@@ -1,0 +1,382 @@
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { assets, eventTypeList } from '../assets/assets'
+import OwnerSidebar from '../components/OwnerSidebar'
+
+const AddGown = () => {
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    eventType: 'wedding',
+    fabric: '',
+    price: '',
+    color: '',
+    size: ['Free Size'],
+    available: true
+  })
+  
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+
+  const sizeOptions = ['Free Size', 'Small', 'Medium', 'Large', 'Extra Large']
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData({
+      ...formData,
+      [name]: value
+    })
+    setError('')
+    setSuccess('')
+  }
+
+  const handleSizeChange = (size) => {
+    setFormData(prev => {
+      if (prev.size.includes(size)) {
+        // Remove if already selected
+        return {
+          ...prev,
+          size: prev.size.filter(s => s !== size)
+        }
+      } else {
+        // Add if not selected
+        return {
+          ...prev,
+          size: [...prev.size, size]
+        }
+      }
+    })
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setSelectedImage(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setLoading(true)
+
+    // Validation
+    if (!formData.name || !formData.description || !formData.fabric || !formData.price || !formData.color) {
+      setError('Please fill in all required fields')
+      setLoading(false)
+      return
+    }
+
+    if (!selectedImage) {
+      setError('Please select an image')
+      setLoading(false)
+      return
+    }
+
+    if (formData.size.length === 0) {
+      setError('Please select at least one size')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setError('Please login to add a gown')
+        setLoading(false)
+        return
+      }
+
+      // Create FormData for file upload
+      const formDataToSend = new FormData()
+      formDataToSend.append('image', selectedImage)
+      formDataToSend.append('gownData', JSON.stringify({
+        name: formData.name,
+        description: formData.description,
+        eventType: formData.eventType.toLowerCase(),
+        fabric: formData.fabric,
+        price: parseFloat(formData.price),
+        color: formData.color,
+        size: formData.size,
+        available: formData.available
+      }))
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      const response = await fetch(`${API_URL}/owner/add-gown`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataToSend
+      })
+
+      const data = await response.json()
+
+      if (data.success || data.sucess) {
+        setSuccess('Gown added successfully!')
+        // Reset form
+        setFormData({
+          name: '',
+          description: '',
+          eventType: 'wedding',
+          fabric: '',
+          price: '',
+          color: '',
+          size: ['Free Size'],
+          available: true
+        })
+        setSelectedImage(null)
+        setImagePreview(null)
+        
+        // Redirect to manage gowns after 2 seconds
+        setTimeout(() => {
+          navigate('/owner/manage-gown')
+        }, 2000)
+      } else {
+        setError(data.message || 'Failed to add gown')
+      }
+    } catch (err) {
+      console.error('Error adding gown:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className='flex min-h-screen bg-gray-50'>
+      <OwnerSidebar />
+      
+      <div className='flex-1 p-8'>
+        <div className='max-w-3xl mx-auto'>
+          {/* Header */}
+          <div className='mb-8'>
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>Add New Gown</h1>
+            <p className='text-gray-600'>Fill in the details to add a new gown to your collection.</p>
+          </div>
+
+          {/* Success/Error Messages */}
+          {success && (
+            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
+              <p className='text-green-800'>{success}</p>
+            </div>
+          )}
+
+          {error && (
+            <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
+              <p className='text-red-800'>{error}</p>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
+            <div className='space-y-6'>
+              {/* Image Upload */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Gown Image <span className='text-red-500'>*</span>
+                </label>
+                <div className='flex items-center gap-4'>
+                  <div className='flex-1'>
+                    <input
+                      type='file'
+                      accept='image/*'
+                      onChange={handleImageChange}
+                      className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                      required
+                    />
+                  </div>
+                  {imagePreview && (
+                    <div className='w-32 h-32 rounded-lg overflow-hidden border border-gray-200'>
+                      <img src={imagePreview} alt='Preview' className='w-full h-full object-cover' />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Gown Name */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Gown Name <span className='text-red-500'>*</span>
+                </label>
+                <input
+                  type='text'
+                  name='name'
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder='Enter gown name'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Description <span className='text-red-500'>*</span>
+                </label>
+                <textarea
+                  name='description'
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder='Describe the gown...'
+                  rows={4}
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none'
+                  required
+                />
+              </div>
+
+              {/* Event Type */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Event Type <span className='text-red-500'>*</span>
+                </label>
+                <select
+                  name='eventType'
+                  value={formData.eventType}
+                  onChange={handleInputChange}
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                  required
+                >
+                  {eventTypeList.map((eventType) => (
+                    <option key={eventType} value={eventType.toLowerCase()}>
+                      {eventType}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Fabric and Color Row */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Fabric <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    name='fabric'
+                    value={formData.fabric}
+                    onChange={handleInputChange}
+                    placeholder='e.g., Chiffon, Silk'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Color <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    name='color'
+                    value={formData.color}
+                    onChange={handleInputChange}
+                    placeholder='e.g., White, Red'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Price */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Price (₱) <span className='text-red-500'>*</span>
+                </label>
+                <input
+                  type='number'
+                  name='price'
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder='Enter rental price'
+                  min='0'
+                  step='0.01'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  required
+                />
+              </div>
+
+              {/* Size Selection */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Available Sizes <span className='text-red-500'>*</span>
+                </label>
+                <div className='flex flex-wrap gap-3'>
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      type='button'
+                      onClick={() => handleSizeChange(size)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                        formData.size.includes(size)
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                <p className='text-sm text-gray-500 mt-2'>
+                  Selected: {formData.size.join(', ') || 'None'}
+                </p>
+              </div>
+
+              {/* Available Toggle */}
+              <div className='flex items-center gap-3'>
+                <input
+                  type='checkbox'
+                  id='available'
+                  checked={formData.available}
+                  onChange={(e) => setFormData({...formData, available: e.target.checked})}
+                  className='w-5 h-5 text-primary rounded focus:ring-primary'
+                />
+                <label htmlFor='available' className='text-sm font-medium text-gray-700'>
+                  Mark as available for booking
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <div className='flex gap-4 pt-4'>
+                <button
+                  type='submit'
+                  disabled={loading}
+                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
+                    loading
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {loading ? 'Adding Gown...' : 'Add Gown'}
+                </button>
+                <button
+                  type='button'
+                  onClick={() => navigate('/owner/manage-gown')}
+                  className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default AddGown
+
