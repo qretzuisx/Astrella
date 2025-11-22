@@ -36,7 +36,6 @@ export const faceShapeList = ['Oval', 'Square', 'Round', 'Heart', 'Diamond']
 
 export const assets = {
     logo,
-    gmail_logo,
     search_icon,
     size_icon,
     edit_icon,
