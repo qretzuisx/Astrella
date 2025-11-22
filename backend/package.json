@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "server": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "create-admin": "node scripts/createAdmin.js",
+    "verify-gowns": "node scripts/verifyAllGowns.js"
   },
   "keywords": [],
   "author": "",

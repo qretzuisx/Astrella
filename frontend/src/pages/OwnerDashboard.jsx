@@ -30,7 +30,7 @@ const OwnerDashboard = () => {
         const userData = await userResponse.json()
         
         if (userData.sucess || userData.success) {
-          const role = userData.user?.role || userData.user?.role
+          const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
           setUserRole(role)
           
           // Check if user is owner or admin

@@ -140,10 +140,10 @@ const AddGown = () => {
         setSelectedImage(null)
         setImagePreview(null)
         
-        // Redirect to manage gowns after 2 seconds
+        // Redirect to manage gowns and trigger refresh
         setTimeout(() => {
-          navigate('/owner/manage-gown')
-        }, 2000)
+          navigate('/owner/manage-gown', { state: { refresh: true } })
+        }, 1500)
       } else {
         setError(data.message || 'Failed to add gown')
       }

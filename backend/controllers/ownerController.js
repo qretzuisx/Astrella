@@ -49,8 +49,10 @@ export const addGown = async (req, res) =>{
             ]
         });
 
-        const image = optimizedImageUrl;
-        await Gown.create({...gown, owner: _id, image});
+        // Save image as array (model expects array)
+        const image = [optimizedImageUrl];
+        // Auto-verify gowns added by owners
+        await Gown.create({...gown, owner: _id, image, verified: true});
 
         res.json({success: true, message: "Gown Added"})
 
@@ -92,15 +94,19 @@ export const ToggleGownAvailability = async (req, res)=>{
     try {
          const {_id} = req.user;
          const {gownID} = req.body
-        const gown = await Gown.findById({gownID})
+        const gown = await Gown.findById(gownID)
 
-        if(gown.owner.toString() !== _id.toString()){
-            return res.json({ success: false, message: "Unauthorized" });
+        if (!gown) {
+            return res.status(404).json({ success: false, message: 'Gown not found' })
         }
 
-        gown.isAvailable = !gown.isAvailable;
+        if(gown.owner.toString() !== _id.toString()){
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+
+        gown.available = !gown.available;
         await gown.save();
-        res.json({success: true, message: "Availability Toggled"})
+        res.json({success: true, message: "Availability Toggled", available: gown.available})
     } catch (error) {
         console.log(error.message);
         res.json({success: false, message: error.message})
@@ -115,15 +121,20 @@ export const DeleteGown = async (req, res)=>{
          const {gownID} = req.body
         const gown = await Gown.findById(gownID)
 
-        if(gown.owner.toString() !== _id.toString()){
-            return res.json({ success: false, message: "Unauthorized" });
+        if (!gown) {
+            return res.status(404).json({ success: false, message: 'Gown not found' })
         }
 
+        if(gown.owner.toString() !== _id.toString()){
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+
+        // Remove ownership and mark unavailable
         gown.owner = null;
-        gown.isAvailable = false;
+        gown.available = false;
 
         await gown.save();
-        res.json({success: true, message: "Gown Remove"})
+        res.json({success: true, message: "Gown Removed"})
     } catch (error) {
         console.log(error.message);
         res.json({success: false, message: error.message})

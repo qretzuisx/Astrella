@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { assets, dummyGownData } from '../assets/assets'
+import { assets } from '../assets/assets'
 import PaymentModal from '../components/PaymentModal'
 import ContractModal from '../components/ContractModal'
 
@@ -9,6 +9,7 @@ const GownDetails = () => {
   const {id} = useParams()
   const navigate = useNavigate()
   const [gown, setGown] = useState(null)
+  const [loadingGown, setLoadingGown] = useState(true)
   const currency = import.meta.env.VITE_CURRENCY || '₱'
   const [measurements, setMeasurements] = useState({
     waist: '',
@@ -24,9 +25,39 @@ const GownDetails = () => {
   const [showPayment, setShowPayment] = useState(false)
   const [showContract, setShowContract] = useState(false)
 
-  useEffect(()=>{
-    setGown(dummyGownData.find(gown => gown._id === id))
-  }, [id])
+  useEffect(() => {
+    const fetchGown = async () => {
+      try {
+        setLoadingGown(true)
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+        const response = await fetch(`${API_URL}/owner/all-gowns`)
+        const data = await response.json()
+        
+        if (data.success && data.gowns) {
+          const foundGown = data.gowns.find(g => g._id === id)
+          if (foundGown) {
+            setGown(foundGown)
+          } else {
+            setError('Gown not found')
+            navigate('/gowns')
+          }
+        } else {
+          setError('Failed to load gown details')
+          navigate('/gowns')
+        }
+      } catch (error) {
+        console.error('Error fetching gown:', error)
+        setError('Failed to load gown details')
+        navigate('/gowns')
+      } finally {
+        setLoadingGown(false)
+      }
+    }
+
+    if (id) {
+      fetchGown()
+    }
+  }, [id, navigate])
 
   // Handle confirm reservation button click - show payment modal
   const handleConfirmReservation = () => {
@@ -79,10 +110,8 @@ const GownDetails = () => {
 
       if (data.success) {
         setSuccess(true)
-        // Redirect to My Bookings after 2 seconds
-        setTimeout(() => {
-          navigate('/my-bookings')
-        }, 2000)
+        // Navigate to My Bookings immediately and pass the created booking
+        navigate('/my-bookings', { state: { newBooking: data.booking } })
       } else {
         setError(data.message || 'Failed to create booking')
       }
@@ -119,7 +148,34 @@ const GownDetails = () => {
   }
 
 
-  return gown ? (
+  if (loadingGown) {
+    return (
+      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-xl text-gray-500'>Loading gown details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!gown) {
+    return (
+      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
+        <div className='text-center'>
+          <p className='text-xl text-gray-500 mb-4'>Gown not found</p>
+          <button
+            onClick={() => navigate('/gowns')}
+            className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
+          >
+            Back to Gowns
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
     <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 mb-16'>
       {/* Back Button */}
       <button onClick={()=> navigate(-1)} className='flex items-center gap-2 mb-8 text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
@@ -134,17 +190,17 @@ const GownDetails = () => {
           {/* Image Section */}
           <div className='relative rounded-2xl overflow-hidden shadow-xl bg-gray-100 aspect-[4/5]'>
             <img 
-              src={gown.image} 
+              src={Array.isArray(gown.image) ? gown.image[0] : gown.image} 
               alt={gown.name}
               className='w-full h-full object-cover'
             />
-            {gown.isAvailable && (
+            {gown?.available && (
               <div className='absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2'>
                 <img src={assets.check_icon} alt="check" className='w-4 h-4' />
                 Available Now
               </div>
             )}
-            {!gown.isAvailable && (
+            {!gown?.available && (
               <div className='absolute top-4 left-4 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium'>
                 Currently Unavailable
               </div>
@@ -201,7 +257,7 @@ const GownDetails = () => {
           {/* Title and Owner */}
           <div className='mb-6'>
             <h1 className='text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
-            <p className='text-lg text-gray-600'>by {gown.owner}</p>
+            <p className='text-lg text-gray-600'>by {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}</p>
           </div>
 
           {/* Price */}
@@ -396,13 +452,13 @@ const GownDetails = () => {
             <button 
               onClick={handleConfirmReservation}
               className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
-                gown.isAvailable && pickupDate && returnDate && !loading && !success
+                gown?.available && pickupDate && returnDate && !loading && !success
                   ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl' 
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
-              disabled={!gown.isAvailable || !pickupDate || !returnDate || loading || success}
+              disabled={!gown?.available || !pickupDate || !returnDate || loading || success || loadingGown}
             >
-              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown.isAvailable ? 'Confirm Reservation' : 'Not Available'}
+              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Reservation' : 'Not Available'}
             </button>
 
             {/* Payment Modal */}
@@ -435,7 +491,7 @@ const GownDetails = () => {
           <div>
             <h3 className='text-lg font-semibold text-gray-900 mb-2'>Availability</h3>
             <p className='text-gray-600'>
-              {gown.isAvailable 
+              {gown?.available 
                 ? 'This gown is currently available for booking. Please select your preferred dates to proceed with the reservation.'
                 : 'This gown is currently unavailable. Please check back later or contact the owner for more information.'}
             </p>
@@ -448,13 +504,6 @@ const GownDetails = () => {
             </p>
           </div>
         </div>
-      </div>
-    </div>
-  ) : (
-    <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
-      <div className='text-center'>
-        <p className='text-xl text-gray-500 mb-4'>Loading gown details...</p>
-        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto'></div>
       </div>
     </div>
   )

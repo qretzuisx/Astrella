@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { assets, dummyGownData } from '../assets/assets'
+import { assets } from '../assets/assets'
 import GownCard from '../components/GownCard'
 
 const Gown = () => {
@@ -20,21 +20,26 @@ const Gown = () => {
           setGowns(data.gowns)
           setFilteredGowns(data.gowns)
         } else {
-          // Fallback to dummy data
-          setGowns(dummyGownData)
-          setFilteredGowns(dummyGownData)
+          // Show empty state if no gowns or API error
+          setGowns([])
+          setFilteredGowns([])
         }
       } catch (error) {
         console.error('Error fetching gowns:', error)
-        // Fallback to dummy data
-        setGowns(dummyGownData)
-        setFilteredGowns(dummyGownData)
+        // Don't use dummy data, show empty state
+        setGowns([])
+        setFilteredGowns([])
       } finally {
         setLoading(false)
       }
     }
 
     fetchGowns()
+    
+    // Refresh every 30 seconds to get new gowns
+    const refreshInterval = setInterval(fetchGowns, 30000)
+    
+    return () => clearInterval(refreshInterval)
   }, [])
 
   // Filter gowns based on search query
@@ -55,7 +60,7 @@ const Gown = () => {
     }
 
     // Filter only available gowns
-    filtered = filtered.filter(gown => gown.isAvailable !== false)
+    filtered = filtered.filter(gown => gown.available !== false)
 
     setFilteredGowns(filtered)
   }, [searchQuery, gowns])
