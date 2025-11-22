@@ -1,38 +1,50 @@
 import React, { useEffect, useState } from 'react'
-import { assets, dummyMyBookingsData } from '../assets/assets'
+import { useLocation } from 'react-router-dom'
+import { assets } from '../assets/assets'
 
 const MyBookings = () => {
+  const location = useLocation()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const currency = import.meta.env.VITE_CURRENCY || '₱'
 
   useEffect(() => {
-    // For now, using dummy data. Replace with API call later
+    // Fetch bookings from API
     const fetchBookings = async () => {
       try {
         const token = localStorage.getItem('token')
         if (token) {
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
           const response = await fetch(`${API_URL}/bookings/user`, {
+            method: 'POST',
             headers: {
+              'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             }
           })
           const data = await response.json()
           if (data.success) {
-            setBookings(data.bookings || [])
+            // merge any new booking passed via navigation state
+            const initial = data.bookings || []
+            if (location?.state?.newBooking) {
+              const nb = location.state.newBooking
+              const exists = initial.some(b => b._id === nb._id)
+              if (!exists) initial.unshift(nb)
+              // Clear navigation state so it doesn't reapply on future visits
+              try { window.history.replaceState({}, document.title) } catch(e){}
+            }
+            setBookings(initial)
           } else {
-            // Fallback to dummy data
-            setBookings(dummyMyBookingsData)
+            // API returned no bookings
+            setBookings([])
           }
         } else {
-          // Fallback to dummy data if not logged in
-          setBookings(dummyMyBookingsData)
+          // Not logged in - show empty list
+          setBookings([])
         }
       } catch (error) {
         console.error('Error fetching bookings:', error)
-        // Fallback to dummy data
-        setBookings(dummyMyBookingsData)
+        setBookings([])
       } finally {
         setLoading(false)
       }
@@ -110,7 +122,7 @@ const MyBookings = () => {
                 <h3 className='text-xl font-bold text-gray-900 mb-2'>
                   {booking.gown?.name || 'Gown Name'}
                 </h3>
-                <p className='text-gray-600 mb-4'>by {booking.owner || 'Owner'}</p>
+                <p className='text-gray-600 mb-4'>by {booking.owner ? (typeof booking.owner === 'object' ? booking.owner.name : booking.owner) : 'Owner'}</p>
 
                 {/* Date Information */}
                 <div className='space-y-3 mb-4'>

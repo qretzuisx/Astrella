@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const ManageGowns = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [gowns, setGowns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -13,7 +14,11 @@ const ManageGowns = () => {
 
   useEffect(() => {
     fetchGowns()
-  }, [])
+    // Clear location state after refresh
+    if (location.state?.refresh) {
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state])
 
   const fetchGowns = async () => {
     try {

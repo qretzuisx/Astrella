@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 
 const LoginModal = ({ showLogin, setShowLogin }) => {
+  const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
@@ -54,10 +56,30 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
         if (data.sucess || data.success) {
           localStorage.setItem('token', data.token)
+          
+          // Fetch user data to determine role and redirect
+          const userResponse = await fetch(`${API_URL}/user/data`, {
+            headers: {
+              'Authorization': `Bearer ${data.token}`
+            }
+          })
+          const userData = await userResponse.json()
+          
           setSuccess('Login successful!')
           setTimeout(() => {
             setShowLogin(false)
-            window.location.reload()
+            
+            // Redirect based on user role
+            if (userData.success || userData.sucess) {
+              const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
+              if (role === 'owner' || role === 'admin') {
+                window.location.href = '/owner'
+              } else {
+                window.location.href = '/'
+              }
+            } else {
+              window.location.href = '/'
+            }
           }, 1000)
         } else {
           setError(data.message || 'Login failed')
@@ -98,10 +120,21 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
         if (data.sucess || data.success) {
           localStorage.setItem('token', data.token)
+          
+          // Fetch user data to determine role and redirect
+          const userResponse = await fetch(`${API_URL}/user/data`, {
+            headers: {
+              'Authorization': `Bearer ${data.token}`
+            }
+          })
+          const userData = await userResponse.json()
+          
           setSuccess('Registration successful!')
           setTimeout(() => {
             setShowLogin(false)
-            window.location.reload()
+            
+            // Redirect based on user role (new users are 'user' by default)
+            window.location.href = '/'
           }, 1000)
         } else {
           setError(data.message || 'Registration failed')
@@ -275,4 +308,3 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 }
 
 export default LoginModal
-
