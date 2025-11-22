@@ -1,1 +1,0 @@
-// https://prebuiltui.com/components/footer

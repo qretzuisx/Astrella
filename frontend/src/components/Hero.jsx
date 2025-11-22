@@ -95,7 +95,7 @@ const Hero = () => {
               onClick={() => setShowImageAnalysis(true)}
               className="text-primary hover:text-primary-dull text-sm font-medium underline"
             >
-              📷 Upload Photo to Auto-Detect
+            Upload Photo to Auto-Detect
             </button>
             <span className="text-gray-400">or</span>
             <button
@@ -106,7 +106,7 @@ const Hero = () => {
             </button>
           </div>
           <p className="text-xs text-gray-500">
-            Upload a photo to automatically detect your body type, skin tone, and face shape
+            Upload a photo to automatically detect your body type, skin tone, and face shape.
           </p>
         </div>
       </form>
