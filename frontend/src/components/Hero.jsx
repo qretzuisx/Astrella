@@ -43,7 +43,7 @@ const Hero = () => {
   const handleImageAnalysisComplete = (results) => {
     setSkinTone(results.skinTone);
     setBodyType(results.bodyType);
-    setFaceShape(results.faceShape);
+    setfaceShape(results.faceShape);
     setShowImageAnalysis(false);
   };
 
@@ -66,7 +66,7 @@ const Hero = () => {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center gap-14 bg-light text-center py-8'>
+    <div className='min-h-screen flex flex-col items-center justify-center gap-14 text-center py-8'>
       <h1 className='text-4xl md:text-5xl font-semibold'>Astrella, your guide to becoming a Cinderella</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">

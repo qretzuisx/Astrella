@@ -1,168 +1,220 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { bodyTypeList, skinToneList, faceShapeList } from '../assets/assets';
 
 const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
-  const [image, setImage] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [results, setResults] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const fileInputRef = useRef(null);
-  const canvasRef = useRef(null);
+   const [image, setImage] = useState(null);
+   const [analyzing, setAnalyzing] = useState(false);
+   const [results, setResults] = useState(null);
+   const [preview, setPreview] = useState(null);
+   const [modelsLoaded, setModelsLoaded] = useState(true);
+   const fileInputRef = useRef(null);
+   const canvasRef = useRef(null);
 
-  // Analyze skin tone from image
-  const analyzeSkinTone = (imageData, width, height) => {
-    // Sample pixels from face area (center-top region)
-    const startX = Math.floor(width * 0.3);
-    const endX = Math.floor(width * 0.7);
-    const startY = Math.floor(height * 0.1);
-    const endY = Math.floor(height * 0.4);
+  // Component is ready for analysis immediately
+  useEffect(() => {
+    setModelsLoaded(true); // Always ready since no models to load
+  }, []);
 
-    let totalR = 0, totalG = 0, totalB = 0;
-    let sampleCount = 0;
+   // SKIN TONE ANALYSIS
+   const analyzeSkinTone = async (imgElement) => {
+     try {
+       const canvas = document.createElement('canvas');
+       const ctx = canvas.getContext('2d');
+       canvas.width = imgElement.width;
+       canvas.height = imgElement.height;
+       ctx.drawImage(imgElement, 0, 0);
 
-    for (let y = startY; y < endY; y += 5) {
-      for (let x = startX; x < endX; x += 5) {
-        const index = (y * width + x) * 4;
-        const r = imageData[index];
-        const g = imageData[index + 1];
-        const b = imageData[index + 2];
+       // Multiple regions for sampling
+       const regions = [
+         { x: 0.35, y: 0.15, w: 0.3, h: 0.2 }, // center
+         { x: 0.25, y: 0.25, w: 0.15, h: 0.15 }, // left cheek
+         { x: 0.6, y: 0.25, w: 0.15, h: 0.15 }, // right cheek
+         { x: 0.4, y: 0.35, w: 0.2, h: 0.15 }   // chin
+       ];
 
-        // Skip very dark or very light pixels (likely not skin)
-        if (r > 50 && r < 240 && g > 50 && g < 240 && b > 50 && b < 240) {
-          totalR += r;
-          totalG += g;
-          totalB += b;
-          sampleCount++;
+       let totalR = 0, totalG = 0, totalB = 0, count = 0;
+
+       regions.forEach(region => {
+         const startX = Math.floor(canvas.width * region.x);
+         const endX = Math.floor(canvas.width * (region.x + region.w));
+         const startY = Math.floor(canvas.height * region.y);
+         const endY = Math.floor(canvas.height * (region.y + region.h));
+
+         for (let y = startY; y < endY; y += 3) {
+           for (let x = startX; x < endX; x += 3) {
+             const { data } = ctx.getImageData(x, y, 1, 1);
+             const [r, g, b] = [data[0], data[1], data[2]];
+
+             // Looser skin pixel detection
+             const isSkinLike = (
+               r > 40 && g > 30 && b > 20 &&
+               r < 250 && g < 240 && b < 240 &&
+               r > g * 0.9 && g > b * 0.8
+             );
+
+             if (isSkinLike) {
+               totalR += r;
+               totalG += g;
+               totalB += b;
+               count++;
+             }
+           }
+         }
+       });
+
+       if (count < 10) return 'Neutral';
+
+       const avgR = totalR / count;
+       const avgG = totalG / count;
+       const avgB = totalB / count;
+
+       const rbDiff = avgR - avgB;
+       const rgDiff = avgR - avgG;
+
+       if (rbDiff > 25 && rgDiff > 15) return 'Warm';
+       else if (avgB > avgR && avgB > avgG) return 'Cool';
+       else return 'Neutral';
+     } catch (error) {
+       console.error('Skin tone analysis error:', error);
+       return 'Neutral';
+     }
+   };
+
+  // BODY TYPE ANALYSIS
+  const analyzeBodyType = async (imgElement) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = imgElement.width;
+      canvas.height = imgElement.height;
+      ctx.drawImage(imgElement, 0, 0);
+
+      const regions = [
+        { x: 0.25, y: 0.15, w: 0.5, h: 0.2 }, // shoulders
+        { x: 0.3, y: 0.35, w: 0.4, h: 0.15 }, // waist
+        { x: 0.25, y: 0.5, w: 0.5, h: 0.2 }  // hips
+      ];
+
+      const getRegionWidth = (region) => {
+        const startX = Math.floor(canvas.width * region.x);
+        const endX = Math.floor(canvas.width * (region.x + region.w));
+        const startY = Math.floor(canvas.height * region.y);
+        const endY = Math.floor(canvas.height * (region.y + region.h));
+
+        let leftEdge = endX;
+        let rightEdge = startX;
+
+        for (let y = startY; y < endY; y += 2) {
+          for (let x = startX; x < endX; x += 2) {
+            const { data } = ctx.getImageData(x, y, 1, 1);
+            const brightness = (data[0] + data[1] + data[2]) / 3;
+
+            if (brightness < 180) {
+              if (x < leftEdge) leftEdge = x;
+              if (x > rightEdge) rightEdge = x;
+            }
+          }
         }
-      }
-    }
 
-    if (sampleCount === 0) return null;
+        return Math.max(0, rightEdge - leftEdge);
+      };
 
-    const avgR = totalR / sampleCount;
-    const avgG = totalG / sampleCount;
-    const avgB = totalB / sampleCount;
+      const shoulderWidth = getRegionWidth(regions[0]);
+      const waistWidth = getRegionWidth(regions[1]);
+      const hipWidth = getRegionWidth(regions[2]);
 
-    // Determine skin tone based on RGB values
-    // Warm tones: higher red/yellow
-    // Cool tones: higher blue
-    // Neutral: balanced
-    const redYellow = avgR + avgG;
-    const blue = avgB;
+      if (shoulderWidth < 20 || waistWidth < 20 || hipWidth < 20) return 'Rectangle';
 
-    if (redYellow > blue * 1.3) {
-      return 'Warm';
-    } else if (blue > redYellow * 1.1) {
-      return 'Cold';
-    } else {
-      return 'Neutral';
-    }
-  };
+      const waistToShoulder = waistWidth / shoulderWidth;
+      const waistToHip = waistWidth / hipWidth;
+      const hipToShoulder = hipWidth / shoulderWidth;
 
-  // Analyze body proportions (simplified)
-  const analyzeBodyType = (imageData, width, height) => {
-    // This is a simplified analysis
-    // In a real app, you'd use pose detection models
-    // For now, we'll use basic width measurements at different heights
-
-    const shoulderY = Math.floor(height * 0.2);
-    const waistY = Math.floor(height * 0.5);
-    const hipY = Math.floor(height * 0.65);
-
-    const getWidth = (y) => {
-      let leftEdge = width;
-      let rightEdge = 0;
-      
-      for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4;
-        const r = imageData[index];
-        const g = imageData[index + 1];
-        const b = imageData[index + 2];
-        const brightness = (r + g + b) / 3;
-        
-        // Find body edges (darker areas or significant color changes)
-        if (brightness < 200) {
-          if (x < leftEdge) leftEdge = x;
-          if (x > rightEdge) rightEdge = x;
-        }
-      }
-      
-      return rightEdge - leftEdge;
-    };
-
-    const shoulderWidth = getWidth(shoulderY);
-    const waistWidth = getWidth(waistY);
-    const hipWidth = getWidth(hipY);
-
-    // Simple classification
-    if (waistWidth < shoulderWidth * 0.8 && waistWidth < hipWidth * 0.8) {
-      return 'Hourglass';
-    } else if (hipWidth > shoulderWidth * 1.1) {
-      return 'Pear';
-    } else if (Math.abs(shoulderWidth - waistWidth) < shoulderWidth * 0.1 && 
-               Math.abs(waistWidth - hipWidth) < waistWidth * 0.1) {
+      if (waistToShoulder < 0.85 && waistToHip < 0.9 && Math.abs(shoulderWidth - hipWidth) < shoulderWidth * 0.15)
+        return 'Hourglass';
+      else if (hipToShoulder > 1.08 && waistToHip < 0.95)
+        return 'Pear';
+      else if (waistToShoulder > 1.05 && waistToHip > 1.02 && hipToShoulder < 0.98)
+        return 'Diamond';
+      else
+        return 'Rectangle';
+    } catch (error) {
+      console.error('Body type analysis error:', error);
       return 'Rectangle';
-    } else {
-      return 'Diamond';
     }
   };
 
-  // Analyze face shape (simplified)
-  const analyzeFaceShape = (imageData, width, height) => {
-    // Simplified face shape detection
-    // In reality, you'd need face detection models
-    // This is a placeholder that returns a reasonable default
-    
-    // For now, we'll return a random but reasonable guess
-    // In production, you'd use face-api.js or similar
-    const faceShapes = ['Oval', 'Round', 'Square', 'Heart', 'Diamond'];
-    
-    // Simple heuristic: analyze face area proportions
-    const faceTop = Math.floor(height * 0.1);
-    const faceBottom = Math.floor(height * 0.4);
-    const faceHeight = faceBottom - faceTop;
-    const faceCenterX = Math.floor(width / 2);
-    
-    // Get face width at different heights
-    const topWidth = getFaceWidth(imageData, width, faceTop + faceHeight * 0.2);
-    const midWidth = getFaceWidth(imageData, width, faceTop + faceHeight * 0.5);
-    const bottomWidth = getFaceWidth(imageData, width, faceTop + faceHeight * 0.8);
-    
-    // Classify based on proportions
-    if (midWidth > topWidth && midWidth > bottomWidth) {
-      return 'Diamond';
-    } else if (bottomWidth > topWidth * 1.2) {
-      return 'Heart';
-    } else if (Math.abs(topWidth - bottomWidth) < topWidth * 0.1) {
-      return 'Square';
-    } else if (topWidth > midWidth * 1.1) {
-      return 'Round';
-    } else {
+  // FACE SHAPE ANALYSIS
+  const analyzeFaceShape = async (imgElement) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = imgElement.width;
+      canvas.height = imgElement.height;
+      ctx.drawImage(imgElement, 0, 0);
+
+      const regions = [
+        { x: 0.35, y: 0.12, w: 0.3, h: 0.08 }, // forehead
+        { x: 0.3, y: 0.2, w: 0.4, h: 0.1 },   // cheekbones
+        { x: 0.25, y: 0.3, w: 0.5, h: 0.08 }, // jawline
+        { x: 0.4, y: 0.38, w: 0.2, h: 0.05 }  // chin
+      ];
+
+      const getFaceWidth = (region) => {
+        const startX = Math.floor(canvas.width * region.x);
+        const endX = Math.floor(canvas.width * (region.x + region.w));
+        const startY = Math.floor(canvas.height * region.y);
+        const endY = Math.floor(canvas.height * (region.y + region.h));
+
+        let leftEdge = endX;
+        let rightEdge = startX;
+
+        for (let y = startY; y < endY; y += 2) {
+          for (let x = startX; x < endX; x += 2) {
+            const { data } = ctx.getImageData(x, y, 1, 1);
+            const brightness = (data[0] + data[1] + data[2]) / 3;
+
+            if (brightness > 60 && brightness < 220) {
+              if (x < leftEdge) leftEdge = x;
+              if (x > rightEdge) rightEdge = x;
+            }
+          }
+        }
+
+        return Math.max(0, rightEdge - leftEdge);
+      };
+
+      const foreheadWidth = getFaceWidth(regions[0]);
+      const cheekWidth = getFaceWidth(regions[1]);
+      const jawWidth = getFaceWidth(regions[2]);
+      const chinWidth = getFaceWidth(regions[3]);
+
+      const faceHeight = Math.floor(canvas.height * 0.43) - Math.floor(canvas.height * 0.12);
+
+      if (foreheadWidth < 10 || cheekWidth < 10 || jawWidth < 10) return 'Oval';
+
+      const jawCheekRatio = jawWidth / cheekWidth;
+      const foreheadJawRatio = foreheadWidth / jawWidth;
+      const chinJawRatio = chinWidth / jawWidth;
+      const faceRatio = faceHeight / cheekWidth;
+
+      if (foreheadJawRatio > 1.05 && chinJawRatio < 0.85 && jawCheekRatio < 0.95)
+        return 'Heart';
+      else if (jawCheekRatio > 1.02 && Math.abs(foreheadWidth - jawWidth) < foreheadWidth * 0.1)
+        return 'Square';
+      else if (faceRatio < 1.2 && jawCheekRatio < 1.05 && foreheadJawRatio < 1.05)
+        return 'Round';
+      else if (foreheadJawRatio < 0.95 && chinJawRatio < 0.9 && jawCheekRatio > 1.0)
+        return 'Diamond';
+      else if (faceRatio > 1.3 && jawCheekRatio >= 0.95 && jawCheekRatio <= 1.05)
+        return 'Oval';
+      else
+        return 'Oval'; // fallback
+    } catch (error) {
+      console.error('Face shape analysis error:', error);
       return 'Oval';
     }
   };
 
-  const getFaceWidth = (imageData, width, y) => {
-    let leftEdge = width;
-    let rightEdge = 0;
-    const centerX = Math.floor(width / 2);
-    
-    for (let x = 0; x < width; x++) {
-      const index = (y * width + x) * 4;
-      const r = imageData[index];
-      const g = imageData[index + 1];
-      const b = imageData[index + 2];
-      const brightness = (r + g + b) / 3;
-      
-      // Detect face edges (skin-colored pixels)
-      if (r > 100 && g > 80 && b > 60 && brightness < 220) {
-        if (x < leftEdge) leftEdge = x;
-        if (x > rightEdge) rightEdge = x;
-      }
-    }
-    
-    return rightEdge - leftEdge;
-  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -181,45 +233,57 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     reader.readAsDataURL(file);
   };
 
-  const analyzeImage = () => {
-    if (!image) return;
+  const analyzeImage = async () => {
+    if (!image || !modelsLoaded) {
+      return;
+    }
 
     setAnalyzing(true);
+    console.log('Starting image analysis...');
 
-    // Use setTimeout to allow UI to update
-    setTimeout(() => {
+    try {
       const img = new Image();
-      img.onload = () => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        
-        // Set canvas size
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // Draw image to canvas
-        ctx.drawImage(img, 0, 0);
-        
-        // Get image data
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        
-        // Analyze attributes
-        const skinTone = analyzeSkinTone(imageData.data, canvas.width, canvas.height) || 'Neutral';
-        const bodyType = analyzeBodyType(imageData.data, canvas.width, canvas.height) || 'Rectangle';
-        const faceShape = analyzeFaceShape(imageData.data, canvas.width, canvas.height) || 'Oval';
-        
-        const analysisResults = {
-          skinTone,
-          bodyType,
-          faceShape,
-          confidence: 'Medium' // Simplified
-        };
-        
-        setResults(analysisResults);
-        setAnalyzing(false);
+      img.crossOrigin = 'anonymous';
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = image;
+      });
+
+      console.log('Image loaded, analyzing attributes...');
+
+      // Analyze attributes using improved algorithms
+      const [skinTone, bodyType, faceShape] = await Promise.all([
+        analyzeSkinTone(img),
+        analyzeBodyType(img),
+        analyzeFaceShape(img)
+      ]);
+
+      console.log('Analysis results:', { skinTone, bodyType, faceShape });
+
+      const analysisResults = {
+        skinTone: skinTone || 'Neutral',
+        bodyType: bodyType || 'Rectangle',
+        faceShape: faceShape || 'Oval',
+        confidence: 'High'
       };
-      img.src = image;
-    }, 100);
+
+      setResults(analysisResults);
+      console.log('Results set:', analysisResults);
+    } catch (error) {
+      console.error('Analysis error:', error);
+  
+      const analysisResults = {
+        skinTone: 'Neutral',
+        bodyType: 'Rectangle',
+        faceShape: 'Oval',
+        confidence: 'Low'
+      };
+      setResults(analysisResults);
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const handleConfirm = () => {
@@ -309,7 +373,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                     <h3 className="font-semibold mb-3">Detected Attributes</h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm text-gray-600">Skin Tone:</label>
+                        <label className="text-sm text-gray-600">Skin Tone</label>
                         <select
                           value={results.skinTone}
                           onChange={(e) => handleEdit('skinTone', e.target.value)}
@@ -321,7 +385,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm text-gray-600">Body Type:</label>
+                        <label className="text-sm text-gray-600">Body Type</label>
                         <select
                           value={results.bodyType}
                           onChange={(e) => handleEdit('bodyType', e.target.value)}
@@ -333,7 +397,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm text-gray-600">Face Shape:</label>
+                        <label className="text-sm text-gray-600">Face Shape</label>
                         <select
                           value={results.faceShape}
                           onChange={(e) => handleEdit('faceShape', e.target.value)}
@@ -346,7 +410,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                       </div>
                     </div>
                     <p className="text-xs text-gray-500 mt-2">
-                      Review and adjust the detected attributes if needed
+                      The attributes above have been automatically detected and populated. Review and adjust if needed, then apply them.
                     </p>
                   </div>
 
@@ -355,7 +419,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                       onClick={handleConfirm}
                       className="flex-1 bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all"
                     >
-                      Use These Attributes
+                      Apply Detected Attributes
                     </button>
                     <button
                       onClick={() => {
@@ -379,4 +443,5 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 };
 
 export default ImageAnalysis;
+
 

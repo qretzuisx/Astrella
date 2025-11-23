@@ -12,7 +12,7 @@ const AddGown = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    eventType: 'wedding',
+    eventType: '',
     fabric: '',
     price: '',
     color: '',
@@ -130,7 +130,7 @@ const AddGown = () => {
         setFormData({
           name: '',
           description: '',
-          eventType: 'wedding',
+          eventType: '',
           fabric: '',
           price: '',
           color: '',

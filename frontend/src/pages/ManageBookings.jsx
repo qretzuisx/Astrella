@@ -7,7 +7,7 @@ const ManageBookings = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all') // all, pending, confirmed, canceled
+  const [filterStatus, setFilterStatus] = useState('all') 
   const currency = import.meta.env.VITE_CURRENCY || '₱'
 
   useEffect(() => {

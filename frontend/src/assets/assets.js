@@ -28,10 +28,9 @@ import upload_icon from "./upload_icon.svg"
 
 
 // AI RECCOMENDATION LIST
-export const eventTypeList = ['Wedding', 'Traditional', 'Prom', 'Formal']
+export const eventTypeList = ['Wedding', 'Traditional', 'Prom', 'Formal', 'Themed']
 export const bodyTypeList = ['Hourglass', 'Pear', 'Rectangle', 'Diamond']
-export const skinToneList = ['Warm', 'Cold', 'Neutral']
-export const heightList = ['Small', 'Medium', 'Tall']
+export const skinToneList = ['Warm', 'Cool', 'Neutral']
 export const faceShapeList = ['Oval', 'Square', 'Round', 'Heart', 'Diamond']
 
 export const assets = {
