@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Navbar from './components/Navbar'
+import Navbar from './components/navbar'
 import LoginModal from './components/LoginModal'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
