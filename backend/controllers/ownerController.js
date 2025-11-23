@@ -28,7 +28,7 @@ export const addGown = async (req, res) =>{
         if(!imageFile) {
             return res
             .status(400)
-            .json({sucess: false, message: "No image uploaded"});
+            .json({success: false, message: "No image uploaded"});
         }
 
 // upload img to imagekit
@@ -193,7 +193,7 @@ export const updateUserImage = async (req, res)=>{
         if(!imageFile) {
             return res
             .status(400)
-            .json({sucess: false, message: "No image uploaded"});
+            .json({success: false, message: "No image uploaded"});
         }
 
         const fileBuffer = fs.readFileSync(imageFile.path)
