@@ -129,7 +129,7 @@ const ManageBookings = () => {
           {/* Header */}
           <div className='mb-8'>
             <h1 className='text-3xl font-bold text-gray-900 mb-2'>Manage Bookings</h1>
-            <p className='text-gray-600'>View and manage all customer bookings for your gowns.</p>
+            <p className='text-gray-600'>View and manage all customer bookings for your apparel.</p>
           </div>
 
           {/* Success/Error Messages */}
@@ -174,7 +174,7 @@ const ManageBookings = () => {
               <p className='text-xl text-gray-500 mb-4'>
                 {filterStatus === 'all' ? 'No bookings found' : `No ${filterStatus} bookings`}
               </p>
-              <p className='text-gray-400'>Bookings will appear here when customers book your gowns.</p>
+              <p className='text-gray-400'>Bookings will appear here when customers book your apparel.</p>
             </div>
           ) : (
             <div className='space-y-4'>
@@ -213,6 +213,16 @@ const ManageBookings = () => {
                               Return: <strong>{formatDate(booking.returnDate)}</strong>
                             </span>
                           </div>
+                          {booking.pickupTime && (
+                            <div className='flex items-center gap-2'>
+                              <svg className='w-4 h-4 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                              </svg>
+                              <span>
+                                Time: <strong>{booking.pickupTime}</strong>
+                              </span>
+                            </div>
+                          )}
                           <div className='flex items-center gap-2'>
                             <img src={assets.user_profile} alt="user" className='w-4 h-4 rounded-full' />
                             <span>
@@ -223,6 +233,21 @@ const ManageBookings = () => {
                             <span className='text-gray-500'>Email:</span>
                             <span>{booking.user?.email || 'N/A'}</span>
                           </div>
+                          {(booking.measurements?.waist || booking.measurements?.hips) && (
+                            <div className='flex items-center gap-2 mt-2 pt-2 border-t border-gray-200'>
+                              <img src={assets.size_icon} alt="measurements" className='w-4 h-4' />
+                              <span className='font-semibold text-gray-700'>Measurements:</span>
+                              {booking.measurements?.waist && (
+                                <span>Waist: <strong>{booking.measurements.waist} {booking.measurements?.unit || 'inches'}</strong></span>
+                              )}
+                              {booking.measurements?.waist && booking.measurements?.hips && (
+                                <span className='mx-1'>|</span>
+                              )}
+                              {booking.measurements?.hips && (
+                                <span>Hips: <strong>{booking.measurements.hips} {booking.measurements?.unit || 'inches'}</strong></span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

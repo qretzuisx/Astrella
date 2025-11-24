@@ -125,7 +125,7 @@ const ManageGowns = () => {
         <OwnerSidebar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
-            <p className='text-xl text-gray-500 mb-4'>Loading gowns...</p>
+            <p className='text-xl text-gray-500 mb-4'>Loading apparel...</p>
             <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto'></div>
           </div>
         </div>
@@ -142,8 +142,8 @@ const ManageGowns = () => {
           {/* Header */}
           <div className='mb-8 flex items-center justify-between'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900 mb-2'>Manage Gowns</h1>
-              <p className='text-gray-600'>View and manage all your gowns.</p>
+              <h1 className='text-3xl font-bold text-gray-900 mb-2'>Manage Apparel</h1>
+              <p className='text-gray-600'>View and manage all your apparel.</p>
             </div>
             <button
               onClick={() => navigate('/owner/add-gown')}
@@ -171,7 +171,7 @@ const ManageGowns = () => {
           {gowns.length === 0 ? (
             <div className='text-center py-16 bg-white rounded-xl border border-gray-200'>
               <img src={assets.gownIcon} alt="gown" className='w-16 h-16 mx-auto mb-4 opacity-50' />
-              <p className='text-xl text-gray-500 mb-4'>No gowns found</p>
+              <p className='text-xl text-gray-500 mb-4'>No apparel found</p>
               <p className='text-gray-400 mb-6'>Start by adding your first gown!</p>
               <button
                 onClick={() => navigate('/owner/add-gown')}

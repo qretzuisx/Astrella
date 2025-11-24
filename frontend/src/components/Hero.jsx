@@ -66,7 +66,15 @@ const Hero = () => {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center gap-14 text-center py-8'>
+    <div 
+      className='min-h-screen flex flex-col items-center justify-center gap-14 text-center py-8'
+      style={{
+        backgroundImage: `url(${assets.home_bg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       <h1 className='text-4xl md:text-5xl font-semibold'>Astrella, your guide to becoming a Cinderella</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
@@ -183,8 +191,6 @@ const Hero = () => {
           onClose={() => setShowImageAnalysis(false)}
         />
       )}
-
-      <img src={assets.main_ai} alt="ai" className='max-h-96 object-contain' />
     </div>
   );
 }

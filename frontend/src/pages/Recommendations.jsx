@@ -70,7 +70,7 @@ const Recommendations = () => {
       <div className="min-h-screen flex items-center justify-center bg-light">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Finding your perfect gowns...</p>
+          <p className="text-gray-600">Finding your perfect apparel...</p>
         </div>
       </div>
     );
@@ -173,7 +173,7 @@ const Recommendations = () => {
           </div>
         ) : (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-600 mb-4">No gowns found matching your preferences.</p>
+            <p className="text-gray-600 mb-4">No apparel found matching your preferences.</p>
             <button
               onClick={() => navigate('/')}
               className="bg-primary text-white px-6 py-2 rounded-full hover:bg-primary-dull transition-all"

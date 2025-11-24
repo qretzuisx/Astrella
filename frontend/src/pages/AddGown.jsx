@@ -11,7 +11,8 @@ const AddGown = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    location: '',
+    contactNumber: '',
     eventType: '',
     fabric: '',
     price: '',
@@ -73,7 +74,7 @@ const AddGown = () => {
     setLoading(true)
 
     // Validation
-    if (!formData.name || !formData.description || !formData.fabric || !formData.price || !formData.color) {
+    if (!formData.name || !formData.location || !formData.contactNumber || !formData.fabric || !formData.price || !formData.color) {
       setError('Please fill in all required fields')
       setLoading(false)
       return
@@ -104,7 +105,8 @@ const AddGown = () => {
       formDataToSend.append('image', selectedImage)
       formDataToSend.append('gownData', JSON.stringify({
         name: formData.name,
-        description: formData.description,
+        location: formData.location,
+        contactNumber: formData.contactNumber,
         eventType: formData.eventType.toLowerCase(),
         fabric: formData.fabric,
         price: parseFloat(formData.price),
@@ -125,11 +127,12 @@ const AddGown = () => {
       const data = await response.json()
 
       if (data.success || data.sucess) {
-        setSuccess('Gown added successfully!')
+        setSuccess('Apparel added successfully!')
         // Reset form
         setFormData({
           name: '',
-          description: '',
+          location: '',
+          contactNumber: '',
           eventType: '',
           fabric: '',
           price: '',
@@ -163,8 +166,8 @@ const AddGown = () => {
         <div className='max-w-3xl mx-auto'>
           {/* Header */}
           <div className='mb-8'>
-            <h1 className='text-3xl font-bold text-gray-900 mb-2'>Add New Gown</h1>
-            <p className='text-gray-600'>Fill in the details to add a new gown to your collection.</p>
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>Add New Apparel</h1>
+            <p className='text-gray-600'>Fill in the details to add new apparel to your collection.</p>
           </div>
 
           {/* Success/Error Messages */}
@@ -186,7 +189,7 @@ const AddGown = () => {
               {/* Image Upload */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Gown Image <span className='text-red-500'>*</span>
+                  Apparel Image <span className='text-red-500'>*</span>
                 </label>
                 <div className='flex items-center gap-4'>
                   <div className='flex-1'>
@@ -209,31 +212,47 @@ const AddGown = () => {
               {/* Gown Name */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Gown Name <span className='text-red-500'>*</span>
+                  Apparel Name <span className='text-red-500'>*</span>
                 </label>
                 <input
                   type='text'
                   name='name'
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder='Enter gown name'
+                  placeholder='Enter apparel name'
                   className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   required
                 />
               </div>
 
-              {/* Description */}
+              {/* Location */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Description <span className='text-red-500'>*</span>
+                  Location <span className='text-red-500'>*</span>
                 </label>
-                <textarea
-                  name='description'
-                  value={formData.description}
+                <input
+                  type='text'
+                  name='location'
+                  value={formData.location}
                   onChange={handleInputChange}
-                  placeholder='Describe the gown...'
-                  rows={4}
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none'
+                  placeholder='Enter location (e.g., City, Street Address)'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  required
+                />
+              </div>
+
+              {/* Contact Number */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Contact Number <span className='text-red-500'>*</span>
+                </label>
+                <input
+                  type='tel'
+                  name='contactNumber'
+                  value={formData.contactNumber}
+                  onChange={handleInputChange}
+                  placeholder='Enter contact number (e.g., +63 912 345 6789)'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   required
                 />
               </div>
@@ -360,7 +379,7 @@ const AddGown = () => {
                       : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
                   }`}
                 >
-                  {loading ? 'Adding Gown...' : 'Add Gown'}
+                  {loading ? 'Adding Apparel...' : 'Add Apparel'}
                 </button>
                 <button
                   type='button'

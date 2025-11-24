@@ -126,14 +126,14 @@ const OwnerDashboard = () => {
 
           {/* Stats Cards */}
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-            {/* Total Gowns */}
+            {/* Total Apparel */}
             <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-200'>
               <div className='flex items-center justify-between mb-4'>
                 <div className='p-3 bg-primary/10 rounded-lg'>
-                  <img src={assets.gownIconColored} alt="gown" className='w-6 h-6' />
+                  <img src={assets.gownIconColored} alt="apparel" className='w-6 h-6' />
                 </div>
               </div>
-              <h3 className='text-sm text-gray-600 mb-1'>Total Gowns</h3>
+              <h3 className='text-sm text-gray-600 mb-1'>Total Apparel</h3>
               <p className='text-3xl font-bold text-gray-900'>
                 {dashboardData?.totalGowns || 0}
               </p>

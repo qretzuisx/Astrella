@@ -13,7 +13,8 @@ const GownDetails = () => {
   const currency = import.meta.env.VITE_CURRENCY || '₱'
   const [measurements, setMeasurements] = useState({
     waist: '',
-    hips: ''
+    hips: '',
+    unit: 'inches' // default unit
   })
   const [pickupTime, setPickupTime] = useState('')
   const [pickupDate, setPickupDate] = useState('')
@@ -103,6 +104,12 @@ const GownDetails = () => {
           gown: gown._id,
           pickupDate: new Date(pickupDate).toISOString(),
           returnDate: new Date(returnDate).toISOString(),
+          pickupTime: pickupTime,
+          measurements: {
+            waist: measurements.waist || null,
+            hips: measurements.hips || null,
+            unit: measurements.unit || 'inches'
+          }
         })
       })
 
@@ -168,7 +175,7 @@ const GownDetails = () => {
             onClick={() => navigate('/gowns')}
             className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
           >
-            Back to Gowns
+            Back to Apparel
           </button>
         </div>
       </div>
@@ -180,7 +187,7 @@ const GownDetails = () => {
       {/* Back Button */}
       <button onClick={()=> navigate(-1)} className='flex items-center gap-2 mb-8 text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
         <img src={assets.arrow_icon} alt="arrow" className='rotate-180 opacity-65'/>
-        <span>Back to all gowns</span>
+        <span>Back to all apparel</span>
         </button> 
 
       {/* Main Content */}
@@ -188,11 +195,11 @@ const GownDetails = () => {
         {/* Left Column - Image and Measurements */}
         <div className='w-full flex flex-col gap-8'>
           {/* Image Section */}
-          <div className='relative rounded-2xl overflow-hidden shadow-xl bg-gray-100 aspect-[4/5]'>
+          <div className='relative rounded-2xl overflow-hidden shadow-xl bg-gray-100'>
             <img 
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image} 
               alt={gown.name}
-              className='w-full h-full object-cover'
+              className='w-full h-auto max-h-[600px] object-contain'
             />
             {gown?.available && (
               <div className='absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2'>
@@ -209,7 +216,17 @@ const GownDetails = () => {
 
           {/* Size Measurement Section */}
           <div>
-            <h2 className='text-xl font-semibold text-gray-900 mb-4'>Size Measurement</h2>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold text-gray-900'>Size Measurement</h2>
+              <select
+                value={measurements.unit}
+                onChange={(e) => setMeasurements({...measurements, unit: e.target.value})}
+                className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm'
+              >
+                <option value='inches'>Inches</option>
+                <option value='cm'>Centimeters</option>
+              </select>
+            </div>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3'>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -224,7 +241,7 @@ const GownDetails = () => {
                     className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   />
                   <span className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm'>
-                    inches
+                    {measurements.unit}
                   </span>
                 </div>
               </div>
@@ -241,7 +258,7 @@ const GownDetails = () => {
                     className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   />
                   <span className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm'>
-                    inches
+                    {measurements.unit}
                   </span>
                 </div>
               </div>
@@ -250,31 +267,9 @@ const GownDetails = () => {
               Note: Measurements are preferably done in-person for the best fit.
             </p>
           </div>
-        </div>
 
-        {/* Details Section */}
-        <div className='flex flex-col'>
-          {/* Title and Owner */}
-          <div className='mb-6'>
-            <h1 className='text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
-            <p className='text-lg text-gray-600'>by {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}</p>
-          </div>
-
-          {/* Price */}
-          <div className='mb-6'>
-            <p className='text-3xl font-bold text-primary'>
-              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
-            </p>
-          </div>
-
-          {/* Description */}
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold text-gray-900 mb-3'>Description</h2>
-            <p className='text-gray-600 leading-relaxed'>{gown.description}</p>
-          </div>
-
-          {/* Gown Details Grid */}
-          <div className='mb-8'>
+          {/* Gown Details Grid - Moved here */}
+          <div>
             <h2 className='text-xl font-semibold text-gray-900 mb-4'>Gown Details</h2>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
               {/* Fabric */}
@@ -326,6 +321,34 @@ const GownDetails = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Details Section */}
+        <div className='flex flex-col'>
+          {/* Title and Owner */}
+          <div className='mb-6'>
+            <h1 className='text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
+            <p className='text-lg text-gray-600'>by {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}</p>
+          </div>
+
+          {/* Price */}
+          <div className='mb-6'>
+            <p className='text-3xl font-bold text-primary'>
+              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Location */}
+          <div className='mb-8'>
+            <h2 className='text-xl font-semibold text-gray-900 mb-3'>Location</h2>
+            <p className='text-gray-600 leading-relaxed'>{gown.location || 'Location not specified'}</p>
+          </div>
+
+          {/* Contact Number */}
+          <div className='mb-8'>
+            <h2 className='text-xl font-semibold text-gray-900 mb-3'>Contact Number</h2>
+            <p className='text-gray-600 leading-relaxed'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+          </div>
 
           {/* Category (if available) */}
           {gown.category && (
@@ -354,7 +377,7 @@ const GownDetails = () => {
           )}
 
           {/* Booking Section */}
-          <div className='mb-8 border border-gray-200 rounded-xl p-6 bg-gray-50'>
+          <div className='border border-gray-200 rounded-xl p-6 bg-gray-50'>
             <h2 className='text-xl font-semibold text-gray-900 mb-6'>Booking Details</h2>
             
             {/* Date Section */}
@@ -413,21 +436,6 @@ const GownDetails = () => {
               />
             </div>
 
-            {/* Event Section */}
-            <div className='mb-6'>
-              <div className='flex items-center gap-2 mb-4'>
-                <img src={assets.event_icon} alt="event" className='w-5 h-5' />
-                <h3 className='text-lg font-semibold text-gray-900'>Event</h3>
-              </div>
-              <input
-                type='text'
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                placeholder='Enter event name'
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
-              />
-            </div>
-
             {/* Summary */}
             {pickupDate && returnDate && (
               <div className='pt-4 border-t border-gray-300 space-y-2'>
@@ -448,7 +456,7 @@ const GownDetails = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className='mt-auto pt-6 space-y-3'>
+          <div className='mt-6 space-y-3'>
             <button 
               onClick={handleConfirmReservation}
               className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
@@ -475,11 +483,6 @@ const GownDetails = () => {
               setShowContract={setShowContract}
               onSubmit={handleContractSubmit}
             />
-            <button 
-              className='w-full py-4 rounded-lg font-semibold border-2 border-primary text-primary hover:bg-primary/5 transition-all duration-300'
-            >
-              Contact Owner
-            </button>
           </div>
         </div>
       </div>

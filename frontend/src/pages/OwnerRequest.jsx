@@ -150,7 +150,7 @@ const OwnerRequest = () => {
         <div className='mb-8 text-center'>
           <h1 className='text-4xl font-bold text-gray-900 mb-2'>Request Owner Access</h1>
           <p className='text-gray-600'>
-            Become an owner to list and manage your gowns on Astrella
+            Become an owner to list and manage your apparel on Astrella
           </p>
         </div>
 
@@ -253,7 +253,7 @@ const OwnerRequest = () => {
                   <li>Your request will be reviewed by an admin</li>
                   <li>You'll be notified once a decision is made</li>
                   <li>If approved, you'll gain access to the owner dashboard</li>
-                  <li>You can then start listing and managing your gowns</li>
+                  <li>You can then start listing and managing your apparel</li>
                 </ul>
               </div>
 

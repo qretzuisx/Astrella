@@ -4,7 +4,8 @@ const {ObjectId} = mongoose.Schema.Types
 const gownSchema = new mongoose.Schema({
     owner: {type: ObjectId, ref: 'User'},
     name: {type: String, required: true},
-    description: {type: String, required: true},
+    location: {type: String, required: true},
+    contactNumber: {type: String, required: true},
     eventType: {type: String, enum: ["wedding", "traditional", "prom", "formal", "themed"], default: "others"},
     fabric: {type: String, required: true},
     price: {type: Number, required: true},

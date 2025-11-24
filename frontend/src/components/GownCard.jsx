@@ -12,11 +12,11 @@ const GownCard = ({ gown }) => {
       transition-all duration-500 cursor-pointer flex flex-col h-full"
     >
 
-      <div className="relative h-72 sm:h-80 overflow-hidden">
+      <div className="relative overflow-hidden bg-gray-100">
         <img
           src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
           alt={gown.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-auto max-h-96 object-contain transition-transform duration-500 group-hover:scale-105"
         />
 
         {gown.available && (

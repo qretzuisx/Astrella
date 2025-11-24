@@ -96,7 +96,7 @@ const MyBookings = () => {
       {bookings.length === 0 ? (
         <div className='text-center py-16'>
           <p className='text-xl text-gray-500 mb-4'>No bookings found</p>
-          <p className='text-gray-400'>Start booking gowns to see them here!</p>
+          <p className='text-gray-400'>Start booking apparel to see them here!</p>
         </div>
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
@@ -106,11 +106,11 @@ const MyBookings = () => {
               className='bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'
             >
               {/* Gown Image */}
-              <div className='relative h-64 overflow-hidden'>
+              <div className='relative overflow-hidden bg-gray-100'>
                 <img 
-                  src={booking.gown?.image || assets.gown_image1} 
+                  src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1} 
                   alt={booking.gown?.name || 'Gown'}
-                  className='w-full h-full object-cover'
+                  className='w-full h-auto max-h-96 object-contain'
                 />
                 <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(booking.status)}`}>
                   {booking.status?.toUpperCase() || 'PENDING'}

@@ -73,7 +73,7 @@ const Gown = () => {
     return (
       <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
-          <p className='text-xl text-gray-500 mb-4'>Loading gowns...</p>
+          <p className='text-xl text-gray-500 mb-4'>Loading apparel...</p>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto'></div>
         </div>
       </div>
@@ -85,10 +85,10 @@ const Gown = () => {
       {/* Header Section */}
       <div className='text-center mb-12'>
         <h1 className='text-4xl md:text-5xl font-bold text-gray-900 mb-4'>
-          Available Gowns
+          Available Apparel
         </h1>
         <p className='text-lg text-gray-600 mb-8'>
-          Browse our selection of gowns available for your next event.
+          Browse our selection of apparel available for your next event.
         </p>
 
         {/* Search Bar */}
@@ -117,7 +117,7 @@ const Gown = () => {
         {/* Results Count */}
         {searchQuery && (
           <div className='text-gray-600 mb-8'>
-            <span className='font-medium'>{filteredGowns.length}</span> gown{filteredGowns.length !== 1 ? 's' : ''} found
+            <span className='font-medium'>{filteredGowns.length}</span> item{filteredGowns.length !== 1 ? 's' : ''} found
             {filteredGowns.length > 0 && (
               <button
                 onClick={handleClearSearch}
@@ -133,7 +133,7 @@ const Gown = () => {
       {/* Gowns Grid */}
       {filteredGowns.length === 0 ? (
         <div className='text-center py-16'>
-          <p className='text-xl text-gray-500 mb-4'>No gowns found</p>
+          <p className='text-xl text-gray-500 mb-4'>No apparel found</p>
           <p className='text-gray-400 mb-6'>Try adjusting your search</p>
           {searchQuery && (
             <button

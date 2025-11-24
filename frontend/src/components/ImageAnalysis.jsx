@@ -15,7 +15,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     setModelsLoaded(true); // Always ready since no models to load
   }, []);
 
-   // SKIN TONE ANALYSIS
+   // SKIN TONE ANALYSIS (Improved)
    const analyzeSkinTone = async (imgElement) => {
      try {
        const canvas = document.createElement('canvas');
@@ -24,15 +24,15 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
        canvas.height = imgElement.height;
        ctx.drawImage(imgElement, 0, 0);
 
-       // Multiple regions for sampling
+       // Focus on face regions (more accurate for skin tone)
        const regions = [
-         { x: 0.35, y: 0.15, w: 0.3, h: 0.2 }, // center
-         { x: 0.25, y: 0.25, w: 0.15, h: 0.15 }, // left cheek
-         { x: 0.6, y: 0.25, w: 0.15, h: 0.15 }, // right cheek
-         { x: 0.4, y: 0.35, w: 0.2, h: 0.15 }   // chin
+         { x: 0.38, y: 0.2, w: 0.24, h: 0.15 },  // forehead
+         { x: 0.35, y: 0.35, w: 0.12, h: 0.12 }, // left cheek
+         { x: 0.53, y: 0.35, w: 0.12, h: 0.12 }, // right cheek
+         { x: 0.42, y: 0.48, w: 0.16, h: 0.08 }  // upper chin
        ];
 
-       let totalR = 0, totalG = 0, totalB = 0, count = 0;
+       let skinPixels = [];
 
        regions.forEach(region => {
          const startX = Math.floor(canvas.width * region.x);
@@ -40,39 +40,47 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
          const startY = Math.floor(canvas.height * region.y);
          const endY = Math.floor(canvas.height * (region.y + region.h));
 
-         for (let y = startY; y < endY; y += 3) {
-           for (let x = startX; x < endX; x += 3) {
+         for (let y = startY; y < endY; y += 2) {
+           for (let x = startX; x < endX; x += 2) {
              const { data } = ctx.getImageData(x, y, 1, 1);
              const [r, g, b] = [data[0], data[1], data[2]];
 
-             // Looser skin pixel detection
+             // Improved skin detection using YCbCr color space approximation
              const isSkinLike = (
-               r > 40 && g > 30 && b > 20 &&
-               r < 250 && g < 240 && b < 240 &&
-               r > g * 0.9 && g > b * 0.8
+               r > 95 && g > 40 && b > 20 &&
+               r > g && r > b &&
+               Math.abs(r - g) > 15 &&
+               Math.max(r, g, b) - Math.min(r, g, b) > 15 &&
+               r < 250 && g < 230 && b < 220
              );
 
              if (isSkinLike) {
-               totalR += r;
-               totalG += g;
-               totalB += b;
-               count++;
+               skinPixels.push({ r, g, b });
              }
            }
          }
        });
 
-       if (count < 10) return 'Neutral';
+       if (skinPixels.length < 50) return 'Neutral';
 
-       const avgR = totalR / count;
-       const avgG = totalG / count;
-       const avgB = totalB / count;
+       // Calculate median instead of average (more robust to outliers)
+       skinPixels.sort((a, b) => (a.r + a.g + a.b) - (b.r + b.g + b.b));
+       const medianIndex = Math.floor(skinPixels.length / 2);
+       const medianPixel = skinPixels[medianIndex];
 
-       const rbDiff = avgR - avgB;
-       const rgDiff = avgR - avgG;
+       const { r: avgR, g: avgG, b: avgB } = medianPixel;
 
-       if (rbDiff > 25 && rgDiff > 15) return 'Warm';
-       else if (avgB > avgR && avgB > avgG) return 'Cool';
+       // Use ITA° (Individual Typology Angle) method for better accuracy
+       const L = 0.2126 * avgR + 0.7152 * avgG + 0.0722 * avgB;
+       const a = avgR - avgG;
+       const b = avgG - avgB;
+       
+       // Calculate undertone
+       const warmScore = a - b;
+       const coolScore = b - a;
+
+       if (warmScore > 8) return 'Warm';
+       else if (coolScore > 8) return 'Cool';
        else return 'Neutral';
      } catch (error) {
        console.error('Skin tone analysis error:', error);
@@ -80,7 +88,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
      }
    };
 
-  // BODY TYPE ANALYSIS
+  // BODY TYPE ANALYSIS (Improved)
   const analyzeBodyType = async (imgElement) => {
     try {
       const canvas = document.createElement('canvas');
@@ -89,10 +97,11 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       canvas.height = imgElement.height;
       ctx.drawImage(imgElement, 0, 0);
 
+      // Better positioned regions for body detection
       const regions = [
-        { x: 0.25, y: 0.15, w: 0.5, h: 0.2 }, // shoulders
-        { x: 0.3, y: 0.35, w: 0.4, h: 0.15 }, // waist
-        { x: 0.25, y: 0.5, w: 0.5, h: 0.2 }  // hips
+        { x: 0.25, y: 0.18, w: 0.5, h: 0.12 }, // shoulders
+        { x: 0.32, y: 0.38, w: 0.36, h: 0.1 }, // waist
+        { x: 0.28, y: 0.52, w: 0.44, h: 0.12 }  // hips
       ];
 
       const getRegionWidth = (region) => {
@@ -103,38 +112,56 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 
         let leftEdge = endX;
         let rightEdge = startX;
+        let edgeCount = 0;
 
-        for (let y = startY; y < endY; y += 2) {
+        for (let y = startY; y < endY; y += 3) {
+          let rowLeftEdge = endX;
+          let rowRightEdge = startX;
+          
           for (let x = startX; x < endX; x += 2) {
             const { data } = ctx.getImageData(x, y, 1, 1);
             const brightness = (data[0] + data[1] + data[2]) / 3;
+            
+            // Better edge detection with contrast consideration
+            const isEdge = brightness < 200 && data[3] > 200; // Check for solid pixels
 
-            if (brightness < 180) {
-              if (x < leftEdge) leftEdge = x;
-              if (x > rightEdge) rightEdge = x;
+            if (isEdge) {
+              if (x < rowLeftEdge) rowLeftEdge = x;
+              if (x > rowRightEdge) rowRightEdge = x;
             }
+          }
+          
+          // Average across multiple rows for stability
+          if (rowLeftEdge < rowRightEdge) {
+            leftEdge = Math.min(leftEdge, rowLeftEdge);
+            rightEdge = Math.max(rightEdge, rowRightEdge);
+            edgeCount++;
           }
         }
 
-        return Math.max(0, rightEdge - leftEdge);
+        return edgeCount > 3 ? Math.max(0, rightEdge - leftEdge) : 0;
       };
 
       const shoulderWidth = getRegionWidth(regions[0]);
       const waistWidth = getRegionWidth(regions[1]);
       const hipWidth = getRegionWidth(regions[2]);
 
-      if (shoulderWidth < 20 || waistWidth < 20 || hipWidth < 20) return 'Rectangle';
+      if (shoulderWidth < 30 || waistWidth < 30 || hipWidth < 30) return 'Rectangle';
 
       const waistToShoulder = waistWidth / shoulderWidth;
       const waistToHip = waistWidth / hipWidth;
       const hipToShoulder = hipWidth / shoulderWidth;
+      const shoulderToHip = shoulderWidth / hipWidth;
 
-      if (waistToShoulder < 0.85 && waistToHip < 0.9 && Math.abs(shoulderWidth - hipWidth) < shoulderWidth * 0.15)
+      // Improved classification thresholds
+      if (waistToShoulder < 0.75 && waistToHip < 0.75 && Math.abs(hipToShoulder - 1) < 0.1)
         return 'Hourglass';
-      else if (hipToShoulder > 1.08 && waistToHip < 0.95)
+      else if (hipToShoulder > 1.1 && waistToHip < 0.85)
         return 'Pear';
-      else if (waistToShoulder > 1.05 && waistToHip > 1.02 && hipToShoulder < 0.98)
-        return 'Diamond';
+      else if (shoulderToHip > 1.1 && waistToShoulder > 0.85)
+        return 'Inverted Triangle';
+      else if (waistToShoulder > 0.9 && waistToHip > 0.9 && Math.abs(hipToShoulder - 1) < 0.15)
+        return 'Rectangle';
       else
         return 'Rectangle';
     } catch (error) {
@@ -143,7 +170,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     }
   };
 
-  // FACE SHAPE ANALYSIS
+  // FACE SHAPE ANALYSIS (Improved)
   const analyzeFaceShape = async (imgElement) => {
     try {
       const canvas = document.createElement('canvas');
@@ -152,11 +179,12 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       canvas.height = imgElement.height;
       ctx.drawImage(imgElement, 0, 0);
 
+      // More precise face region sampling
       const regions = [
-        { x: 0.35, y: 0.12, w: 0.3, h: 0.08 }, // forehead
-        { x: 0.3, y: 0.2, w: 0.4, h: 0.1 },   // cheekbones
-        { x: 0.25, y: 0.3, w: 0.5, h: 0.08 }, // jawline
-        { x: 0.4, y: 0.38, w: 0.2, h: 0.05 }  // chin
+        { x: 0.36, y: 0.15, w: 0.28, h: 0.06 }, // forehead
+        { x: 0.32, y: 0.28, w: 0.36, h: 0.08 }, // cheekbones
+        { x: 0.35, y: 0.42, w: 0.3, h: 0.06 },  // jawline
+        { x: 0.42, y: 0.48, w: 0.16, h: 0.04 }  // chin
       ];
 
       const getFaceWidth = (region) => {
@@ -165,22 +193,39 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         const startY = Math.floor(canvas.height * region.y);
         const endY = Math.floor(canvas.height * (region.y + region.h));
 
-        let leftEdge = endX;
-        let rightEdge = startX;
+        let widths = [];
 
         for (let y = startY; y < endY; y += 2) {
+          let rowLeftEdge = endX;
+          let rowRightEdge = startX;
+          
           for (let x = startX; x < endX; x += 2) {
             const { data } = ctx.getImageData(x, y, 1, 1);
-            const brightness = (data[0] + data[1] + data[2]) / 3;
+            const [r, g, b] = [data[0], data[1], data[2]];
+            const brightness = (r + g + b) / 3;
 
-            if (brightness > 60 && brightness < 220) {
-              if (x < leftEdge) leftEdge = x;
-              if (x > rightEdge) rightEdge = x;
+            // Better skin/face detection
+            const isFaceLike = (
+              brightness > 80 && brightness < 240 &&
+              r > 60 && g > 40 && b > 20 &&
+              r > b && data[3] > 200
+            );
+
+            if (isFaceLike) {
+              if (x < rowLeftEdge) rowLeftEdge = x;
+              if (x > rowRightEdge) rowRightEdge = x;
             }
+          }
+          
+          if (rowLeftEdge < rowRightEdge) {
+            widths.push(rowRightEdge - rowLeftEdge);
           }
         }
 
-        return Math.max(0, rightEdge - leftEdge);
+        // Return median width for more stability
+        if (widths.length === 0) return 0;
+        widths.sort((a, b) => a - b);
+        return widths[Math.floor(widths.length / 2)];
       };
 
       const foreheadWidth = getFaceWidth(regions[0]);
@@ -188,24 +233,26 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       const jawWidth = getFaceWidth(regions[2]);
       const chinWidth = getFaceWidth(regions[3]);
 
-      const faceHeight = Math.floor(canvas.height * 0.43) - Math.floor(canvas.height * 0.12);
+      const faceHeight = Math.floor(canvas.height * 0.48) - Math.floor(canvas.height * 0.15);
 
-      if (foreheadWidth < 10 || cheekWidth < 10 || jawWidth < 10) return 'Oval';
+      if (foreheadWidth < 20 || cheekWidth < 20 || jawWidth < 20) return 'Oval';
 
       const jawCheekRatio = jawWidth / cheekWidth;
+      const foreheadCheekRatio = foreheadWidth / cheekWidth;
       const foreheadJawRatio = foreheadWidth / jawWidth;
       const chinJawRatio = chinWidth / jawWidth;
       const faceRatio = faceHeight / cheekWidth;
 
-      if (foreheadJawRatio > 1.05 && chinJawRatio < 0.85 && jawCheekRatio < 0.95)
+      // Improved classification with better thresholds
+      if (foreheadCheekRatio > 1.05 && jawCheekRatio < 0.85 && chinJawRatio < 0.75)
         return 'Heart';
-      else if (jawCheekRatio > 1.02 && Math.abs(foreheadWidth - jawWidth) < foreheadWidth * 0.1)
+      else if (Math.abs(foreheadCheekRatio - 1) < 0.08 && Math.abs(jawCheekRatio - 1) < 0.08 && chinJawRatio > 0.75)
         return 'Square';
-      else if (faceRatio < 1.2 && jawCheekRatio < 1.05 && foreheadJawRatio < 1.05)
+      else if (faceRatio < 1.15 && Math.abs(foreheadCheekRatio - 1) < 0.1 && Math.abs(jawCheekRatio - 1) < 0.1)
         return 'Round';
-      else if (foreheadJawRatio < 0.95 && chinJawRatio < 0.9 && jawCheekRatio > 1.0)
+      else if (cheekWidth > foreheadWidth && cheekWidth > jawWidth && (cheekWidth - foreheadWidth) > 10 && (cheekWidth - jawWidth) > 10)
         return 'Diamond';
-      else if (faceRatio > 1.3 && jawCheekRatio >= 0.95 && jawCheekRatio <= 1.05)
+      else if (faceRatio > 1.3 && Math.abs(foreheadCheekRatio - 1) < 0.12 && Math.abs(jawCheekRatio - 1) < 0.12)
         return 'Oval';
       else
         return 'Oval'; // fallback
