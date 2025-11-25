@@ -6,7 +6,7 @@ const gownSchema = new mongoose.Schema({
     name: {type: String, required: true},
     location: {type: String, required: true},
     contactNumber: {type: String, required: true},
-    eventType: {type: String, enum: ["wedding", "traditional", "prom", "formal", "themed"], default: "others"},
+    eventType: {type: [String], enum: ["wedding", "traditional", "prom", "formal", "themed"], default: []},
     fabric: {type: String, required: true},
     price: {type: Number, required: true},
     size: {type: [String], default: ["Free Size"]},

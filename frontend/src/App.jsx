@@ -13,6 +13,7 @@ import ManageBookings from './pages/ManageBookings'
 import Recommendations from './pages/Recommendations'
 import OwnerRequest from './pages/OwnerRequest'
 import AdminOwnerRequests from './pages/AdminOwnerRequests'
+import UserProfile from './pages/UserProfile'
 
 const App = () => {
   const [ShowLogin, setShowLogin] = useState(false)
@@ -28,6 +29,7 @@ const App = () => {
         <Route path='/gowns' element={<Gown/>}/>
         <Route path='/recommendations' element={<Recommendations/>}/>
         <Route path='/my-bookings' element={<MyBookings/>}/> 
+        <Route path='/profile' element={<UserProfile/>}/>
         <Route path='/request-owner' element={<OwnerRequest/>}/>
         <Route path='/owner' element={<OwnerDashboard/>}/>
         <Route path='/owner/add-gown' element={<AddGown/>}/>

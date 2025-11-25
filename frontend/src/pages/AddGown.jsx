@@ -13,7 +13,7 @@ const AddGown = () => {
     name: '',
     location: '',
     contactNumber: '',
-    eventType: '',
+    eventType: [],
     fabric: '',
     price: '',
     color: '',
@@ -49,6 +49,24 @@ const AddGown = () => {
         return {
           ...prev,
           size: [...prev.size, size]
+        }
+      }
+    })
+  }
+
+  const handleEventTypeChange = (eventType) => {
+    setFormData(prev => {
+      if (prev.eventType.includes(eventType)) {
+        // Remove if already selected
+        return {
+          ...prev,
+          eventType: prev.eventType.filter(e => e !== eventType)
+        }
+      } else {
+        // Add if not selected
+        return {
+          ...prev,
+          eventType: [...prev.eventType, eventType]
         }
       }
     })
@@ -92,6 +110,12 @@ const AddGown = () => {
       return
     }
 
+    if (formData.eventType.length === 0) {
+      setError('Please select at least one event type')
+      setLoading(false)
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -107,7 +131,7 @@ const AddGown = () => {
         name: formData.name,
         location: formData.location,
         contactNumber: formData.contactNumber,
-        eventType: formData.eventType.toLowerCase(),
+        eventType: formData.eventType.map(e => e.toLowerCase()),
         fabric: formData.fabric,
         price: parseFloat(formData.price),
         color: formData.color,
@@ -133,7 +157,7 @@ const AddGown = () => {
           name: '',
           location: '',
           contactNumber: '',
-          eventType: '',
+          eventType: [],
           fabric: '',
           price: '',
           color: '',
@@ -260,21 +284,27 @@ const AddGown = () => {
               {/* Event Type */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Event Type <span className='text-red-500'>*</span>
+                  Event Types <span className='text-red-500'>*</span>
                 </label>
-                <select
-                  name='eventType'
-                  value={formData.eventType}
-                  onChange={handleInputChange}
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
-                  required
-                >
+                <div className='flex flex-wrap gap-3'>
                   {eventTypeList.map((eventType) => (
-                    <option key={eventType} value={eventType.toLowerCase()}>
+                    <button
+                      key={eventType}
+                      type='button'
+                      onClick={() => handleEventTypeChange(eventType.toLowerCase())}
+                      className={`px-4 py-2 rounded-lg border-2 transition-all capitalize ${
+                        formData.eventType.includes(eventType.toLowerCase())
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      }`}
+                    >
                       {eventType}
-                    </option>
+                    </button>
                   ))}
-                </select>
+                </div>
+                <p className='text-sm text-gray-500 mt-2'>
+                  Selected: {formData.eventType.length > 0 ? formData.eventType.map(e => e.charAt(0).toUpperCase() + e.slice(1)).join(', ') : 'None'}
+                </p>
               </div>
 
               {/* Fabric and Color Row */}

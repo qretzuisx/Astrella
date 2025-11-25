@@ -20,6 +20,7 @@ const GownDetails = () => {
   const [pickupDate, setPickupDate] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [eventName, setEventName] = useState('')
+  const [contactNumber, setContactNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -67,6 +68,11 @@ const GownDetails = () => {
       return
     }
 
+    if (!contactNumber || contactNumber.trim() === '') {
+      setError('Please provide your contact number')
+      return
+    }
+
     // Check if user is logged in
     const token = localStorage.getItem('token')
     if (!token) {
@@ -105,6 +111,7 @@ const GownDetails = () => {
           pickupDate: new Date(pickupDate).toISOString(),
           returnDate: new Date(returnDate).toISOString(),
           pickupTime: pickupTime,
+          contactNumber: contactNumber,
           measurements: {
             waist: measurements.waist || null,
             hips: measurements.hips || null,
@@ -307,7 +314,7 @@ const GownDetails = () => {
                 </div>
               </div>
 
-              {/* Event Type */}
+              {/* Event Types */}
               <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg'>
                 <div className='bg-white p-3 rounded-lg shadow-sm'>
                   <img src={assets.event_icon} alt="event" className='w-6 h-6' />
@@ -315,7 +322,9 @@ const GownDetails = () => {
                 <div>
                   <p className='text-sm text-gray-500 mb-1'>Event Type</p>
                   <p className='text-base font-medium text-gray-900 capitalize'>
-                    {gown.eventtype || gown.eventType}
+                    {Array.isArray(gown.eventType) && gown.eventType.length > 0
+                      ? gown.eventType.join(', ')
+                      : gown.eventtype || gown.eventType || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -436,6 +445,25 @@ const GownDetails = () => {
               />
             </div>
 
+            {/* Contact Number Section */}
+            <div className='mb-6'>
+              <div className='flex items-center gap-2 mb-4'>
+                <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                </svg>
+                <h3 className='text-lg font-semibold text-gray-900'>Contact Number</h3>
+              </div>
+              <input
+                type='tel'
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                placeholder='Enter your contact number'
+                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                required
+              />
+              <p className='text-sm text-gray-500 mt-2'>Owner will use this to contact you</p>
+            </div>
+
             {/* Summary */}
             {pickupDate && returnDate && (
               <div className='pt-4 border-t border-gray-300 space-y-2'>
@@ -460,11 +488,11 @@ const GownDetails = () => {
             <button 
               onClick={handleConfirmReservation}
               className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
-                gown?.available && pickupDate && returnDate && !loading && !success
+                gown?.available && pickupDate && returnDate && contactNumber && !loading && !success
                   ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl' 
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
-              disabled={!gown?.available || !pickupDate || !returnDate || loading || success || loadingGown}
+              disabled={!gown?.available || !pickupDate || !returnDate || !contactNumber || loading || success || loadingGown}
             >
               {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Reservation' : 'Not Available'}
             </button>

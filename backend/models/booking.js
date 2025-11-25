@@ -10,6 +10,7 @@ const bookingSchema = new mongoose.Schema({
     returnDate: {type: Date, required: true},
     pickupTime: {type: String},
     price: {type: Number, required: true},
+    contactNumber: {type: String, default: ''},
     measurements: {
         waist: {type: Number},
         hips: {type: Number},

@@ -1,0 +1,871 @@
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { assets } from '../assets/assets'
+
+const UserProfile = () => {
+  const navigate = useNavigate()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [requestStatus, setRequestStatus] = useState(null)
+  const [showOwnerRequest, setShowOwnerRequest] = useState(false)
+  const [ownerMessage, setOwnerMessage] = useState('')
+  const [submittingRequest, setSubmittingRequest] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    contactNumber: '',
+  })
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+
+  // Delete account state
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+
+  const role = user ? (typeof user.role === 'object' ? user.role.name : user.role) : null
+
+  useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      navigate('/')
+      return
+    }
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      // Get user data
+      const userResponse = await fetch(`${API_URL}/user/data`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const userData = await userResponse.json()
+      
+      if (userData.success || userData.sucess) {
+        setUser(userData.user)
+        setFormData({
+          name: userData.user.name || '',
+          email: userData.user.email || '',
+          contactNumber: userData.user.contactNumber || '',
+        })
+
+        // Check owner request status for regular users
+        const userRole = typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role
+        if (userRole === 'user') {
+          const statusResponse = await fetch(`${API_URL}/user/owner-request-status`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          const statusData = await statusResponse.json()
+          
+          if (statusData.success && statusData.request) {
+            setRequestStatus(statusData.request)
+          }
+        }
+      } else {
+        navigate('/')
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      setError('Failed to load user data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      const response = await fetch(`${API_URL}/user/update-profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          contactNumber: formData.contactNumber,
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Profile updated successfully!')
+        setEditing(false)
+        await fetchUserData()
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.message || 'Failed to update profile')
+      }
+    } catch (err) {
+      console.error('Error updating profile:', err)
+      setError('An error occurred. Please try again.')
+    }
+  }
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    // Validate passwords
+    if (passwordData.newPassword.length < 8) {
+      setError('New password must be at least 8 characters long')
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      const response = await fetch(`${API_URL}/user/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Password changed successfully!')
+        setShowPasswordChange(false)
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        })
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.message || 'Failed to change password')
+      }
+    } catch (err) {
+      console.error('Error changing password:', err)
+      setError('An error occurred. Please try again.')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      setError('Please type DELETE to confirm')
+      return
+    }
+
+    setError('')
+    setSuccess('')
+
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      const response = await fetch(`${API_URL}/user/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        localStorage.removeItem('token')
+        navigate('/')
+      } else {
+        setError(data.message || 'Failed to delete account')
+      }
+    } catch (err) {
+      console.error('Error deleting account:', err)
+      setError('An error occurred. Please try again.')
+    }
+  }
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB')
+      return
+    }
+
+    setUploading(true)
+    setError('')
+
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await fetch(`${API_URL}/owner/update-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Profile picture updated successfully!')
+        // Refresh user data
+        await fetchUserData()
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.message || 'Failed to upload image')
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      setError('Failed to upload image. Please try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleOwnerRequest = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setSubmittingRequest(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      const response = await fetch(`${API_URL}/user/request-owner`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: ownerMessage })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess(data.message || 'Request submitted successfully!')
+        setOwnerMessage('')
+        setShowOwnerRequest(false)
+        
+        // Refresh request status
+        setTimeout(async () => {
+          const statusResponse = await fetch(`${API_URL}/user/owner-request-status`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          const statusData = await statusResponse.json()
+          if (statusData.success && statusData.request) {
+            setRequestStatus(statusData.request)
+          }
+        }, 1000)
+      } else {
+        setError(data.message || 'Failed to submit request')
+      }
+    } catch (err) {
+      console.error('Error submitting request:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setSubmittingRequest(false)
+    }
+  }
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+      case 'approved':
+        return 'bg-green-100 text-green-800 border-green-300'
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-300'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300'
+    }
+  }
+
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'Your request is being reviewed by admin'
+      case 'approved':
+        return 'Congratulations! Your request has been approved.'
+      case 'rejected':
+        return 'Your request has been rejected. You can submit a new request.'
+      default:
+        return ''
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-light'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-gray-600'>Loading profile...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
+
+  return (
+    <div className='min-h-screen bg-light py-12 px-4 md:px-8 lg:px-16'>
+      <div className='max-w-4xl mx-auto'>
+        {/* Header */}
+        <div className='mb-8'>
+          <button
+            onClick={() => navigate('/')}
+            className='text-primary hover:text-primary-dull mb-4 flex items-center gap-2'
+          >
+            <span>←</span> Back to Home
+          </button>
+          <h1 className='text-4xl font-bold text-gray-900 mb-2'>My Profile</h1>
+          <p className='text-gray-600'>Manage your account information and settings</p>
+        </div>
+
+        {/* Success/Error Messages */}
+        {success && (
+          <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
+            <p className='text-green-800'>{success}</p>
+          </div>
+        )}
+
+        {error && (
+          <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
+            <p className='text-red-800'>{error}</p>
+          </div>
+        )}
+
+        {/* Profile Card */}
+        <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6'>
+          {/* Profile Header */}
+          <div className='bg-gradient-to-r from-primary to-primary-dull h-32'></div>
+          
+          <div className='px-8 pb-8'>
+            {/* Profile Picture */}
+            <div className='flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 mb-6'>
+              <div className='relative'>
+                {user.image ? (
+                  <img 
+                    src={user.image} 
+                    alt={user.name}
+                    className='w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg'
+                  />
+                ) : (
+                  <div className='w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-4xl font-bold border-4 border-white shadow-lg'>
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                
+                {/* Upload Button */}
+                <label className='absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-all border-2 border-gray-200'>
+                  <input
+                    type='file'
+                    accept='image/*'
+                    onChange={handleImageUpload}
+                    className='hidden'
+                    disabled={uploading}
+                  />
+                  {uploading ? (
+                    <div className='w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin'></div>
+                  ) : (
+                    <img src={assets.camera_icon} alt='upload' className='w-5 h-5' />
+                  )}
+                </label>
+              </div>
+
+              <div className='flex-1 text-center sm:text-left'>
+                <p className='text-gray-600'>{user.email}</p>
+                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold capitalize ${
+                  role === 'admin' ? 'bg-red-100 text-red-800' :
+                  role === 'owner' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {role}
+                </span>
+              </div>
+
+              {(role === 'owner' || role === 'admin') && (
+                <button
+                  onClick={() => navigate('/owner')}
+                  className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold shadow-md'
+                >
+                  Go to Dashboard
+                </button>
+              )}
+            </div>
+
+            {/* Profile Information */}
+            <div className='space-y-6'>
+              {!editing ? (
+                // View Mode
+                <>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Full Name
+                      </label>
+                      <input
+                        type='text'
+                        value={formData.name}
+                        disabled
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
+                      />
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Email Address
+                      </label>
+                      <input
+                        type='email'
+                        value={formData.email}
+                        disabled
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
+                      />
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Contact Number
+                      </label>
+                      <input
+                        type='text'
+                        value={formData.contactNumber || 'Not provided'}
+                        disabled
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
+                      />
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Account Type
+                      </label>
+                      <input
+                        type='text'
+                        value={role || 'User'}
+                        disabled
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 capitalize'
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className='flex flex-wrap gap-3 pt-4 border-t border-gray-200'>
+                    <button
+                      onClick={() => setEditing(true)}
+                      className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
+                    >
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => setShowPasswordChange(!showPasswordChange)}
+                      className='px-6 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-all font-semibold'
+                    >
+                      Change Password
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteAccount(!showDeleteAccount)}
+                      className='px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all font-semibold'
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </>
+              ) : (
+                // Edit Mode
+                <form onSubmit={handleUpdateProfile}>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Full Name *
+                      </label>
+                      <input
+                        type='text'
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                      />
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Email Address
+                      </label>
+                      <input
+                        type='email'
+                        value={formData.email}
+                        disabled
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
+                      />
+                      <p className='text-xs text-gray-500 mt-1'>Email cannot be changed</p>
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Contact Number
+                      </label>
+                      <input
+                        type='text'
+                        value={formData.contactNumber}
+                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                        placeholder='Enter your contact number'
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                      />
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Account Type
+                      </label>
+                      <input
+                        type='text'
+                        value={role || 'User'}
+                        disabled
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 capitalize'
+                      />
+                    </div>
+                  </div>
+
+                  <div className='flex gap-4 pt-6 border-t border-gray-200 mt-6'>
+                    <button
+                      type='submit'
+                      className='flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setEditing(false)
+                        setFormData({
+                          name: user.name || '',
+                          email: user.email || '',
+                          contactNumber: user.contactNumber || '',
+                        })
+                      }}
+                      className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Password Change Section */}
+        {showPasswordChange && (
+          <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6'>
+            <h2 className='text-2xl font-bold text-gray-900 mb-4'>Change Password</h2>
+            <form onSubmit={handlePasswordChange} className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Current Password *
+                </label>
+                <input
+                  type='password'
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  required
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                />
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  New Password * (min. 8 characters)
+                </label>
+                <input
+                  type='password'
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  required
+                  minLength={8}
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                />
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Confirm New Password *
+                </label>
+                <input
+                  type='password'
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  required
+                  minLength={8}
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                />
+              </div>
+
+              <div className='flex gap-4 pt-4'>
+                <button
+                  type='submit'
+                  className='flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
+                >
+                  Update Password
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setShowPasswordChange(false)
+                    setPasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: '',
+                    })
+                  }}
+                  className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Delete Account Section */}
+        {showDeleteAccount && (
+          <div className='bg-red-50 rounded-xl shadow-sm border-2 border-red-200 p-8 mb-6'>
+            <h2 className='text-2xl font-bold text-red-900 mb-4'>Delete Account</h2>
+            <div className='bg-white p-6 rounded-lg mb-4'>
+              <p className='text-gray-800 mb-4'>
+                <strong>Warning:</strong> This action is permanent and cannot be undone. All your data including:
+              </p>
+              <ul className='list-disc list-inside text-gray-700 space-y-1 mb-4'>
+                <li>Profile information</li>
+                <li>Booking history</li>
+                <li>Account preferences</li>
+              </ul>
+              <p className='text-gray-800'>will be permanently deleted.</p>
+            </div>
+
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-red-900 mb-2'>
+                  Type <strong>DELETE</strong> to confirm
+                </label>
+                <input
+                  type='text'
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder='Type DELETE'
+                  className='w-full px-4 py-3 border-2 border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none'
+                />
+              </div>
+
+              <div className='flex gap-4'>
+                <button
+                  type='button'
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmation !== 'DELETE'}
+                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all ${
+                    deleteConfirmation === 'DELETE'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Delete My Account
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setShowDeleteAccount(false)
+                    setDeleteConfirmation('')
+                  }}
+                  className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Become Owner Section - Only for regular users */}
+        {role === 'user' && (
+          <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
+            <h2 className='text-2xl font-bold text-gray-900 mb-4'>Become an Owner</h2>
+            <p className='text-gray-600 mb-6'>
+              Want to list and manage your own apparel? Request owner access to unlock additional features.
+            </p>
+
+            {/* Existing Request Status */}
+            {requestStatus && (
+              <div className={`mb-6 p-6 rounded-lg border-2 ${getStatusBadge(requestStatus.status)}`}>
+                <div className='flex items-center justify-between mb-2'>
+                  <h3 className='text-lg font-semibold'>Request Status</h3>
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusBadge(requestStatus.status)}`}>
+                    {requestStatus.status}
+                  </span>
+                </div>
+                <p className='text-sm mb-2'>{getStatusMessage(requestStatus.status)}</p>
+                
+                {requestStatus.message && (
+                  <div className='mt-3 pt-3 border-t border-current border-opacity-20'>
+                    <p className='text-sm font-medium mb-1'>Your Message:</p>
+                    <p className='text-sm'>{requestStatus.message}</p>
+                  </div>
+                )}
+                
+                {requestStatus.adminNote && (
+                  <div className='mt-3 pt-3 border-t border-current border-opacity-20'>
+                    <p className='text-sm font-medium mb-1'>Admin Note:</p>
+                    <p className='text-sm'>{requestStatus.adminNote}</p>
+                  </div>
+                )}
+                
+                <p className='text-xs mt-3 opacity-75'>
+                  Submitted: {new Date(requestStatus.createdAt).toLocaleDateString()}
+                </p>
+
+                {requestStatus.status === 'approved' && (
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('token')
+                      window.location.href = '/'
+                    }}
+                    className='mt-4 px-6 py-2 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors font-semibold'
+                  >
+                    Refresh Page to Access Dashboard
+                  </button>
+                )}
+
+                {requestStatus.status === 'rejected' && (
+                  <button
+                    onClick={() => {
+                      setRequestStatus(null)
+                      setShowOwnerRequest(true)
+                    }}
+                    className='mt-4 px-6 py-2 bg-white text-red-800 rounded-lg hover:bg-red-50 transition-colors font-semibold'
+                  >
+                    Submit New Request
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Request Form */}
+            {(!requestStatus || requestStatus.status !== 'pending') && !showOwnerRequest && (
+              <button
+                onClick={() => setShowOwnerRequest(true)}
+                className='w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold shadow-md'
+              >
+                Request Owner Access
+              </button>
+            )}
+
+            {showOwnerRequest && (!requestStatus || requestStatus.status !== 'pending') && (
+              <form onSubmit={handleOwnerRequest} className='space-y-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Tell us why you want to become an owner
+                  </label>
+                  <textarea
+                    value={ownerMessage}
+                    onChange={(e) => setOwnerMessage(e.target.value)}
+                    placeholder='Tell us about your business, experience, or why you want to become an owner...'
+                    rows={5}
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none'
+                  />
+                  <p className='text-xs text-gray-500 mt-1'>
+                    This message will be sent to admin for review
+                  </p>
+                </div>
+
+                <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                  <h3 className='font-semibold text-blue-900 mb-2'>What happens next?</h3>
+                  <ul className='text-sm text-blue-800 space-y-1 list-disc list-inside'>
+                    <li>Your request will be reviewed by an admin</li>
+                    <li>You'll see the status update on this page</li>
+                    <li>If approved, you'll gain access to the owner dashboard</li>
+                    <li>You can then start listing and managing your apparel</li>
+                  </ul>
+                </div>
+
+                <div className='flex gap-4'>
+                  <button
+                    type='submit'
+                    disabled={submittingRequest}
+                    className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all ${
+                      submittingRequest
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-primary hover:bg-primary-dull shadow-md'
+                    }`}
+                  >
+                    {submittingRequest ? 'Submitting...' : 'Submit Request'}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setShowOwnerRequest(false)
+                      setOwnerMessage('')
+                    }}
+                    className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default UserProfile

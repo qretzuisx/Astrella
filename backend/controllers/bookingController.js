@@ -17,7 +17,7 @@ export const checkAvailability = async (gown, pickupDate, returnDate) => {
 export const createBooking = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { gown, pickupDate, returnDate, pickupTime, measurements } = req.body;
+    const { gown, pickupDate, returnDate, pickupTime, measurements, contactNumber } = req.body;
 
     // basic validation
     if (!gown || !pickupDate || !returnDate) {
@@ -45,6 +45,7 @@ export const createBooking = async (req, res) => {
       returnDate: new Date(returnDate),
       pickupTime: pickupTime || null,
       price,
+      contactNumber: contactNumber || '',
       measurements: measurements || {}
     });
 

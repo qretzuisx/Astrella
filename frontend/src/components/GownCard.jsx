@@ -49,7 +49,11 @@ const GownCard = ({ gown }) => {
           </div>
           <div className="flex items-center text-sm">
             <img src={assets.event_icon} alt="" className="h-4 mr-2" />
-            <span className="capitalize">{gown.eventtype || gown.eventType || 'N/A'}</span>
+            <span className="capitalize">
+              {Array.isArray(gown.eventType) && gown.eventType.length > 0
+                ? gown.eventType.join(', ')
+                : gown.eventtype || gown.eventType || 'N/A'}
+            </span>
           </div>
         </div>
       </div>

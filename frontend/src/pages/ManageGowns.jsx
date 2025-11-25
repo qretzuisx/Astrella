@@ -232,7 +232,11 @@ const ManageGowns = () => {
                       </div>
                       <div className='flex items-center gap-2 text-gray-600'>
                         <img src={assets.event_icon} alt="event" className='w-4 h-4' />
-                        <span className='capitalize truncate'>{gown.eventType || 'N/A'}</span>
+                        <span className='capitalize truncate'>
+                          {Array.isArray(gown.eventType) && gown.eventType.length > 0
+                            ? gown.eventType.join(', ')
+                            : gown.eventType || 'N/A'}
+                        </span>
                       </div>
                       <div className='flex items-center gap-2 text-gray-600'>
                         <img src={assets.size_icon} alt="size" className='w-4 h-4' />

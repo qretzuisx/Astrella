@@ -129,12 +129,24 @@ const calculateRecommendationScore = (gown, preferences) => {
 
     // Event Type Match (30 points)
     if (preferences.eventType) {
-        const gownEventType = gown.eventType?.toLowerCase();
         const userEventType = preferences.eventType.toLowerCase();
-        if (gownEventType === userEventType) {
-            score += 30;
-        } else if (gownEventType?.includes(userEventType) || userEventType.includes(gownEventType)) {
-            score += 20;
+        
+        // Handle both array and string eventType
+        if (Array.isArray(gown.eventType)) {
+            const gownEventTypes = gown.eventType.map(e => e.toLowerCase());
+            if (gownEventTypes.includes(userEventType)) {
+                score += 30; // Perfect match
+            } else if (gownEventTypes.some(e => e.includes(userEventType) || userEventType.includes(e))) {
+                score += 20; // Partial match
+            }
+        } else {
+            // Backward compatibility for old string format
+            const gownEventType = gown.eventType?.toLowerCase();
+            if (gownEventType === userEventType) {
+                score += 30;
+            } else if (gownEventType?.includes(userEventType) || userEventType.includes(gownEventType)) {
+                score += 20;
+            }
         }
     }
 
@@ -233,6 +245,159 @@ const calculateRecommendationScore = (gown, preferences) => {
 
     return Math.min(score, maxScore);
 };
+
+// Update user profile
+export const updateProfile = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { name, contactNumber, address, bio } = req.body;
+
+        // Validate required fields
+        if (!name || name.trim().length === 0) {
+            return res.json({ success: false, message: 'Name is required' });
+        }
+
+        // Update user
+        const updatedUser = await User.findByIdAndUpdate(
+            _id,
+            {
+                name: name.trim(),
+                contactNumber: contactNumber || '',
+                address: address || '',
+                bio: bio || ''
+            },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        res.json({ 
+            success: true, 
+            message: 'Profile updated successfully',
+            user: updatedUser 
+        });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Change password
+export const changePassword = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { currentPassword, newPassword } = req.body;
+
+        // Validate inputs
+        if (!currentPassword || !newPassword) {
+            return res.json({ success: false, message: 'All fields are required' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.json({ success: false, message: 'New password must be at least 8 characters long' });
+        }
+
+        // Get user with password
+        const user = await User.findById(_id);
+        if (!user) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.json({ success: false, message: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        user.password = hashedPassword;
+        await user.save();
+
+        res.json({ success: true, message: 'Password changed successfully' });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Get user statistics
+export const getUserStatistics = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const Booking = (await import("../models/booking.js")).default;
+
+        // Get all user bookings
+        const allBookings = await Booking.find({ user: _id });
+        const completedBookings = allBookings.filter(b => b.status === 'confirmed');
+        const pendingBookings = allBookings.filter(b => b.status === 'pending');
+
+        // Get user join date
+        const user = await User.findById(_id);
+
+        const statistics = {
+            totalBookings: allBookings.length,
+            completedBookings: completedBookings.length,
+            pendingBookings: pendingBookings.length,
+            memberSince: user.createdAt
+        };
+
+        res.json({ success: true, statistics });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Delete user account
+export const deleteAccount = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const user = await User.findById(_id);
+
+        if (!user) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+
+        // Prevent admin from deleting their account through this route
+        if (user.role === 'admin') {
+            return res.json({ success: false, message: 'Admin accounts cannot be deleted through this method' });
+        }
+
+        // Check if user has any pending bookings
+        const Booking = (await import("../models/booking.js")).default;
+        const pendingBookings = await Booking.find({ 
+            user: _id, 
+            status: { $in: ['pending', 'confirmed'] }
+        });
+
+        if (pendingBookings.length > 0) {
+            return res.json({ 
+                success: false, 
+                message: 'Please cancel or complete all active bookings before deleting your account' 
+            });
+        }
+
+        // Delete user's owner requests if any
+        const OwnerRequest = (await import("../models/OwnerRequest.js")).default;
+        await OwnerRequest.deleteMany({ user: _id });
+
+        // Delete user's bookings history
+        await Booking.deleteMany({ user: _id });
+
+        // Delete user
+        await User.findByIdAndDelete(_id);
+
+        res.json({ success: true, message: 'Account deleted successfully' });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
 
 // Get AI Recommendations
 export const getRecommendations = async (req, res) => {
