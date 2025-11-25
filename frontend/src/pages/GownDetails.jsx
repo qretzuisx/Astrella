@@ -1,8 +1,54 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import PaymentModal from '../components/PaymentModal'
 import ContractModal from '../components/ContractModal'
+
+const BUSINESS_OPEN_MINUTES = 9 * 60 // 09:00 AM
+const BUSINESS_CLOSE_MINUTES = 19 * 60 // 07:00 PM
+const INTERVAL_MINUTES = 15
+
+const minutesToTimeString = (totalMinutes) => {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
+
+const normalizeTimeInput = (rawValue) => {
+  if (!rawValue) {
+    return { valid: false, message: 'Time is required.' }
+  }
+
+  const sanitized = rawValue.replace(/[^\d:]/g, '')
+  if (!/^\d{1,2}:\d{2}$/.test(sanitized)) {
+    return { valid: false, message: 'Please use the HH:MM format.' }
+  }
+
+  let [hours, minutes] = sanitized.split(':').map(Number)
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return { valid: false, message: 'Invalid time provided.' }
+  }
+
+  let totalMinutes = hours * 60 + minutes
+
+  if (totalMinutes < BUSINESS_OPEN_MINUTES) {
+    return { valid: true, time: minutesToTimeString(BUSINESS_OPEN_MINUTES), autoAdjusted: true }
+  }
+
+  if (totalMinutes > BUSINESS_CLOSE_MINUTES) {
+    return { valid: true, time: minutesToTimeString(BUSINESS_CLOSE_MINUTES), autoAdjusted: true }
+  }
+
+  const remainder = totalMinutes % INTERVAL_MINUTES
+  if (remainder !== 0) {
+    const roundedUp = totalMinutes + (INTERVAL_MINUTES - remainder)
+    const roundedDown = totalMinutes - remainder
+    totalMinutes = roundedUp <= BUSINESS_CLOSE_MINUTES ? roundedUp : roundedDown
+    return { valid: true, time: minutesToTimeString(totalMinutes), autoAdjusted: true }
+  }
+
+  return { valid: true, time: minutesToTimeString(totalMinutes), autoAdjusted: false }
+}
 
 const GownDetails = () => {
 
@@ -11,12 +57,14 @@ const GownDetails = () => {
   const [gown, setGown] = useState(null)
   const [loadingGown, setLoadingGown] = useState(true)
   const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
   const [measurements, setMeasurements] = useState({
     waist: '',
     hips: '',
     unit: 'inches' // default unit
   })
   const [pickupTime, setPickupTime] = useState('')
+  const [returnTime, setReturnTime] = useState('')
   const [pickupDate, setPickupDate] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [eventName, setEventName] = useState('')
@@ -26,12 +74,15 @@ const GownDetails = () => {
   const [success, setSuccess] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [showContract, setShowContract] = useState(false)
+  const [formErrors, setFormErrors] = useState({})
+  const [scheduleStatus, setScheduleStatus] = useState({ loading: false, message: '', valid: false })
+  const [durationDays, setDurationDays] = useState(0)
+  const [totalAmount, setTotalAmount] = useState(0)
 
   useEffect(() => {
     const fetchGown = async () => {
       try {
         setLoadingGown(true)
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
         const response = await fetch(`${API_URL}/owner/all-gowns`)
         const data = await response.json()
         
@@ -61,10 +112,100 @@ const GownDetails = () => {
     }
   }, [id, navigate])
 
+  const allowedTimes = useMemo(() => {
+    const times = []
+    for (let minutes = BUSINESS_OPEN_MINUTES; minutes <= BUSINESS_CLOSE_MINUTES; minutes += INTERVAL_MINUTES) {
+      times.push(minutesToTimeString(minutes))
+    }
+    return times
+  }, [])
+
+  const formatTimeLabel = (timeValue) => {
+    if (!timeValue) return ''
+    const [hourString, minuteString] = timeValue.split(':')
+    let hour = parseInt(hourString, 10)
+    const minutes = parseInt(minuteString, 10)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    hour = hour % 12 || 12
+    return `${hour.toString().padStart(2, '0')}:${minuteString} ${period}`
+  }
+
+  const combineDateAndTime = (dateValue, timeValue) => {
+    if (!dateValue || !timeValue) return null
+    return new Date(`${dateValue}T${timeValue}`)
+  }
+
+  const setFieldError = (field, message) => {
+    setFormErrors(prev => ({ ...prev, [field]: message }))
+  }
+
+  const handlePickupDateChange = (value) => {
+    setPickupDate(value)
+    if (!value) {
+      setFieldError('pickupDate', 'Pick-up date is required.')
+      return
+    }
+    setFieldError('pickupDate', '')
+    setError('')
+    if (returnDate && new Date(`${returnDate}T00:00:00`) < new Date(`${value}T00:00:00`)) {
+      setFieldError('returnDate', 'Return date cannot be earlier than pickup date.')
+    } else {
+      setFieldError('returnDate', '')
+    }
+  }
+
+  const handleReturnDateChange = (value) => {
+    setReturnDate(value)
+    if (!value) {
+      setFieldError('returnDate', 'Return date is required.')
+      return
+    }
+    if (pickupDate && new Date(`${value}T00:00:00`) < new Date(`${pickupDate}T00:00:00`)) {
+      setFieldError('returnDate', 'Return date cannot be earlier than pickup date.')
+    } else {
+      setFieldError('returnDate', '')
+      setError('')
+    }
+  }
+
+  const handleTimeChange = (value, fieldSetter, fieldName) => {
+    const result = normalizeTimeInput(value)
+    if (!result.valid) {
+      fieldSetter('')
+      setFieldError(fieldName, result.message)
+      return
+    }
+
+    fieldSetter(result.time)
+    setFieldError(fieldName, '')
+    setError('')
+  }
+
+  const handleContactChange = (value) => {
+    const digitsOnly = value.replace(/\D/g, '')
+    setContactNumber(digitsOnly)
+    if (!digitsOnly || digitsOnly.length < 10 || digitsOnly.length > 13) {
+      setFieldError('contactNumber', 'Contact number must be 10-13 digits.')
+    } else {
+      setFieldError('contactNumber', '')
+      setError('')
+    }
+  }
+
   // Handle confirm reservation button click - show payment modal
   const handleConfirmReservation = () => {
-    if (!pickupDate || !returnDate) {
-      setError('Please select both pickup and return dates')
+    if (!pickupDate || !returnDate || !pickupTime || !returnTime) {
+      setError('Please complete pickup and return dates and times')
+      return
+    }
+
+    if (formErrors.pickupDate || formErrors.returnDate || formErrors.pickupTime || formErrors.returnTime || formErrors.contactNumber) {
+      setError('Please resolve the highlighted errors before continuing')
+      return
+    }
+
+    if (!scheduleStatus.valid) {
+      setError(scheduleStatus.message || 'Schedule conflicts with another reservation')
       return
     }
 
@@ -97,9 +238,9 @@ const GownDetails = () => {
     setError('')
 
     try {
+      const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
+      const returnDateTime = combineDateAndTime(returnDate, returnTime)
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const response = await fetch(`${API_URL}/bookings/create`, {
         method: 'POST',
         headers: {
@@ -108,9 +249,10 @@ const GownDetails = () => {
         },
         body: JSON.stringify({
           gown: gown._id,
-          pickupDate: new Date(pickupDate).toISOString(),
-          returnDate: new Date(returnDate).toISOString(),
+          pickupDate: pickupDateTime?.toISOString(),
+          returnDate: returnDateTime?.toISOString(),
           pickupTime: pickupTime,
+          returnTime: returnTime,
           contactNumber: contactNumber,
           measurements: {
             waist: measurements.waist || null,
@@ -137,17 +279,112 @@ const GownDetails = () => {
     }
   }
 
-  // Calculate duration in days
-  const calculateDuration = () => {
-    if (pickupDate && returnDate) {
-      const start = new Date(pickupDate)
-      const end = new Date(returnDate)
-      const diffTime = Math.abs(end - start)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      return diffDays > 0 ? diffDays : 0
+  useEffect(() => {
+    if (!pickupDate || !returnDate || !pickupTime || !returnTime) {
+      setDurationDays(0)
+      setTotalAmount(0)
+      return
     }
-    return 0
-  }
+
+    const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
+    const returnDateTime = combineDateAndTime(returnDate, returnTime)
+
+    if (!pickupDateTime || !returnDateTime) {
+      setDurationDays(0)
+      setTotalAmount(0)
+      return
+    }
+
+    if (returnDateTime <= pickupDateTime) {
+      setDurationDays(0)
+      setTotalAmount(0)
+      setFieldError('returnDate', 'Return time cannot be earlier than pickup time.')
+      setFieldError('returnTime', 'Return time must be later than pickup time.')
+      return
+    }
+
+    setFieldError('returnDate', '')
+    setFieldError('returnTime', '')
+    const diffMs = returnDateTime - pickupDateTime
+    const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+    setDurationDays(diffDays)
+    const basePrice = gown?.price || gown?.pricePerDay || 0
+    setTotalAmount(basePrice)
+  }, [pickupDate, returnDate, pickupTime, returnTime, gown])
+
+  useEffect(() => {
+    if (!gown?._id || !pickupDate || !returnDate || !pickupTime || !returnTime) {
+      setScheduleStatus({ loading: false, message: 'Select pickup and return date & time to check availability.', valid: false })
+      return
+    }
+
+    if (formErrors.pickupDate || formErrors.returnDate || formErrors.pickupTime || formErrors.returnTime) {
+      setScheduleStatus({ loading: false, message: 'Resolve date and time errors to check availability.', valid: false })
+      return
+    }
+
+    let ignore = false
+    const validateSchedule = async () => {
+      setScheduleStatus({ loading: true, message: 'Checking availability…', valid: false })
+      try {
+        const response = await fetch(`${API_URL}/bookings/check-availability`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gownId: gown._id,
+            pickupDate,
+            returnDate,
+            pickupTime,
+            returnTime
+          })
+        })
+        const data = await response.json()
+        if (!ignore) {
+          if (response.ok && data.success) {
+            setScheduleStatus({ loading: false, message: 'Schedule is available.', valid: true })
+          } else {
+            setScheduleStatus({
+              loading: false,
+              message: data.message || 'Schedule conflict found.',
+              valid: false
+            })
+          }
+        }
+      } catch (err) {
+        if (!ignore) {
+          setScheduleStatus({ loading: false, message: 'Unable to verify schedule. Please try again.', valid: false })
+        }
+      }
+    }
+
+    validateSchedule()
+
+    return () => {
+      ignore = true
+    }
+  }, [
+    API_URL,
+    gown,
+    pickupDate,
+    returnDate,
+    pickupTime,
+    returnTime,
+    formErrors.pickupDate,
+    formErrors.returnDate,
+    formErrors.pickupTime,
+    formErrors.returnTime
+  ])
+
+  const hasFieldErrors = Object.values(formErrors).some(Boolean)
+  const isFormComplete = Boolean(pickupDate && returnDate && pickupTime && returnTime && contactNumber)
+  const confirmDisabled = !gown?.available
+    || !isFormComplete
+    || hasFieldErrors
+    || !scheduleStatus.valid
+    || scheduleStatus.loading
+    || loading
+    || success
+    || loadingGown
 
   // Format date with day name (MM-DD-YYYY, dayname format)
   const formatDateWithDay = (dateString) => {
@@ -403,12 +640,15 @@ const GownDetails = () => {
                   <input
                     type='date'
                     value={pickupDate}
-                    onChange={(e) => setPickupDate(e.target.value)}
+                    onChange={(e) => handlePickupDateChange(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupDate ? 'border-red-400' : 'border-gray-300'}`}
                   />
                   {pickupDate && (
                     <p className='text-sm text-gray-600 mt-1'>{formatDateWithDay(pickupDate)}</p>
+                  )}
+                  {formErrors.pickupDate && (
+                    <p className='text-sm text-red-600 mt-1'>{formErrors.pickupDate}</p>
                   )}
                 </div>
                 <div>
@@ -418,12 +658,15 @@ const GownDetails = () => {
                   <input
                     type='date'
                     value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
+                    onChange={(e) => handleReturnDateChange(e.target.value)}
                     min={pickupDate || new Date().toISOString().split('T')[0]}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnDate ? 'border-red-400' : 'border-gray-300'}`}
                   />
                   {returnDate && (
                     <p className='text-sm text-gray-600 mt-1'>{formatDateWithDay(returnDate)}</p>
+                  )}
+                  {formErrors.returnDate && (
+                    <p className='text-sm text-red-600 mt-1'>{formErrors.returnDate}</p>
                   )}
                 </div>
               </div>
@@ -437,12 +680,52 @@ const GownDetails = () => {
                 </svg>
                 <h3 className='text-lg font-semibold text-gray-900'>Time</h3>
               </div>
-              <input
-                type='time'
-                value={pickupTime}
-                onChange={(e) => setPickupTime(e.target.value)}
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
-              />
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Pick-up Time</label>
+                  <input
+                    type='time'
+                    min='09:00'
+                    max='19:00'
+                    step='900'
+                    list='allowed-times'
+                    value={pickupTime}
+                    onChange={(e) => handleTimeChange(e.target.value, setPickupTime, 'pickupTime')}
+                    onBlur={(e) => handleTimeChange(e.target.value, setPickupTime, 'pickupTime')}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupTime ? 'border-red-400' : 'border-gray-300'}`}
+                  />
+                  {formErrors.pickupTime && (
+                    <p className='text-sm text-red-600 mt-1'>{formErrors.pickupTime}</p>
+                  )}
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Return Time</label>
+                  <input
+                    type='time'
+                    min='09:00'
+                    max='19:00'
+                    step='900'
+                    list='allowed-times'
+                    value={returnTime}
+                    onChange={(e) => handleTimeChange(e.target.value, setReturnTime, 'returnTime')}
+                    onBlur={(e) => handleTimeChange(e.target.value, setReturnTime, 'returnTime')}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnTime ? 'border-red-400' : 'border-gray-300'}`}
+                  />
+                  {formErrors.returnTime && (
+                    <p className='text-sm text-red-600 mt-1'>{formErrors.returnTime}</p>
+                  )}
+                </div>
+              </div>
+              <datalist id='allowed-times'>
+                {allowedTimes.map(time => (
+                  <option key={time} value={time}>{formatTimeLabel(time)}</option>
+                ))}
+              </datalist>
+              {(scheduleStatus.loading || scheduleStatus.message) && (
+                <p className={`text-sm mt-2 ${scheduleStatus.loading ? 'text-blue-600' : scheduleStatus.valid ? 'text-green-600' : 'text-red-600'}`}>
+                  {scheduleStatus.loading ? 'Checking availability…' : scheduleStatus.message}
+                </p>
+              )}
             </div>
 
             {/* Contact Number Section */}
@@ -455,28 +738,34 @@ const GownDetails = () => {
               </div>
               <input
                 type='tel'
+                inputMode='numeric'
+                pattern='[0-9]*'
+                maxLength={13}
                 value={contactNumber}
-                onChange={(e) => setContactNumber(e.target.value)}
+                onChange={(e) => handleContactChange(e.target.value)}
                 placeholder='Enter your contact number'
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.contactNumber ? 'border-red-400' : 'border-gray-300'}`}
                 required
               />
               <p className='text-sm text-gray-500 mt-2'>Owner will use this to contact you</p>
+              {formErrors.contactNumber && (
+                <p className='text-sm text-red-600 mt-1'>{formErrors.contactNumber}</p>
+              )}
             </div>
 
             {/* Summary */}
-            {pickupDate && returnDate && (
+            {durationDays > 0 && (
               <div className='pt-4 border-t border-gray-300 space-y-2'>
                 <div className='flex justify-between items-center'>
                   <span className='text-gray-600'>Duration:</span>
                   <span className='font-semibold text-gray-900'>
-                    {calculateDuration()} {calculateDuration() === 1 ? 'day' : 'days'}
+                    {durationDays} {durationDays === 1 ? 'day' : 'days'}
                   </span>
                 </div>
                 <div className='flex justify-between items-center'>
                   <span className='text-gray-600'>Total:</span>
                   <span className='text-xl font-bold text-primary'>
-                    {currency}{(gown.pricePerDay || gown.price || 0).toLocaleString()}
+                    {currency}{(totalAmount || 0).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -488,11 +777,11 @@ const GownDetails = () => {
             <button 
               onClick={handleConfirmReservation}
               className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
-                gown?.available && pickupDate && returnDate && contactNumber && !loading && !success
-                  ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl' 
+                !confirmDisabled
+                  ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
-              disabled={!gown?.available || !pickupDate || !returnDate || !contactNumber || loading || success || loadingGown}
+              disabled={confirmDisabled}
             >
               {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Reservation' : 'Not Available'}
             </button>
@@ -501,7 +790,7 @@ const GownDetails = () => {
             <PaymentModal
               showPayment={showPayment}
               setShowPayment={setShowPayment}
-              total={gown.pricePerDay || gown.price || 0}
+              total={totalAmount || gown.pricePerDay || gown.price || 0}
               onContinue={handlePaymentContinue}
             />
 

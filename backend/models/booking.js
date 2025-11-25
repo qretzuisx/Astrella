@@ -9,6 +9,7 @@ const bookingSchema = new mongoose.Schema({
     pickupDate: {type: Date, required: true},
     returnDate: {type: Date, required: true},
     pickupTime: {type: String},
+    returnTime: {type: String},
     price: {type: Number, required: true},
     contactNumber: {type: String, default: ''},
     measurements: {

@@ -8,6 +8,27 @@ const OwnerDashboard = () => {
   const [error, setError] = useState('')
   const [userRole, setUserRole] = useState(null)
   const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const timeFormatOptions = { hour: '2-digit', minute: '2-digit' }
+
+  const formatBookingDate = (value) => {
+    if (!value) return '--'
+    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  const formatBookingTime = (timeValue, fallbackDate) => {
+    if (timeValue) {
+      const [hours, minutes] = timeValue.split(':').map(Number)
+      if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+        const date = fallbackDate ? new Date(fallbackDate) : new Date()
+        date.setHours(hours, minutes, 0, 0)
+        return date.toLocaleTimeString(undefined, timeFormatOptions)
+      }
+    }
+    if (fallbackDate) {
+      return new Date(fallbackDate).toLocaleTimeString(undefined, timeFormatOptions)
+    }
+    return '--:--'
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -202,7 +223,7 @@ const OwnerDashboard = () => {
                         <div>
                           <h3 className='font-semibold text-gray-900'>{booking.gown?.name || 'Gown'}</h3>
                           <p className='text-sm text-gray-600'>
-                            {booking.user?.name || 'Customer'} • {new Date(booking.pickupDate).toLocaleDateString()} - {new Date(booking.returnDate).toLocaleDateString()}
+                            {booking.user?.name || 'Customer'} • {formatBookingDate(booking.pickupDate)} {formatBookingTime(booking.pickupTime, booking.pickupDate)} - {formatBookingDate(booking.returnDate)} {formatBookingTime(booking.returnTime, booking.returnDate)}
                           </p>
                         </div>
                       </div>
