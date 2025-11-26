@@ -149,7 +149,7 @@ const Recommendations = () => {
               onClick={() => navigate('/')}
               className="mt-4 text-primary hover:text-primary-dull text-sm font-medium"
             >
-              Change Preferences →
+              Change Preferences
             </button>
           </div>
         )}

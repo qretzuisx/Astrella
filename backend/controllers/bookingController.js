@@ -1,5 +1,6 @@
 import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
+import imageKit from "../configs/imagekit.js";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -45,10 +46,38 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
 export const createBooking = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { gown, pickupDate, returnDate, pickupTime, returnTime, measurements, contactNumber } = req.body;
+    const { gown, pickupDate, returnDate, pickupTime, returnTime, contactNumber } = req.body;
+
+    // Parse measurements and payment from JSON strings
+    let measurements = {};
+    let paymentInfo = {};
+    
+    try {
+      if (req.body.measurements) {
+        measurements = typeof req.body.measurements === 'string' 
+          ? JSON.parse(req.body.measurements) 
+          : req.body.measurements;
+      }
+      if (req.body.payment) {
+        paymentInfo = typeof req.body.payment === 'string' 
+          ? JSON.parse(req.body.payment) 
+          : req.body.payment;
+      }
+    } catch (parseError) {
+      return res.status(400).json({ success: false, message: "Invalid JSON format for measurements or payment" });
+    }
 
     if (!gown || !pickupDate || !returnDate || !pickupTime || !returnTime) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    // Validate payment information
+    if (!paymentInfo.transactionRef || paymentInfo.transactionRef.length < 10) {
+      return res.status(400).json({ success: false, message: "Valid GCash reference number is required" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Payment screenshot is required" });
     }
 
     if (!isWithinBusinessHours(pickupTime) || !isWithinBusinessHours(returnTime)) {
@@ -93,6 +122,50 @@ export const createBooking = async (req, res) => {
     const pricePerDay = gownData.pricePerDay || gownData.price || 0;
     const price = rentalDays * pricePerDay;
 
+    // Upload payment screenshot to ImageKit
+    let screenshotUrl = '';
+    try {
+      // Read file from disk (multer diskStorage)
+      const fs = await import('fs');
+      let fileBuffer;
+      
+      if (req.file.buffer) {
+        // Memory storage
+        fileBuffer = req.file.buffer;
+      } else if (req.file.path) {
+        // Disk storage
+        fileBuffer = fs.readFileSync(req.file.path);
+      } else {
+        throw new Error('No file buffer or path available');
+      }
+      
+      const uploadResponse = await imageKit.upload({
+        file: fileBuffer.toString('base64'),
+        fileName: `payment_${_id}_${Date.now()}.${req.file.mimetype.split('/')[1]}`,
+        folder: '/payment_screenshots'
+      });
+      screenshotUrl = uploadResponse.url;
+      
+      // Clean up temporary file if using disk storage
+      if (req.file.path) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (uploadError) {
+      console.error('ImageKit upload error:', uploadError);
+      return res.status(500).json({ success: false, message: "Failed to upload payment screenshot" });
+    }
+
+    // Check for duplicate reference numbers
+    const existingPayment = await Booking.findOne({ 
+      'payment.transactionRef': paymentInfo.transactionRef 
+    });
+    if (existingPayment) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "This reference number has already been used. Please check your transaction." 
+      });
+    }
+
     const newBooking = await Booking.create({
       gown,
       owner: gownData.owner,
@@ -103,7 +176,16 @@ export const createBooking = async (req, res) => {
       returnTime,
       price,
       contactNumber: cleanContactNumber,
-      measurements: measurements || {}
+      measurements: measurements || {},
+      payment: {
+        method: 'gcash',
+        depositAmount: paymentInfo.depositAmount || Math.round(price * 0.5),
+        totalAmount: paymentInfo.totalAmount || price,
+        remainingBalance: paymentInfo.remainingBalance || (price - Math.round(price * 0.5)),
+        transactionRef: paymentInfo.transactionRef,
+        screenshot: screenshotUrl,
+        status: 'pending'
+      }
     });
 
     // Do NOT toggle gown.available here; availability is per-date.
@@ -115,7 +197,7 @@ export const createBooking = async (req, res) => {
       .populate('owner', 'name')
       .populate('user', 'name email')
 
-    res.json({ success: true, message: "Booking Created", booking: populatedBooking });
+    res.json({ success: true, message: "Booking Created - Payment pending verification", booking: populatedBooking });
 
   } catch (error) {
     console.log(error.message);
@@ -346,6 +428,60 @@ export const getGownCalendar = async (req, res) => {
         laundryHoldDates: Array.from(laundryHoldDates).sort(),
       },
     });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// API to verify payment (approve or reject)
+export const verifyPayment = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { bookingId, action, rejectionReason } = req.body;
+
+    if (!bookingId || !action) {
+      return res.status(400).json({ success: false, message: "Missing bookingId or action" });
+    }
+
+    if (action !== 'approve' && action !== 'reject') {
+      return res.status(400).json({ success: false, message: "Action must be 'approve' or 'reject'" });
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    // Verify owner authorization
+    if (booking.owner.toString() !== _id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Check if payment exists
+    if (!booking.payment) {
+      return res.status(400).json({ success: false, message: "No payment information found" });
+    }
+
+    // Update payment status
+    if (action === 'approve') {
+      booking.payment.status = 'verified';
+      booking.payment.verifiedAt = new Date();
+      booking.payment.verifiedBy = _id;
+      // Keep status as 'pending' - owner still needs to confirm pickup separately
+    } else {
+      booking.payment.status = 'rejected';
+      booking.payment.rejectionReason = rejectionReason || 'Payment verification failed';
+      booking.status = 'canceled'; // Cancel booking if payment rejected
+    }
+
+    await booking.save();
+
+    res.json({ 
+      success: true, 
+      message: `Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully` 
+    });
+
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, message: error.message });

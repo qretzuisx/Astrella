@@ -13,6 +13,8 @@ import ManageBookings from './pages/ManageBookings'
 import Recommendations from './pages/Recommendations'
 import OwnerRequest from './pages/OwnerRequest'
 import UserProfile from './pages/UserProfile'
+import ShopProfile from './pages/ShopProfile'
+import OwnerProfile from './pages/OwnerProfile'
 
 const App = () => {
   const [ShowLogin, setShowLogin] = useState(false)
@@ -25,12 +27,14 @@ const App = () => {
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/gown-details/:id' element={<GownDetails/>}/> 
+        <Route path='/owner-profile/:ownerId' element={<OwnerProfile/>}/>
         <Route path='/gowns' element={<Gown/>}/>
         <Route path='/recommendations' element={<Recommendations/>}/>
         <Route path='/my-bookings' element={<MyBookings/>}/> 
         <Route path='/profile' element={<UserProfile/>}/>
         <Route path='/request-owner' element={<OwnerRequest/>}/>
         <Route path='/owner' element={<OwnerDashboard/>}/>
+        <Route path='/owner/shop-profile' element={<ShopProfile/>}/>
         <Route path='/owner/add-gown' element={<AddGown/>}/>
         <Route path='/owner/manage-gown' element={<ManageGowns/>}/>
         <Route path='/owner/manage-bookings' element={<ManageBookings/>}/>

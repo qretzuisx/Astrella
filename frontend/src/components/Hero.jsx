@@ -67,120 +67,133 @@ const Hero = () => {
 
   return (
     <div 
-      className='min-h-screen flex flex-col items-center justify-center gap-14 text-center py-8'
-      style={{
-        backgroundImage: `url(${assets.home_bg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      className='min-h-screen flex flex-col items-center pt-32 gap-14 text-center py-8 relative'
     >
-      <h1 className='text-4xl md:text-5xl font-semibold'>Astrella, your guide to becoming a Cinderella</h1>
+      {/* Background Image with Darker Overlay */}
+      <div 
+        className='absolute inset-0 -z-10'
+        style={{
+          backgroundImage: `url(${assets.home_bg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      />
+      {/* Darker overlay for better content visibility */}
+      <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-black/35 to-black/45 backdrop-blur-[0.5px] -z-10' />
+      
+      {/* Clean, Simple Heading */}
+      <h1 className='text-4xl md:text-6xl font-bold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)] px-4 leading-tight'>
+        Astrella, your guide to becoming a Cinderella
+      </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
-        <div className="flex flex-wrap md:flex-row items-start md:items-center justify-center gap-3 bg-white p-4 md:rounded-full rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.1)] w-full md:w-[90%] lg:w-[80%] xl:w-[70%] max-w-[850px]">
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6">
+        {/* Glassmorphism Selection Fields in Single Line */}
+        <div className="flex flex-wrap items-center justify-center gap-3 bg-white/40 backdrop-blur-md p-4 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/50 w-full max-w-[1000px]">
           
-          <div className="flex flex-col items-start gap-2">
-            <select value={bodyType} onChange={(e) => setBodyType(e.target.value)} className="p-2 border rounded">
-              <option value="">Body Type</option>{bodyTypeList.map((body) => (
-                <option key={body} value={body}>{body}
-                </option>))}
-            </select>
-            <p className='px-1 text-sm text-gray-500'>
-              {bodyType ? bodyType : '(Select Body Type)'}</p>
+          <select 
+            value={bodyType} 
+            onChange={(e) => setBodyType(e.target.value)} 
+            className="px-4 py-2 border-2 border-white/60 rounded-full text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
+          >
+            <option value="">Body Type</option>
+            {bodyTypeList.map((body) => (
+              <option key={body} value={body}>{body}</option>
+            ))}
+          </select>
+
+          <select 
+            value={skinTone} 
+            onChange={(e) => setSkinTone(e.target.value)} 
+            className="px-4 py-2 border-2 border-white/60 rounded-full text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
+          >
+            <option value="">Skin Tone</option>
+            {skinToneList.map((skin) => (
+              <option key={skin} value={skin}>{skin}</option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-1 px-4 py-2 border-2 border-white/60 rounded-full hover:border-primary focus-within:border-primary transition-all bg-white/60 backdrop-blur-sm shadow-md">
+            <input
+              type="number"
+              value={heightFeet}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 8)) {
+                  setHeightFeet(val);
+                }
+              }}
+              placeholder="5"
+              min="0"
+              max="8"
+              step="1"
+              className="w-10 text-center font-semibold text-gray-800 focus:outline-none bg-transparent"
+            />
+            <span className="text-gray-700 font-semibold text-sm">ft</span>
+            <input
+              type="number"
+              value={heightInches}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 11)) {
+                  setHeightInches(val);
+                }
+              }}
+              placeholder="6"
+              min="0"
+              max="11"
+              step="1"
+              className="w-10 text-center font-semibold text-gray-800 focus:outline-none bg-transparent"
+            />
+            <span className="text-gray-700 font-semibold text-sm">in</span>
           </div>
-          <div className="flex flex-col items-start gap-2">
-             <select value={skinTone} onChange={(e) => setSkinTone(e.target.value)} className="p-2 border rounded">
-              <option value="">Skin tone</option>{skinToneList.map((skin) => (
-                <option key={skin} value={skin}>{skin}
-                </option>))}
-            </select>
-            <p className='px-1 text-sm text-gray-500'>
-  {skinTone ? skinTone : '(Select Skin tone)'}</p>
-          </div>
-          <div className="flex flex-col items-start gap-2">
-            <div className="flex items-center gap-1">
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={heightFeet}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 8)) {
-                      setHeightFeet(val);
-                    }
-                  }}
-                  placeholder="5"
-                  min="0"
-                  max="8"
-                  step="1"
-                  className="p-2 border rounded w-14 text-center"
-                />
-                <span className="text-gray-500 text-sm">ft</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={heightInches}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 11)) {
-                      setHeightInches(val);
-                    }
-                  }}
-                  placeholder="6"
-                  min="0"
-                  max="11"
-                  step="1"
-                  className="p-2 border rounded w-14 text-center"
-                />
-                <span className="text-gray-500 text-sm">in</span>
-              </div>
-            </div>
-            <p className='px-1 text-sm text-gray-500'>
-              {heightFeet || heightInches 
-                ? `${heightFeet || 0}'${heightInches || 0}"` 
-                : '(Enter height)'}</p>
-          </div>
-          <div className="flex flex-col items-start gap-2">
-             <select value={eventType} onChange={(e) => seteventType(e.target.value)} className="p-2 border rounded">
-              <option value="">Event Type</option>{eventTypeList.map((event) => (
-                <option key={event} value={event}>{event}
-                </option>))}
-            </select>
-            <p className='px-1 text-sm text-gray-500'>
-              {eventType ? eventType: '(Select Event Type)'}</p>
-          </div>
-          <div className="flex flex-col items-start gap-2">
-             <select value={faceShape} onChange={(e) => setfaceShape(e.target.value)} className="p-2 border rounded">
-              <option value="">Face Shape</option>{faceShapeList.map((face) => (
-                <option key={face} value={face}>{face}
-                </option>))}
-            </select>
-            <p className='px-1 text-sm text-gray-500'>
-              {faceShape ? faceShape : '(Select Face shape)'}</p>
-          </div>
+
+          <select 
+            value={eventType} 
+            onChange={(e) => seteventType(e.target.value)} 
+            className="px-4 py-2 border-2 border-white/60 rounded-full text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
+          >
+            <option value="">Event Type</option>
+            {eventTypeList.map((event) => (
+              <option key={event} value={event}>{event}</option>
+            ))}
+          </select>
+
+          <select 
+            value={faceShape} 
+            onChange={(e) => setfaceShape(e.target.value)} 
+            className="px-4 py-2 border-2 border-white/60 rounded-full text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
+          >
+            <option value="">Face Shape</option>
+            {faceShapeList.map((face) => (
+              <option key={face} value={face}>{face}</option>
+            ))}
+          </select>
         </div>
 
-        <div className="flex flex-col items-center gap-3">
+        {/* Glassmorphism Buttons */}
+        <div className="flex flex-col items-center gap-4">
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => setShowImageAnalysis(true)}
-              className="text-primary hover:text-primary-dull text-sm font-medium underline"
+              className="bg-white/70 backdrop-blur-md text-primary border-2 border-white/80 px-8 py-3 rounded-full font-bold hover:bg-primary hover:text-white hover:border-primary transition-all shadow-xl flex items-center gap-2"
             >
-            Upload Photo to Auto-Detect
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Upload & Analyze Photo
             </button>
-            <span className="text-gray-400">or</span>
+            <span className="text-white font-bold text-lg drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">or</span>
             <button
               type="submit"
-              className="bg-primary text-white px-6 py-3 rounded-full font-medium hover:bg-primary-dull transition-all"
+              className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-dull transition-all shadow-2xl border-2 border-primary hover:scale-105"
             >
-              Get Style Recommendations &gt;&gt;
+              Get Recommendations
             </button>
           </div>
-          <p className="text-xs text-gray-500">
-            Upload a photo to automatically detect your body type, skin tone, and face shape.
+          <p className="text-sm text-gray-800 font-semibold bg-white/60 backdrop-blur-md px-6 py-2 rounded-full border border-white/70 shadow-lg">
+            Upload a photo to auto-detect your features or fill in manually
           </p>
         </div>
       </form>

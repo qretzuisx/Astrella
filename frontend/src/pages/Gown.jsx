@@ -196,7 +196,7 @@ const Gown = () => {
         </p>
 
         {/* Search Bar with Filter Button */}
-        <div className='sticky top-20 z-10 bg-white/95 backdrop-blur-sm py-4 -mx-6 px-6 md:-mx-16 md:px-16 lg:-mx-24 lg:px-24 xl:-mx-32 xl:px-32 mb-8'>
+        <div className='sticky top-20 z-10 py-4 mb-8'>
           <div className='max-w-2xl mx-auto'>
             <div className='relative flex items-center gap-3'>
             {/* Search Input */}

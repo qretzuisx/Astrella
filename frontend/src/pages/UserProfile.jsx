@@ -31,7 +31,7 @@ const UserProfile = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const role = user ? (typeof user.role === 'object' ? user.role.name : user.role) : null
-  const roleLabel = role === 'admin' ? 'owner' : role
+  const roleLabel = role // Display actual role
 
   useEffect(() => {
     fetchUserData()

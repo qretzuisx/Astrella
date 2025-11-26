@@ -108,10 +108,7 @@ export const getOwnerRequestStatus = async (req, res) => {
             .sort({ createdAt: -1 });
 
         if (request) {
-            const safeRequest = request.toObject()
-            safeRequest.systemNote = safeRequest.systemNote || safeRequest.adminNote || ''
-            delete safeRequest.adminNote
-            return res.json({ success: true, request: safeRequest });
+            return res.json({ success: true, request });
         }
 
         const user = await User.findById(_id);
@@ -447,10 +444,6 @@ export const deleteAccount = async (req, res) => {
             return res.json({ success: false, message: 'User not found' });
         }
 
-        // Prevent admin from deleting their account through this route
-        if (user.role === 'admin') {
-            return res.json({ success: false, message: 'Admin accounts cannot be deleted through this method' });
-        }
 
         // Check if user has any pending bookings
         const Booking = (await import("../models/booking.js")).default;
@@ -542,6 +535,147 @@ export const getRecommendations = async (req, res) => {
             preferences,
             totalMatches: recommendations.length
         });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
+// API to update shop profile (for owners)
+export const updateShopProfile = async (req, res) => {
+    try {
+        const { _id } = req.user
+        const { shopName, description, address, city, operatingHours, facebook, instagram } = req.body
+
+        console.log('Shop profile update request:', { shopName, address, city })
+        console.log('Files received:', req.files ? Object.keys(req.files) : 'none')
+
+        const user = await User.findById(_id)
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" })
+        }
+
+        if (user.role !== 'owner') {
+            return res.status(403).json({ success: false, message: "Only owners can update shop profile" })
+        }
+
+        // Handle file uploads
+        let businessPermitUrl = user.shopProfile?.businessPermit || ''
+        let dtiRegistrationUrl = user.shopProfile?.dtiRegistration || ''
+
+        // Upload business permit if provided
+        if (req.files && req.files.businessPermit) {
+            const imageKit = (await import('../configs/imagekit.js')).default
+            const fs = await import('fs')
+            const file = req.files.businessPermit[0]
+            
+            // Read file from disk
+            let fileBuffer
+            if (file.buffer) {
+                fileBuffer = file.buffer
+            } else if (file.path) {
+                fileBuffer = fs.readFileSync(file.path)
+            }
+            
+            const uploadResponse = await imageKit.upload({
+                file: fileBuffer.toString('base64'),
+                fileName: `business_permit_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
+                folder: '/business_documents'
+            })
+            businessPermitUrl = uploadResponse.url
+            
+            // Clean up temp file
+            if (file.path) {
+                fs.unlinkSync(file.path)
+            }
+        }
+
+        // Upload DTI registration if provided
+        if (req.files && req.files.dtiRegistration) {
+            const imageKit = (await import('../configs/imagekit.js')).default
+            const fs = await import('fs')
+            const file = req.files.dtiRegistration[0]
+            
+            // Read file from disk
+            let fileBuffer
+            if (file.buffer) {
+                fileBuffer = file.buffer
+            } else if (file.path) {
+                fileBuffer = fs.readFileSync(file.path)
+            }
+            
+            const uploadResponse = await imageKit.upload({
+                file: fileBuffer.toString('base64'),
+                fileName: `dti_registration_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
+                folder: '/business_documents'
+            })
+            dtiRegistrationUrl = uploadResponse.url
+            
+            // Clean up temp file
+            if (file.path) {
+                fs.unlinkSync(file.path)
+            }
+        }
+
+        // Update shop profile
+        user.shopProfile = {
+            ...user.shopProfile,
+            shopName: shopName || user.shopProfile?.shopName || '',
+            description: description || user.shopProfile?.description || '',
+            address: address || user.shopProfile?.address || '',
+            city: city || user.shopProfile?.city || '',
+            operatingHours: operatingHours || user.shopProfile?.operatingHours || '',
+            socialMedia: {
+                facebook: facebook || user.shopProfile?.socialMedia?.facebook || '',
+                instagram: instagram || user.shopProfile?.socialMedia?.instagram || ''
+            },
+            verified: user.shopProfile?.verified || false,
+            verifiedAt: user.shopProfile?.verifiedAt,
+            businessPermit: businessPermitUrl,
+            dtiRegistration: dtiRegistrationUrl
+        }
+
+        await user.save()
+
+        res.json({ 
+            success: true, 
+            message: "Shop profile updated successfully",
+            shopProfile: user.shopProfile
+        })
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// API to get shop profile by owner ID
+export const getShopProfile = async (req, res) => {
+    try {
+        const { ownerId } = req.params
+        
+        const owner = await User.findById(ownerId).select('name email contactNumber shopProfile createdAt role')
+        
+        if (!owner) {
+            return res.status(404).json({ success: false, message: "Owner not found" })
+        }
+
+        if (owner.role !== 'owner') {
+            return res.status(404).json({ success: false, message: "User is not an owner" })
+        }
+
+        res.json({ 
+            success: true, 
+            owner: {
+                _id: owner._id,
+                name: owner.name,
+                email: owner.email,
+                contactNumber: owner.contactNumber,
+                shopProfile: owner.shopProfile,
+                joinedDate: owner.createdAt
+            }
+        })
 
     } catch (error) {
         console.log(error.message);

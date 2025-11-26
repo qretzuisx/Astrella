@@ -5,6 +5,7 @@ import connectDb from "./configs/db.js";
 import userRouter from "./routes/userRoutes.js";
 import ownerRouter from "./routes/ownerRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import mlRouter from "./routes/mlRoutes.js";
 
 const app = express()
 
@@ -21,6 +22,7 @@ app.get('/', (req, res) => res.send("Server is running"))
 app.use('/api/user', userRouter)
 app.use('/api/owner', ownerRouter)
 app.use('/api/bookings', bookingRouter)
+app.use('/api/ml', mlRouter) // ML-powered recommendations
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));

@@ -3,48 +3,82 @@ import { assets } from '../assets/assets'
 
 const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
   const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    cardName: '',
-    paymentMethod: 'card' // card or google
+    referenceNumber: '',
+    screenshot: null,
+    screenshotPreview: null
   })
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
+
+  // Calculate deposit (50% of total)
+  const depositAmount = Math.round(total * 0.5)
+  const remainingBalance = total - depositAmount
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    // Format card number with spaces
-    if (name === 'cardNumber') {
-      const formatted = value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim()
-      setPaymentData({ ...paymentData, [name]: formatted })
-    } else {
-      setPaymentData({ ...paymentData, [name]: value })
-    }
+    setPaymentData({ ...paymentData, [name]: value })
     setError('')
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg']
+    if (!validTypes.includes(file.type)) {
+      setError('Please upload a PNG or JPG image')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB')
+      return
+    }
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPaymentData({
+        ...paymentData,
+        screenshot: file,
+        screenshotPreview: reader.result
+      })
+      setError('')
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleContinue = () => {
     // Validation
-    if (paymentData.paymentMethod === 'card') {
-      const cardNumber = paymentData.cardNumber.replace(/\s/g, '')
-      if (!paymentData.cardNumber || cardNumber.length < 16) {
-        setError('Please enter a valid card number')
-        return
-      }
-      if (!paymentData.cardName) {
-        setError('Please enter the name on card')
-        return
-      }
+    if (!paymentData.referenceNumber || paymentData.referenceNumber.trim() === '') {
+      setError('Please enter the GCash reference number')
+      return
     }
 
-    // Continue to contract agreement
-    onContinue()
+    if (!paymentData.screenshot) {
+      setError('Please upload a screenshot of your transaction')
+      return
+    }
+
+    // Reference number should be at least 10 characters
+    if (paymentData.referenceNumber.length < 10) {
+      setError('Please enter a valid reference number (at least 10 characters)')
+      return
+    }
+
+    // Continue to contract agreement with payment data
+    onContinue(paymentData)
   }
 
   const handleClose = () => {
     setShowPayment(false)
     setPaymentData({
-      cardNumber: '',
-      cardName: '',
-      paymentMethod: 'card'
+      referenceNumber: '',
+      screenshot: null,
+      screenshotPreview: null
     })
     setError('')
   }
@@ -53,11 +87,11 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
 
   return (
     <div 
-      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto'
       onClick={handleClose}
     >
       <div 
-        className='bg-white rounded-2xl shadow-xl max-w-md w-full p-8 relative'
+        className='bg-white rounded-2xl shadow-xl max-w-2xl w-full p-8 relative my-8'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -70,8 +104,23 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
 
         {/* Header */}
         <div className='text-center mb-6'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-2'>Payment</h2>
-          <p className='text-gray-600'>Total: ₱{total?.toLocaleString() || '0'}</p>
+          <h2 className='text-3xl font-bold text-gray-900 mb-2'>GCash Payment</h2>
+          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4'>
+            <div className='space-y-2'>
+              <div className='flex justify-between items-center'>
+                <span className='text-gray-600 font-medium'>Total Amount:</span>
+                <span className='text-2xl font-bold text-gray-900'>₱{total?.toLocaleString() || '0'}</span>
+              </div>
+              <div className='flex justify-between items-center text-green-700'>
+                <span className='font-medium'>Deposit Required (50%):</span>
+                <span className='text-xl font-bold'>₱{depositAmount?.toLocaleString() || '0'}</span>
+              </div>
+              <div className='flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-blue-200'>
+                <span>Balance (pay on pickup):</span>
+                <span className='font-semibold'>₱{remainingBalance?.toLocaleString() || '0'}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Error Message */}
@@ -81,87 +130,108 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
           </div>
         )}
 
-        {/* Payment Method Selection */}
-        <div className='mb-6'>
-          <div className='flex gap-4'>
-            <button
-              onClick={() => setPaymentData({ ...paymentData, paymentMethod: 'google' })}
-              className={`flex-1 p-4 border-2 rounded-lg transition-all ${
-                paymentData.paymentMethod === 'google'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              <div className='text-center'>
-                <div className='text-2xl mb-2'>G</div>
-                <p className='text-sm font-medium'>Google Pay</p>
-              </div>
-            </button>
-            <button
-              onClick={() => setPaymentData({ ...paymentData, paymentMethod: 'card' })}
-              className={`flex-1 p-4 border-2 rounded-lg transition-all ${
-                paymentData.paymentMethod === 'card'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              <div className='text-center'>
-                <div className='text-2xl mb-2'>💳</div>
-                <p className='text-sm font-medium'>Card</p>
-              </div>
-            </button>
+        {/* Payment Instructions */}
+        <div className='mb-6 bg-gray-50 rounded-lg p-4'>
+          <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
+            <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>1</span>
+            Scan QR Code with GCash
+          </h3>
+          
+          {/* QR Code Display */}
+          <div className='flex justify-center my-6'>
+            <div className='bg-white p-4 rounded-xl shadow-md border-2 border-primary'>
+              <img 
+                src={assets.gcash_qr} 
+                alt="GCash QR Code" 
+                className='w-48 h-48 object-contain'
+              />
+              <p className='text-center text-sm text-gray-600 mt-2 font-medium'>
+                Pay ₱{depositAmount?.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Card Payment Form */}
-        {paymentData.paymentMethod === 'card' && (
-          <div className='space-y-4'>
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Number
-              </label>
-              <input
-                type='text'
-                name='cardNumber'
-                value={paymentData.cardNumber}
-                onChange={handleInputChange}
-                placeholder='1234 5678 9101 1121'
-                maxLength={19}
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-              />
-            </div>
+        {/* Reference Number Input */}
+        <div className='mb-6'>
+          <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
+            <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>2</span>
+            Enter Reference Number
+          </h3>
+          <label className='block text-sm font-medium text-gray-700 mb-2'>
+            GCash Reference Number *
+          </label>
+          <input
+            type='text'
+            name='referenceNumber'
+            value={paymentData.referenceNumber}
+            onChange={handleInputChange}
+            placeholder='e.g., 1234567890123'
+            className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+          />
+          <p className='text-xs text-gray-500 mt-1'>
+            Found in your GCash transaction receipt
+          </p>
+        </div>
 
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Name
-              </label>
+        {/* Screenshot Upload */}
+        <div className='mb-6'>
+          <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
+            <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>3</span>
+            Upload Transaction Screenshot
+          </h3>
+          
+          {!paymentData.screenshotPreview ? (
+            <label className='block'>
+              <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all'>
+                <img src={assets.upload_icon} alt="upload" className='w-12 h-12 mx-auto mb-3 opacity-50' />
+                <p className='text-gray-600 font-medium mb-1'>Click to upload screenshot</p>
+                <p className='text-sm text-gray-500'>PNG or JPG (max 5MB)</p>
+              </div>
               <input
-                type='text'
-                name='cardName'
-                value={paymentData.cardName}
-                onChange={handleInputChange}
-                placeholder='Enter your name on card'
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                type='file'
+                accept='image/png,image/jpeg,image/jpg'
+                onChange={handleFileChange}
+                className='hidden'
               />
+            </label>
+          ) : (
+            <div className='relative'>
+              <img 
+                src={paymentData.screenshotPreview} 
+                alt="Transaction screenshot preview" 
+                className='w-full max-h-64 object-contain border border-gray-300 rounded-lg'
+              />
+              <button
+                onClick={() => setPaymentData({ ...paymentData, screenshot: null, screenshotPreview: null })}
+                className='absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors'
+              >
+                ×
+              </button>
+              <div className='mt-2 flex items-center gap-2 text-green-600'>
+                <img src={assets.check_icon} alt="check" className='w-5 h-5' />
+                <p className='text-sm font-medium'>Screenshot uploaded successfully</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Google Pay Info */}
-        {paymentData.paymentMethod === 'google' && (
-          <div className='p-4 bg-gray-50 rounded-lg'>
-            <p className='text-sm text-gray-600 text-center'>
-              You will be redirected to Google Pay to complete the payment.
-            </p>
-          </div>
-        )}
+        {/* Important Note */}
+        <div className='mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+          <p className='text-sm text-yellow-800'>
+            <strong>Note:</strong> Your booking will be pending until the owner verifies your payment. 
+            You'll receive a confirmation once verified. The remaining balance of ₱{remainingBalance?.toLocaleString()} 
+            will be paid during pickup.
+          </p>
+        </div>
 
         {/* Continue Button */}
         <button
           onClick={handleContinue}
-          className='w-full mt-6 py-3 bg-gray-400 text-white rounded-lg font-semibold hover:bg-gray-500 transition-colors'
+          disabled={uploading}
+          className='w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed'
         >
-          Continue
+          {uploading ? 'Processing...' : 'Continue to Contract Agreement'}
         </button>
       </div>
     </div>

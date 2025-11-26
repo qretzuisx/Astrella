@@ -11,9 +11,12 @@ import {
     getUserStatistics,
     deleteAccount,
     requestPasswordReset,
-    resetPassword
+    resetPassword,
+    updateShopProfile,
+    getShopProfile
 } from "../controllers/userController.js";
 import { protect} from "../middleware/auth.js"
+import upload from "../middleware/multer.js"
 
 const userRouter = express.Router();
 
@@ -29,5 +32,10 @@ userRouter.delete('/delete-account', protect, deleteAccount)
 userRouter.post('/request-owner', protect, requestOwnerRole)
 userRouter.get('/owner-request-status', protect, getOwnerRequestStatus)
 userRouter.get('/recommendations', getRecommendations)
+userRouter.put('/shop-profile', protect, upload.fields([
+    { name: 'businessPermit', maxCount: 1 },
+    { name: 'dtiRegistration', maxCount: 1 }
+]), updateShopProfile)
+userRouter.get('/shop-profile/:ownerId', getShopProfile)
 
 export default userRouter

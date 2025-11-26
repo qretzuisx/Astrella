@@ -192,7 +192,7 @@ const OwnerRequest = () => {
                 onClick={() => navigate('/owner')}
                 className='mt-4 px-6 py-2 bg-white text-green-800 rounded-lg hover:bg-green-50 transition-colors font-semibold'
               >
-                Go to Owner Dashboard →
+                Go to Owner Dashboard
               </button>
             )}
 

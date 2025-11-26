@@ -9,6 +9,8 @@ const ManageBookings = () => {
   const [success, setSuccess] = useState('')
   const [filterStatus, setFilterStatus] = useState('all') 
   const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const [selectedPayment, setSelectedPayment] = useState(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   useEffect(() => {
     fetchBookings()
@@ -103,6 +105,48 @@ const ManageBookings = () => {
     }
   }
 
+  const handleVerifyPayment = async (bookingId, action) => {
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      
+      const response = await fetch(`${API_URL}/bookings/verify-payment`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          bookingId, 
+          action, // 'approve' or 'reject'
+          rejectionReason: action === 'reject' ? 'Payment verification failed' : undefined
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setSuccess(`Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
+        setShowPaymentModal(false)
+        setSelectedPayment(null)
+        fetchBookings()
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.message || `Failed to ${action} payment`)
+        setTimeout(() => setError(''), 3000)
+      }
+    } catch (error) {
+      console.error('Error verifying payment:', error)
+      setError('An error occurred. Please try again.')
+      setTimeout(() => setError(''), 3000)
+    }
+  }
+
+  const openPaymentModal = (booking) => {
+    setSelectedPayment(booking)
+    setShowPaymentModal(true)
+  }
+
   // Filter bookings by status
   const filteredBookings = filterStatus === 'all' 
     ? bookings 
@@ -148,12 +192,12 @@ const ManageBookings = () => {
           )}
 
           {/* Filter Tabs */}
-          <div className='mb-6 flex gap-2 border-b border-gray-200'>
+          <div className='mb-6 flex gap-2 border-b border-gray-200 overflow-x-auto'>
             {['all', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+                className={`px-6 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap ${
                   filterStatus === status
                     ? 'border-primary text-primary'
                     : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -270,15 +314,56 @@ const ManageBookings = () => {
                         <p className='text-2xl font-bold text-primary mt-3'>
                           {currency}{booking.price?.toLocaleString() || 0}
                         </p>
+                        
+                        {/* Payment Info */}
+                        {booking.payment && (
+                          <div className='mt-3 text-sm text-left bg-gray-50 rounded-lg p-3 border border-gray-200'>
+                            <p className='font-semibold text-gray-700 mb-2'>Deposit Paid:</p>
+                            <p className='text-2xl font-bold text-green-600 mb-2'>
+                              {currency}{booking.payment.depositAmount?.toLocaleString()}
+                            </p>
+                            <p className='text-gray-600 text-xs mb-2'>
+                              Ref: <span className='font-mono'>{booking.payment.transactionRef}</span>
+                            </p>
+                            {booking.payment.status !== 'pending' && (
+                              <div className={`mt-2 px-2 py-1 rounded text-xs font-semibold ${
+                                booking.payment.status === 'verified' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {booking.payment.status?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Buttons: Manage Booking (pickup/return) */}
                       <div className='flex flex-col gap-2'>
-                        {booking.status === 'pending' && (
+                        {/* Payment Verification - Only for pending status with pending payment */}
+                        {booking.status === 'pending' && booking.payment?.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => openPaymentModal(booking)}
+                              className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
+                            >
+                              Review Payment
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
+                            >
+                              Cancel Booking
+                            </button>
+                          </>
+                        )}
+
+                        {/* After payment verified - show confirm pickup button */}
+                        {booking.status === 'pending' && booking.payment?.status === 'verified' && (
                           <>
                             <button
                               onClick={() => handleStatusChange(booking._id, 'confirmed')}
-                              className='w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold'
+                              className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
                             >
                               Confirm Pick-up
                             </button>
@@ -290,6 +375,25 @@ const ManageBookings = () => {
                             </button>
                           </>
                         )}
+
+                        {/* For bookings without payment (old bookings) */}
+                        {booking.status === 'pending' && !booking.payment && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(booking._id, 'confirmed')}
+                              className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
+                            >
+                              Confirm Pick-up
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
+                            >
+                              Cancel Booking
+                            </button>
+                          </>
+                        )}
+
                         {booking.status === 'confirmed' && (
                           <>
                             <button
@@ -306,10 +410,11 @@ const ManageBookings = () => {
                             </button>
                           </>
                         )}
+                        
                         {booking.status === 'canceled' && (
                           <button
                             onClick={() => handleStatusChange(booking._id, 'confirmed')}
-                            className='w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold'
+                            className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
                           >
                             Re-confirm & Mark For Pick-up
                           </button>
@@ -323,6 +428,120 @@ const ManageBookings = () => {
           )}
         </div>
       </div>
+
+      {/* Payment Screenshot Modal */}
+      {showPaymentModal && selectedPayment && (
+        <div 
+          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
+          onClick={() => setShowPaymentModal(false)}
+        >
+          <div 
+            className='bg-white rounded-2xl shadow-xl max-w-3xl w-full p-8 relative max-h-[90vh] overflow-y-auto'
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className='absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl'
+            >
+              ×
+            </button>
+
+            {/* Header */}
+            <div className='mb-6'>
+              <h2 className='text-2xl font-bold text-gray-900 mb-2'>Payment Verification</h2>
+              <p className='text-gray-600'>Review and verify the payment screenshot submitted by the customer.</p>
+            </div>
+
+            {/* Customer & Booking Info */}
+            <div className='bg-gray-50 rounded-lg p-4 mb-6'>
+              <div className='grid grid-cols-2 gap-4 text-sm'>
+                <div>
+                  <p className='text-gray-500'>Customer:</p>
+                  <p className='font-semibold'>{selectedPayment.user?.name}</p>
+                </div>
+                <div>
+                  <p className='text-gray-500'>Gown:</p>
+                  <p className='font-semibold'>{selectedPayment.gown?.name}</p>
+                </div>
+                <div>
+                  <p className='text-gray-500'>Total Booking:</p>
+                  <p className='font-semibold text-primary'>{currency}{selectedPayment.price?.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className='text-gray-500'>Deposit (50%):</p>
+                  <p className='font-semibold text-green-600'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Details */}
+            <div className='mb-6'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-3'>Deposit Payment Details</h3>
+              <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+                <div className='space-y-3'>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-gray-700'>Payment Method:</span>
+                    <span className='font-semibold'>GCash</span>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-gray-700'>Reference Number:</span>
+                    <span className='font-mono font-semibold text-sm'>{selectedPayment.payment?.transactionRef}</span>
+                  </div>
+                  <div className='flex justify-between items-center pt-2 border-t border-blue-300'>
+                    <span className='text-gray-700 font-semibold'>Deposit Amount:</span>
+                    <span className='text-xl font-bold text-green-600'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+              <p className='text-xs text-gray-500 mt-2'>
+                Note: Balance will be collected during pickup
+              </p>
+            </div>
+
+            {/* Screenshot */}
+            <div className='mb-6'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-3'>Transaction Screenshot</h3>
+              <div className='border border-gray-300 rounded-lg overflow-hidden bg-gray-100'>
+                {selectedPayment.payment?.screenshot ? (
+                  <img 
+                    src={selectedPayment.payment.screenshot} 
+                    alt="Payment Screenshot" 
+                    className='w-full h-auto max-h-[500px] object-contain'
+                  />
+                ) : (
+                  <div className='flex items-center justify-center h-64 text-gray-400'>
+                    No screenshot available
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Warning */}
+            <div className='mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+              <p className='text-sm text-yellow-800'>
+                <strong>Important:</strong> Please verify that the reference number matches the GCash transaction and the amount is correct before approving.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className='flex gap-4'>
+              <button
+                onClick={() => handleVerifyPayment(selectedPayment._id, 'approve')}
+                className='flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+              >
+                Approve Payment
+              </button>
+              <button
+                onClick={() => handleVerifyPayment(selectedPayment._id, 'reject')}
+                className='flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
+              >
+                Reject Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

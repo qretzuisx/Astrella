@@ -228,13 +228,17 @@ const GownDetails = () => {
     setShowPayment(true)
   }
 
+  // State to store payment data
+  const [paymentData, setPaymentData] = useState(null)
+
   // Handle payment continue - show contract modal
-  const handlePaymentContinue = () => {
+  const handlePaymentContinue = (paymentInfo) => {
+    setPaymentData(paymentInfo)
     setShowPayment(false)
     setShowContract(true)
   }
 
-  // Handle contract submit - create booking
+  // Handle contract submit - create booking with payment data
   const handleContractSubmit = async () => {
     setShowContract(false)
     setLoading(true)
@@ -244,25 +248,47 @@ const GownDetails = () => {
       const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
       const returnDateTime = combineDateAndTime(returnDate, returnTime)
       const token = localStorage.getItem('token')
+
+      // Calculate deposit and remaining balance
+      const depositAmount = Math.round(totalAmount * 0.5)
+      const remainingBalance = totalAmount - depositAmount
+
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('gown', gown._id)
+      formData.append('pickupDate', pickupDateTime?.toISOString())
+      formData.append('returnDate', returnDateTime?.toISOString())
+      formData.append('pickupTime', pickupTime)
+      formData.append('returnTime', returnTime)
+      formData.append('contactNumber', contactNumber)
+      formData.append('measurements', JSON.stringify({
+        waist: measurements.waist || null,
+        hips: measurements.hips || null,
+        unit: measurements.unit || 'inches'
+      }))
+      
+      // Add payment information
+      formData.append('payment', JSON.stringify({
+        method: 'gcash',
+        depositAmount: depositAmount,
+        totalAmount: totalAmount,
+        remainingBalance: remainingBalance,
+        transactionRef: paymentData?.referenceNumber || '',
+        status: 'pending'
+      }))
+
+      // Add screenshot file
+      if (paymentData?.screenshot) {
+        formData.append('paymentScreenshot', paymentData.screenshot)
+      }
+
       const response = await fetch(`${API_URL}/bookings/create`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
+          // Don't set Content-Type for FormData, browser will set it with boundary
         },
-        body: JSON.stringify({
-          gown: gown._id,
-          pickupDate: pickupDateTime?.toISOString(),
-          returnDate: returnDateTime?.toISOString(),
-          pickupTime: pickupTime,
-          returnTime: returnTime,
-          contactNumber: contactNumber,
-          measurements: {
-            waist: measurements.waist || null,
-            hips: measurements.hips || null,
-            unit: measurements.unit || 'inches'
-          }
-        })
+        body: formData
       })
 
       const data = await response.json()
@@ -621,7 +647,18 @@ const GownDetails = () => {
           {/* Title and Owner */}
           <div className='mb-6'>
             <h1 className='text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
-            <p className='text-lg text-gray-600'>by {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}</p>
+            <p className='text-lg text-gray-600'>
+              by{' '}
+              <button
+                onClick={() => {
+                  const ownerId = typeof gown.owner === 'object' ? gown.owner._id : gown.owner
+                  navigate(`/owner-profile/${ownerId}`)
+                }}
+                className='text-primary hover:text-primary-dull font-semibold hover:underline transition-colors'
+              >
+                {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}
+              </button>
+            </p>
           </div>
 
           {/* Price */}
@@ -719,14 +756,11 @@ const GownDetails = () => {
               </div>
             </div>
 
-          {/* Availability Snapshot */}
+          {/* Availability Status */}
           <div className='mb-6 bg-white border border-gray-200 rounded-lg p-4'>
             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4'>
               <div>
-                <h4 className='text-base font-semibold text-gray-900'>Availability Snapshot</h4>
-                <p className='text-xs text-gray-500'>
-                  Owner currently holds apparel for {calendarInfo.laundryDays || 0} laundry day{calendarInfo.laundryDays === 1 ? '' : 's'} after each return.
-                </p>
+                <h4 className='text-base font-semibold text-gray-900'>Availability Status</h4>
               </div>
               <div className='flex items-center gap-4 text-xs text-gray-600'>
                 <span className='flex items-center gap-1'>

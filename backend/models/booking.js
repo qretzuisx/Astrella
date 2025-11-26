@@ -26,7 +26,26 @@ const bookingSchema = new mongoose.Schema({
         waist: {type: Number},
         hips: {type: Number},
         unit: {type: String, default: 'inches'}
-    }
+    },
+    // Payment information
+    payment: {
+        method: { type: String, enum: ['gcash'], default: 'gcash' },
+        depositAmount: { type: Number, required: true },
+        totalAmount: { type: Number, required: true },
+        remainingBalance: { type: Number },
+        transactionRef: { type: String },
+        screenshot: { type: String }, // URL to uploaded screenshot
+        status: { 
+            type: String, 
+            enum: ['pending', 'verified', 'rejected'], 
+            default: 'pending' 
+        },
+        verifiedAt: { type: Date },
+        verifiedBy: { type: ObjectId, ref: 'User' },
+        rejectionReason: { type: String }
+    },
+    balancePaidAt: { type: Date },
+    balancePaidAmount: { type: Number }
 }, {timestamps: true})
 
 const Booking = mongoose.model('Booking', bookingSchema)

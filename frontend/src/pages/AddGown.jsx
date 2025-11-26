@@ -11,8 +11,6 @@ const AddGown = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    location: '',
-    contactNumber: '',
     eventType: [],
     fabric: '',
     price: '',
@@ -93,7 +91,7 @@ const AddGown = () => {
     setLoading(true)
 
     // Validation
-    if (!formData.name || !formData.location || !formData.contactNumber || !formData.fabric || !formData.price || !formData.color) {
+    if (!formData.name || !formData.fabric || !formData.price || !formData.color) {
       setError('Please fill in all required fields')
       setLoading(false)
       return
@@ -132,8 +130,6 @@ const AddGown = () => {
       formDataToSend.append('image', selectedImage)
       formDataToSend.append('gownData', JSON.stringify({
         name: formData.name,
-        location: formData.location,
-        contactNumber: formData.contactNumber,
         eventType: formData.eventType.map(e => e.toLowerCase()),
         fabric: formData.fabric,
         price: parseFloat(formData.price),
@@ -159,8 +155,6 @@ const AddGown = () => {
         // Reset form
         setFormData({
           name: '',
-          location: '',
-          contactNumber: '',
           eventType: [],
           fabric: '',
           price: '',
@@ -254,36 +248,18 @@ const AddGown = () => {
                 />
               </div>
 
-              {/* Location */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Location <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='text'
-                  name='location'
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder='Enter location (e.g., City, Street Address)'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  required
-                />
-              </div>
-
-              {/* Contact Number */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Contact Number <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='tel'
-                  name='contactNumber'
-                  value={formData.contactNumber}
-                  onChange={handleInputChange}
-                  placeholder='Enter contact number (e.g., +63 912 345 6789)'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  required
-                />
+              {/* Info Box - Location from Shop Profile */}
+              <div className='col-span-1 md:col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+                <p className='text-sm text-blue-800'>
+                  <strong>Note:</strong> Location and contact information will be automatically taken from your Shop Profile. 
+                  <button
+                    type='button'
+                    onClick={() => navigate('/owner/shop-profile')}
+                    className='ml-1 text-primary font-semibold hover:underline'
+                  >
+                    Update Shop Profile
+                  </button>
+                </p>
               </div>
 
               {/* Event Type */}

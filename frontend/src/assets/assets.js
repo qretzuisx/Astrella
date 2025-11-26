@@ -25,6 +25,8 @@ import calendar_icon_colored from "./calendar_icon_colored.svg"
 import location_icon_colored from "./location_icon_colored.svg"
 import home_bg from "./home-bg.png"
 import upload_icon from "./upload_icon.svg"
+import gcash_qr from "./gcash-qr.png"
+import apparel_bg from "./apparel-bg.png"
 
 
 // AI RECCOMENDATION LIST
@@ -61,6 +63,8 @@ export const assets = {
     filter_icon,
     upload_icon,
     home_bg,
+    gcash_qr,
+    apparel_bg,
 }
 
 export const menuLinks = [
@@ -71,6 +75,7 @@ export const menuLinks = [
 
 export const ownerMenuLinks = [
     { name: "Dashboard", path: "/owner", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+    { name: "Shop Profile", path: "/owner/shop-profile", icon: edit_icon, coloredIcon: edit_icon },
     { name: "Add Apparel", path: "/owner/add-gown", icon: addIcon, coloredIcon: addIconColored },
     { name: "Manage Apparel", path: "/owner/manage-gown", icon: gownIcon, coloredIcon: gownIconColored },
     { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },

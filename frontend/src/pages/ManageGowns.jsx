@@ -156,12 +156,12 @@ const ManageGowns = () => {
 
       const data = await response.json()
       if (data.success || data.sucess) {
-        setSuccess('Laundry buffer updated successfully')
+        setSuccess('Laundry days updated successfully')
         setGowns(prev => prev.map(g => g._id === gownId ? { ...g, laundryDays: data.laundryDays } : g))
         setLaundryForm(prev => ({ ...prev, [gownId]: String(data.laundryDays ?? parsedValue) }))
         setTimeout(() => setSuccess(''), 3000)
       } else {
-        setError(data.message || 'Failed to update laundry buffer')
+        setError(data.message || 'Failed to update laundry days')
         setTimeout(() => setError(''), 3000)
       }
     } catch (err) {
@@ -303,8 +303,7 @@ const ManageGowns = () => {
                     {/* Laundry Days */}
                     <div className='mt-4 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300'>
                       <div className='flex items-center justify-between'>
-                        <p className='text-sm font-semibold text-gray-700'>Laundry Buffer</p>
-                        <span className='text-xs text-gray-500'>Shown as orange dates to renters</span>
+                        <p className='text-sm font-semibold text-gray-700'>Laundry Days</p>
                       </div>
                       <div className='flex items-center gap-3 mt-3'>
                         <input
