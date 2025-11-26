@@ -21,25 +21,91 @@ const isWithinBusinessHours = (timeValue) => {
   return totalMinutes >= minMinutes && totalMinutes <= maxMinutes && minutes % 15 === 0;
 };
 
+// Helper function to get all laundry dates for a gown (as date strings YYYY-MM-DD)
+const getLaundryDates = async (gownId, laundryDays) => {
+  if (!laundryDays || laundryDays <= 0) return new Set();
+  
+  const laundryDateSet = new Set();
+  const bookings = await Booking.find({
+    gown: gownId,
+    status: { $ne: "canceled" },
+  });
+
+  bookings.forEach((booking) => {
+    const returnDate = new Date(booking.returnDate);
+    // Add each laundry day after return date
+    for (let i = 1; i <= laundryDays; i++) {
+      const laundryDate = new Date(returnDate);
+      laundryDate.setDate(laundryDate.getDate() + i);
+      // Convert to YYYY-MM-DD format
+      const dateString = laundryDate.toISOString().split('T')[0];
+      laundryDateSet.add(dateString);
+    }
+  });
+
+  return laundryDateSet;
+};
+
+// Helper function to check if a date range overlaps with any blocked dates (bookings or laundry days)
+const dateRangeOverlapsBlocked = (startDate, endDate, blockedDateSet) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Check each day in the range
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dateString = d.toISOString().split('T')[0];
+    if (blockedDateSet.has(dateString)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const checkAvailability = async (gown, pickupDate, returnDate, options = {}) => {
   const start = pickupDate instanceof Date ? pickupDate : new Date(pickupDate);
   const end = returnDate instanceof Date ? returnDate : new Date(returnDate);
   const laundryDays = Number(options.laundryDays || 0);
-  const bufferMs = Math.max(laundryDays, 0) * DAY_IN_MS;
+  
+  // Get all bookings
   const bookings = await Booking.find({
     gown,
     status: { $ne: "canceled" },
   });
 
-  const newEndBuffered = new Date(end.getTime() + bufferMs);
-
-  const conflict = bookings.some((booking) => {
-    const bookingStart = booking.pickupDate;
-    const bookingEndBuffered = new Date(booking.returnDate.getTime() + bufferMs);
-    return bookingStart < newEndBuffered && start < bookingEndBuffered;
+  // Build a set of all blocked dates (booking dates + laundry days)
+  const blockedDates = new Set();
+  
+  // Add all booking dates (pickup through return)
+  bookings.forEach((booking) => {
+    const bookingStart = new Date(booking.pickupDate);
+    const bookingEnd = new Date(booking.returnDate);
+    for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+      blockedDates.add(d.toISOString().split('T')[0]);
+    }
+    
+    // Add laundry days after return
+    if (laundryDays > 0) {
+      for (let i = 1; i <= laundryDays; i++) {
+        const laundryDate = new Date(bookingEnd);
+        laundryDate.setDate(laundryDate.getDate() + i);
+        blockedDates.add(laundryDate.toISOString().split('T')[0]);
+      }
+    }
   });
 
-  return !conflict;
+  // Check if requested date range overlaps with any blocked dates
+  const requestedStartString = start.toISOString().split('T')[0];
+  const requestedEndString = end.toISOString().split('T')[0];
+  
+  // Check each day in the requested range
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dateString = d.toISOString().split('T')[0];
+    if (blockedDates.has(dateString)) {
+      return false; // Date is blocked
+    }
+  }
+
+  return true; // No conflicts
 };
 
 // API to create booking
@@ -112,7 +178,23 @@ export const createBooking = async (req, res) => {
       { laundryDays: gownData.laundryDays }
     );
     if (!isAvailable) {
-      return res.json({ success: false, message: "This gown is still reserved or in laundry during your selected pickup time." });
+      // Check if it's specifically a laundry day conflict by checking if any date in range is a laundry day
+      const laundryDateSet = await getLaundryDates(gown, gownData.laundryDays);
+      let isLaundryConflict = false;
+      
+      // Check each day in the requested range
+      for (let d = new Date(pickupDateTime); d <= returnDateTime; d.setDate(d.getDate() + 1)) {
+        const dateString = d.toISOString().split('T')[0];
+        if (laundryDateSet.has(dateString)) {
+          isLaundryConflict = true;
+          break;
+        }
+      }
+      
+      if (isLaundryConflict) {
+        return res.json({ success: false, message: "This gown is in laundry on one or more of your selected dates. Laundry days are fully blocked and cannot be booked." });
+      }
+      return res.json({ success: false, message: "This gown is already reserved during your selected dates." });
     }
 
     // Dynamic rental pricing based on number of days selected
@@ -228,6 +310,10 @@ export const validateBookingWindow = async (req, res) => {
       return res.status(404).json({ success: false, message: "Gown not found" });
     }
 
+    const laundryDays = Number(gown.laundryDays || 0);
+    
+    // Build a set of all blocked dates (booking dates + laundry days)
+    const blockedDates = new Set();
     const bookings = await Booking.find({
       gown: gownId,
       status: { $ne: "canceled" },
@@ -235,28 +321,75 @@ export const validateBookingWindow = async (req, res) => {
       .populate("user", "name")
       .populate("gown", "name");
 
-    const bufferMs = Math.max(gown.laundryDays || 0, 0) * DAY_IN_MS;
-    const newEndBuffered = new Date(returnDateTime.getTime() + bufferMs);
-
-    const conflict = bookings.find((existing) => {
-      const existingEndBuffered = new Date(existing.returnDate.getTime() + bufferMs);
-      return existing.pickupDate < newEndBuffered && pickupDateTime < existingEndBuffered;
+    // Add all booking dates (pickup through return)
+    bookings.forEach((booking) => {
+      const bookingStart = new Date(booking.pickupDate);
+      const bookingEnd = new Date(booking.returnDate);
+      for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+        blockedDates.add(d.toISOString().split('T')[0]);
+      }
+      
+      // Add laundry days after return (fully blocked)
+      if (laundryDays > 0) {
+        for (let i = 1; i <= laundryDays; i++) {
+          const laundryDate = new Date(bookingEnd);
+          laundryDate.setDate(laundryDate.getDate() + i);
+          blockedDates.add(laundryDate.toISOString().split('T')[0]);
+        }
+      }
     });
 
-    if (conflict) {
+    // Check if requested date range overlaps with any blocked dates
+    const requestedStartString = pickupDateTime.toISOString().split('T')[0];
+    const requestedEndString = returnDateTime.toISOString().split('T')[0];
+    
+    // Check each day in the requested range
+    const conflictingDates = [];
+    for (let d = new Date(pickupDateTime); d <= returnDateTime; d.setDate(d.getDate() + 1)) {
+      const dateString = d.toISOString().split('T')[0];
+      if (blockedDates.has(dateString)) {
+        conflictingDates.push(dateString);
+      }
+    }
+
+    if (conflictingDates.length > 0) {
+      // Find which booking caused the conflict
+      const conflict = bookings.find((existing) => {
+        const existingStart = new Date(existing.pickupDate);
+        const existingEnd = new Date(existing.returnDate);
+        // Check if dates overlap
+        return (pickupDateTime <= existingEnd && returnDateTime >= existingStart);
+      });
+
+      // Check if conflict is due to laundry day
+      const isLaundryConflict = conflictingDates.some(dateStr => {
+        return bookings.some(booking => {
+          const returnDate = new Date(booking.returnDate);
+          for (let i = 1; i <= laundryDays; i++) {
+            const laundryDate = new Date(returnDate);
+            laundryDate.setDate(laundryDate.getDate() + i);
+            if (laundryDate.toISOString().split('T')[0] === dateStr) {
+              return true;
+            }
+          }
+          return false;
+        });
+      });
+
       return res.status(409).json({
         success: false,
-        message: gown.laundryDays
-          ? "This gown is unavailable or in laundry during your selected pickup time."
-          : "This gown is still reserved during your selected pickup time.",
-        conflict: {
+        message: isLaundryConflict
+          ? "This gown is in laundry on one or more of your selected dates. Laundry days are fully blocked and cannot be booked."
+          : "This gown is already reserved during your selected dates.",
+        conflict: conflict ? {
           pickupDate: conflict.pickupDate,
           returnDate: conflict.returnDate,
           pickupTime: conflict.pickupTime,
           returnTime: conflict.returnTime,
           customer: conflict.user?.name,
-          laundryDays: gown.laundryDays || 0,
-        },
+          laundryDays: laundryDays,
+        } : null,
+        conflictingDates: conflictingDates,
       });
     }
 
@@ -412,11 +545,20 @@ export const getGownCalendar = async (req, res) => {
         captureDate(new Date(cursor), unavailableDates);
       }
 
+      // Laundry days are fully blocked - add to both sets
       const bufferDays = Math.max(gown.laundryDays || 0, 0);
       for (let i = 1; i <= bufferDays; i += 1) {
         const laundryDate = new Date(booking.returnDate);
         laundryDate.setDate(laundryDate.getDate() + i);
-        captureDate(laundryDate, laundryHoldDates);
+        const dateString = laundryDate.toISOString().split('T')[0];
+        // Add to laundryHoldDates for highlighting
+        if (laundryDate >= today && laundryDate <= horizon) {
+          laundryHoldDates.add(dateString);
+        }
+        // Also add to unavailableDates to fully block them
+        if (laundryDate >= today && laundryDate <= horizon) {
+          unavailableDates.add(dateString);
+        }
       }
     });
 

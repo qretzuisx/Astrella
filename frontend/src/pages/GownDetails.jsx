@@ -148,6 +148,21 @@ const GownDetails = () => {
       setFieldError('pickupDate', 'Pick-up date is required.')
       return
     }
+    
+    // Check if date is blocked (unavailable or laundry day)
+    const dateString = value
+    const isUnavailable = calendarInfo.unavailableDates.includes(dateString)
+    const isLaundryDay = calendarInfo.laundryHoldDates.includes(dateString)
+    
+    if (isUnavailable || isLaundryDay) {
+      if (isLaundryDay) {
+        setFieldError('pickupDate', 'This date is a laundry day and is fully blocked. Please select a different date.')
+      } else {
+        setFieldError('pickupDate', 'This date is not available. Please select a different date.')
+      }
+      return
+    }
+    
     setFieldError('pickupDate', '')
     setError('')
     if (returnDate && new Date(`${returnDate}T00:00:00`) < new Date(`${value}T00:00:00`)) {
@@ -163,6 +178,21 @@ const GownDetails = () => {
       setFieldError('returnDate', 'Return date is required.')
       return
     }
+    
+    // Check if date is blocked (unavailable or laundry day)
+    const dateString = value
+    const isUnavailable = calendarInfo.unavailableDates.includes(dateString)
+    const isLaundryDay = calendarInfo.laundryHoldDates.includes(dateString)
+    
+    if (isUnavailable || isLaundryDay) {
+      if (isLaundryDay) {
+        setFieldError('returnDate', 'This date is a laundry day and is fully blocked. Please select a different date.')
+      } else {
+        setFieldError('returnDate', 'This date is not available. Please select a different date.')
+      }
+      return
+    }
+    
     if (pickupDate && new Date(`${value}T00:00:00`) < new Date(`${pickupDate}T00:00:00`)) {
       setFieldError('returnDate', 'Return date cannot be earlier than pickup date.')
     } else {
@@ -761,6 +791,9 @@ const GownDetails = () => {
             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4'>
               <div>
                 <h4 className='text-base font-semibold text-gray-900'>Availability Status</h4>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Laundry days are fully blocked and cannot be selected for booking.
+                </p>
               </div>
               <div className='flex items-center gap-4 text-xs text-gray-600'>
                 <span className='flex items-center gap-1'>
@@ -769,7 +802,7 @@ const GownDetails = () => {
                 </span>
                 <span className='flex items-center gap-1'>
                   <span className='w-3 h-3 rounded-full bg-orange-400 inline-block'></span>
-                  Laundry
+                  Laundry (Blocked)
                 </span>
               </div>
             </div>
