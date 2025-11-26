@@ -34,8 +34,8 @@ const OwnerRequest = () => {
           const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
           setUserRole(role)
           
-          // If already owner/admin, redirect
-          if (role === 'owner' || role === 'admin') {
+          // If already owner, redirect
+          if (role === 'owner') {
             navigate('/owner')
             return
           }
@@ -101,7 +101,11 @@ const OwnerRequest = () => {
           if (statusData.success && statusData.request) {
             setRequestStatus(statusData.request)
           }
-        }, 1000)
+        }, 500)
+
+        setTimeout(() => {
+          navigate('/owner')
+        }, 1500)
       } else {
         setError(data.message || 'Failed to submit request')
       }
@@ -129,17 +133,17 @@ const OwnerRequest = () => {
   const getStatusMessage = (status) => {
     switch (status) {
       case 'pending':
-        return 'Your request is being reviewed by admin'
+        return 'We are finalizing your owner tools. This usually takes less than a minute.'
       case 'approved':
-        return 'Congratulations! Your request has been approved. You can now access the owner dashboard.'
+        return 'Owner access is active. Head over to the owner dashboard to start managing apparel.'
       case 'rejected':
-        return 'Your request has been rejected. Please contact admin for more information.'
+        return 'We could not grant owner access at this time. Please reach out to support if you believe this is a mistake.'
       default:
         return ''
     }
   }
 
-  if (userRole === 'owner' || userRole === 'admin') {
+  if (userRole === 'owner') {
     return null // Will redirect
   }
 
@@ -172,10 +176,10 @@ const OwnerRequest = () => {
               </div>
             )}
             
-            {requestStatus.adminNote && (
+            {requestStatus.systemNote && (
               <div className='mt-3 pt-3 border-t border-current border-opacity-20'>
-                <p className='text-sm font-medium mb-1'>Admin Note:</p>
-                <p className='text-sm'>{requestStatus.adminNote}</p>
+                <p className='text-sm font-medium mb-1'>System Note:</p>
+                <p className='text-sm'>{requestStatus.systemNote}</p>
               </div>
             )}
             
@@ -214,7 +218,7 @@ const OwnerRequest = () => {
             </h2>
             
             <p className='text-gray-600 mb-6'>
-              Tell us why you want to become an owner. This helps us review your request faster.
+              Tell us why you want to become an owner. This helps us match you with the right tools.
             </p>
 
             {/* Success/Error Messages */}
@@ -243,17 +247,16 @@ const OwnerRequest = () => {
                   className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none'
                 />
                 <p className='text-xs text-gray-500 mt-1'>
-                  This message will be sent to admin for review
+                  This message helps our support team learn more about your business.
                 </p>
               </div>
 
               <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
                 <h3 className='font-semibold text-blue-900 mb-2'>What happens next?</h3>
                 <ul className='text-sm text-blue-800 space-y-1 list-disc list-inside'>
-                  <li>Your request will be reviewed by an admin</li>
-                  <li>You'll be notified once a decision is made</li>
-                  <li>If approved, you'll gain access to the owner dashboard</li>
-                  <li>You can then start listing and managing your apparel</li>
+                  <li>Your account is upgraded instantly once verified</li>
+                  <li>You will be redirected to the owner dashboard</li>
+                  <li>You can immediately start adding apparel and bookings</li>
                 </ul>
               </div>
 

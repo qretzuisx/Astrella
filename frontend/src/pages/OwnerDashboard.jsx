@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const OwnerDashboard = () => {
+  const navigate = useNavigate()
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -54,9 +56,9 @@ const OwnerDashboard = () => {
           const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
           setUserRole(role)
           
-          // Check if user is owner or admin
-          if (role !== 'owner' && role !== 'admin') {
-            setError('You need owner access to view this dashboard. Please request owner access from admin.')
+        // Check if user is owner
+        if (role !== 'owner') {
+          setError('You need owner access to view this dashboard. Please submit an owner request first.')
             setLoading(false)
             return
           }
@@ -148,7 +150,11 @@ const OwnerDashboard = () => {
           {/* Stats Cards */}
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
             {/* Total Apparel */}
-            <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-200'>
+            <button
+              type='button'
+              onClick={() => navigate('/owner/manage-gown')}
+              className='bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
+            >
               <div className='flex items-center justify-between mb-4'>
                 <div className='p-3 bg-primary/10 rounded-lg'>
                   <img src={assets.gownIconColored} alt="apparel" className='w-6 h-6' />
@@ -158,10 +164,14 @@ const OwnerDashboard = () => {
               <p className='text-3xl font-bold text-gray-900'>
                 {dashboardData?.totalGowns || 0}
               </p>
-            </div>
+            </button>
 
             {/* Total Bookings */}
-            <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-200'>
+            <button
+              type='button'
+              onClick={() => navigate('/owner/manage-bookings')}
+              className='bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
+            >
               <div className='flex items-center justify-between mb-4'>
                 <div className='p-3 bg-blue-100 rounded-lg'>
                   <img src={assets.listIconColored} alt="bookings" className='w-6 h-6' />
@@ -171,10 +181,14 @@ const OwnerDashboard = () => {
               <p className='text-3xl font-bold text-gray-900'>
                 {dashboardData?.totalBookings || 0}
               </p>
-            </div>
+            </button>
 
             {/* Pending Bookings */}
-            <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-200'>
+            <button
+              type='button'
+              onClick={() => navigate('/owner/manage-bookings')}
+              className='bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
+            >
               <div className='flex items-center justify-between mb-4'>
                 <div className='p-3 bg-yellow-100 rounded-lg'>
                   <img src={assets.cautionIconColored} alt="pending" className='w-6 h-6' />
@@ -184,7 +198,7 @@ const OwnerDashboard = () => {
               <p className='text-3xl font-bold text-gray-900'>
                 {dashboardData?.pendingBookings || 0}
               </p>
-            </div>
+            </button>
 
             {/* Monthly Revenue */}
             <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-200'>

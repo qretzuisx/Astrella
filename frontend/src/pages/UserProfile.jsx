@@ -31,6 +31,7 @@ const UserProfile = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const role = user ? (typeof user.role === 'object' ? user.role.name : user.role) : null
+  const roleLabel = role === 'admin' ? 'owner' : role
 
   useEffect(() => {
     fetchUserData()
@@ -333,15 +334,14 @@ const UserProfile = () => {
               <div className='flex-1 text-center sm:text-left'>
                 <p className='text-gray-600'>{user.email}</p>
                 <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold capitalize ${
-                  role === 'admin' ? 'bg-red-100 text-red-800' :
-                  role === 'owner' ? 'bg-blue-100 text-blue-800' :
+                  roleLabel === 'owner' ? 'bg-blue-100 text-blue-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
-                  {role}
+                  {roleLabel || 'user'}
                 </span>
               </div>
 
-              {(role === 'owner' || role === 'admin') && (
+              {role === 'owner' && (
                 <button
                   onClick={() => navigate('/owner')}
                   className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold shadow-md'

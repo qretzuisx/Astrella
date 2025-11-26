@@ -1,6 +1,8 @@
 import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 const combineDateAndTime = (dateValue, timeValue) => {
   if (!dateValue) return null;
   const safeTime = timeValue || "09:00";
@@ -18,16 +20,25 @@ const isWithinBusinessHours = (timeValue) => {
   return totalMinutes >= minMinutes && totalMinutes <= maxMinutes && minutes % 15 === 0;
 };
 
-export const checkAvailability = async (gown, pickupDate, returnDate) => {
+export const checkAvailability = async (gown, pickupDate, returnDate, options = {}) => {
   const start = pickupDate instanceof Date ? pickupDate : new Date(pickupDate);
   const end = returnDate instanceof Date ? returnDate : new Date(returnDate);
-  const overlap = await Booking.find({
+  const laundryDays = Number(options.laundryDays || 0);
+  const bufferMs = Math.max(laundryDays, 0) * DAY_IN_MS;
+  const bookings = await Booking.find({
     gown,
     status: { $ne: "canceled" },
-    pickupDate: { $lt: end },
-    returnDate: { $gt: start },
   });
-  return overlap.length === 0;
+
+  const newEndBuffered = new Date(end.getTime() + bufferMs);
+
+  const conflict = bookings.some((booking) => {
+    const bookingStart = booking.pickupDate;
+    const bookingEndBuffered = new Date(booking.returnDate.getTime() + bufferMs);
+    return bookingStart < newEndBuffered && start < bookingEndBuffered;
+  });
+
+  return !conflict;
 };
 
 // API to create booking
@@ -60,14 +71,19 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: "Contact number must be 10-13 digits." });
     }
 
-    const isAvailable = await checkAvailability(gown, pickupDateTime, returnDateTime);
-    if (!isAvailable) {
-      return res.json({ success: false, message: "This gown is still reserved during your selected pickup time." });
-    }
-
     const gownData = await Gown.findById(gown);
     if (!gownData) {
       return res.status(404).json({ success: false, message: "Gown not found" });
+    }
+
+    const isAvailable = await checkAvailability(
+      gown,
+      pickupDateTime,
+      returnDateTime,
+      { laundryDays: gownData.laundryDays }
+    );
+    if (!isAvailable) {
+      return res.json({ success: false, message: "This gown is still reserved or in laundry during your selected pickup time." });
     }
 
     const basePrice = gownData.price || gownData.pricePerDay || 0;
@@ -121,25 +137,39 @@ export const validateBookingWindow = async (req, res) => {
       return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
     }
 
-    const overlap = await Booking.findOne({
+    const gown = await Gown.findById(gownId).select('laundryDays name');
+    if (!gown) {
+      return res.status(404).json({ success: false, message: "Gown not found" });
+    }
+
+    const bookings = await Booking.find({
       gown: gownId,
       status: { $ne: "canceled" },
-      pickupDate: { $lt: returnDateTime },
-      returnDate: { $gt: pickupDateTime },
     })
       .populate("user", "name")
       .populate("gown", "name");
 
-    if (overlap) {
+    const bufferMs = Math.max(gown.laundryDays || 0, 0) * DAY_IN_MS;
+    const newEndBuffered = new Date(returnDateTime.getTime() + bufferMs);
+
+    const conflict = bookings.find((existing) => {
+      const existingEndBuffered = new Date(existing.returnDate.getTime() + bufferMs);
+      return existing.pickupDate < newEndBuffered && pickupDateTime < existingEndBuffered;
+    });
+
+    if (conflict) {
       return res.status(409).json({
         success: false,
-        message: "This gown is still reserved during your selected pickup time.",
+        message: gown.laundryDays
+          ? "This gown is unavailable or in laundry during your selected pickup time."
+          : "This gown is still reserved during your selected pickup time.",
         conflict: {
-          pickupDate: overlap.pickupDate,
-          returnDate: overlap.returnDate,
-          pickupTime: overlap.pickupTime,
-          returnTime: overlap.returnTime,
-          customer: overlap.user?.name,
+          pickupDate: conflict.pickupDate,
+          returnDate: conflict.returnDate,
+          pickupTime: conflict.pickupTime,
+          returnTime: conflict.returnTime,
+          customer: conflict.user?.name,
+          laundryDays: gown.laundryDays || 0,
         },
       });
     }
@@ -244,3 +274,66 @@ export const changeBookingStatus = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 }
+
+export const getGownCalendar = async (req, res) => {
+  try {
+    const { gownId } = req.params;
+    if (!gownId) {
+      return res.status(400).json({ success: false, message: "Missing gownId" });
+    }
+
+    const gown = await Gown.findById(gownId).select('laundryDays');
+    if (!gown) {
+      return res.status(404).json({ success: false, message: "Gown not found" });
+    }
+
+    const bookings = await Booking.find({
+      gown: gownId,
+      status: { $ne: "canceled" }
+    }).sort({ pickupDate: 1 });
+
+    const unavailableDates = new Set();
+    const laundryHoldDates = new Set();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const horizon = new Date(today.getTime() + 180 * DAY_IN_MS);
+
+    const captureDate = (dateObj, targetSet) => {
+      if (dateObj < today || dateObj > horizon) {
+        return;
+      }
+      targetSet.add(dateObj.toISOString().split('T')[0]);
+    };
+
+    bookings.forEach((booking) => {
+      const bookingStart = new Date(booking.pickupDate);
+      const bookingEnd = new Date(booking.returnDate);
+      for (
+        let cursor = new Date(bookingStart);
+        cursor <= bookingEnd;
+        cursor.setDate(cursor.getDate() + 1)
+      ) {
+        captureDate(new Date(cursor), unavailableDates);
+      }
+
+      const bufferDays = Math.max(gown.laundryDays || 0, 0);
+      for (let i = 1; i <= bufferDays; i += 1) {
+        const laundryDate = new Date(booking.returnDate);
+        laundryDate.setDate(laundryDate.getDate() + i);
+        captureDate(laundryDate, laundryHoldDates);
+      }
+    });
+
+    res.json({
+      success: true,
+      calendar: {
+        laundryDays: gown.laundryDays || 0,
+        unavailableDates: Array.from(unavailableDates).sort(),
+        laundryHoldDates: Array.from(laundryHoldDates).sort(),
+      },
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

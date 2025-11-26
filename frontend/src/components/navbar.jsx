@@ -42,6 +42,12 @@ const Navbar = ({setShowLogin}) => {
     fetchUser()
   }, [])
 
+  useEffect(() => {
+    if (!loading && role === 'owner' && !location.pathname.startsWith('/owner')) {
+      navigate('/owner')
+    }
+  }, [loading, role, location.pathname, navigate])
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     setUser(null)
@@ -91,8 +97,8 @@ const Navbar = ({setShowLogin}) => {
                 <>
                   {user ? (
                     <>
-                      {/* Show Dashboard button only for owners/admins */}
-                      {(role === 'owner' || role === 'admin') && (
+                      {/* Show Dashboard button only for owners */}
+                      {role === 'owner' && (
                         <button 
                           onClick={() => navigate('/owner')} 
                           className="cursor-pointer px-4 py-2 text-primary hover:text-primary-dull transition-all"

@@ -2,6 +2,7 @@ import User from "../models/User.js"
 import Gown from "../models/Gown.js"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 
 
 // jwt token
@@ -75,29 +76,21 @@ export const requestOwnerRole = async (req, res) => {
 
         // Check if user is already an owner
         const user = await User.findById(_id);
-        if (user.role === 'owner' || user.role === 'admin') {
-            return res.json({ success: false, message: "You already have owner or admin privileges" });
+        if (user.role === 'owner') {
+            return res.json({ success: false, message: "You already have owner privileges" });
         }
 
-        // Check if there's already a pending request
+        // Grant owner role immediately and store a record for history
         const OwnerRequest = (await import("../models/OwnerRequest.js")).default;
-        const existingRequest = await OwnerRequest.findOne({ 
-            user: _id, 
-            status: 'pending' 
-        });
-
-        if (existingRequest) {
-            return res.json({ success: false, message: "You already have a pending request" });
-        }
-
-        // Create new request
+        await User.findByIdAndUpdate(_id, { role: 'owner' });
         await OwnerRequest.create({
             user: _id,
             message: message || '',
-            status: 'pending'
+            status: 'approved',
+            systemNote: 'Owner access granted automatically',
         });
 
-        res.json({ success: true, message: "Owner request submitted successfully. Admin will review it." });
+        res.json({ success: true, message: "Owner access granted immediately. You can now open the owner dashboard." });
 
     } catch (error) {
         console.log(error.message);
@@ -114,7 +107,29 @@ export const getOwnerRequestStatus = async (req, res) => {
         const request = await OwnerRequest.findOne({ user: _id })
             .sort({ createdAt: -1 });
 
-        res.json({ success: true, request: request || null });
+        if (request) {
+            const safeRequest = request.toObject()
+            safeRequest.systemNote = safeRequest.systemNote || safeRequest.adminNote || ''
+            delete safeRequest.adminNote
+            return res.json({ success: true, request: safeRequest });
+        }
+
+        const user = await User.findById(_id);
+        if (user?.role === 'owner') {
+            return res.json({ 
+                success: true, 
+                request: {
+                    _id: user._id,
+                    status: 'approved',
+                    message: 'Owner access active',
+                    systemNote: 'Owner access granted automatically',
+                    createdAt: user.updatedAt,
+                    updatedAt: user.updatedAt
+                } 
+            });
+        }
+
+        res.json({ success: true, request: null });
 
     } catch (error) {
         console.log(error.message);
@@ -322,6 +337,76 @@ export const changePassword = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
+export const requestPasswordReset = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'No account found with that email' });
+        }
+
+        const rawToken = crypto.randomBytes(20).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Password reset code generated. Use it within 60 minutes.', 
+            resetToken: rawToken 
+        });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, resetToken, newPassword } = req.body;
+
+        if (!email || !resetToken || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Email, reset token, and new password are required' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 8 characters long' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user || !user.resetPasswordToken || !user.resetPasswordExpires) {
+            return res.status(400).json({ success: false, message: 'Reset request not found or already used' });
+        }
+
+        if (user.resetPasswordExpires.getTime() < Date.now()) {
+            return res.status(400).json({ success: false, message: 'Reset token has expired. Start over.' });
+        }
+
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        if (hashedToken !== user.resetPasswordToken) {
+            return res.status(400).json({ success: false, message: 'Invalid reset token' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.json({ success: true, message: 'Password reset successful. You can now log in.' });
+
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
 
 // Get user statistics
 export const getUserStatistics = async (req, res) => {

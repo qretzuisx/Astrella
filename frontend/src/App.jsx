@@ -12,7 +12,6 @@ import ManageGowns from './pages/ManageGowns'
 import ManageBookings from './pages/ManageBookings'
 import Recommendations from './pages/Recommendations'
 import OwnerRequest from './pages/OwnerRequest'
-import AdminOwnerRequests from './pages/AdminOwnerRequests'
 import UserProfile from './pages/UserProfile'
 
 const App = () => {
@@ -35,7 +34,6 @@ const App = () => {
         <Route path='/owner/add-gown' element={<AddGown/>}/>
         <Route path='/owner/manage-gown' element={<ManageGowns/>}/>
         <Route path='/owner/manage-bookings' element={<ManageBookings/>}/>
-        <Route path='/owner/admin/requests' element={<AdminOwnerRequests/>}/>
       </Routes>
     </>
   )

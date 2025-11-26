@@ -14,6 +14,7 @@ const gownSchema = new mongoose.Schema({
     image: { type: [String], required: true},
     available: {type: Boolean, default: true},
     verified: {type: Boolean, default: false},
+    laundryDays: {type: Number, default: 1, min: 0, max: 14},
 }, {timestamps: true})
 
 const Gown = mongoose.model('Gown', gownSchema) 

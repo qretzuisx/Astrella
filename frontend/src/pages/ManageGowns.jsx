@@ -10,6 +10,8 @@ const ManageGowns = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [laundryForm, setLaundryForm] = useState({})
+  const [laundrySaving, setLaundrySaving] = useState(null)
   const currency = import.meta.env.VITE_CURRENCY || '₱'
 
   useEffect(() => {
@@ -39,7 +41,13 @@ const ManageGowns = () => {
       const data = await response.json()
       
       if (data.success) {
-        setGowns(data.gowns || [])
+        const gownsList = data.gowns || []
+        setGowns(gownsList)
+        const laundryMap = gownsList.reduce((acc, gown) => {
+          acc[gown._id] = String(typeof gown.laundryDays === 'number' ? gown.laundryDays : 0)
+          return acc
+        }, {})
+        setLaundryForm(laundryMap)
       } else {
         setError(data.message || 'Failed to load gowns')
       }
@@ -116,6 +124,52 @@ const ManageGowns = () => {
       console.error('Error deleting gown:', error)
       setError('An error occurred. Please try again.')
       setTimeout(() => setError(''), 3000)
+    }
+  }
+
+  const handleLaundryInputChange = (gownId, value) => {
+    setLaundryForm(prev => ({ ...prev, [gownId]: value }))
+  }
+
+  const handleSaveLaundryDays = async (gownId) => {
+    const rawValue = laundryForm[gownId]
+    const parsedValue = Number(rawValue)
+
+    if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+      setError('Laundry days must be 0 or greater.')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+
+    try {
+      setLaundrySaving(gownId)
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      const response = await fetch(`${API_URL}/owner/gown/laundry-days`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ gownID: gownId, laundryDays: parsedValue })
+      })
+
+      const data = await response.json()
+      if (data.success || data.sucess) {
+        setSuccess('Laundry buffer updated successfully')
+        setGowns(prev => prev.map(g => g._id === gownId ? { ...g, laundryDays: data.laundryDays } : g))
+        setLaundryForm(prev => ({ ...prev, [gownId]: String(data.laundryDays ?? parsedValue) }))
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.message || 'Failed to update laundry buffer')
+        setTimeout(() => setError(''), 3000)
+      }
+    } catch (err) {
+      console.error('Error updating laundry days:', err)
+      setError('An error occurred. Please try again.')
+      setTimeout(() => setError(''), 3000)
+    } finally {
+      setLaundrySaving(null)
     }
   }
 
@@ -243,6 +297,36 @@ const ManageGowns = () => {
                         <span className='truncate'>
                           {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size || 'N/A'}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Laundry Days */}
+                    <div className='mt-4 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300'>
+                      <div className='flex items-center justify-between'>
+                        <p className='text-sm font-semibold text-gray-700'>Laundry Buffer</p>
+                        <span className='text-xs text-gray-500'>Shown as orange dates to renters</span>
+                      </div>
+                      <div className='flex items-center gap-3 mt-3'>
+                        <input
+                          type='number'
+                          min='0'
+                          max='14'
+                          value={laundryForm[gown._id] ?? String(gown.laundryDays ?? 0)}
+                          onChange={(e) => handleLaundryInputChange(gown._id, e.target.value)}
+                          className='w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm'
+                        />
+                        <span className='text-sm text-gray-600'>day(s) after return</span>
+                        <button
+                          onClick={() => handleSaveLaundryDays(gown._id)}
+                          disabled={laundrySaving === gown._id}
+                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                            laundrySaving === gown._id
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-primary text-white hover:bg-primary-dull'
+                          }`}
+                        >
+                          {laundrySaving === gown._id ? 'Saving...' : 'Save'}
+                        </button>
                       </div>
                     </div>
 

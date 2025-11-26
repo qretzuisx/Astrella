@@ -78,6 +78,9 @@ const GownDetails = () => {
   const [scheduleStatus, setScheduleStatus] = useState({ loading: false, message: '', valid: false })
   const [durationDays, setDurationDays] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
+  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], laundryHoldDates: [], laundryDays: 0 })
+  const [calendarLoading, setCalendarLoading] = useState(false)
+  const [calendarError, setCalendarError] = useState('')
 
   useEffect(() => {
     const fetchGown = async () => {
@@ -386,6 +389,8 @@ const GownDetails = () => {
     || success
     || loadingGown
 
+  const gownId = gown?._id || ''
+
   // Format date with day name (MM-DD-YYYY, dayname format)
   const formatDateWithDay = (dateString) => {
     if (!dateString) return ''
@@ -397,6 +402,48 @@ const GownDetails = () => {
     const year = date.getFullYear()
     return `${month}-${day}-${year}, ${dayName}`
   }
+
+  const formatShortDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  }
+
+  useEffect(() => {
+    if (!gownId) return
+    let ignore = false
+    const fetchCalendar = async () => {
+      try {
+        setCalendarLoading(true)
+        setCalendarError('')
+        const response = await fetch(`${API_URL}/bookings/calendar/${gownId}`)
+        const data = await response.json()
+        if (ignore) return
+        if (response.ok && data.success) {
+          setCalendarInfo({
+            unavailableDates: data.calendar?.unavailableDates || [],
+            laundryHoldDates: data.calendar?.laundryHoldDates || [],
+            laundryDays: data.calendar?.laundryDays || 0
+          })
+        } else {
+          setCalendarError(data.message || 'Unable to load availability highlights.')
+        }
+      } catch (err) {
+        if (!ignore) {
+          setCalendarError('Unable to load availability highlights. Please try again later.')
+        }
+      } finally {
+        if (!ignore) {
+          setCalendarLoading(false)
+        }
+      }
+    }
+
+    fetchCalendar()
+    return () => {
+      ignore = true
+    }
+  }, [API_URL, gownId])
 
 
   if (loadingGown) {
@@ -671,6 +718,74 @@ const GownDetails = () => {
                 </div>
               </div>
             </div>
+
+          {/* Availability Snapshot */}
+          <div className='mb-6 bg-white border border-gray-200 rounded-lg p-4'>
+            <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4'>
+              <div>
+                <h4 className='text-base font-semibold text-gray-900'>Availability Snapshot</h4>
+                <p className='text-xs text-gray-500'>
+                  Owner currently holds apparel for {calendarInfo.laundryDays || 0} laundry day{calendarInfo.laundryDays === 1 ? '' : 's'} after each return.
+                </p>
+              </div>
+              <div className='flex items-center gap-4 text-xs text-gray-600'>
+                <span className='flex items-center gap-1'>
+                  <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
+                  Reserved
+                </span>
+                <span className='flex items-center gap-1'>
+                  <span className='w-3 h-3 rounded-full bg-orange-400 inline-block'></span>
+                  Laundry
+                </span>
+              </div>
+            </div>
+            {calendarLoading ? (
+              <p className='text-sm text-gray-500'>Loading highlighted dates...</p>
+            ) : calendarError ? (
+              <p className='text-sm text-red-600'>{calendarError}</p>
+            ) : (
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <p className='text-sm font-medium text-gray-700 mb-2'>Reserved Dates</p>
+                  {calendarInfo.unavailableDates.length > 0 ? (
+                    <>
+                      <div className='flex flex-wrap gap-2 max-h-32 overflow-y-auto'>
+                        {calendarInfo.unavailableDates.slice(0, 60).map(date => (
+                          <span key={date} className='px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 border border-red-200'>
+                            {formatShortDate(date)}
+                          </span>
+                        ))}
+                      </div>
+                      {calendarInfo.unavailableDates.length > 60 && (
+                        <p className='text-xs text-gray-400 mt-2'>Showing first 60 dates</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className='text-sm text-gray-500'>No upcoming reservations in the next months.</p>
+                  )}
+                </div>
+                <div>
+                  <p className='text-sm font-medium text-gray-700 mb-2'>Laundry Hold Dates</p>
+                  {calendarInfo.laundryHoldDates.length > 0 ? (
+                    <>
+                      <div className='flex flex-wrap gap-2 max-h-32 overflow-y-auto'>
+                        {calendarInfo.laundryHoldDates.slice(0, 60).map(date => (
+                          <span key={date} className='px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700 border border-orange-200'>
+                            {formatShortDate(date)}
+                          </span>
+                        ))}
+                      </div>
+                      {calendarInfo.laundryHoldDates.length > 60 && (
+                        <p className='text-xs text-gray-400 mt-2'>Showing first 60 dates</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className='text-sm text-gray-500'>No laundry holds scheduled yet.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
             {/* Time Section */}
             <div className='mb-6'>

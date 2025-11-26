@@ -18,7 +18,8 @@ const AddGown = () => {
     price: '',
     color: '',
     size: ['Free Size'],
-    available: true
+    available: true,
+    laundryDays: 1
   })
   
   const [selectedImage, setSelectedImage] = useState(null)
@@ -124,6 +125,8 @@ const AddGown = () => {
         return
       }
 
+      const laundryDaysValue = Math.max(0, Math.min(Number(formData.laundryDays) || 0, 14))
+
       // Create FormData for file upload
       const formDataToSend = new FormData()
       formDataToSend.append('image', selectedImage)
@@ -136,7 +139,8 @@ const AddGown = () => {
         price: parseFloat(formData.price),
         color: formData.color,
         size: formData.size,
-        available: formData.available
+        available: formData.available,
+        laundryDays: laundryDaysValue
       }))
 
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -162,7 +166,8 @@ const AddGown = () => {
           price: '',
           color: '',
           size: ['Free Size'],
-          available: true
+          available: true,
+          laundryDays: 1
         })
         setSelectedImage(null)
         setImagePreview(null)
@@ -356,6 +361,25 @@ const AddGown = () => {
                   className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   required
                 />
+              </div>
+
+              {/* Laundry Buffer */}
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Laundry Buffer (days)
+                </label>
+                <input
+                  type='number'
+                  name='laundryDays'
+                  min='0'
+                  max='14'
+                  value={formData.laundryDays}
+                  onChange={handleInputChange}
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                />
+                <p className='text-xs text-gray-500 mt-1'>
+                  Set the number of days needed for cleaning before the apparel becomes bookable again.
+                </p>
               </div>
 
               {/* Size Selection */}

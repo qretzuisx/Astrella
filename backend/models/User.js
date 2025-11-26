@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema({
     role: {type: String, enum: ["admin", "owner", "user"], default: 'user'},
     image: {type: String, default: ''},
     contactNumber: {type: String, default: ''},
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
 },{timestamps: true})
 
 const User = mongoose.model('User', userSchema)

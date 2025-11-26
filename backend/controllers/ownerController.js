@@ -1,9 +1,16 @@
-import { create } from "domain";
 import imageKit from "../configs/imagekit.js";
 import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import fs from "fs";
+
+const clampLaundryDays = (value) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 0) {
+        return 0;
+    }
+    return Math.min(Math.floor(parsed), 14);
+};
 
 // API to list gowns
 export const addGown = async (req, res) =>{
@@ -11,6 +18,7 @@ export const addGown = async (req, res) =>{
         const {_id} = req.user;
         let gown = JSON.parse(req.body.gownData);
         const imageFile = req.file;
+        const laundryDays = clampLaundryDays(gown.laundryDays ?? 1);
 
         if(!imageFile) {
             return res
@@ -39,7 +47,7 @@ export const addGown = async (req, res) =>{
         // Save image as array (model expects array)
         const image = [optimizedImageUrl];
         // Auto-verify gowns added by owners
-        await Gown.create({...gown, owner: _id, image, verified: true});
+        await Gown.create({...gown, owner: _id, image, verified: true, laundryDays});
 
         res.json({success: true, message: "Gown Added"})
 
@@ -128,6 +136,34 @@ export const DeleteGown = async (req, res)=>{
         
     }
 }
+
+export const updateLaundryDays = async (req, res) => {
+    try {
+        const {_id} = req.user;
+        const { gownID, laundryDays } = req.body;
+
+        if (!gownID) {
+            return res.status(400).json({ success: false, message: "Missing gownID" });
+        }
+
+        const gown = await Gown.findById(gownID);
+        if (!gown) {
+            return res.status(404).json({ success: false, message: "Gown not found" });
+        }
+
+        if (gown.owner?.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+
+        gown.laundryDays = clampLaundryDays(laundryDays);
+        await gown.save();
+
+        res.json({ success: true, message: "Laundry buffer updated", laundryDays: gown.laundryDays });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
 
 // API Dashboard data
 export const getDashboardData = async (req, res)=>{

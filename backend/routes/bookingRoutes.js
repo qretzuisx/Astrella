@@ -1,5 +1,5 @@
 import express from "express";
-import { changeBookingStatus, createBooking, getOwnerBooking, getUserBooking, validateBookingWindow } from "../controllers/bookingController.js";
+import { changeBookingStatus, createBooking, getGownCalendar, getOwnerBooking, getUserBooking, validateBookingWindow } from "../controllers/bookingController.js";
 import { protect } from "../middleware/auth.js";
 
 
@@ -10,5 +10,6 @@ bookingRouter.post('/create', protect, createBooking)
 bookingRouter.post('/user', protect, getUserBooking)
 bookingRouter.post('/owner', protect, getOwnerBooking)
 bookingRouter.put('/change-status', protect, changeBookingStatus)
+bookingRouter.get('/calendar/:gownId', getGownCalendar)
 
 export default bookingRouter;

@@ -14,6 +14,14 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [forgotStep, setForgotStep] = useState('request')
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [generatedResetToken, setGeneratedResetToken] = useState('')
+  const [providedResetToken, setProvidedResetToken] = useState('')
+  const [forgotNewPassword, setForgotNewPassword] = useState('')
+  const [forgotConfirmNewPassword, setForgotConfirmNewPassword] = useState('')
 
   const handleInputChange = (e) => {
     setFormData({
@@ -24,6 +32,28 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
     setSuccess('')
   }
 
+  const resetForgotState = () => {
+    setForgotStep('request')
+    setGeneratedResetToken('')
+    setProvidedResetToken('')
+    setForgotNewPassword('')
+    setForgotConfirmNewPassword('')
+  }
+
+  const startForgotFlow = () => {
+    setShowForgotPassword(true)
+    setForgotEmail(formData.email || '')
+    resetForgotState()
+    setError('')
+    setSuccess('')
+  }
+
+  const exitForgotFlow = () => {
+    setShowForgotPassword(false)
+    resetForgotState()
+    setForgotEmail('')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -31,8 +61,6 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
     setLoading(true)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       if (isLogin) {
         // Login
         if (!formData.email || !formData.password) {
@@ -72,7 +100,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
             // Redirect based on user role
             if (userData.success || userData.sucess) {
               const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
-              if (role === 'owner' || role === 'admin') {
+              if (role === 'owner') {
                 window.location.href = '/owner'
               } else {
                 window.location.href = '/'
@@ -148,10 +176,101 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
     }
   }
 
+  const handleForgotRequest = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!forgotEmail) {
+      setError('Please enter the email associated with your account.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const response = await fetch(`${API_URL}/user/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      })
+
+      const data = await response.json()
+      if (response.ok && (data.success || data.sucess)) {
+        setSuccess('Reset code generated. Check your inbox or use the code shown below.')
+        setGeneratedResetToken(data.resetToken || '')
+        setProvidedResetToken(data.resetToken || '')
+        setForgotStep('reset')
+      } else {
+        setError(data.message || 'Unable to start password reset.')
+      }
+    } catch (err) {
+      console.error('Forgot password error:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!providedResetToken) {
+      setError('Please enter the reset code.')
+      return
+    }
+
+    if (!forgotNewPassword || forgotNewPassword.length < 8) {
+      setError('New password must be at least 8 characters.')
+      return
+    }
+
+    if (forgotNewPassword !== forgotConfirmNewPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const response = await fetch(`${API_URL}/user/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: forgotEmail.trim(),
+          resetToken: providedResetToken.trim(),
+          newPassword: forgotNewPassword
+        })
+      })
+
+      const data = await response.json()
+      if (response.ok && (data.success || data.sucess)) {
+        setSuccess('Password updated successfully. You can now log in.')
+        setTimeout(() => {
+          exitForgotFlow()
+          setShowForgotPassword(false)
+          setIsLogin(true)
+        }, 1200)
+      } else {
+        setError(data.message || 'Failed to reset password.')
+      }
+    } catch (err) {
+      console.error('Reset password error:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleClose = () => {
     setShowLogin(false)
     setError('')
     setSuccess('')
+    exitForgotFlow()
     setFormData({
       name: '',
       email: '',
@@ -202,106 +321,223 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          {!isLogin && (
+        {!showForgotPassword ? (
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            {!isLogin && (
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Full Name
+                </label>
+                <input
+                  type='text'
+                  name='name'
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder='Enter your name'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  required={!isLogin}
+                />
+              </div>
+            )}
+
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Full Name
+                Email
               </label>
               <input
-                type='text'
-                name='name'
-                value={formData.name}
+                type='email'
+                name='email'
+                value={formData.email}
                 onChange={handleInputChange}
-                placeholder='Enter your name'
+                placeholder='Enter your email'
                 className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                required={!isLogin}
+                required
               />
             </div>
-          )}
 
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Email
-            </label>
-            <input
-              type='email'
-              name='email'
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder='Enter your email'
-              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-              required
-            />
-          </div>
-
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Password
-            </label>
-            <input
-              type='password'
-              name='password'
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder='Enter your password'
-              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-              required
-            />
-          </div>
-
-          {!isLogin && (
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Confirm Password
+                Password
               </label>
               <input
                 type='password'
-                name='confirmPassword'
-                value={formData.confirmPassword}
+                name='password'
+                value={formData.password}
                 onChange={handleInputChange}
-                placeholder='Confirm your password'
+                placeholder='Enter your password'
                 className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                required={!isLogin}
+                required
               />
             </div>
-          )}
 
-          <button
-            type='submit'
-            disabled={loading}
-            className={`w-full py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
-              loading
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
-            }`}
+            {isLogin && (
+              <div className='text-right'>
+                <button
+                  type='button'
+                  onClick={startForgotFlow}
+                  className='text-sm text-primary font-semibold hover:underline'
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Confirm Password
+                </label>
+                <input
+                  type='password'
+                  name='confirmPassword'
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder='Confirm your password'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  required={!isLogin}
+                />
+              </div>
+            )}
+
+            <button
+              type='submit'
+              disabled={loading}
+              className={`w-full py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
+              }`}
+            >
+              {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
+            </button>
+          </form>
+        ) : (
+          <form
+            onSubmit={forgotStep === 'request' ? handleForgotRequest : handleResetPassword}
+            className='space-y-4'
           >
-            {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
-          </button>
-        </form>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
+                Account Email
+              </label>
+              <input
+                type='email'
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder='you@example.com'
+                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                required
+              />
+            </div>
 
-        {/* Toggle between Login/Register */}
-        <div className='mt-6 text-center'>
-          <p className='text-gray-600'>
-            {isLogin ? "Don't have an account? " : 'Already have an account? '}
+            {forgotStep === 'reset' && (
+              <>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Reset Code
+                  </label>
+                  <input
+                    type='text'
+                    value={providedResetToken}
+                    onChange={(e) => setProvidedResetToken(e.target.value)}
+                    placeholder='Paste the code you received'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required
+                  />
+                </div>
+                {generatedResetToken && (
+                  <div className='p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800'>
+                    <p className='font-semibold mb-1'>Testing locally?</p>
+                    <p className='break-all'>{generatedResetToken}</p>
+                    <p className='text-xs text-orange-600 mt-1'>
+                      Use this code if you cannot receive emails in development.
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    New Password
+                  </label>
+                  <input
+                    type='password'
+                    value={forgotNewPassword}
+                    onChange={(e) => setForgotNewPassword(e.target.value)}
+                    placeholder='Enter a new password'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type='password'
+                    value={forgotConfirmNewPassword}
+                    onChange={(e) => setForgotConfirmNewPassword(e.target.value)}
+                    placeholder='Re-enter your new password'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            <button
+              type='submit'
+              disabled={loading}
+              className={`w-full py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
+              }`}
+            >
+              {loading
+                ? 'Processing...'
+                : forgotStep === 'request'
+                ? 'Send Reset Code'
+                : 'Update Password'}
+            </button>
+          </form>
+        )}
+
+        {/* Toggle between Login/Register or back to login */}
+        {!showForgotPassword ? (
+          <div className='mt-6 text-center'>
+            <p className='text-gray-600'>
+              {isLogin ? "Don't have an account? " : 'Already have an account? '}
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin)
+                  setError('')
+                  setSuccess('')
+                  setFormData({
+                    name: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: ''
+                  })
+                }}
+                className='text-primary font-semibold hover:underline'
+              >
+                {isLogin ? 'Sign Up' : 'Login'}
+              </button>
+            </p>
+          </div>
+        ) : (
+          <div className='mt-6 text-center'>
             <button
               onClick={() => {
-                setIsLogin(!isLogin)
+                exitForgotFlow()
                 setError('')
                 setSuccess('')
-                setFormData({
-                  name: '',
-                  email: '',
-                  password: '',
-                  confirmPassword: ''
-                })
               }}
               className='text-primary font-semibold hover:underline'
             >
-              {isLogin ? 'Sign Up' : 'Login'}
+              Back to login
             </button>
-          </p>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )
