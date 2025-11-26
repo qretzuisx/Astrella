@@ -391,6 +391,7 @@ const UserProfile = () => {
                         disabled
                         className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
                       />
+                      <p className='text-xs text-gray-500 mt-1'>e.g., 09123456789</p>
                     </div>
 
                     <div>
@@ -466,7 +467,7 @@ const UserProfile = () => {
                         type='text'
                         value={formData.contactNumber}
                         onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                        placeholder='Enter your contact number'
+                        placeholder='e.g., 09123456789'
                         className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
                       />
                     </div>

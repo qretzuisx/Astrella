@@ -179,28 +179,16 @@ const OwnerProfile = () => {
             </div>
 
             {/* Social Media */}
-            {(owner.shopProfile?.socialMedia?.facebook || owner.shopProfile?.socialMedia?.instagram) && (
+            {owner.shopProfile?.socialMedia?.facebook && (
               <div className='flex gap-4 mt-4'>
-                {owner.shopProfile.socialMedia.facebook && (
-                  <a
-                    href={owner.shopProfile.socialMedia.facebook}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-blue-600 hover:text-blue-700 font-medium text-sm'
-                  >
-                    Facebook
-                  </a>
-                )}
-                {owner.shopProfile.socialMedia.instagram && (
-                  <a
-                    href={owner.shopProfile.socialMedia.instagram}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-pink-600 hover:text-pink-700 font-medium text-sm'
-                  >
-                    Instagram
-                  </a>
-                )}
+                <a
+                  href={owner.shopProfile.socialMedia.facebook}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-blue-600 hover:text-blue-700 font-medium text-sm'
+                >
+                  Facebook
+                </a>
               </div>
             )}
           </div>

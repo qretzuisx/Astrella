@@ -58,7 +58,7 @@ const testMLModel = async () => {
         // 4. Test recommendations for a sample user
         if (userCount > 0) {
             const sampleUser = await User.findOne();
-            console.log(`🎯 Testing recommendations for user: ${sampleUser.name}`);
+            console.log(`Testing recommendations for user: ${sampleUser.name}`);
             
             const preferences = {
                 bodyType: 'Hourglass',
@@ -144,7 +144,7 @@ const testMLModel = async () => {
         console.log('   - POST /api/ml/retrain\n');
 
     } catch (error) {
-        console.error('❌ Test failed:', error);
+        console.error(' Test failed:', error);
         process.exit(1);
     } finally {
         await mongoose.connection.close();

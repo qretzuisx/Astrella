@@ -20,7 +20,7 @@ import delete_icon from "./delete_icon.svg"
 import eye_icon from "./eye_icon.svg"
 import eye_close_icon from "./eye_close_icon.svg"
 import filter_icon from "./filter_icon.svg"
-import edit_icon from "./edit_icon.svg"
+import edit_profile_icon from "./edit_profile_icon.svg"
 import calendar_icon_colored from "./calendar_icon_colored.svg"
 import location_icon_colored from "./location_icon_colored.svg"
 import home_bg from "./home-bg.png"
@@ -39,7 +39,7 @@ export const assets = {
     logo,
     search_icon,
     size_icon,
-    edit_icon,
+    edit_profile_icon,
     fabric_icon,
     event_icon,
     color_icon,
@@ -75,7 +75,7 @@ export const menuLinks = [
 
 export const ownerMenuLinks = [
     { name: "Dashboard", path: "/owner", icon: dashboardIcon, coloredIcon: dashboardIconColored },
-    { name: "Shop Profile", path: "/owner/shop-profile", icon: edit_icon, coloredIcon: edit_icon },
+    { name: "Shop Profile", path: "/owner/shop-profile", icon: edit_profile_icon, coloredIcon: edit_profile_icon },
     { name: "Add Apparel", path: "/owner/add-gown", icon: addIcon, coloredIcon: addIconColored },
     { name: "Manage Apparel", path: "/owner/manage-gown", icon: gownIcon, coloredIcon: gownIconColored },
     { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },

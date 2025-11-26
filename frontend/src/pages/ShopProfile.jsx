@@ -13,9 +13,9 @@ const ShopProfile = () => {
     description: '',
     address: '',
     city: '',
+    contactNumber: '',
     operatingHours: '',
-    facebook: '',
-    instagram: ''
+    facebook: ''
   })
   const [businessPermit, setBusinessPermit] = useState(null)
   const [dtiRegistration, setDtiRegistration] = useState(null)
@@ -50,9 +50,9 @@ const ShopProfile = () => {
           description: data.user.shopProfile.description || '',
           address: data.user.shopProfile.address || '',
           city: data.user.shopProfile.city || '',
+          contactNumber: data.user.shopProfile.contactNumber || '',
           operatingHours: data.user.shopProfile.operatingHours || '',
-          facebook: data.user.shopProfile.socialMedia?.facebook || '',
-          instagram: data.user.shopProfile.socialMedia?.instagram || ''
+          facebook: data.user.shopProfile.socialMedia?.facebook || ''
         })
         // Set existing documents
         if (data.user.shopProfile.businessPermit) {
@@ -132,9 +132,9 @@ const ShopProfile = () => {
       formData.append('description', shopProfile.description)
       formData.append('address', shopProfile.address)
       formData.append('city', shopProfile.city)
+      formData.append('contactNumber', shopProfile.contactNumber)
       formData.append('operatingHours', shopProfile.operatingHours)
       formData.append('facebook', shopProfile.facebook)
-      formData.append('instagram', shopProfile.instagram)
       
       // Append files if selected
       if (businessPermit) {
@@ -292,10 +292,25 @@ const ShopProfile = () => {
               />
             </div>
 
-            {/* Social Media */}
+            {/* Contact Information */}
             <div className='mb-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Social Media (Optional)</h3>
+              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Contact Information</h3>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                    Phone Number <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    name='contactNumber'
+                    value={shopProfile.contactNumber}
+                    onChange={handleInputChange}
+                    placeholder='e.g., 09123456789'
+                    required
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  />
+                </div>
+
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-2'>
                     Facebook
@@ -306,20 +321,6 @@ const ShopProfile = () => {
                     value={shopProfile.facebook}
                     onChange={handleInputChange}
                     placeholder='Facebook page URL'
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  />
-                </div>
-
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                    Instagram
-                  </label>
-                  <input
-                    type='text'
-                    name='instagram'
-                    value={shopProfile.instagram}
-                    onChange={handleInputChange}
-                    placeholder='Instagram profile URL'
                     className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   />
                 </div>
@@ -442,12 +443,6 @@ const ShopProfile = () => {
               </div>
             </div>
 
-            {/* Info Box */}
-            <div className='mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
-              <p className='text-sm text-blue-800'>
-                <strong>Note:</strong> Once you save your shop profile, the address and contact information will automatically appear on all your gown listings, so you won't need to enter them each time you add a new gown.
-              </p>
-            </div>
 
             {/* Submit Button */}
             <div className='flex gap-4'>
