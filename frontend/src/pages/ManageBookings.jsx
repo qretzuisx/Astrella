@@ -91,6 +91,8 @@ const ManageBookings = () => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'confirmed':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'completed':
         return 'bg-green-100 text-green-800 border-green-200'
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
@@ -147,7 +149,7 @@ const ManageBookings = () => {
 
           {/* Filter Tabs */}
           <div className='mb-6 flex gap-2 border-b border-gray-200'>
-            {['all', 'pending', 'confirmed', 'canceled'].map((status) => (
+            {['all', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -270,15 +272,15 @@ const ManageBookings = () => {
                         </p>
                       </div>
 
-                      {/* Action Buttons */}
+                      {/* Action Buttons: Manage Booking (pickup/return) */}
                       <div className='flex flex-col gap-2'>
                         {booking.status === 'pending' && (
                           <>
                             <button
                               onClick={() => handleStatusChange(booking._id, 'confirmed')}
-                              className='w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+                              className='w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold'
                             >
-                              Confirm Booking
+                              Confirm Pick-up
                             </button>
                             <button
                               onClick={() => handleStatusChange(booking._id, 'canceled')}
@@ -289,19 +291,27 @@ const ManageBookings = () => {
                           </>
                         )}
                         {booking.status === 'confirmed' && (
-                          <button
-                            onClick={() => handleStatusChange(booking._id, 'canceled')}
-                            className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
-                          >
-                            Cancel Booking
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(booking._id, 'completed')}
+                              className='w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+                            >
+                              Confirm Return
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
+                            >
+                              Cancel Booking
+                            </button>
+                          </>
                         )}
                         {booking.status === 'canceled' && (
                           <button
                             onClick={() => handleStatusChange(booking._id, 'confirmed')}
-                            className='w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+                            className='w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold'
                           >
-                            Re-confirm Booking
+                            Re-confirm & Mark For Pick-up
                           </button>
                         )}
                       </div>

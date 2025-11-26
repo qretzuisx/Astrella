@@ -86,8 +86,12 @@ export const createBooking = async (req, res) => {
       return res.json({ success: false, message: "This gown is still reserved or in laundry during your selected pickup time." });
     }
 
-    const basePrice = gownData.price || gownData.pricePerDay || 0;
-    const price = basePrice;
+    // Dynamic rental pricing based on number of days selected
+    const msDiff = returnDateTime.getTime() - pickupDateTime.getTime();
+    const rawDays = msDiff / DAY_IN_MS;
+    const rentalDays = Math.max(1, Math.ceil(rawDays));
+    const pricePerDay = gownData.pricePerDay || gownData.price || 0;
+    const price = rentalDays * pricePerDay;
 
     const newBooking = await Booking.create({
       gown,
@@ -237,34 +241,44 @@ export const changeBookingStatus = async (req, res) => {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const prevStatus = booking.status
+    const prevStatus = booking.status;
+
+    // Track owner confirmations for Manage Booking
+    if (status === 'confirmed' && !booking.pickupConfirmedAt) {
+      booking.pickupConfirmedAt = new Date();
+    }
+    if (status === 'completed' && !booking.returnConfirmedAt) {
+      booking.returnConfirmedAt = new Date();
+    }
+
     booking.status = status;
     await booking.save();
 
-    // If booking is confirmed, mark the gown as unavailable for the booked period
+    // Keep a simple gown-level availability flag in sync for listing visibility.
     try {
-      const gown = await Gown.findById(booking.gown)
+      const gown = await Gown.findById(booking.gown);
+
+      // When a booking is confirmed (pickup), ensure the gown is generally not
+      // listed as freely available, as it is now in active use.
       if (status === 'confirmed') {
-        // simple approach: mark gown not available (owner UI still can override)
-        gown.available = false
-        await gown.save()
+        gown.available = false;
+        await gown.save();
       }
 
-      // If booking was canceled and previously confirmed, try to mark gown available.
-      // Note: this simplistic approach assumes no overlapping confirmed bookings.
-      if (status === 'canceled' && prevStatus === 'confirmed') {
-        // check for other confirmed bookings that overlap this gown
+      // If booking is canceled or completed and was previously confirmed,
+      // try to make the gown available again if there is no other confirmed booking.
+      if ((status === 'canceled' || status === 'completed') && prevStatus === 'confirmed') {
         const overlapping = await Booking.findOne({
           gown: booking.gown,
           status: 'confirmed',
-        })
+        });
         if (!overlapping) {
-          gown.available = true
-          await gown.save()
+          gown.available = true;
+          await gown.save();
         }
       }
     } catch (err) {
-      console.error('Failed to update gown availability on status change:', err.message)
+      console.error('Failed to update gown availability on status change:', err.message);
     }
 
     res.json({ success: true, message: "Status Updated" });

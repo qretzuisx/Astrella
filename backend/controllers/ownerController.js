@@ -158,7 +158,7 @@ export const updateLaundryDays = async (req, res) => {
         gown.laundryDays = clampLaundryDays(laundryDays);
         await gown.save();
 
-        res.json({ success: true, message: "Laundry buffer updated", laundryDays: gown.laundryDays });
+        res.json({ success: true, message: "Laundry day updated", laundryDays: gown.laundryDays });
     } catch (error) {
         console.log(error.message);
         res.json({ success: false, message: error.message });

@@ -311,8 +311,8 @@ const GownDetails = () => {
     const diffMs = returnDateTime - pickupDateTime
     const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
     setDurationDays(diffDays)
-    const basePrice = gown?.price || gown?.pricePerDay || 0
-    setTotalAmount(basePrice)
+    const pricePerDay = gown?.pricePerDay || gown?.price || 0
+    setTotalAmount(diffDays * pricePerDay)
   }, [pickupDate, returnDate, pickupTime, returnTime, gown])
 
   useEffect(() => {
@@ -905,7 +905,7 @@ const GownDetails = () => {
             <PaymentModal
               showPayment={showPayment}
               setShowPayment={setShowPayment}
-              total={totalAmount || gown.pricePerDay || gown.price || 0}
+              total={totalAmount || (gown.pricePerDay || gown.price || 0)}
               onContinue={handlePaymentContinue}
             />
 
