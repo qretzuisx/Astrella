@@ -334,6 +334,23 @@ class HybridRecommendationModel {
             const alreadyBooked = await this.hasUserBookedGown(userId, gownId);
             if (alreadyBooked) continue;
 
+            // STRICT EVENT TYPE FILTERING: Skip gowns that don't match the selected event type
+            if (preferences.eventType) {
+                const userEventType = preferences.eventType.toLowerCase().trim();
+                let matchesEventType = false;
+
+                if (Array.isArray(gown.eventType)) {
+                    const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
+                    matchesEventType = gownEventTypes.includes(userEventType);
+                } else if (gown.eventType) {
+                    const gownEventType = gown.eventType.toLowerCase().trim();
+                    matchesEventType = gownEventType === userEventType;
+                }
+
+                // If event type doesn't match, skip this gown entirely
+                if (!matchesEventType) continue;
+            }
+
             // 1. Collaborative Filtering Score (0-5 scale)
             const cfScore = this.collaborativeModel.predictScore(userId, gownId);
 
@@ -468,24 +485,24 @@ const calculateRecommendationScore = (gown, preferences) => {
     let score = 0;
     const maxScore = 100;
 
-    // Event Type Match (30 points)
+    // Event Type Match (30 points) - STRICT MATCHING ONLY
     if (preferences.eventType) {
-        const userEventType = preferences.eventType.toLowerCase();
+        const userEventType = preferences.eventType.toLowerCase().trim();
         
         if (Array.isArray(gown.eventType)) {
-            const gownEventTypes = gown.eventType.map(e => e.toLowerCase());
+            const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
+            // Only give points if exact match found in the array
             if (gownEventTypes.includes(userEventType)) {
                 score += 30;
-            } else if (gownEventTypes.some(e => e.includes(userEventType) || userEventType.includes(e))) {
-                score += 20;
             }
+            // If no exact match, score remains 0 for event type
         } else {
-            const gownEventType = gown.eventType?.toLowerCase();
+            const gownEventType = gown.eventType?.toLowerCase().trim();
+            // Only give points if exact match
             if (gownEventType === userEventType) {
                 score += 30;
-            } else if (gownEventType?.includes(userEventType) || userEventType.includes(gownEventType)) {
-                score += 20;
             }
+            // If no exact match, score remains 0 for event type
         }
     }
 

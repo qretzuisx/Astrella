@@ -22,7 +22,7 @@ const AddGown = () => {
   const [selectedImage, setSelectedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
 
-  const sizeOptions = ['Free Size', 'Small', 'Medium', 'Large', 'Extra Large']
+  const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size']
 
   const handleInputChange = (e) => {
     const { name, value } = e.target

@@ -139,26 +139,26 @@ const calculateRecommendationScore = (gown, preferences) => {
     let score = 0;
     const maxScore = 100;
 
-    // Event Type Match (30 points)
+    // Event Type Match (30 points) - STRICT MATCHING ONLY
     if (preferences.eventType) {
-        const userEventType = preferences.eventType.toLowerCase();
+        const userEventType = preferences.eventType.toLowerCase().trim();
         
         // Handle both array and string eventType
         if (Array.isArray(gown.eventType)) {
-            const gownEventTypes = gown.eventType.map(e => e.toLowerCase());
+            const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
+            // Only give points if exact match found in the array
             if (gownEventTypes.includes(userEventType)) {
-                score += 30; // Perfect match
-            } else if (gownEventTypes.some(e => e.includes(userEventType) || userEventType.includes(e))) {
-                score += 20; // Partial match
+                score += 30;
             }
+            // If no exact match, score remains 0 for event type
         } else {
             // Backward compatibility for old string format
-            const gownEventType = gown.eventType?.toLowerCase();
+            const gownEventType = gown.eventType?.toLowerCase().trim();
+            // Only give points if exact match
             if (gownEventType === userEventType) {
                 score += 30;
-            } else if (gownEventType?.includes(userEventType) || userEventType.includes(gownEventType)) {
-                score += 20;
             }
+            // If no exact match, score remains 0 for event type
         }
     }
 
@@ -483,7 +483,7 @@ export const getRecommendations = async (req, res) => {
         const { bodyType, skinTone, height, eventType, faceShape } = req.query;
 
         // Get all available and verified gowns
-        const allGowns = await Gown.find({ available: true, verified: true })
+        let allGowns = await Gown.find({ available: true, verified: true })
             .populate('owner', 'name')
             .sort({ createdAt: -1 });
 
@@ -493,6 +493,31 @@ export const getRecommendations = async (req, res) => {
                 recommendations: [],
                 message: "No gowns available at the moment" 
             });
+        }
+
+        // STRICT EVENT TYPE FILTERING - Filter gowns by event type FIRST
+        if (eventType) {
+            const userEventType = eventType.toLowerCase().trim();
+            allGowns = allGowns.filter(gown => {
+                if (Array.isArray(gown.eventType)) {
+                    const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
+                    return gownEventTypes.includes(userEventType);
+                } else if (gown.eventType) {
+                    const gownEventType = gown.eventType.toLowerCase().trim();
+                    return gownEventType === userEventType;
+                }
+                return false;
+            });
+
+            // If no gowns match the event type, return empty
+            if (allGowns.length === 0) {
+                return res.json({ 
+                    success: true, 
+                    recommendations: [],
+                    preferences: { bodyType, skinTone, height, eventType, faceShape },
+                    message: `No gowns available for ${eventType} events` 
+                });
+            }
         }
 
         // If no preferences provided, return all gowns
@@ -507,7 +532,7 @@ export const getRecommendations = async (req, res) => {
             });
         }
 
-        // Calculate scores for each gown
+        // Calculate scores for each gown (now only scoring the filtered gowns)
         const preferences = { bodyType, skinTone, height, eventType, faceShape };
         const scoredGowns = allGowns.map(gown => {
             const score = calculateRecommendationScore(gown, preferences);
@@ -523,17 +548,12 @@ export const getRecommendations = async (req, res) => {
         // Sort by score (highest first)
         scoredGowns.sort((a, b) => b.score - a.score);
 
-        // Filter to show only gowns with score >= 20, or top 20 if all scores are low
-        const filteredGowns = scoredGowns.filter(item => item.score >= 20);
-        const recommendations = filteredGowns.length > 0 
-            ? filteredGowns 
-            : scoredGowns.slice(0, 20);
-
+        // Return all matched gowns (already filtered by event type)
         res.json({ 
             success: true, 
-            recommendations,
+            recommendations: scoredGowns,
             preferences,
-            totalMatches: recommendations.length
+            totalMatches: scoredGowns.length
         });
 
     } catch (error) {
