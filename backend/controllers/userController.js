@@ -618,6 +618,9 @@ export const updateShopProfile = async (req, res) => {
             }
         }
 
+        // Get contact number from request body
+        const contactNumber = req.body.contactNumber || user.shopProfile?.contactNumber || user.contactNumber || ''
+
         // Update shop profile
         user.shopProfile = {
             ...user.shopProfile,
@@ -625,6 +628,7 @@ export const updateShopProfile = async (req, res) => {
             description: description || user.shopProfile?.description || '',
             address: address || user.shopProfile?.address || '',
             city: city || user.shopProfile?.city || '',
+            contactNumber: contactNumber,
             operatingHours: operatingHours || user.shopProfile?.operatingHours || '',
             socialMedia: {
                 facebook: facebook || user.shopProfile?.socialMedia?.facebook || '',
@@ -635,6 +639,9 @@ export const updateShopProfile = async (req, res) => {
             businessPermit: businessPermitUrl,
             dtiRegistration: dtiRegistrationUrl
         }
+
+        // Sync contact number to root level for easy access
+        user.contactNumber = contactNumber
 
         await user.save()
 

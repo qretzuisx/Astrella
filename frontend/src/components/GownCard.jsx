@@ -38,10 +38,18 @@ const GownCard = ({ gown }) => {
             const ownerId = typeof gown.owner === 'object' ? gown.owner._id : gown.owner
             navigate(`/owner-profile/${ownerId}`)
           }}
-          className="text-gray-700 hover:text-primary text-sm mb-4 font-medium text-left hover:underline transition-colors"
+          className="text-gray-700 hover:text-primary text-sm mb-2 font-medium text-left hover:underline transition-colors"
         >
           {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}
         </button>
+
+        {/* Location Info */}
+        {gown.location && (
+          <div className="flex items-start gap-1 mb-4">
+            <img src={assets.location_icon_colored} alt="location" className="h-4 w-4 mt-0.5 flex-shrink-0 opacity-70" />
+            <span className="text-xs text-gray-600 line-clamp-1">{gown.location}</span>
+          </div>
+        )}
 
         <div className="mt-auto grid grid-cols-2 gap-y-2 text-gray-800">
           <div className="flex items-center text-sm font-semibold">

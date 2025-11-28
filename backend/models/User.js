@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
         description: {type: String, default: ''},
         address: {type: String, default: ''},
         city: {type: String, default: ''},
+        contactNumber: {type: String, default: ''}, // Synced with root contactNumber
         operatingHours: {type: String, default: ''},
         businessPermit: {type: String, default: ''}, // URL to uploaded document
         dtiRegistration: {type: String, default: ''}, // URL to uploaded document

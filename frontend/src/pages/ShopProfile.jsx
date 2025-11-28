@@ -44,15 +44,18 @@ const ShopProfile = () => {
 
       const data = await response.json()
       
-      if (data.success && data.user?.shopProfile) {
+      if (data.success && data.user) {
+        // Get contact number from shopProfile first, fallback to root level
+        const contactNumber = data.user.shopProfile?.contactNumber || data.user.contactNumber || ''
+        
         setShopProfile({
-          shopName: data.user.shopProfile.shopName || '',
-          description: data.user.shopProfile.description || '',
-          address: data.user.shopProfile.address || '',
-          city: data.user.shopProfile.city || '',
-          contactNumber: data.user.shopProfile.contactNumber || '',
-          operatingHours: data.user.shopProfile.operatingHours || '',
-          facebook: data.user.shopProfile.socialMedia?.facebook || ''
+          shopName: data.user.shopProfile?.shopName || '',
+          description: data.user.shopProfile?.description || '',
+          address: data.user.shopProfile?.address || '',
+          city: data.user.shopProfile?.city || '',
+          contactNumber: contactNumber,
+          operatingHours: data.user.shopProfile?.operatingHours || '',
+          facebook: data.user.shopProfile?.socialMedia?.facebook || ''
         })
         // Set existing documents
         if (data.user.shopProfile.businessPermit) {

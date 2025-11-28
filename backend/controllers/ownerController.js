@@ -26,6 +26,29 @@ export const addGown = async (req, res) =>{
             .json({success: false, message: "No image uploaded"});
         }
 
+        // Fetch user's shop profile
+        const user = await User.findById(_id);
+        if (!user) {
+            return res.status(404).json({success: false, message: "User not found"});
+        }
+
+        // Validate that shop profile has required information
+        if (!user.shopProfile?.address || user.shopProfile.address.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Please update your shop profile with a valid address before adding gowns."
+            });
+        }
+
+        // Check contact number from either location
+        const contactNumber = user.shopProfile?.contactNumber || user.contactNumber || ''
+        if (!contactNumber || contactNumber.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Please update your shop profile with a valid contact number before adding gowns."
+            });
+        }
+
 // upload img to imagekit
         const fileBuffer = fs.readFileSync(imageFile.path)
         const response = await imageKit.upload({
@@ -46,8 +69,20 @@ export const addGown = async (req, res) =>{
 
         // Save image as array (model expects array)
         const image = [optimizedImageUrl];
+        
+        // Get contact number from either location (shopProfile takes priority)
+        const gownContactNumber = user.shopProfile?.contactNumber || user.contactNumber || ''
+        
         // Auto-verify gowns added by owners
-        await Gown.create({...gown, owner: _id, image, verified: true, laundryDays});
+        await Gown.create({
+            ...gown,
+            owner: _id,
+            image,
+            verified: true,
+            laundryDays,
+            location: user.shopProfile.address,
+            contactNumber: gownContactNumber
+        });
 
         res.json({success: true, message: "Gown Added"})
 
