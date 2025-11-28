@@ -9,13 +9,31 @@ import mlRouter from "./routes/mlRoutes.js";
 
 const app = express()
 
-
-// connect database
 await connectDb()
 
 
-//Middleware
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:5173', 
+    'http://localhost:5174',
+    'http://localhost:3000',
+    process.env.FRONTEND_URL,
+    'https://astrella.vercel.app' 
+];
+
+app.use(cors({
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
+
 app.use(express.json());
 
 app.get('/', (req, res) => res.send("Server is running"))
