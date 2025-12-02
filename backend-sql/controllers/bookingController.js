@@ -6,6 +6,34 @@ import { Op } from 'sequelize';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
+// Helper function to transform SQL booking to match MongoDB format for frontend compatibility
+const transformBookingForResponse = (booking) => {
+  const bookingData = booking.toJSON ? booking.toJSON() : booking;
+  
+  // Transform flat payment fields to nested payment object
+  return {
+    ...bookingData,
+    _id: bookingData.id, // Add MongoDB-style _id for frontend compatibility
+    measurements: bookingData.waist || bookingData.hips ? {
+      waist: bookingData.waist,
+      hips: bookingData.hips,
+      unit: bookingData.measurementUnit || 'inches'
+    } : undefined,
+    payment: {
+      method: bookingData.paymentMethod || 'gcash',
+      depositAmount: bookingData.depositAmount,
+      totalAmount: bookingData.totalAmount,
+      remainingBalance: bookingData.remainingBalance,
+      transactionRef: bookingData.transactionRef,
+      screenshot: bookingData.paymentScreenshot,
+      status: bookingData.paymentStatus || 'pending',
+      verifiedAt: bookingData.paymentVerifiedAt,
+      verifiedBy: bookingData.paymentVerifiedBy,
+      rejectionReason: bookingData.rejectionReason
+    }
+  };
+};
+
 const combineDateAndTime = (dateValue, timeValue) => {
   if (!dateValue) return null;
   const safeTime = timeValue || "09:00";
@@ -225,7 +253,10 @@ export const createBooking = async (req, res) => {
       ]
     });
 
-    res.json({ success: true, message: "Booking Created - Payment pending verification", booking: populatedBooking });
+    // Transform to match frontend expectations
+    const transformedBooking = transformBookingForResponse(populatedBooking);
+
+    res.json({ success: true, message: "Booking Created - Payment pending verification", booking: transformedBooking });
 
   } catch (error) {
     console.log(error.message);
@@ -355,7 +386,10 @@ export const getUserBooking = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ success: true, bookings });
+    // Transform bookings to match frontend expectations
+    const transformedBookings = bookings.map(transformBookingForResponse);
+
+    res.json({ success: true, bookings: transformedBookings });
 
   } catch (error) {
     console.log(error.message);
@@ -379,7 +413,10 @@ export const getOwnerBooking = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ success: true, bookings });
+    // Transform bookings to match frontend expectations
+    const transformedBookings = bookings.map(transformBookingForResponse);
+
+    res.json({ success: true, bookings: transformedBookings });
 
   } catch (error) {
     console.log(error.message);

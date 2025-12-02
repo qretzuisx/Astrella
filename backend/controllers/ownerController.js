@@ -218,9 +218,9 @@ export const getDashboardData = async (req, res)=>{
         const pendingBookings = await Booking.find({owner: _id, status: 'pending'})
         const completedBookings = await Booking.find({owner: _id, status: 'completed'})
 
-        // Monthly revenue when booking is confirmed
+        // Monthly revenue: count confirmed AND completed bookings (completed were previously confirmed)
         const monthlyRevenue = bookings.filter(booking => 
-            booking.status === 'confirmed'
+            booking.status === 'confirmed' || booking.status === 'completed'
         ).reduce((acc, booking) => acc + (booking.price || 0), 0)
 
         const dashboardData = {

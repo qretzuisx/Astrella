@@ -210,17 +210,43 @@ export const getDashboardData = async (req, res) => {
         const pendingBookings = bookings.filter(b => b.status === 'pending');
         const completedBookings = bookings.filter(b => b.status === 'completed');
 
-        // Monthly revenue when booking is confirmed
+        // Monthly revenue: count confirmed AND completed bookings (completed were previously confirmed)
         const monthlyRevenue = bookings
-            .filter(booking => booking.status === 'confirmed')
+            .filter(booking => booking.status === 'confirmed' || booking.status === 'completed')
             .reduce((acc, booking) => acc + (parseFloat(booking.price) || 0), 0);
+
+        // Transform recent bookings to match frontend expectations
+        const transformedRecentBookings = bookings.slice(0, 3).map(booking => {
+            const bookingData = booking.toJSON ? booking.toJSON() : booking;
+            return {
+                ...bookingData,
+                _id: bookingData.id,
+                measurements: bookingData.waist || bookingData.hips ? {
+                    waist: bookingData.waist,
+                    hips: bookingData.hips,
+                    unit: bookingData.measurementUnit || 'inches'
+                } : undefined,
+                payment: {
+                    method: bookingData.paymentMethod || 'gcash',
+                    depositAmount: bookingData.depositAmount,
+                    totalAmount: bookingData.totalAmount,
+                    remainingBalance: bookingData.remainingBalance,
+                    transactionRef: bookingData.transactionRef,
+                    screenshot: bookingData.paymentScreenshot,
+                    status: bookingData.paymentStatus || 'pending',
+                    verifiedAt: bookingData.paymentVerifiedAt,
+                    verifiedBy: bookingData.paymentVerifiedBy,
+                    rejectionReason: bookingData.rejectionReason
+                }
+            };
+        });
 
         const dashboardData = {
             totalGowns: gowns.length,
             totalBookings: bookings.length,
             pendingBookings: pendingBookings.length,
             completedBookings: completedBookings.length,
-            recentBookings: bookings.slice(0, 3),
+            recentBookings: transformedRecentBookings,
             monthlyRevenue
         };
 
