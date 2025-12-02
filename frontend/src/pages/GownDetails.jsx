@@ -90,7 +90,8 @@ const GownDetails = () => {
         const data = await response.json()
         
         if (data.success && data.gowns) {
-          const foundGown = data.gowns.find(g => g._id === id)
+          // Support both MongoDB (_id) and SQL (id) backends
+          const foundGown = data.gowns.find(g => g._id === id || g.id == id)
           if (foundGown) {
             setGown(foundGown)
           } else {
@@ -285,7 +286,7 @@ const GownDetails = () => {
 
       // Create FormData for file upload
       const formData = new FormData()
-      formData.append('gown', gown._id)
+      formData.append('gown', gown._id || gown.id)
       formData.append('pickupDate', pickupDateTime?.toISOString())
       formData.append('returnDate', returnDateTime?.toISOString())
       formData.append('pickupTime', pickupTime)
@@ -372,7 +373,7 @@ const GownDetails = () => {
   }, [pickupDate, returnDate, pickupTime, returnTime, gown])
 
   useEffect(() => {
-    if (!gown?._id || !pickupDate || !returnDate || !pickupTime || !returnTime) {
+    if (!(gown?._id || gown?.id) || !pickupDate || !returnDate || !pickupTime || !returnTime) {
       setScheduleStatus({ loading: false, message: 'Select pickup and return date & time to check availability.', valid: false })
       return
     }
@@ -390,7 +391,7 @@ const GownDetails = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            gownId: gown._id,
+            gownId: gown._id || gown.id,
             pickupDate,
             returnDate,
             pickupTime,
@@ -445,7 +446,7 @@ const GownDetails = () => {
     || success
     || loadingGown
 
-  const gownId = gown?._id || ''
+  const gownId = gown?._id || gown?.id || ''
 
   // Format date with day name (MM-DD-YYYY, dayname format)
   const formatDateWithDay = (dateString) => {
@@ -681,7 +682,7 @@ const GownDetails = () => {
               by{' '}
               <button
                 onClick={() => {
-                  const ownerId = typeof gown.owner === 'object' ? gown.owner._id : gown.owner
+                  const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
                   navigate(`/owner-profile/${ownerId}`)
                 }}
                 className='text-primary hover:text-primary-dull font-semibold hover:underline transition-colors'

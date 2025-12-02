@@ -45,24 +45,32 @@ const ShopProfile = () => {
       const data = await response.json()
       
       if (data.success && data.user) {
-        // Get contact number from shopProfile first, fallback to root level
-        const contactNumber = data.user.shopProfile?.contactNumber || data.user.contactNumber || ''
+        // SQL Backend: data is flat (shopName, shopDescription, etc.)
+        // MongoDB Backend: data is nested in shopProfile object
+        // Support both structures for compatibility
+        
+        const user = data.user
+        const isFlat = user.shopName !== undefined // SQL backend structure
         
         setShopProfile({
-          shopName: data.user.shopProfile?.shopName || '',
-          description: data.user.shopProfile?.description || '',
-          address: data.user.shopProfile?.address || '',
-          city: data.user.shopProfile?.city || '',
-          contactNumber: contactNumber,
-          operatingHours: data.user.shopProfile?.operatingHours || '',
-          facebook: data.user.shopProfile?.socialMedia?.facebook || ''
+          shopName: isFlat ? (user.shopName || '') : (user.shopProfile?.shopName || ''),
+          description: isFlat ? (user.shopDescription || '') : (user.shopProfile?.description || ''),
+          address: isFlat ? (user.shopAddress || '') : (user.shopProfile?.address || ''),
+          city: isFlat ? (user.shopCity || '') : (user.shopProfile?.city || ''),
+          contactNumber: isFlat ? (user.shopContactNumber || user.contactNumber || '') : (user.shopProfile?.contactNumber || user.contactNumber || ''),
+          operatingHours: isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || ''),
+          facebook: isFlat ? (user.facebookUrl || '') : (user.shopProfile?.socialMedia?.facebook || '')
         })
-        // Set existing documents
-        if (data.user.shopProfile.businessPermit) {
-          setPermitPreview(data.user.shopProfile.businessPermit)
+        
+        // Set existing documents (check both structures)
+        const businessPermit = isFlat ? user.businessPermit : user.shopProfile?.businessPermit
+        const dtiRegistration = isFlat ? user.dtiRegistration : user.shopProfile?.dtiRegistration
+        
+        if (businessPermit) {
+          setPermitPreview(businessPermit)
         }
-        if (data.user.shopProfile.dtiRegistration) {
-          setDtiPreview(data.user.shopProfile.dtiRegistration)
+        if (dtiRegistration) {
+          setDtiPreview(dtiRegistration)
         }
       }
     } catch (error) {

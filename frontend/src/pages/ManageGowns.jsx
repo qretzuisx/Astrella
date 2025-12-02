@@ -44,7 +44,7 @@ const ManageGowns = () => {
         const gownsList = data.gowns || []
         setGowns(gownsList)
         const laundryMap = gownsList.reduce((acc, gown) => {
-          acc[gown._id] = String(typeof gown.laundryDays === 'number' ? gown.laundryDays : 0)
+          acc[gown._id || gown.id] = String(typeof gown.laundryDays === 'number' ? gown.laundryDays : 0)
           return acc
         }, {})
         setLaundryForm(laundryMap)
@@ -157,7 +157,7 @@ const ManageGowns = () => {
       const data = await response.json()
       if (data.success || data.sucess) {
         setSuccess('Laundry days updated successfully')
-        setGowns(prev => prev.map(g => g._id === gownId ? { ...g, laundryDays: data.laundryDays } : g))
+        setGowns(prev => prev.map(g => (g._id || g.id) == gownId ? { ...g, laundryDays: data.laundryDays } : g))
         setLaundryForm(prev => ({ ...prev, [gownId]: String(data.laundryDays ?? parsedValue) }))
         setTimeout(() => setSuccess(''), 3000)
       } else {
@@ -238,7 +238,7 @@ const ManageGowns = () => {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
               {gowns.map((gown) => (
                 <div 
-                  key={gown._id} 
+                  key={gown._id || gown.id} 
                   className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow'
                 >
                   {/* Gown Image */}
@@ -310,21 +310,21 @@ const ManageGowns = () => {
                           type='number'
                           min='0'
                           max='14'
-                          value={laundryForm[gown._id] ?? String(gown.laundryDays ?? 0)}
-                          onChange={(e) => handleLaundryInputChange(gown._id, e.target.value)}
+                          value={laundryForm[gown._id || gown.id] ?? String(gown.laundryDays ?? 0)}
+                          onChange={(e) => handleLaundryInputChange(gown._id || gown.id, e.target.value)}
                           className='w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm'
                         />
                         <span className='text-sm text-gray-600'>day(s) after return</span>
                         <button
-                          onClick={() => handleSaveLaundryDays(gown._id)}
-                          disabled={laundrySaving === gown._id}
+                          onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
+                          disabled={laundrySaving === (gown._id || gown.id)}
                           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                            laundrySaving === gown._id
+                            laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                               : 'bg-primary text-white hover:bg-primary-dull'
                           }`}
                         >
-                          {laundrySaving === gown._id ? 'Saving...' : 'Save'}
+                          {laundrySaving === (gown._id || gown.id) ? 'Saving...' : 'Save'}
                         </button>
                       </div>
                     </div>
@@ -332,7 +332,7 @@ const ManageGowns = () => {
                     {/* Action Buttons */}
                     <div className='flex gap-2 pt-4 border-t border-gray-200'>
                       <button
-                        onClick={() => handleToggleAvailability(gown._id)}
+                        onClick={() => handleToggleAvailability(gown._id || gown.id)}
                         className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                           gown.available
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
@@ -342,7 +342,7 @@ const ManageGowns = () => {
                         {gown.available ? 'Mark Unavailable' : 'Mark Available'}
                       </button>
                       <button
-                        onClick={() => handleDeleteGown(gown._id)}
+                        onClick={() => handleDeleteGown(gown._id || gown.id)}
                         className='px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors text-sm font-semibold'
                       >
                         <img src={assets.delete_icon} alt="delete" className='w-4 h-4 mx-auto' />

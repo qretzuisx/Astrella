@@ -44,9 +44,9 @@ const OwnerProfile = () => {
       const data = await response.json()
       
       if (data.success && data.gowns) {
-        // Filter gowns by this owner
+        // Filter gowns by this owner (support both MongoDB and SQL)
         const ownerGowns = data.gowns.filter(gown => 
-          gown.owner === ownerId || gown.owner?._id === ownerId
+          gown.owner === ownerId || gown.owner?._id === ownerId || gown.owner?.id == ownerId
         )
         setGowns(ownerGowns)
       }
@@ -267,7 +267,7 @@ const OwnerProfile = () => {
           {gowns.length > 0 ? (
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
               {gowns.map((gown) => (
-                <GownCard key={gown._id} gown={gown} />
+                <GownCard key={gown._id || gown.id} gown={gown} />
               ))}
             </div>
           ) : (

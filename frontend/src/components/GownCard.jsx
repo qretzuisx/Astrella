@@ -7,7 +7,7 @@ const GownCard = ({ gown }) => {
   const navigate = useNavigate()
 
   return (
-    <div onClick={()=> {navigate(`/gown-details/${gown._id}`); scrollTo(0,0)}}
+    <div onClick={()=> {navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0,0)}}
       className="group rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:-translate-y-2
       transition-all duration-300 cursor-pointer flex flex-col h-full bg-white border border-gray-200"
     >
@@ -35,7 +35,7 @@ const GownCard = ({ gown }) => {
         <button
           onClick={(e) => {
             e.stopPropagation()
-            const ownerId = typeof gown.owner === 'object' ? gown.owner._id : gown.owner
+            const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
             navigate(`/owner-profile/${ownerId}`)
           }}
           className="text-gray-700 hover:text-primary text-sm mb-2 font-medium text-left hover:underline transition-colors"

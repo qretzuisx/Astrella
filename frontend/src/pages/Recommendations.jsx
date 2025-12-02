@@ -158,7 +158,7 @@ const Recommendations = () => {
         {recommendations.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {recommendations.map((item, index) => (
-              <div key={item.gown._id || index} className="relative">
+              <div key={item.gown._id || item.gown.id || index} className="relative">
                 <div className={`absolute top-2 right-2 z-10 px-3 py-1 rounded-full text-xs font-semibold ${getScoreBadge(item.score)}`}>
                   {item.score}% Match
                 </div>

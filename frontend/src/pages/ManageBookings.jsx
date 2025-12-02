@@ -226,7 +226,7 @@ const ManageBookings = () => {
             <div className='space-y-4'>
               {filteredBookings.map((booking) => (
                 <div 
-                  key={booking._id} 
+                  key={booking._id || booking.id} 
                   className='bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow'
                 >
                   <div className='flex flex-col lg:flex-row gap-6'>
@@ -350,7 +350,7 @@ const ManageBookings = () => {
                               Review Payment
                             </button>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
                               className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
                             >
                               Cancel Booking
@@ -362,13 +362,13 @@ const ManageBookings = () => {
                         {booking.status === 'pending' && booking.payment?.status === 'verified' && (
                           <>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'confirmed')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
                               className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
                             >
                               Confirm Pick-up
                             </button>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
                               className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
                             >
                               Cancel Booking
@@ -380,13 +380,13 @@ const ManageBookings = () => {
                         {booking.status === 'pending' && !booking.payment && (
                           <>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'confirmed')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
                               className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
                             >
                               Confirm Pick-up
                             </button>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
                               className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
                             >
                               Cancel Booking
@@ -397,13 +397,13 @@ const ManageBookings = () => {
                         {booking.status === 'confirmed' && (
                           <>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'completed')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
                               className='w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
                             >
                               Confirm Return
                             </button>
                             <button
-                              onClick={() => handleStatusChange(booking._id, 'canceled')}
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
                               className='w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
                             >
                               Cancel Booking
@@ -413,7 +413,7 @@ const ManageBookings = () => {
                         
                         {booking.status === 'canceled' && (
                           <button
-                            onClick={() => handleStatusChange(booking._id, 'confirmed')}
+                            onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
                             className='w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
                           >
                             Re-confirm & Mark For Pick-up
@@ -527,13 +527,13 @@ const ManageBookings = () => {
             {/* Action Buttons */}
             <div className='flex gap-4'>
               <button
-                onClick={() => handleVerifyPayment(selectedPayment._id, 'approve')}
+                onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'approve')}
                 className='flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
               >
                 Approve Payment
               </button>
               <button
-                onClick={() => handleVerifyPayment(selectedPayment._id, 'reject')}
+                onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'reject')}
                 className='flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
               >
                 Reject Payment

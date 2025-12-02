@@ -28,7 +28,7 @@ const MyBookings = () => {
             const initial = data.bookings || []
             if (location?.state?.newBooking) {
               const nb = location.state.newBooking
-              const exists = initial.some(b => b._id === nb._id)
+              const exists = initial.some(b => (b._id || b.id) == (nb._id || nb.id))
               if (!exists) initial.unshift(nb)
               // Clear navigation state so it doesn't reapply on future visits
               try { window.history.replaceState({}, document.title) } catch(e){}
@@ -102,7 +102,7 @@ const MyBookings = () => {
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {bookings.map((booking) => (
             <div 
-              key={booking._id} 
+              key={booking._id || booking.id} 
               className='bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'
             >
               {/* Gown Image */}
