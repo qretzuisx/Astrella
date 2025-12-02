@@ -84,7 +84,7 @@ const Hero = () => {
       
       {/* Clean, Simple Heading */}
       <h1 className='text-4xl md:text-6xl font-bold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)] px-4 leading-tight'>
-        Astrella, your guide to becoming a Cinderella
+        Astrella helps you wear the Best You.
       </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6">
