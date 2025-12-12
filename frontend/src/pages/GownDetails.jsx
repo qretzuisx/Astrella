@@ -226,8 +226,8 @@ const GownDetails = () => {
     }
   }
 
-  // Handle confirm reservation button click - show payment modal
-  const handleConfirmReservation = () => {
+  // Handle confirm booking button click - show payment modal
+  const handleConfirmBooking = () => {
     if (!pickupDate || !returnDate || !pickupTime || !returnTime) {
       setError('Please complete pickup and return dates and times')
       return
@@ -239,7 +239,7 @@ const GownDetails = () => {
     }
 
     if (!scheduleStatus.valid) {
-      setError(scheduleStatus.message || 'Schedule conflicts with another reservation')
+      setError(scheduleStatus.message || 'Schedule conflicts with another booking')
       return
     }
 
@@ -505,10 +505,10 @@ const GownDetails = () => {
 
   if (loadingGown) {
     return (
-      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
-          <p className='text-xl text-gray-500'>Loading gown details...</p>
+          <div className='animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-lg sm:text-xl text-gray-500'>Loading gown details...</p>
         </div>
       </div>
     )
@@ -516,12 +516,12 @@ const GownDetails = () => {
 
   if (!gown) {
     return (
-      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
-          <p className='text-xl text-gray-500 mb-4'>Gown not found</p>
+          <p className='text-lg sm:text-xl text-gray-500 mb-4'>Gown not found</p>
           <button
             onClick={() => navigate('/gowns')}
-            className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
+            className='px-5 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
           >
             Back to Apparel
           </button>
@@ -531,32 +531,32 @@ const GownDetails = () => {
   }
 
   return (
-    <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 mb-16'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
       {/* Back Button */}
-      <button onClick={()=> navigate(-1)} className='flex items-center gap-2 mb-8 text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
-        <img src={assets.arrow_icon} alt="arrow" className='rotate-180 opacity-65'/>
+      <button onClick={()=> navigate(-1)} className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
+        <img src={assets.arrow_icon} alt="arrow" className='rotate-180 opacity-65 w-4 h-4 sm:w-5 sm:h-5'/>
         <span>Back to all apparel</span>
         </button> 
 
       {/* Main Content */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12'>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12'>
         {/* Left Column - Image and Measurements */}
-        <div className='w-full flex flex-col gap-8'>
+        <div className='w-full flex flex-col gap-6 sm:gap-8'>
           {/* Image Section */}
-          <div className='relative rounded-2xl overflow-hidden shadow-xl bg-gray-100'>
+          <div className='relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl bg-gray-100'>
             <img 
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image} 
               alt={gown.name}
-              className='w-full h-auto max-h-[600px] object-contain'
+              className='w-full h-auto max-h-[400px] sm:max-h-[600px] object-contain'
             />
             {gown?.available && (
-              <div className='absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2'>
-                <img src={assets.check_icon} alt="check" className='w-4 h-4' />
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2'>
+                <img src={assets.check_icon} alt="check" className='w-3 h-3 sm:w-4 sm:h-4' />
                 Available Now
               </div>
             )}
             {!gown?.available && (
-              <div className='absolute top-4 left-4 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium'>
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-red-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
                 Currently Unavailable
               </div>
             )}
@@ -564,20 +564,20 @@ const GownDetails = () => {
 
           {/* Size Measurement Section */}
           <div>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-xl font-semibold text-gray-900'>Size Measurement</h2>
+            <div className='flex justify-between items-center mb-3 sm:mb-4'>
+              <h2 className='text-lg sm:text-xl font-semibold text-gray-900'>Size Measurement</h2>
               <select
                 value={measurements.unit}
                 onChange={(e) => setMeasurements({...measurements, unit: e.target.value})}
-                className='px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm'
+                className='px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-xs sm:text-sm'
               >
                 <option value='inches'>Inches</option>
                 <option value='cm'>Centimeters</option>
               </select>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3'>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
                   Waist (optional)
                 </label>
                 <div className='relative'>
@@ -585,16 +585,16 @@ const GownDetails = () => {
                     type='number'
                     value={measurements.waist}
                     onChange={(e) => setMeasurements({...measurements, waist: e.target.value})}
-                    placeholder='Enter waist measurement'
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    placeholder='Enter waist'
+                    className='w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   />
-                  <span className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm'>
+                  <span className='absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs sm:text-sm'>
                     {measurements.unit}
                   </span>
                 </div>
               </div>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
                   Hips (optional)
                 </label>
                 <div className='relative'>
@@ -602,67 +602,67 @@ const GownDetails = () => {
                     type='number'
                     value={measurements.hips}
                     onChange={(e) => setMeasurements({...measurements, hips: e.target.value})}
-                    placeholder='Enter hips measurement'
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    placeholder='Enter hips'
+                    className='w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   />
-                  <span className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm'>
+                  <span className='absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs sm:text-sm'>
                     {measurements.unit}
                   </span>
                 </div>
               </div>
             </div>
-            <p className='text-sm text-gray-500 italic'>
+            <p className='text-xs sm:text-sm text-gray-500 italic'>
               Note: Measurements are preferably done in-person for the best fit.
             </p>
           </div>
 
           {/* Gown Details Grid - Moved here */}
           <div>
-            <h2 className='text-xl font-semibold text-gray-900 mb-4'>Gown Details</h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4'>Gown Details</h2>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
               {/* Fabric */}
-              <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
-                  <img src={assets.fabric_icon} alt="fabric" className='w-6 h-6' />
+              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
+                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
+                  <img src={assets.fabric_icon} alt="fabric" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
-                <div>
-                  <p className='text-sm text-gray-500 mb-1'>Fabric</p>
-                  <p className='text-base font-medium text-gray-900'>{gown.fabric}</p>
+                <div className='min-w-0'>
+                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Fabric</p>
+                  <p className='text-sm sm:text-base font-medium text-gray-900 truncate'>{gown.fabric}</p>
                 </div>
               </div>
 
               {/* Size */}
-              <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
-                  <img src={assets.size_icon} alt="size" className='w-6 h-6' />
+              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
+                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
+                  <img src={assets.size_icon} alt="size" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
-                <div>
-                  <p className='text-sm text-gray-500 mb-1'>Size</p>
-                  <p className='text-base font-medium text-gray-900'>
+                <div className='min-w-0'>
+                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Size</p>
+                  <p className='text-sm sm:text-base font-medium text-gray-900 truncate'>
                     {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size}
                   </p>
                 </div>
               </div>
 
               {/* Color */}
-              <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
-                  <img src={assets.color_icon} alt="color" className='w-6 h-6' />
+              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
+                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
+                  <img src={assets.color_icon} alt="color" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
-                <div>
-                  <p className='text-sm text-gray-500 mb-1'>Color</p>
-                  <p className='text-base font-medium text-gray-900'>{gown.color}</p>
+                <div className='min-w-0'>
+                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Color</p>
+                  <p className='text-sm sm:text-base font-medium text-gray-900 truncate'>{gown.color}</p>
                 </div>
               </div>
 
               {/* Event Types */}
-              <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
-                  <img src={assets.event_icon} alt="event" className='w-6 h-6' />
+              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
+                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
+                  <img src={assets.event_icon} alt="event" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
-                <div>
-                  <p className='text-sm text-gray-500 mb-1'>Event Type</p>
-                  <p className='text-base font-medium text-gray-900 capitalize'>
+                <div className='min-w-0'>
+                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Event Type</p>
+                  <p className='text-sm sm:text-base font-medium text-gray-900 capitalize truncate'>
                     {Array.isArray(gown.eventType) && gown.eventType.length > 0
                       ? gown.eventType.join(', ')
                       : gown.eventtype || gown.eventType || 'N/A'}
@@ -676,9 +676,9 @@ const GownDetails = () => {
         {/* Details Section */}
         <div className='flex flex-col'>
           {/* Title and Owner */}
-          <div className='mb-6'>
-            <h1 className='text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
-            <p className='text-lg text-gray-600'>
+          <div className='mb-4 sm:mb-6'>
+            <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
+            <p className='text-base sm:text-lg text-gray-600'>
               by{' '}
               <button
                 onClick={() => {
@@ -687,34 +687,34 @@ const GownDetails = () => {
                 }}
                 className='text-primary hover:text-primary-dull font-semibold hover:underline transition-colors'
               >
-                {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}
+                {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
               </button>
             </p>
           </div>
 
           {/* Price */}
-          <div className='mb-6'>
-            <p className='text-3xl font-bold text-primary'>
+          <div className='mb-4 sm:mb-6'>
+            <p className='text-2xl sm:text-3xl font-bold text-primary'>
               {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
             </p>
           </div>
 
           {/* Location */}
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold text-gray-900 mb-3'>Location</h2>
-            <p className='text-gray-600 leading-relaxed'>{gown.location || 'Location not specified'}</p>
+          <div className='mb-6 sm:mb-8'>
+            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Location</h2>
+            <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.location || 'Location not specified'}</p>
           </div>
 
           {/* Contact Number */}
-          <div className='mb-8'>
-            <h2 className='text-xl font-semibold text-gray-900 mb-3'>Contact Number</h2>
-            <p className='text-gray-600 leading-relaxed'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+          <div className='mb-6 sm:mb-8'>
+            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Contact Number</h2>
+            <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
           </div>
 
           {/* Category (if available) */}
           {gown.category && (
-            <div className='mb-8'>
-              <div className='inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium'>
+            <div className='mb-6 sm:mb-8'>
+              <div className='inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 text-primary rounded-full text-xs sm:text-sm font-medium'>
                 {gown.category}
               </div>
             </div>
@@ -738,65 +738,65 @@ const GownDetails = () => {
           )}
 
           {/* Booking Section */}
-          <div className='border border-gray-200 rounded-xl p-6 bg-gray-50'>
-            <h2 className='text-xl font-semibold text-gray-900 mb-6'>Booking Details</h2>
+          <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50'>
+            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Booking Details</h2>
             
             {/* Date Section */}
-            <div className='mb-6'>
-              <div className='flex items-center gap-2 mb-4'>
-                <img src={assets.calendar_icon_colored} alt="calendar" className='w-5 h-5' />
-                <h3 className='text-lg font-semibold text-gray-900'>Date</h3>
+            <div className='mb-4 sm:mb-6'>
+              <div className='flex items-center gap-2 mb-3 sm:mb-4'>
+                <img src={assets.calendar_icon_colored} alt="calendar" className='w-4 h-4 sm:w-5 sm:h-5' />
+                <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Date</h3>
               </div>
-              <div className='space-y-4'>
+              <div className='space-y-3 sm:space-y-4'>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
                   Pick-up
                   </label>
                   <input
                     type='date'
                     value={pickupDate}
                     onChange={(e) => handlePickupDateChange(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupDate ? 'border-red-400' : 'border-gray-300'}`}
+                    min={new Date().toLocaleDateString('en-CA')}
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupDate ? 'border-red-400' : 'border-gray-300'}`}
                   />
                   {pickupDate && (
-                    <p className='text-sm text-gray-600 mt-1'>{formatDateWithDay(pickupDate)}</p>
+                    <p className='text-xs sm:text-sm text-gray-600 mt-1'>{formatDateWithDay(pickupDate)}</p>
                   )}
                   {formErrors.pickupDate && (
-                    <p className='text-sm text-red-600 mt-1'>{formErrors.pickupDate}</p>
+                    <p className='text-xs sm:text-sm text-red-600 mt-1'>{formErrors.pickupDate}</p>
                   )}
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
                   Return
                   </label>
                   <input
                     type='date'
                     value={returnDate}
                     onChange={(e) => handleReturnDateChange(e.target.value)}
-                    min={pickupDate || new Date().toISOString().split('T')[0]}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnDate ? 'border-red-400' : 'border-gray-300'}`}
+                    min={pickupDate || new Date().toLocaleDateString('en-CA')}
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnDate ? 'border-red-400' : 'border-gray-300'}`}
                   />
                   {returnDate && (
-                    <p className='text-sm text-gray-600 mt-1'>{formatDateWithDay(returnDate)}</p>
+                    <p className='text-xs sm:text-sm text-gray-600 mt-1'>{formatDateWithDay(returnDate)}</p>
                   )}
                   {formErrors.returnDate && (
-                    <p className='text-sm text-red-600 mt-1'>{formErrors.returnDate}</p>
+                    <p className='text-xs sm:text-sm text-red-600 mt-1'>{formErrors.returnDate}</p>
                   )}
                 </div>
               </div>
             </div>
 
           {/* Availability Status */}
-          <div className='mb-6 bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4'>
+          <div className='mb-4 sm:mb-6 bg-white border border-gray-200 rounded-lg p-3 sm:p-4'>
+            <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3 sm:mb-4'>
               <div>
-                <h4 className='text-base font-semibold text-gray-900'>Availability Status</h4>
+                <h4 className='text-sm sm:text-base font-semibold text-gray-900'>Availability Status</h4>
                 <p className='text-xs text-gray-500 mt-1'>
                   Laundry days are fully blocked and cannot be selected for booking.
                 </p>
               </div>
-              <div className='flex items-center gap-4 text-xs text-gray-600'>
+              <div className='flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600'>
                 <span className='flex items-center gap-1'>
                   <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
                   Reserved
@@ -829,7 +829,7 @@ const GownDetails = () => {
                       )}
                     </>
                   ) : (
-                    <p className='text-sm text-gray-500'>No upcoming reservations in the next months.</p>
+                    <p className='text-sm text-gray-500'>No upcoming bookings in the next months.</p>
                   )}
                 </div>
                 <div>
@@ -958,7 +958,7 @@ const GownDetails = () => {
           {/* Action Buttons */}
           <div className='mt-6 space-y-3'>
             <button 
-              onClick={handleConfirmReservation}
+              onClick={handleConfirmBooking}
               className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
                 !confirmDisabled
                   ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
@@ -966,7 +966,7 @@ const GownDetails = () => {
               }`}
               disabled={confirmDisabled}
             >
-              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Reservation' : 'Not Available'}
+              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Booking' : 'Not Available'}
             </button>
 
             {/* Payment Modal */}
@@ -995,7 +995,7 @@ const GownDetails = () => {
             <h3 className='text-lg font-semibold text-gray-900 mb-2'>Availability</h3>
             <p className='text-gray-600'>
               {gown?.available 
-                ? 'This gown is currently available for booking. Please select your preferred dates to proceed with the reservation.'
+                ? 'This gown is currently available for booking. Please select your preferred dates to proceed with the booking.'
                 : 'This gown is currently unavailable. Please check back later or contact the owner for more information.'}
             </p>
           </div>

@@ -464,11 +464,11 @@ export const getRecommendations = async (req, res) => {
         const { bodyType, skinTone, height, eventType, faceShape } = req.query;
 
         let allGowns = await Gown.findAll({
-            where: { available: true, verified: true },
+            where: { available: true },
             include: [{
                 model: User,
                 as: 'owner',
-                attributes: ['id', 'name']
+                attributes: ['id', 'name', 'shopName']
             }],
             order: [['createdAt', 'DESC']]
         });

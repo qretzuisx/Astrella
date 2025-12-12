@@ -52,7 +52,7 @@ const OwnerDashboard = () => {
 
         const userData = await userResponse.json()
         
-        if (userData.sucess || userData.success) {
+        if (userData.success) {
           const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
           setUserRole(role)
           
@@ -93,10 +93,10 @@ const OwnerDashboard = () => {
     return (
       <div className='flex min-h-screen'>
         <OwnerSidebar />
-        <div className='flex-1 flex items-center justify-center'>
+        <div className='flex-1 flex items-center justify-center px-4'>
           <div className='text-center'>
-            <p className='text-xl text-gray-500 mb-4'>Loading dashboard...</p>
-            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto'></div>
+            <p className='text-lg sm:text-xl text-gray-500 mb-4'>Loading dashboard...</p>
+            <div className='animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto'></div>
           </div>
         </div>
       </div>
@@ -107,15 +107,15 @@ const OwnerDashboard = () => {
     return (
       <div className='flex min-h-screen'>
         <OwnerSidebar />
-        <div className='flex-1 flex items-center justify-center'>
-          <div className='text-center max-w-md'>
-            <div className='bg-red-50 border border-red-200 rounded-lg p-6 mb-4'>
-              <p className='text-red-800 font-semibold mb-2'>Access Denied</p>
-              <p className='text-red-600 text-sm mb-4'>{error}</p>
+        <div className='flex-1 flex items-center justify-center px-4'>
+          <div className='text-center max-w-md w-full'>
+            <div className='bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6 mb-4'>
+              <p className='text-red-800 font-semibold mb-2 text-sm sm:text-base'>Access Denied</p>
+              <p className='text-red-600 text-xs sm:text-sm mb-4'>{error}</p>
               {userRole === 'user' && (
                 <button
                   onClick={() => window.location.href = '/'}
-                  className='px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
+                  className='px-4 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
                 >
                   Go Back
                 </button>
@@ -123,7 +123,7 @@ const OwnerDashboard = () => {
               {!userRole && (
                 <button
                   onClick={() => window.location.href = '/'}
-                  className='px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
+                  className='px-4 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
                 >
                   Login
                 </button>
@@ -139,29 +139,29 @@ const OwnerDashboard = () => {
     <div className='flex min-h-screen bg-gray-50'>
       <OwnerSidebar />
       
-      <div className='flex-1 p-8'>
+      <div className='flex-1 p-4 sm:p-6 lg:p-8 lg:ml-0'>
         <div className='max-w-7xl mx-auto'>
           {/* Header */}
-          <div className='mb-8'>
-            <h1 className='text-3xl font-bold text-gray-900 mb-2'>Dashboard</h1>
-            <p className='text-gray-600'>Welcome back! Here's your overview.</p>
+          <div className='mb-6 sm:mb-8 mt-12 lg:mt-0'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>Dashboard</h1>
+            <p className='text-sm sm:text-base text-gray-600'>Welcome back! Here's your overview.</p>
           </div>
 
           {/* Stats Cards */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8'>
             {/* Total Apparel */}
             <button
               type='button'
               onClick={() => navigate('/owner/manage-gown')}
-              className='bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
+              className='bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
             >
-              <div className='flex items-center justify-between mb-4'>
-                <div className='p-3 bg-primary/10 rounded-lg'>
-                  <img src={assets.gownIconColored} alt="apparel" className='w-6 h-6' />
+              <div className='flex items-center justify-between mb-3 sm:mb-4'>
+                <div className='p-2 sm:p-3 bg-primary/10 rounded-lg'>
+                  <img src={assets.gownIconColored} alt="apparel" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
               </div>
-              <h3 className='text-sm text-gray-600 mb-1'>Total Apparel</h3>
-              <p className='text-3xl font-bold text-gray-900'>
+              <h3 className='text-xs sm:text-sm text-gray-600 mb-1'>Total Apparel</h3>
+              <p className='text-2xl sm:text-3xl font-bold text-gray-900'>
                 {dashboardData?.totalGowns || 0}
               </p>
             </button>
@@ -170,15 +170,15 @@ const OwnerDashboard = () => {
             <button
               type='button'
               onClick={() => navigate('/owner/manage-bookings')}
-              className='bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
+              className='bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
             >
-              <div className='flex items-center justify-between mb-4'>
-                <div className='p-3 bg-blue-100 rounded-lg'>
-                  <img src={assets.listIconColored} alt="bookings" className='w-6 h-6' />
+              <div className='flex items-center justify-between mb-3 sm:mb-4'>
+                <div className='p-2 sm:p-3 bg-blue-100 rounded-lg'>
+                  <img src={assets.listIconColored} alt="bookings" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
               </div>
-              <h3 className='text-sm text-gray-600 mb-1'>Total Bookings</h3>
-              <p className='text-3xl font-bold text-gray-900'>
+              <h3 className='text-xs sm:text-sm text-gray-600 mb-1'>Total Bookings</h3>
+              <p className='text-2xl sm:text-3xl font-bold text-gray-900'>
                 {dashboardData?.totalBookings || 0}
               </p>
             </button>
@@ -187,15 +187,15 @@ const OwnerDashboard = () => {
             <button
               type='button'
               onClick={() => navigate('/owner/manage-bookings')}
-              className='bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
+              className='bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
             >
-              <div className='flex items-center justify-between mb-4'>
-                <div className='p-3 bg-yellow-100 rounded-lg'>
-                  <img src={assets.cautionIconColored} alt="pending" className='w-6 h-6' />
+              <div className='flex items-center justify-between mb-3 sm:mb-4'>
+                <div className='p-2 sm:p-3 bg-yellow-100 rounded-lg'>
+                  <img src={assets.cautionIconColored} alt="pending" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
               </div>
-              <h3 className='text-sm text-gray-600 mb-1'>Pending Bookings</h3>
-              <p className='text-3xl font-bold text-gray-900'>
+              <h3 className='text-xs sm:text-sm text-gray-600 mb-1'>Pending Bookings</h3>
+              <p className='text-2xl sm:text-3xl font-bold text-gray-900'>
                 {dashboardData?.pendingBookings || 0}
               </p>
             </button>

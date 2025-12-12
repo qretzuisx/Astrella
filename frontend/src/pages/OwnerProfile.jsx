@@ -66,10 +66,10 @@ const OwnerProfile = () => {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center px-4'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
-          <p className='text-xl text-gray-500'>Loading shop profile...</p>
+          <div className='animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-lg sm:text-xl text-gray-500'>Loading shop profile...</p>
         </div>
       </div>
     )
@@ -77,12 +77,12 @@ const OwnerProfile = () => {
 
   if (error || !owner) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center px-4'>
         <div className='text-center'>
-          <p className='text-xl text-gray-500 mb-4'>{error || 'Owner not found'}</p>
+          <p className='text-lg sm:text-xl text-gray-500 mb-4'>{error || 'Owner not found'}</p>
           <button
             onClick={() => navigate('/gowns')}
-            className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
+            className='px-5 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
           >
             Back to Apparel
           </button>
@@ -92,11 +92,11 @@ const OwnerProfile = () => {
   }
 
   return (
-    <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 mb-16'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)} 
-        className='flex items-center gap-2 mb-8 text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'
+        className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'
       >
         <img src={assets.arrow_icon} alt="back" className='rotate-180 opacity-65'/>
         <span>Back</span>

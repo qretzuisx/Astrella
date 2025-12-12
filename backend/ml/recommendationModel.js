@@ -76,7 +76,7 @@ class CollaborativeFilteringModel {
      * Uses Cosine Similarity on gown features
      */
     async calculateGownSimilarity() {
-        const gowns = await Gown.find({ available: true, verified: true });
+        const gowns = await Gown.find({ available: true });
         
         for (let i = 0; i < gowns.length; i++) {
             const gownA = gowns[i];
@@ -322,7 +322,7 @@ class HybridRecommendationModel {
         await this.ensureTrained();
 
         // Get all available gowns
-        const allGowns = await Gown.find({ available: true, verified: true })
+        const allGowns = await Gown.find({ available: true })
             .populate('owner', 'name shopProfile');
 
         const scoredGowns = [];

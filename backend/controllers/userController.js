@@ -482,8 +482,8 @@ export const getRecommendations = async (req, res) => {
     try {
         const { bodyType, skinTone, height, eventType, faceShape } = req.query;
 
-        // Get all available and verified gowns
-        let allGowns = await Gown.find({ available: true, verified: true })
+        // Get all available gowns
+        let allGowns = await Gown.find({ available: true })
             .populate('owner', 'name')
             .sort({ createdAt: -1 });
 

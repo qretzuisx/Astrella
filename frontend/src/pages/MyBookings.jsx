@@ -80,26 +80,26 @@ const MyBookings = () => {
 
   if (loading) {
     return (
-      <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
-          <p className='text-xl text-gray-500 mb-4'>Loading your bookings...</p>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto'></div>
+          <p className='text-lg sm:text-xl text-gray-500 mb-4'>Loading your bookings...</p>
+          <div className='animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto'></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className='px-6 md:px-16 lg:px-24 xl:px-32 mt-16 mb-16'>
-      <h1 className='text-4xl font-bold text-gray-900 mb-8'>My Bookings</h1>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
+      <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-6 sm:mb-8'>My Bookings</h1>
 
       {bookings.length === 0 ? (
-        <div className='text-center py-16'>
-          <p className='text-xl text-gray-500 mb-4'>No bookings found</p>
-          <p className='text-gray-400'>Start booking apparel to see them here!</p>
+        <div className='text-center py-12 sm:py-16 px-4'>
+          <p className='text-lg sm:text-xl text-gray-500 mb-3 sm:mb-4'>No bookings found</p>
+          <p className='text-sm sm:text-base text-gray-400'>Start booking apparel to see them here!</p>
         </div>
       ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
           {bookings.map((booking) => (
             <div 
               key={booking._id || booking.id} 
@@ -110,43 +110,43 @@ const MyBookings = () => {
                 <img 
                   src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1} 
                   alt={booking.gown?.name || 'Gown'}
-                  className='w-full h-auto max-h-96 object-contain'
+                  className='w-full h-auto max-h-64 sm:max-h-80 md:max-h-96 object-contain'
                 />
-                <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(booking.status)}`}>
+                <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(booking.status)}`}>
                   {booking.status?.toUpperCase() || 'PENDING'}
                 </div>
               </div>
 
               {/* Booking Details */}
-              <div className='p-6'>
-                <h3 className='text-xl font-bold text-gray-900 mb-2'>
+              <div className='p-4 sm:p-6'>
+                <h3 className='text-lg sm:text-xl font-bold text-gray-900 mb-2'>
                   {booking.gown?.name || 'Gown Name'}
                 </h3>
-                <p className='text-gray-600 mb-4'>by {booking.owner ? (typeof booking.owner === 'object' ? booking.owner.name : booking.owner) : 'Owner'}</p>
+                <p className='text-sm sm:text-base text-gray-600 mb-3 sm:mb-4'>by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}</p>
 
                 {/* Date Information */}
-                <div className='space-y-3 mb-4'>
+                <div className='space-y-2 sm:space-y-3 mb-3 sm:mb-4'>
                   <div className='flex items-center gap-2 text-gray-700'>
-                    <img src={assets.calendar_icon_colored} alt="calendar" className='w-5 h-5' />
-                    <div className='flex-1'>
-                      <p className='text-sm text-gray-500'>Pickup</p>
-                      <p className='font-medium'>{formatDate(booking.pickupDate)}</p>
+                    <img src={assets.calendar_icon_colored} alt="calendar" className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-xs sm:text-sm text-gray-500'>Pickup</p>
+                      <p className='text-sm sm:text-base font-medium truncate'>{formatDate(booking.pickupDate)}</p>
                     </div>
                   </div>
                   <div className='flex items-center gap-2 text-gray-700'>
-                    <img src={assets.calendar_icon_colored} alt="calendar" className='w-5 h-5' />
-                    <div className='flex-1'>
-                      <p className='text-sm text-gray-500'>Return</p>
-                      <p className='font-medium'>{formatDate(booking.returnDate)}</p>
+                    <img src={assets.calendar_icon_colored} alt="calendar" className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-xs sm:text-sm text-gray-500'>Return</p>
+                      <p className='text-sm sm:text-base font-medium truncate'>{formatDate(booking.returnDate)}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Price */}
-                <div className='pt-4 border-t border-gray-200'>
+                <div className='pt-3 sm:pt-4 border-t border-gray-200'>
                   <div className='flex justify-between items-center'>
-                    <span className='text-gray-600'>Total Price:</span>
-                    <span className='text-2xl font-bold text-primary'>
+                    <span className='text-sm sm:text-base text-gray-600'>Total Price:</span>
+                    <span className='text-xl sm:text-2xl font-bold text-primary'>
                       {currency}{booking.price?.toLocaleString() || '0'}
                     </span>
                   </div>

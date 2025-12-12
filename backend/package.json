@@ -6,7 +6,10 @@
   "scripts": {
     "server": "nodemon server.js",
     "start": "node server.js",
-    "verify-gowns": "node scripts/verifyAllGowns.js"
+    "verify-gowns": "node scripts/verifyAllGowns.js",
+    "list-owners": "node scripts/listOwners.js",
+    "update-owner-name": "node scripts/updateOwnerName.js",
+    "update-owner-name-by-email": "node scripts/updateOwnerNameByEmail.js"
   },
   "keywords": [],
   "author": "",

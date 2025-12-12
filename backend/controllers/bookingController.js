@@ -26,12 +26,12 @@ const getLaundryDates = async (gownId, laundryDays) => {
   if (!laundryDays || laundryDays <= 0) return new Set();
   
   const laundryDateSet = new Set();
-  const bookings = await Booking.find({
+  const Bookings = await Booking.find({
     gown: gownId,
     status: { $ne: "canceled" },
   });
 
-  bookings.forEach((booking) => {
+  Bookings.forEach((Booking) => {
     const returnDate = new Date(booking.returnDate);
     // Add each laundry day after return date
     for (let i = 1; i <= laundryDays; i++) {
@@ -66,27 +66,27 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
   const end = returnDate instanceof Date ? returnDate : new Date(returnDate);
   const laundryDays = Number(options.laundryDays || 0);
   
-  // Get all bookings
-  const bookings = await Booking.find({
+  // Get all Bookings
+  const Bookings = await Booking.find({
     gown,
     status: { $ne: "canceled" },
   });
 
-  // Build a set of all blocked dates (booking dates + laundry days)
+  // Build a set of all blocked dates (Booking dates + laundry days)
   const blockedDates = new Set();
-  
-  // Add all booking dates (pickup through return)
-  bookings.forEach((booking) => {
-    const bookingStart = new Date(booking.pickupDate);
-    const bookingEnd = new Date(booking.returnDate);
-    for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+
+  // Add all Booking dates (pickup through return)
+  Bookings.forEach((Booking) => {
+    const BookingStart = new Date(Booking.pickupDate);
+    const BookingEnd = new Date(Booking.returnDate);
+    for (let d = new Date(BookingStart); d <= BookingEnd; d.setDate(d.getDate() + 1)) {
       blockedDates.add(d.toISOString().split('T')[0]);
     }
-    
+
     // Add laundry days after return
     if (laundryDays > 0) {
       for (let i = 1; i <= laundryDays; i++) {
-        const laundryDate = new Date(bookingEnd);
+        const laundryDate = new Date(BookingEnd);
         laundryDate.setDate(laundryDate.getDate() + i);
         blockedDates.add(laundryDate.toISOString().split('T')[0]);
       }
@@ -108,7 +108,7 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
   return true; // No conflicts
 };
 
-// API to create booking
+// API to create Booking
 export const createBooking = async (req, res) => {
   try {
     const { _id } = req.user;
@@ -238,13 +238,13 @@ export const createBooking = async (req, res) => {
     }
 
     // Check for duplicate reference numbers
-    const existingPayment = await Booking.findOne({ 
-      'payment.transactionRef': paymentInfo.transactionRef 
+    const existingPayment = await Booking.findOne({
+      'payment.transactionRef': paymentInfo.transactionRef
     });
     if (existingPayment) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "This reference number has already been used. Please check your transaction." 
+      return res.status(400).json({
+        success: false,
+        message: "This reference number has already been used. Please check your transaction."
       });
     }
 
@@ -278,8 +278,8 @@ export const createBooking = async (req, res) => {
       .populate('gown')
       .populate('owner', 'name')
       .populate('user', 'name email')
-
-    res.json({ success: true, message: "Booking Created - Payment pending verification", booking: populatedBooking });
+    
+    res.json({ success: true, message: "Booking Created - Payment pending verification", Booking: populatedBooking });
 
   } catch (error) {
     console.log(error.message);
@@ -312,27 +312,27 @@ export const validateBookingWindow = async (req, res) => {
 
     const laundryDays = Number(gown.laundryDays || 0);
     
-    // Build a set of all blocked dates (booking dates + laundry days)
+    // Build a set of all blocked dates (Booking dates + laundry days)
     const blockedDates = new Set();
-    const bookings = await Booking.find({
+    const Bookings = await Booking.find({
       gown: gownId,
       status: { $ne: "canceled" },
     })
       .populate("user", "name")
       .populate("gown", "name");
-
-    // Add all booking dates (pickup through return)
-    bookings.forEach((booking) => {
-      const bookingStart = new Date(booking.pickupDate);
-      const bookingEnd = new Date(booking.returnDate);
-      for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+    
+    // Add all Booking dates (pickup through return)
+    Bookings.forEach((Booking) => {
+      const BookingStart = new Date(Booking.pickupDate);
+      const BookingEnd = new Date(Booking.returnDate);
+      for (let d = new Date(BookingStart); d <= BookingEnd; d.setDate(d.getDate() + 1)) {
         blockedDates.add(d.toISOString().split('T')[0]);
       }
-      
+    
       // Add laundry days after return (fully blocked)
       if (laundryDays > 0) {
         for (let i = 1; i <= laundryDays; i++) {
-          const laundryDate = new Date(bookingEnd);
+          const laundryDate = new Date(BookingEnd);
           laundryDate.setDate(laundryDate.getDate() + i);
           blockedDates.add(laundryDate.toISOString().split('T')[0]);
         }
@@ -353,18 +353,18 @@ export const validateBookingWindow = async (req, res) => {
     }
 
     if (conflictingDates.length > 0) {
-      // Find which booking caused the conflict
-      const conflict = bookings.find((existing) => {
+      // Find which Booking caused the conflict
+      const conflict = Bookings.find((existing) => {
         const existingStart = new Date(existing.pickupDate);
         const existingEnd = new Date(existing.returnDate);
         // Check if dates overlap
         return (pickupDateTime <= existingEnd && returnDateTime >= existingStart);
       });
-
+      
       // Check if conflict is due to laundry day
       const isLaundryConflict = conflictingDates.some(dateStr => {
-        return bookings.some(booking => {
-          const returnDate = new Date(booking.returnDate);
+        return Bookings.some(Booking => {
+          const returnDate = new Date(Booking.returnDate);
           for (let i = 1; i <= laundryDays; i++) {
             const laundryDate = new Date(returnDate);
             laundryDate.setDate(laundryDate.getDate() + i);
@@ -400,16 +400,16 @@ export const validateBookingWindow = async (req, res) => {
   }
 };
 
-// API to list user bookings
+// API to list user Bookings
 export const getUserBooking = async (req, res) => {
   try {
     const { _id } = req.user;
-    const bookings = await Booking.find({ user: _id })
+    const Bookings = await Booking.find({ user: _id })
       .populate('gown')
       .populate('owner', 'name')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, bookings });
+    res.json({ success: true, Bookings });
 
   } catch (error) {
     console.log(error.message);
@@ -417,19 +417,19 @@ export const getUserBooking = async (req, res) => {
   }
 }
 
-// API to get owner bookings
+// API to get owner Bookings
 export const getOwnerBooking = async (req, res) => {
   try {
     if (req.user.role !== 'owner') {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const bookings = await Booking.find({ owner: req.user._id })
+    const Bookings = await Booking.find({ owner: req.user._id })
       .populate('gown')
       .populate('user', '-password')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, bookings });
+    res.json({ success: true, Bookings });
 
   } catch (error) {
     console.log(error.message);
@@ -437,54 +437,54 @@ export const getOwnerBooking = async (req, res) => {
   }
 }
 
-// API change booking status
+// API change Booking status
 export const changeBookingStatus = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { bookingId, status } = req.body;
+    const { BookingId, status } = req.body;
 
-    if (!bookingId || !status) {
-      return res.status(400).json({ success: false, message: "Missing bookingId or status" });
+    if (!BookingId || !status) {
+      return res.status(400).json({ success: false, message: "Missing BookingId or status" });
     }
 
-    const booking = await Booking.findById(bookingId);
-    if (!booking) {
+    const Booking = await Booking.findById(BookingId);
+    if (!Booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
-    if (booking.owner.toString() !== _id.toString()) {
+    if (Booking.owner.toString() !== _id.toString()) {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const prevStatus = booking.status;
+    const prevStatus = Booking.status;
 
     // Track owner confirmations for Manage Booking
-    if (status === 'confirmed' && !booking.pickupConfirmedAt) {
-      booking.pickupConfirmedAt = new Date();
+    if (status === 'confirmed' && !Booking.pickupConfirmedAt) {
+      Booking.pickupConfirmedAt = new Date();
     }
-    if (status === 'completed' && !booking.returnConfirmedAt) {
-      booking.returnConfirmedAt = new Date();
+    if (status === 'completed' && !Booking.returnConfirmedAt) {
+      Booking.returnConfirmedAt = new Date();
     }
 
-    booking.status = status;
-    await booking.save();
+    Booking.status = status;
+    await Booking.save();
 
     // Keep a simple gown-level availability flag in sync for listing visibility.
     try {
-      const gown = await Gown.findById(booking.gown);
-
-      // When a booking is confirmed (pickup), ensure the gown is generally not
+      const gown = await Gown.findById(Booking.gown);
+    
+      // When a Booking is confirmed (pickup), ensure the gown is generally not
       // listed as freely available, as it is now in active use.
       if (status === 'confirmed') {
         gown.available = false;
         await gown.save();
       }
-
-      // If booking is canceled or completed and was previously confirmed,
-      // try to make the gown available again if there is no other confirmed booking.
+    
+      // If Booking is canceled or completed and was previously confirmed,
+      // try to make the gown available again if there is no other confirmed Booking.
       if ((status === 'canceled' || status === 'completed') && prevStatus === 'confirmed') {
         const overlapping = await Booking.findOne({
-          gown: booking.gown,
+          gown: Booking.gown,
           status: 'confirmed',
         });
         if (!overlapping) {
@@ -516,7 +516,7 @@ export const getGownCalendar = async (req, res) => {
       return res.status(404).json({ success: false, message: "Gown not found" });
     }
 
-    const bookings = await Booking.find({
+    const Bookings = await Booking.find({
       gown: gownId,
       status: { $ne: "canceled" }
     }).sort({ pickupDate: 1 });
@@ -534,21 +534,21 @@ export const getGownCalendar = async (req, res) => {
       targetSet.add(dateObj.toISOString().split('T')[0]);
     };
 
-    bookings.forEach((booking) => {
-      const bookingStart = new Date(booking.pickupDate);
-      const bookingEnd = new Date(booking.returnDate);
+    Bookings.forEach((Booking) => {
+      const BookingStart = new Date(Booking.pickupDate);
+      const BookingEnd = new Date(Booking.returnDate);
       for (
-        let cursor = new Date(bookingStart);
-        cursor <= bookingEnd;
+        let cursor = new Date(BookingStart);
+        cursor <= BookingEnd;
         cursor.setDate(cursor.getDate() + 1)
       ) {
         captureDate(new Date(cursor), unavailableDates);
       }
-
+    
       // Laundry days are fully blocked - add to both sets
       const bufferDays = Math.max(gown.laundryDays || 0, 0);
       for (let i = 1; i <= bufferDays; i += 1) {
-        const laundryDate = new Date(booking.returnDate);
+        const laundryDate = new Date(Booking.returnDate);
         laundryDate.setDate(laundryDate.getDate() + i);
         const dateString = laundryDate.toISOString().split('T')[0];
         // Add to laundryHoldDates for highlighting
@@ -580,48 +580,48 @@ export const getGownCalendar = async (req, res) => {
 export const verifyPayment = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { bookingId, action, rejectionReason } = req.body;
+    const { BookingId, action, rejectionReason } = req.body;
 
-    if (!bookingId || !action) {
-      return res.status(400).json({ success: false, message: "Missing bookingId or action" });
+    if (!BookingId || !action) {
+      return res.status(400).json({ success: false, message: "Missing BookingId or action" });
     }
 
     if (action !== 'approve' && action !== 'reject') {
       return res.status(400).json({ success: false, message: "Action must be 'approve' or 'reject'" });
     }
 
-    const booking = await Booking.findById(bookingId);
-    if (!booking) {
+    const Booking = await Booking.findById(BookingId);
+    if (!Booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
     // Verify owner authorization
-    if (booking.owner.toString() !== _id.toString()) {
+    if (Booking.owner.toString() !== _id.toString()) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     // Check if payment exists
-    if (!booking.payment) {
+    if (!Booking.payment) {
       return res.status(400).json({ success: false, message: "No payment information found" });
     }
 
     // Update payment status
     if (action === 'approve') {
-      booking.payment.status = 'verified';
-      booking.payment.verifiedAt = new Date();
-      booking.payment.verifiedBy = _id;
+      Booking.payment.status = 'verified';
+      Booking.payment.verifiedAt = new Date();
+      Booking.payment.verifiedBy = _id;
       // Keep status as 'pending' - owner still needs to confirm pickup separately
     } else {
-      booking.payment.status = 'rejected';
-      booking.payment.rejectionReason = rejectionReason || 'Payment verification failed';
-      booking.status = 'canceled'; // Cancel booking if payment rejected
+      Booking.payment.status = 'rejected';
+      Booking.payment.rejectionReason = rejectionReason || 'Payment verification failed';
+      Booking.status = 'canceled'; // Cancel Booking if payment rejected
     }
 
-    await booking.save();
+    await Booking.save();
 
-    res.json({ 
-      success: true, 
-      message: `Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully` 
+    res.json({
+      success: true,
+      message: `Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully`
     });
 
   } catch (error) {

@@ -90,11 +90,10 @@ export const getOwnersGowns = async (req, res) => {
 export const getAllGowns = async (req, res) => {
     try {
         const gowns = await Gown.findAll({
-            where: { available: true, verified: true },
             include: [{
                 model: User,
                 as: 'owner',
-                attributes: ['id', 'name']
+                attributes: ['id', 'name', 'shopName']
             }],
             order: [['createdAt', 'DESC']]
         });

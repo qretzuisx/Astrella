@@ -109,7 +109,7 @@ export const getOwnersGowns = async (req, res)=>{
 // API to get all public gowns (available for browsing)
 export const getAllGowns = async (req, res) => {
     try {
-        const gowns = await Gown.find({ available: true, verified: true })
+        const gowns = await Gown.find({})
             .populate('owner', 'name')
             .sort({ createdAt: -1 })
         res.json({ success: true, gowns })

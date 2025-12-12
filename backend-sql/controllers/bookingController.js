@@ -54,7 +54,7 @@ const isWithinBusinessHours = (timeValue) => {
 // Helper function to get all laundry dates for a gown
 const getLaundryDates = async (gownId, laundryDays) => {
   if (!laundryDays || laundryDays <= 0) return new Set();
-  
+
   const laundryDateSet = new Set();
   const bookings = await Booking.findAll({
     where: {
@@ -89,14 +89,14 @@ export const checkAvailability = async (gownId, pickupDate, returnDate, options 
   });
 
   const blockedDates = new Set();
-  
+
   bookings.forEach((booking) => {
     const bookingStart = new Date(booking.pickupDate);
     const bookingEnd = new Date(booking.returnDate);
     for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
       blockedDates.add(d.toISOString().split('T')[0]);
     }
-    
+
     if (laundryDays > 0) {
       for (let i = 1; i <= laundryDays; i++) {
         const laundryDate = new Date(bookingEnd);
@@ -199,7 +199,7 @@ export const createBooking = async (req, res) => {
       if (isLaundryConflict) {
         return res.json({ success: false, message: "This gown is in laundry on one or more of your selected dates. Laundry days are fully blocked and cannot be booked." });
       }
-      return res.json({ success: false, message: "This gown is already reserved during your selected dates." });
+      return res.json({ success: false, message: "This gown is already booked during your selected dates." });
     }
 
     const msDiff = returnDateTime.getTime() - pickupDateTime.getTime();
@@ -248,7 +248,7 @@ export const createBooking = async (req, res) => {
     const populatedBooking = await Booking.findByPk(newBooking.id, {
       include: [
         { model: Gown, as: 'gown' },
-        { model: User, as: 'owner', attributes: ['id', 'name'] },
+        { model: User, as: 'owner', attributes: ['id', 'name', 'shopName'] },
         { model: User, as: 'user', attributes: ['id', 'name', 'email'] }
       ]
     });
@@ -353,7 +353,7 @@ export const validateBookingWindow = async (req, res) => {
         success: false,
         message: isLaundryConflict
           ? "This gown is in laundry on one or more of your selected dates. Laundry days are fully blocked and cannot be booked."
-          : "This gown is already reserved during your selected dates.",
+          : "This gown is already booked during your selected dates.",
         conflict: conflict ? {
           pickupDate: conflict.pickupDate,
           returnDate: conflict.returnDate,
@@ -373,33 +373,43 @@ export const validateBookingWindow = async (req, res) => {
   }
 };
 
-// API to list user bookings
+// API to list user Bookings
 export const getUserBooking = async (req, res) => {
   try {
     const { id } = req.user;
+    console.log('=== GET USER BOOKINGS ===');
+    console.log('User ID:', id);
+    
     const bookings = await Booking.findAll({
       where: { userId: id },
       include: [
         { model: Gown, as: 'gown' },
-        { model: User, as: 'owner', attributes: ['id', 'name'] }
+        { model: User, as: 'owner', attributes: ['id', 'name', 'shopName'] }
       ],
       order: [['createdAt', 'DESC']]
     });
 
+    console.log('Found bookings:', bookings.length);
+
     // Transform bookings to match frontend expectations
     const transformedBookings = bookings.map(transformBookingForResponse);
+    
+    console.log('Transformed bookings:', transformedBookings.length);
 
     res.json({ success: true, bookings: transformedBookings });
 
   } catch (error) {
-    console.log(error.message);
+    console.log('ERROR in getUserBooking:', error.message);
     res.json({ success: false, message: error.message });
   }
 }
 
-// API to get owner bookings
+// API to get owner Bookings
 export const getOwnerBooking = async (req, res) => {
   try {
+    console.log('=== GET OWNER BOOKINGS ===');
+    console.log('User:', req.user.id, 'Role:', req.user.role);
+    
     if (req.user.role !== 'owner') {
       return res.json({ success: false, message: "Unauthorized" });
     }
@@ -413,18 +423,24 @@ export const getOwnerBooking = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
+    console.log('Found bookings:', bookings.length);
+    console.log('Raw bookings:', JSON.stringify(bookings, null, 2));
+
     // Transform bookings to match frontend expectations
     const transformedBookings = bookings.map(transformBookingForResponse);
+    
+    console.log('Transformed bookings:', transformedBookings.length);
+    console.log('First transformed booking:', JSON.stringify(transformedBookings[0], null, 2));
 
     res.json({ success: true, bookings: transformedBookings });
 
   } catch (error) {
-    console.log(error.message);
+    console.log('ERROR in getOwnerBooking:', error.message);
     res.json({ success: false, message: error.message });
   }
 }
 
-// API change booking status
+// API change Booking status
 export const changeBookingStatus = async (req, res) => {
   try {
     const { id } = req.user;

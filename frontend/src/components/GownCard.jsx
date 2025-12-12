@@ -40,7 +40,7 @@ const GownCard = ({ gown }) => {
           }}
           className="text-gray-700 hover:text-primary text-sm mb-2 font-medium text-left hover:underline transition-colors"
         >
-          {gown.owner ? (typeof gown.owner === 'object' ? gown.owner.name : gown.owner) : 'Unknown'}
+          {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
         </button>
 
         {/* Location Info */}

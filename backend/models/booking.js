@@ -35,10 +35,10 @@ const bookingSchema = new mongoose.Schema({
         remainingBalance: { type: Number },
         transactionRef: { type: String },
         screenshot: { type: String }, // URL to uploaded screenshot
-        status: { 
-            type: String, 
-            enum: ['pending', 'verified', 'rejected'], 
-            default: 'pending' 
+        status: {
+            type: String,
+            enum: ['pending', 'verified', 'rejected'],
+            default: 'pending'
         },
         verifiedAt: { type: Date },
         verifiedBy: { type: ObjectId, ref: 'User' },

@@ -180,47 +180,47 @@ const AddGown = () => {
     <div className='flex min-h-screen bg-gray-50'>
       <OwnerSidebar />
       
-      <div className='flex-1 p-8'>
+      <div className='flex-1 p-4 sm:p-6 lg:p-8'>
         <div className='max-w-3xl mx-auto'>
           {/* Header */}
-          <div className='mb-8'>
-            <h1 className='text-3xl font-bold text-gray-900 mb-2'>Add New Apparel</h1>
-            <p className='text-gray-600'>Fill in the details to add new apparel to your collection.</p>
+          <div className='mb-6 sm:mb-8 mt-12 lg:mt-0'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>Add New Apparel</h1>
+            <p className='text-sm sm:text-base text-gray-600'>Fill in the details to add new apparel to your collection.</p>
           </div>
 
           {/* Success/Error Messages */}
           {success && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <p className='text-green-800'>{success}</p>
+            <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg'>
+              <p className='text-green-800 text-sm sm:text-base'>{success}</p>
             </div>
           )}
 
           {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
-              <p className='text-red-800'>{error}</p>
+            <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
+              <p className='text-red-800 text-sm sm:text-base'>{error}</p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
-            <div className='space-y-6'>
+          <form onSubmit={handleSubmit} className='bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8'>
+            <div className='space-y-4 sm:space-y-6'>
               {/* Image Upload */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
                   Apparel Image <span className='text-red-500'>*</span>
                 </label>
-                <div className='flex items-center gap-4'>
-                  <div className='flex-1'>
+                <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4'>
+                  <div className='flex-1 w-full'>
                     <input
                       type='file'
                       accept='image/*'
                       onChange={handleImageChange}
-                      className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                      className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                       required
                     />
                   </div>
                   {imagePreview && (
-                    <div className='w-32 h-32 rounded-lg overflow-hidden border border-gray-200'>
+                    <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0'>
                       <img src={imagePreview} alt='Preview' className='w-full h-full object-cover' />
                     </div>
                   )}
@@ -229,7 +229,7 @@ const AddGown = () => {
 
               {/* Gown Name */}
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
                   Apparel Name <span className='text-red-500'>*</span>
                 </label>
                 <input
@@ -238,7 +238,7 @@ const AddGown = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder='Enter apparel name'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  className='w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   required
                 />
               </div>

@@ -33,7 +33,7 @@ class CollaborativeFilteringModel {
         
         try {
             // Fetch all completed bookings (positive interactions)
-            const bookings = await Booking.findAll({ 
+            const bookings = await Booking.findAll({
                 where: {
                     status: { [Op.in]: ['confirmed', 'completed'] }
                 },

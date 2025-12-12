@@ -113,18 +113,24 @@ const Navbar = ({setShowLogin}) => {
                         className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-all"
                       >
                         <div className="text-right max-sm:text-left">
-                          <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                          <p className="text-sm font-medium text-gray-700">
+                            {role === 'owner' && user.shopProfile?.shopName 
+                              ? user.shopProfile.shopName 
+                              : user.name}
+                          </p>
                           <p className="text-xs text-gray-500 capitalize">{role}</p>
                         </div>
                         {user.image ? (
                           <img 
                             src={user.image} 
-                            alt={user.name}
+                            alt={role === 'owner' && user.shopProfile?.shopName ? user.shopProfile.shopName : user.name}
                             className="w-10 h-10 rounded-full object-cover border-2 border-primary"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                            {user.name?.charAt(0).toUpperCase()}
+                            {(role === 'owner' && user.shopProfile?.shopName 
+                              ? user.shopProfile.shopName 
+                              : user.name)?.charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
