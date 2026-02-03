@@ -5,11 +5,21 @@ import { assets } from '../assets/assets'
 const LoginModal = ({ showLogin, setShowLogin }) => {
   const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true)
+  const [showOwnerOptional, setShowOwnerOptional] = useState(false)
   const [formData, setFormData] = useState({
+    role: 'user', // user | owner
     name: '',
     email: '',
+    contactNumber: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+
+    // Owner signup optional fields
+    shopName: '',
+    address: '',
+    city: '',
+    facebook: '',
+    instagram: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -84,7 +94,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
         if (data.sucess || data.success) {
           localStorage.setItem('token', data.token)
-          
+
           // Fetch user data to determine role and redirect
           const userResponse = await fetch(`${API_URL}/user/data`, {
             headers: {
@@ -92,30 +102,46 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
             }
           })
           const userData = await userResponse.json()
-          
-          setSuccess('Login successful!')
-          setTimeout(() => {
-            setShowLogin(false)
-            
-            // Redirect based on user role
-            if (userData.success || userData.sucess) {
-              const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
-              if (role === 'owner') {
-                window.location.href = '/owner'
-              } else {
-                window.location.href = '/'
-              }
-            } else {
-              window.location.href = '/'
+
+          if (userData.success || userData.sucess) {
+            const actualRole = userData.user
+              ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role)
+              : 'user'
+
+            // If user selected a role to login as, enforce it to prevent confusion.
+            if (formData.role && actualRole && formData.role !== actualRole) {
+              localStorage.removeItem('token')
+              setError(`This account is a ${actualRole === 'owner' ? 'Shop Owner' : 'Customer'} account. Please switch the login role.`)
+              setLoading(false)
+              return
             }
-          }, 1000)
+
+            setSuccess('Login successful!')
+            setTimeout(() => {
+              setShowLogin(false)
+              window.location.href = actualRole === 'owner' ? '/owner' : '/'
+            }, 700)
+          } else {
+            setSuccess('Login successful!')
+            setTimeout(() => {
+              setShowLogin(false)
+              window.location.href = '/'
+            }, 700)
+          }
         } else {
           setError(data.message || 'Login failed')
         }
       } else {
         // Register
-        if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+        if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.contactNumber) {
           setError('Please fill in all fields')
+          setLoading(false)
+          return
+        }
+
+        const digitsOnly = formData.contactNumber.toString().replace(/\D/g, '')
+        if (digitsOnly.length < 10 || digitsOnly.length > 13) {
+          setError('Contact number must be 10-13 digits')
           setLoading(false)
           return
         }
@@ -140,7 +166,18 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
           body: JSON.stringify({
             name: formData.name,
             email: formData.email,
-            password: formData.password
+            password: formData.password,
+            contactNumber: digitsOnly,
+            role: formData.role,
+            shopProfile: formData.role === 'owner' ? {
+              shopName: formData.shopName,
+              address: formData.address,
+              city: formData.city,
+              socialMedia: {
+                facebook: formData.facebook,
+                instagram: formData.instagram
+              }
+            } : undefined
           })
         })
 
@@ -272,10 +309,17 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
     setSuccess('')
     exitForgotFlow()
     setFormData({
+      role: 'user',
       name: '',
       email: '',
+      contactNumber: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      shopName: '',
+      address: '',
+      city: '',
+      facebook: '',
+      instagram: ''
     })
   }
 
@@ -286,7 +330,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
       onClick={handleClose}
     >
       <div 
-        className='bg-white rounded-2xl shadow-xl max-w-md w-full p-8 relative'
+        className='bg-white rounded-2xl shadow-xl max-w-md w-full p-4 sm:p-8 relative max-h-[85vh] overflow-y-auto'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -298,13 +342,31 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
         </button>
 
         {/* Header */}
-        <div className='text-center mb-6'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-2'>
+        <div className='text-center mb-4 sm:mb-6'>
+          <h2 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h2>
           <p className='text-gray-600'>
             {isLogin ? 'Login to your account' : 'Sign up to get started'}
           </p>
+
+          {/* Role Selector */}
+          <div className='mt-3 sm:mt-4 flex gap-2 justify-center'>
+            <button
+              type='button'
+              onClick={() => setFormData({ ...formData, role: 'user' })}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${formData.role === 'user' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300'}`}
+            >
+              Customer
+            </button>
+            <button
+              type='button'
+              onClick={() => setFormData({ ...formData, role: 'owner' })}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${formData.role === 'owner' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300'}`}
+            >
+              Shop Owner
+            </button>
+          </div>
         </div>
 
         {/* Error/Success Messages */}
@@ -324,20 +386,113 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
         {!showForgotPassword ? (
           <form onSubmit={handleSubmit} className='space-y-4'>
             {!isLogin && (
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Full Name
-                </label>
-                <input
-                  type='text'
-                  name='name'
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder='Enter your name'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Full Name
+                  </label>
+                  <input
+                    type='text'
+                    name='name'
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder='Enter your name'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required={!isLogin}
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Contact Number
+                  </label>
+                  <input
+                    type='tel'
+                    name='contactNumber'
+                    inputMode='numeric'
+                    value={formData.contactNumber}
+                    onChange={handleInputChange}
+                    placeholder='e.g., 09XXXXXXXXX'
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    required
+                  />
+                  <p className='text-xs text-gray-500 mt-1'>Required (used for bookings so you won\'t re-type it every time)</p>
+                </div>
+
+                {formData.role === 'owner' && (
+                  <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-3'>
+                    <button
+                      type='button'
+                      onClick={() => setShowOwnerOptional((v) => !v)}
+                      className='w-full flex items-center justify-between text-left'
+                    >
+                      <span className='text-sm font-semibold text-gray-900'>Owner Details (optional)</span>
+                      <span className='text-sm text-primary font-semibold'>{showOwnerOptional ? 'Hide' : 'Show'}</span>
+                    </button>
+                    {showOwnerOptional && (
+                    <>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>Shop Name</label>
+                      <input
+                        type='text'
+                        name='shopName'
+                        value={formData.shopName}
+                        onChange={handleInputChange}
+                        placeholder='Your shop name'
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>Address</label>
+                      <input
+                        type='text'
+                        name='address'
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder='Shop address'
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>City</label>
+                      <input
+                        type='text'
+                        name='city'
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        placeholder='City'
+                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                      />
+                    </div>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                      <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-2'>Facebook</label>
+                        <input
+                          type='text'
+                          name='facebook'
+                          value={formData.facebook}
+                          onChange={handleInputChange}
+                          placeholder='Facebook link'
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-2'>Instagram</label>
+                        <input
+                          type='text'
+                          name='instagram'
+                          value={formData.instagram}
+                          onChange={handleInputChange}
+                          placeholder='Instagram link'
+                          className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
+                        />
+                      </div>
+                    </div>
+                    </>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
             <div>
@@ -512,10 +667,17 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                   setError('')
                   setSuccess('')
                   setFormData({
+                    role: 'user',
                     name: '',
                     email: '',
+                    contactNumber: '',
                     password: '',
-                    confirmPassword: ''
+                    confirmPassword: '',
+                    shopName: '',
+                    address: '',
+                    city: '',
+                    facebook: '',
+                    instagram: ''
                   })
                 }}
                 className='text-primary font-semibold hover:underline'

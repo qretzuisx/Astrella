@@ -12,6 +12,8 @@ const Gown = () => {
   const [selectedEventType, setSelectedEventType] = useState('')
   const [selectedFabric, setSelectedFabric] = useState('')
   const [selectedSize, setSelectedSize] = useState('')
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState('')
+  const [selectedGender, setSelectedGender] = useState('')
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   
@@ -141,11 +143,21 @@ const Gown = () => {
       )
     }
 
+    // Filter by age group
+    if (selectedAgeGroup) {
+      filtered = filtered.filter(gown => (gown.ageGroup || '').toLowerCase() === selectedAgeGroup.toLowerCase())
+    }
+
+    // Filter by gender
+    if (selectedGender) {
+      filtered = filtered.filter(gown => (gown.gender || '').toLowerCase() === selectedGender.toLowerCase())
+    }
+
     // Filter only available gowns
     filtered = filtered.filter(gown => gown.available !== false)
 
     setFilteredGowns(filtered)
-  }, [searchQuery, selectedColor, selectedEventType, selectedFabric, selectedSize, gowns])
+  }, [searchQuery, selectedColor, selectedEventType, selectedFabric, selectedSize, selectedAgeGroup, selectedGender, gowns])
 
   const handleClearSearch = () => {
     setSearchQuery('')
@@ -157,11 +169,13 @@ const Gown = () => {
     setSelectedEventType('')
     setSelectedFabric('')
     setSelectedSize('')
+    setSelectedAgeGroup('')
+    setSelectedGender('')
     setSearchQuery('')
     setSearchParams({})
   }
 
-  const hasActiveFilters = searchQuery || selectedColor || selectedEventType || selectedFabric || selectedSize
+  const hasActiveFilters = searchQuery || selectedColor || selectedEventType || selectedFabric || selectedSize || selectedAgeGroup || selectedGender
 
   const handleSearchChange = (value) => {
     setSearchQuery(value)
@@ -238,7 +252,7 @@ const Gown = () => {
                 <span className='font-medium hidden md:inline text-sm sm:text-base'>Filter</span>
                 {hasActiveFilters && (
                   <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold'>
-                    {[selectedColor, selectedEventType, selectedFabric, selectedSize].filter(Boolean).length}
+                    {[selectedColor, selectedEventType, selectedFabric, selectedSize, selectedAgeGroup, selectedGender].filter(Boolean).length}
                   </span>
                 )}
               </div>
@@ -262,6 +276,42 @@ const Gown = () => {
 
               {/* Grid Layout for Filters */}
               <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3'>
+                {/* Age Group Filter */}
+                <div>
+                  <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
+                    Age Group
+                  </label>
+                  <select
+                    value={selectedAgeGroup}
+                    onChange={(e) => setSelectedAgeGroup(e.target.value)}
+                    className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
+                  >
+                    <option value=''>All</option>
+                    <option value='6–9 Years'>6–9 Years</option>
+                    <option value='10–12 Years'>10–12 Years</option>
+                    <option value='13–17 Years'>13–17 Years</option>
+                    <option value='18–29 Years'>18–29 Years</option>
+                    <option value='30–59 Years'>30–59 Years</option>
+                    <option value='60+ Years'>60+ Years</option>
+                  </select>
+                </div>
+
+                {/* Gender Filter */}
+                <div>
+                  <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
+                    Gender
+                  </label>
+                  <select
+                    value={selectedGender}
+                    onChange={(e) => setSelectedGender(e.target.value)}
+                    className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
+                  >
+                    <option value=''>All</option>
+                    <option value='Female'>Female</option>
+                    <option value='Male'>Male</option>
+                    <option value='Unisex'>Unisex</option>
+                  </select>
+                </div>
                 {/* Color Filter */}
                 <div>
                   <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>

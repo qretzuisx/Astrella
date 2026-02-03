@@ -20,16 +20,18 @@ const Recommendations = () => {
         // Get preferences from URL params
         const bodyType = searchParams.get('bodyType');
         const skinTone = searchParams.get('skinTone');
-        const height = searchParams.get('height');
         const eventType = searchParams.get('eventType');
         const faceShape = searchParams.get('faceShape');
+        const age = searchParams.get('age');
+        const gender = searchParams.get('gender');
 
         const params = new URLSearchParams();
         if (bodyType) params.append('bodyType', bodyType);
         if (skinTone) params.append('skinTone', skinTone);
-        if (height) params.append('height', height);
         if (eventType) params.append('eventType', eventType);
         if (faceShape) params.append('faceShape', faceShape);
+        if (age) params.append('age', age);
+        if (gender) params.append('gender', gender);
 
         const response = await fetch(`${API_URL}/user/recommendations?${params.toString()}`);
         const data = await response.json();
@@ -110,7 +112,7 @@ const Recommendations = () => {
         </div>
 
         {/* Preferences Summary */}
-        {(preferences.bodyType || preferences.skinTone || preferences.height || preferences.eventType || preferences.faceShape) && (
+        {(preferences.bodyType || preferences.skinTone || preferences.eventType || preferences.faceShape || preferences.age || preferences.gender) && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h2 className="text-xl font-semibold mb-4">Your Preferences</h2>
             <div className="flex flex-wrap gap-4">
@@ -126,12 +128,6 @@ const Recommendations = () => {
                   <span className="text-sm text-gray-900">{preferences.skinTone}</span>
                 </div>
               )}
-              {preferences.height && (
-                <div className="bg-gray-50 px-4 py-2 rounded-full">
-                  <span className="text-sm font-medium text-gray-700">Height: </span>
-                  <span className="text-sm text-gray-900">{preferences.height}</span>
-                </div>
-              )}
               {preferences.eventType && (
                 <div className="bg-gray-50 px-4 py-2 rounded-full">
                   <span className="text-sm font-medium text-gray-700">Event: </span>
@@ -142,6 +138,18 @@ const Recommendations = () => {
                 <div className="bg-gray-50 px-4 py-2 rounded-full">
                   <span className="text-sm font-medium text-gray-700">Face Shape: </span>
                   <span className="text-sm text-gray-900">{preferences.faceShape}</span>
+                </div>
+              )}
+              {preferences.age && (
+                <div className="bg-gray-50 px-4 py-2 rounded-full">
+                  <span className="text-sm font-medium text-gray-700">Age: </span>
+                  <span className="text-sm text-gray-900">{preferences.age}</span>
+                </div>
+              )}
+              {preferences.gender && (
+                <div className="bg-gray-50 px-4 py-2 rounded-full">
+                  <span className="text-sm font-medium text-gray-700">Gender: </span>
+                  <span className="text-sm text-gray-900">{preferences.gender}</span>
                 </div>
               )}
             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import * as faceapi from 'face-api.js';
 import { bodyTypeList, skinToneList, faceShapeList } from '../assets/assets';
 
 const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
@@ -6,13 +7,29 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
    const [analyzing, setAnalyzing] = useState(false);
    const [results, setResults] = useState(null);
    const [preview, setPreview] = useState(null);
-   const [modelsLoaded, setModelsLoaded] = useState(true);
+   const [modelsLoaded, setModelsLoaded] = useState(false);
    const fileInputRef = useRef(null);
    const canvasRef = useRef(null);
 
-  // Component is ready for analysis immediately
+  // Load face-api models for age & gender estimation
   useEffect(() => {
-    setModelsLoaded(true); // Always ready since no models to load
+    let mounted = true;
+    const loadModels = async () => {
+      try {
+        // Models are stored in /public/models
+        const MODEL_URL = '/models';
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+        ]);
+        if (mounted) setModelsLoaded(true);
+      } catch (e) {
+        console.error('Failed to load face-api models:', e);
+        if (mounted) setModelsLoaded(true); // Allow analysis to continue without age/gender
+      }
+    };
+    loadModels();
+    return () => { mounted = false; };
   }, []);
 
    // SKIN TONE ANALYSIS (Improved)
@@ -281,7 +298,14 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
   };
 
   const analyzeImage = async () => {
-    if (!image || !modelsLoaded) {
+    if (!image) {
+      alert('Please choose a photo first.')
+      return;
+    }
+
+    // If models are still loading, don't silently do nothing.
+    if (!modelsLoaded) {
+      alert('Loading analysis models... please try again in a moment.')
       return;
     }
 
@@ -307,13 +331,46 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         analyzeFaceShape(img)
       ]);
 
+      // Age & gender (face-api)
+      let age = null;
+      let gender = null;
+      let ageGroup = '';
+      let sex = '';
+      try {
+        const detection = await faceapi
+          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
+          .withAgeAndGender();
+
+        if (detection) {
+          age = Math.round(detection.age);
+          gender = detection.gender; // 'male' | 'female'
+
+          // Map to buckets required by UI
+          if (age >= 6 && age <= 9) ageGroup = '6–9 Years'
+          else if (age >= 10 && age <= 12) ageGroup = '10–12 Years'
+          else if (age >= 13 && age <= 17) ageGroup = '13–17 Years'
+          else if (age >= 18 && age <= 29) ageGroup = '18–29 Years'
+          else if (age >= 30 && age <= 59) ageGroup = '30–59 Years'
+          else if (age >= 60) ageGroup = '60+ Years'
+
+          sex = gender === 'female' ? 'Female' : gender === 'male' ? 'Male' : ''
+        }
+      } catch (e) {
+        console.warn('Age/gender detection unavailable:', e);
+      }
+
       console.log('Analysis results:', { skinTone, bodyType, faceShape });
 
       const analysisResults = {
         skinTone: skinTone || 'Neutral',
         bodyType: bodyType || 'Rectangle',
         faceShape: faceShape || 'Oval',
-        confidence: 'High'
+        ageGroup,
+        sex,
+        // keep original raw values for debugging/backward compat
+        age: age ?? '',
+        gender: gender ?? '',
+        confidence: age && gender ? 'High' : 'Medium'
       };
 
       setResults(analysisResults);
@@ -325,6 +382,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         skinTone: 'Neutral',
         bodyType: 'Rectangle',
         faceShape: 'Oval',
+        age: '',
+        gender: '',
         confidence: 'Low'
       };
       setResults(analysisResults);
@@ -398,10 +457,10 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                 <div className="flex gap-4">
                   <button
                     onClick={analyzeImage}
-                    disabled={analyzing}
+                    disabled={analyzing || !modelsLoaded || !image}
                     className="flex-1 bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50"
                   >
-                    {analyzing ? 'Analyzing...' : 'Analyze Photo'}
+                    {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
                   </button>
                   <button
                     onClick={() => {
@@ -454,6 +513,37 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                             <option key={shape} value={shape}>{shape}</option>
                           ))}
                         </select>
+                      </div>
+
+                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                        <div>
+                          <label className="text-sm text-gray-600">Age Group</label>
+                          <select
+                            value={results.ageGroup || ''}
+                            onChange={(e) => handleEdit('ageGroup', e.target.value)}
+                            className="w-full mt-1 p-2 border rounded"
+                          >
+                            <option value=''>Select age group</option>
+                            <option value='6–9 Years'>6–9 Years</option>
+                            <option value='10–12 Years'>10–12 Years</option>
+                            <option value='13–17 Years'>13–17 Years</option>
+                            <option value='18–29 Years'>18–29 Years</option>
+                            <option value='30–59 Years'>30–59 Years</option>
+                            <option value='60+ Years'>60+ Years</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-600">Sex</label>
+                          <select
+                            value={results.sex || ''}
+                            onChange={(e) => handleEdit('sex', e.target.value)}
+                            className="w-full mt-1 p-2 border rounded"
+                          >
+                            <option value=''>Select sex</option>
+                            <option value='Female'>Female</option>
+                            <option value='Male'>Male</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     <p className="text-xs text-gray-500 mt-2">

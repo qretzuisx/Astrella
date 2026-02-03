@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { DayPicker } from 'react-day-picker'
+import 'react-day-picker/dist/style.css'
 import { assets } from '../assets/assets'
 import PaymentModal from '../components/PaymentModal'
 import ContractModal from '../components/ContractModal'
@@ -64,23 +66,26 @@ const GownDetails = () => {
     unit: 'inches' // default unit
   })
   const [pickupTime, setPickupTime] = useState('')
-  const [returnTime, setReturnTime] = useState('')
+  // Return time is excluded from the user form. Backend will default it from pickupTime.
   const [pickupDate, setPickupDate] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [eventName, setEventName] = useState('')
-  const [contactNumber, setContactNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [showContract, setShowContract] = useState(false)
+  // State to store payment data
+  const [paymentData, setPaymentData] = useState(null)
   const [formErrors, setFormErrors] = useState({})
   const [scheduleStatus, setScheduleStatus] = useState({ loading: false, message: '', valid: false })
   const [durationDays, setDurationDays] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
-  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], laundryHoldDates: [], laundryDays: 0 })
+  const [bookingType, setBookingType] = useState('reservation')
+  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialHoldDates: [], laundryHoldDates: [], laundryDays: 0 })
   const [calendarLoading, setCalendarLoading] = useState(false)
   const [calendarError, setCalendarError] = useState('')
+  const [blockedClick, setBlockedClick] = useState(null) // { date: 'YYYY-MM-DD', message: string }
 
   useEffect(() => {
     const fetchGown = async () => {
@@ -143,63 +148,84 @@ const GownDetails = () => {
     setFormErrors(prev => ({ ...prev, [field]: message }))
   }
 
-  const handlePickupDateChange = (value) => {
-    setPickupDate(value)
-    if (!value) {
+  const toIsoDate = (dateObj) => {
+    if (!dateObj) return ''
+    const d = dateObj instanceof Date ? dateObj : new Date(dateObj)
+    if (Number.isNaN(d.getTime())) return ''
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }
+
+  const blockedReasonForDate = (isoDate) => {
+    if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
+    if (calendarInfo.trialHoldDates.includes(isoDate)) return { reason: 'trial', message: 'Trial hold date.' }
+    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
+    return null
+  }
+
+  const isPastIsoDate = (isoDate) => {
+    if (!isoDate) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const d = new Date(`${isoDate}T00:00:00`)
+    if (Number.isNaN(d.getTime())) return false
+    return d < today
+  }
+
+  const handleCalendarSelect = (range) => {
+    // clear any previous blocked click message when selecting valid dates
+    if (blockedClick) setBlockedClick(null)
+    // range can be undefined or { from, to }
+    if (!range?.from) {
+      setPickupDate('')
+      setReturnDate('')
       setFieldError('pickupDate', 'Pick-up date is required.')
       return
     }
-    
-    // Check if date is blocked (unavailable or laundry day)
-    const dateString = value
-    const isUnavailable = calendarInfo.unavailableDates.includes(dateString)
-    const isLaundryDay = calendarInfo.laundryHoldDates.includes(dateString)
-    
-    if (isUnavailable || isLaundryDay) {
-      if (isLaundryDay) {
-        setFieldError('pickupDate', 'This date is a laundry day and is fully blocked. Please select a different date.')
-      } else {
-        setFieldError('pickupDate', 'This date is not available. Please select a different date.')
-      }
-      return
-    }
-    
-    setFieldError('pickupDate', '')
-    setError('')
-    if (returnDate && new Date(`${returnDate}T00:00:00`) < new Date(`${value}T00:00:00`)) {
-      setFieldError('returnDate', 'Return date cannot be earlier than pickup date.')
-    } else {
-      setFieldError('returnDate', '')
-    }
-  }
 
-  const handleReturnDateChange = (value) => {
-    setReturnDate(value)
-    if (!value) {
-      setFieldError('returnDate', 'Return date is required.')
+    const fromIso = toIsoDate(range.from)
+    const reason = blockedReasonForDate(fromIso)
+    if (reason) {
+      setFieldError('pickupDate', `${reason.message} Please choose another date.`)
       return
     }
-    
-    // Check if date is blocked (unavailable or laundry day)
-    const dateString = value
-    const isUnavailable = calendarInfo.unavailableDates.includes(dateString)
-    const isLaundryDay = calendarInfo.laundryHoldDates.includes(dateString)
-    
-    if (isUnavailable || isLaundryDay) {
-      if (isLaundryDay) {
-        setFieldError('returnDate', 'This date is a laundry day and is fully blocked. Please select a different date.')
-      } else {
-        setFieldError('returnDate', 'This date is not available. Please select a different date.')
-      }
-      return
-    }
-    
-    if (pickupDate && new Date(`${value}T00:00:00`) < new Date(`${pickupDate}T00:00:00`)) {
-      setFieldError('returnDate', 'Return date cannot be earlier than pickup date.')
-    } else {
+
+    setPickupDate(fromIso)
+    setFieldError('pickupDate', '')
+
+    // Trial: auto-set return date
+    if (bookingType === 'trial') {
+      const autoReturn = new Date(range.from)
+      autoReturn.setDate(autoReturn.getDate() + 2)
+      setReturnDate(toIsoDate(autoReturn))
       setFieldError('returnDate', '')
-      setError('')
+      return
     }
+
+    if (!range.to) {
+      setReturnDate(fromIso)
+      setFieldError('returnDate', '')
+      return
+    }
+
+    const toIso = toIsoDate(range.to)
+    // Validate all dates in selected range are not blocked
+    const cursor = new Date(range.from)
+    const end = new Date(range.to)
+    while (cursor <= end) {
+      const iso = toIsoDate(cursor)
+      const r = blockedReasonForDate(iso)
+      if (r) {
+        setFieldError('returnDate', `${r.message} Range contains blocked dates.`)
+        return
+      }
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    setReturnDate(toIso)
+    setFieldError('returnDate', '')
   }
 
   const handleTimeChange = (value, fieldSetter, fieldName) => {
@@ -215,36 +241,20 @@ const GownDetails = () => {
     setError('')
   }
 
-  const handleContactChange = (value) => {
-    const digitsOnly = value.replace(/\D/g, '')
-    setContactNumber(digitsOnly)
-    if (!digitsOnly || digitsOnly.length < 10 || digitsOnly.length > 13) {
-      setFieldError('contactNumber', 'Contact number must be 10-13 digits.')
-    } else {
-      setFieldError('contactNumber', '')
-      setError('')
-    }
-  }
-
   // Handle confirm booking button click - show payment modal
   const handleConfirmBooking = () => {
-    if (!pickupDate || !returnDate || !pickupTime || !returnTime) {
-      setError('Please complete pickup and return dates and times')
+    if (!pickupDate || !returnDate || !pickupTime) {
+      setError('Please complete pickup date, return date, and pickup time')
       return
     }
 
-    if (formErrors.pickupDate || formErrors.returnDate || formErrors.pickupTime || formErrors.returnTime || formErrors.contactNumber) {
+    if (formErrors.pickupDate || formErrors.returnDate || formErrors.pickupTime) {
       setError('Please resolve the highlighted errors before continuing')
       return
     }
 
     if (!scheduleStatus.valid) {
       setError(scheduleStatus.message || 'Schedule conflicts with another booking')
-      return
-    }
-
-    if (!contactNumber || contactNumber.trim() === '') {
-      setError('Please provide your contact number')
       return
     }
 
@@ -256,11 +266,15 @@ const GownDetails = () => {
     }
 
     setError('')
+
+    // Trial booking: no payment, proceed directly to create booking
+    if (bookingType === 'trial') {
+      handleContractSubmit()
+      return
+    }
+
     setShowPayment(true)
   }
-
-  // State to store payment data
-  const [paymentData, setPaymentData] = useState(null)
 
   // Handle payment continue - show contract modal
   const handlePaymentContinue = (paymentInfo) => {
@@ -277,10 +291,11 @@ const GownDetails = () => {
 
     try {
       const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
-      const returnDateTime = combineDateAndTime(returnDate, returnTime)
+      const effectiveReturnTime = pickupTime
+      const returnDateTime = combineDateAndTime(returnDate, effectiveReturnTime)
       const token = localStorage.getItem('token')
 
-      // Calculate deposit and remaining balance
+      // Calculate deposit and remaining balance (reservation only)
       const depositAmount = Math.round(totalAmount * 0.5)
       const remainingBalance = totalAmount - depositAmount
 
@@ -290,27 +305,33 @@ const GownDetails = () => {
       formData.append('pickupDate', pickupDateTime?.toISOString())
       formData.append('returnDate', returnDateTime?.toISOString())
       formData.append('pickupTime', pickupTime)
-      formData.append('returnTime', returnTime)
-      formData.append('contactNumber', contactNumber)
+      formData.append('returnTime', pickupTime)
       formData.append('measurements', JSON.stringify({
         waist: measurements.waist || null,
         hips: measurements.hips || null,
         unit: measurements.unit || 'inches'
       }))
       
-      // Add payment information
-      formData.append('payment', JSON.stringify({
-        method: 'gcash',
-        depositAmount: depositAmount,
-        totalAmount: totalAmount,
-        remainingBalance: remainingBalance,
-        transactionRef: paymentData?.referenceNumber || '',
-        status: 'pending'
-      }))
+      formData.append('bookingType', bookingType)
 
-      // Add screenshot file
-      if (paymentData?.screenshot) {
-        formData.append('paymentScreenshot', paymentData.screenshot)
+      // Reservation only: include payment information
+      if (bookingType !== 'trial') {
+        if (!paymentData) {
+          throw new Error('Payment details are missing. Please complete payment to continue.')
+        }
+        const paymentMethod = paymentData.method || 'gcash'
+        formData.append('payment', JSON.stringify({
+          method: paymentMethod,
+          depositAmount: depositAmount,
+          totalAmount: totalAmount,
+          remainingBalance: remainingBalance,
+          transactionRef: paymentMethod === 'gcash' ? (paymentData?.referenceNumber || '') : undefined,
+          status: 'pending'
+        }))
+
+        if (paymentMethod === 'gcash' && paymentData?.screenshot) {
+          formData.append('paymentScreenshot', paymentData.screenshot)
+        }
       }
 
       const response = await fetch(`${API_URL}/bookings/create`, {
@@ -340,14 +361,30 @@ const GownDetails = () => {
   }
 
   useEffect(() => {
-    if (!pickupDate || !returnDate || !pickupTime || !returnTime) {
+    // For trials, auto-set return date to pickup+2 days and compute totals as 0
+    if (bookingType === 'trial') {
+      if (pickupDate) {
+        const pickup = new Date(`${pickupDate}T00:00:00`)
+        const autoReturn = new Date(pickup)
+        autoReturn.setDate(autoReturn.getDate() + 2)
+        const autoReturnStr = autoReturn.toLocaleDateString('en-CA')
+        if (returnDate !== autoReturnStr) {
+          setReturnDate(autoReturnStr)
+        }
+      }
+      setDurationDays(2)
+      setTotalAmount(0)
+      return
+    }
+
+    if (!pickupDate || !returnDate || !pickupTime) {
       setDurationDays(0)
       setTotalAmount(0)
       return
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
-    const returnDateTime = combineDateAndTime(returnDate, returnTime)
+    const returnDateTime = combineDateAndTime(returnDate, pickupTime)
 
     if (!pickupDateTime || !returnDateTime) {
       setDurationDays(0)
@@ -358,27 +395,25 @@ const GownDetails = () => {
     if (returnDateTime <= pickupDateTime) {
       setDurationDays(0)
       setTotalAmount(0)
-      setFieldError('returnDate', 'Return time cannot be earlier than pickup time.')
-      setFieldError('returnTime', 'Return time must be later than pickup time.')
+      setFieldError('returnDate', 'Return date/time cannot be earlier than pickup date/time.')
       return
     }
 
     setFieldError('returnDate', '')
-    setFieldError('returnTime', '')
     const diffMs = returnDateTime - pickupDateTime
     const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
     setDurationDays(diffDays)
     const pricePerDay = gown?.pricePerDay || gown?.price || 0
     setTotalAmount(diffDays * pricePerDay)
-  }, [pickupDate, returnDate, pickupTime, returnTime, gown])
+  }, [pickupDate, returnDate, pickupTime, gown, bookingType])
 
   useEffect(() => {
-    if (!(gown?._id || gown?.id) || !pickupDate || !returnDate || !pickupTime || !returnTime) {
-      setScheduleStatus({ loading: false, message: 'Select pickup and return date & time to check availability.', valid: false })
+    if (!(gown?._id || gown?.id) || !pickupDate || !returnDate || !pickupTime) {
+      setScheduleStatus({ loading: false, message: 'Select pickup and return dates and pickup time to check availability.', valid: false })
       return
     }
 
-    if (formErrors.pickupDate || formErrors.returnDate || formErrors.pickupTime || formErrors.returnTime) {
+    if (formErrors.pickupDate || formErrors.returnDate || formErrors.pickupTime) {
       setScheduleStatus({ loading: false, message: 'Resolve date and time errors to check availability.', valid: false })
       return
     }
@@ -395,7 +430,7 @@ const GownDetails = () => {
             pickupDate,
             returnDate,
             pickupTime,
-            returnTime
+            returnTime: pickupTime
           })
         })
         const data = await response.json()
@@ -428,15 +463,13 @@ const GownDetails = () => {
     pickupDate,
     returnDate,
     pickupTime,
-    returnTime,
     formErrors.pickupDate,
     formErrors.returnDate,
-    formErrors.pickupTime,
-    formErrors.returnTime
+    formErrors.pickupTime
   ])
 
   const hasFieldErrors = Object.values(formErrors).some(Boolean)
-  const isFormComplete = Boolean(pickupDate && returnDate && pickupTime && returnTime && contactNumber)
+  const isFormComplete = Boolean(pickupDate && returnDate && pickupTime)
   const confirmDisabled = !gown?.available
     || !isFormComplete
     || hasFieldErrors
@@ -479,6 +512,7 @@ const GownDetails = () => {
         if (response.ok && data.success) {
           setCalendarInfo({
             unavailableDates: data.calendar?.unavailableDates || [],
+            trialHoldDates: data.calendar?.trialHoldDates || [],
             laundryHoldDates: data.calendar?.laundryHoldDates || [],
             laundryDays: data.calendar?.laundryDays || 0
           })
@@ -741,119 +775,144 @@ const GownDetails = () => {
           <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50'>
             <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Booking Details</h2>
             
-            {/* Date Section */}
+            {/* Booking Type */}
             <div className='mb-4 sm:mb-6'>
               <div className='flex items-center gap-2 mb-3 sm:mb-4'>
-                <img src={assets.calendar_icon_colored} alt="calendar" className='w-4 h-4 sm:w-5 sm:h-5' />
-                <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Date</h3>
+                <span className='inline-block w-2.5 h-2.5 rounded-full bg-primary'></span>
+                <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Booking Type</h3>
               </div>
-              <div className='space-y-3 sm:space-y-4'>
-                <div>
-                  <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
-                  Pick-up
-                  </label>
+              <div className='flex flex-col sm:flex-row gap-3'>
+                <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${bookingType === 'reservation' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
                   <input
-                    type='date'
-                    value={pickupDate}
-                    onChange={(e) => handlePickupDateChange(e.target.value)}
-                    min={new Date().toLocaleDateString('en-CA')}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupDate ? 'border-red-400' : 'border-gray-300'}`}
+                    type='radio'
+                    name='bookingType'
+                    value='reservation'
+                    checked={bookingType === 'reservation'}
+                    onChange={() => setBookingType('reservation')}
                   />
-                  {pickupDate && (
-                    <p className='text-xs sm:text-sm text-gray-600 mt-1'>{formatDateWithDay(pickupDate)}</p>
-                  )}
-                  {formErrors.pickupDate && (
-                    <p className='text-xs sm:text-sm text-red-600 mt-1'>{formErrors.pickupDate}</p>
-                  )}
-                </div>
-                <div>
-                  <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
-                  Return
-                  </label>
+                  <div>
+                    <p className='font-semibold text-gray-900'>Reservation</p>
+                    <p className='text-xs text-gray-500'>Standard rental booking</p>
+                  </div>
+                </label>
+                <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${bookingType === 'trial' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
                   <input
-                    type='date'
-                    value={returnDate}
-                    onChange={(e) => handleReturnDateChange(e.target.value)}
-                    min={pickupDate || new Date().toLocaleDateString('en-CA')}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnDate ? 'border-red-400' : 'border-gray-300'}`}
+                    type='radio'
+                    name='bookingType'
+                    value='trial'
+                    checked={bookingType === 'trial'}
+                    onChange={() => setBookingType('trial')}
                   />
-                  {returnDate && (
-                    <p className='text-xs sm:text-sm text-gray-600 mt-1'>{formatDateWithDay(returnDate)}</p>
-                  )}
-                  {formErrors.returnDate && (
-                    <p className='text-xs sm:text-sm text-red-600 mt-1'>{formErrors.returnDate}</p>
-                  )}
-                </div>
+                  <div>
+                    <p className='font-semibold text-gray-900'>2-day Trial</p>
+                    <p className='text-xs text-gray-500'>Try the dress in-store (hold is temporary)</p>
+                  </div>
+                </label>
               </div>
             </div>
 
-          {/* Availability Status */}
-          <div className='mb-4 sm:mb-6 bg-white border border-gray-200 rounded-lg p-3 sm:p-4'>
-            <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3 sm:mb-4'>
-              <div>
-                <h4 className='text-sm sm:text-base font-semibold text-gray-900'>Availability Status</h4>
-                <p className='text-xs text-gray-500 mt-1'>
-                  Laundry days are fully blocked and cannot be selected for booking.
-                </p>
+            {/* Date Selection */}
+            <div className='mb-4 sm:mb-6'>
+              <div className='flex items-center gap-2 mb-3 sm:mb-4'>
+                <img src={assets.calendar_icon_colored} alt="calendar" className='w-4 h-4 sm:w-5 sm:h-5' />
+                <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Select Dates</h3>
               </div>
-              <div className='flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600'>
-                <span className='flex items-center gap-1'>
-                  <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
-                  Reserved
-                </span>
-                <span className='flex items-center gap-1'>
-                  <span className='w-3 h-3 rounded-full bg-orange-400 inline-block'></span>
-                  Laundry (Blocked)
-                </span>
+
+              <div className='bg-white border border-gray-200 rounded-lg p-3 sm:p-4'>
+                <div className='flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 mb-3'>
+                  <span className='flex items-center gap-1'>
+                    <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
+                    Reserved
+                  </span>
+                  <span className='flex items-center gap-1'>
+                    <span className='w-3 h-3 rounded-full bg-orange-400 inline-block'></span>
+                    Trial Hold
+                  </span>
+                  <span className='flex items-center gap-1'>
+                    <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
+                    Laundry
+                  </span>
+                </div>
+
+                {calendarLoading ? (
+                  <p className='text-sm text-gray-500'>Loading calendar…</p>
+                ) : calendarError ? (
+                  <p className='text-sm text-red-600'>{calendarError}</p>
+                ) : (
+                  <DayPicker
+                    mode={bookingType === 'trial' ? 'single' : 'range'}
+                    numberOfMonths={1}
+                    onDayClick={(day, modifiers) => {
+                      // If a blocked day is clicked, show a badge message instead of changing selection
+                      const iso = toIsoDate(day)
+                      if (isPastIsoDate(iso)) {
+                        setBlockedClick({
+                          date: iso,
+                          message: 'Past dates cannot be selected.',
+                        })
+                        return
+                      }
+
+                      const reason = blockedReasonForDate(iso)
+                      if (reason) {
+                        setBlockedClick({
+                          date: iso,
+                          message: `${reason.message} Please choose another date.`,
+                        })
+                      } else {
+                        // clear badge when clicking a non-blocked day
+                        if (blockedClick) setBlockedClick(null)
+                      }
+                    }}
+                    selected={bookingType === 'trial'
+                      ? (pickupDate ? new Date(`${pickupDate}T00:00:00`) : undefined)
+                      : {
+                          from: pickupDate ? new Date(`${pickupDate}T00:00:00`) : undefined,
+                          to: returnDate ? new Date(`${returnDate}T00:00:00`) : undefined,
+                        }
+                    }
+                    onSelect={(sel) => {
+                      if (bookingType === 'trial') {
+                        if (!sel) return
+                        handleCalendarSelect({ from: sel, to: sel })
+                      } else {
+                        handleCalendarSelect(sel)
+                      }
+                    }}
+                    disabled={(date) => {
+                      const iso = toIsoDate(date)
+                      // Disable all past days (only today and future dates are clickable)
+                      if (isPastIsoDate(iso)) return true
+                      return Boolean(blockedReasonForDate(iso))
+                    }}
+                    modifiers={{
+                      reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
+                      trial: (date) => calendarInfo.trialHoldDates.includes(toIsoDate(date)),
+                      laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
+                    }}
+                    modifiersClassNames={{
+                      reserved: 'rdp-day_reserved',
+                      trial: 'rdp-day_trial',
+                      laundry: 'rdp-day_laundry',
+                    }}
+                  />
+                )}
+
+                {blockedClick && (
+                  <div className='mt-3 mb-2 inline-flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm'>
+                    <span className='font-semibold'>Blocked:</span>
+                    <span>{blockedClick.message}</span>
+                  </div>
+                )}
+
+                <div className='mt-3 space-y-1'>
+                  <p className='text-sm text-gray-700'><strong>Pick-up:</strong> {pickupDate ? formatDateWithDay(pickupDate) : '—'}</p>
+                  <p className='text-sm text-gray-700'><strong>Return:</strong> {returnDate ? formatDateWithDay(returnDate) : '—'}</p>
+                  {formErrors.pickupDate && <p className='text-sm text-red-600'>{formErrors.pickupDate}</p>}
+                  {formErrors.returnDate && <p className='text-sm text-red-600'>{formErrors.returnDate}</p>}
+                </div>
               </div>
             </div>
-            {calendarLoading ? (
-              <p className='text-sm text-gray-500'>Loading highlighted dates...</p>
-            ) : calendarError ? (
-              <p className='text-sm text-red-600'>{calendarError}</p>
-            ) : (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div>
-                  <p className='text-sm font-medium text-gray-700 mb-2'>Reserved Dates</p>
-                  {calendarInfo.unavailableDates.length > 0 ? (
-                    <>
-                      <div className='flex flex-wrap gap-2 max-h-32 overflow-y-auto'>
-                        {calendarInfo.unavailableDates.slice(0, 60).map(date => (
-                          <span key={date} className='px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 border border-red-200'>
-                            {formatShortDate(date)}
-                          </span>
-                        ))}
-                      </div>
-                      {calendarInfo.unavailableDates.length > 60 && (
-                        <p className='text-xs text-gray-400 mt-2'>Showing first 60 dates</p>
-                      )}
-                    </>
-                  ) : (
-                    <p className='text-sm text-gray-500'>No upcoming bookings in the next months.</p>
-                  )}
-                </div>
-                <div>
-                  <p className='text-sm font-medium text-gray-700 mb-2'>Laundry Hold Dates</p>
-                  {calendarInfo.laundryHoldDates.length > 0 ? (
-                    <>
-                      <div className='flex flex-wrap gap-2 max-h-32 overflow-y-auto'>
-                        {calendarInfo.laundryHoldDates.slice(0, 60).map(date => (
-                          <span key={date} className='px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700 border border-orange-200'>
-                            {formatShortDate(date)}
-                          </span>
-                        ))}
-                      </div>
-                      {calendarInfo.laundryHoldDates.length > 60 && (
-                        <p className='text-xs text-gray-400 mt-2'>Showing first 60 dates</p>
-                      )}
-                    </>
-                  ) : (
-                    <p className='text-sm text-gray-500'>No laundry holds scheduled yet.</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
 
             {/* Time Section */}
             <div className='mb-6'>
@@ -881,23 +940,6 @@ const GownDetails = () => {
                     <p className='text-sm text-red-600 mt-1'>{formErrors.pickupTime}</p>
                   )}
                 </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Return Time</label>
-                  <input
-                    type='time'
-                    min='09:00'
-                    max='19:00'
-                    step='900'
-                    list='allowed-times'
-                    value={returnTime}
-                    onChange={(e) => handleTimeChange(e.target.value, setReturnTime, 'returnTime')}
-                    onBlur={(e) => handleTimeChange(e.target.value, setReturnTime, 'returnTime')}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnTime ? 'border-red-400' : 'border-gray-300'}`}
-                  />
-                  {formErrors.returnTime && (
-                    <p className='text-sm text-red-600 mt-1'>{formErrors.returnTime}</p>
-                  )}
-                </div>
               </div>
               <datalist id='allowed-times'>
                 {allowedTimes.map(time => (
@@ -908,31 +950,6 @@ const GownDetails = () => {
                 <p className={`text-sm mt-2 ${scheduleStatus.loading ? 'text-blue-600' : scheduleStatus.valid ? 'text-green-600' : 'text-red-600'}`}>
                   {scheduleStatus.loading ? 'Checking availability…' : scheduleStatus.message}
                 </p>
-              )}
-            </div>
-
-            {/* Contact Number Section */}
-            <div className='mb-6'>
-              <div className='flex items-center gap-2 mb-4'>
-                <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
-                </svg>
-                <h3 className='text-lg font-semibold text-gray-900'>Contact Number</h3>
-              </div>
-              <input
-                type='tel'
-                inputMode='numeric'
-                pattern='[0-9]*'
-                maxLength={13}
-                value={contactNumber}
-                onChange={(e) => handleContactChange(e.target.value)}
-                placeholder='Enter your contact number'
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.contactNumber ? 'border-red-400' : 'border-gray-300'}`}
-                required
-              />
-              <p className='text-sm text-gray-500 mt-2'>Owner will use this to contact you</p>
-              {formErrors.contactNumber && (
-                <p className='text-sm text-red-600 mt-1'>{formErrors.contactNumber}</p>
               )}
             </div>
 

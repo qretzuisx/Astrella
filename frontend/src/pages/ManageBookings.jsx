@@ -12,6 +12,18 @@ const ManageBookings = () => {
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
+  // Reschedule / Extend modal state
+  const [editOpen, setEditOpen] = useState(false)
+  const [editMode, setEditMode] = useState('reschedule') // reschedule | extend
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editForm, setEditForm] = useState({
+    pickupDate: '',
+    returnDate: '',
+    pickupTime: '09:00',
+    returnTime: '09:00',
+  })
+
   useEffect(() => {
     fetchBookings()
   }, [])
@@ -53,7 +65,30 @@ const ManageBookings = () => {
     try {
       const token = localStorage.getItem('token')
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
+
+      // Use unified update endpoint for cancel (instant release for trials)
+      if (newStatus === 'canceled') {
+        const response = await fetch(`${API_URL}/bookings/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ bookingId, action: 'cancel' })
+        })
+
+        const data = await response.json()
+        if (data.success) {
+          setSuccess('Booking canceled successfully')
+          fetchBookings()
+          setTimeout(() => setSuccess(''), 3000)
+        } else {
+          setError(data.message || 'Failed to cancel booking')
+          setTimeout(() => setError(''), 3000)
+        }
+        return
+      }
+
       const response = await fetch(`${API_URL}/bookings/change-status`, {
         method: 'PUT',
         headers: {
@@ -64,7 +99,7 @@ const ManageBookings = () => {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         setSuccess(`Booking ${newStatus} successfully`)
         fetchBookings()
@@ -75,6 +110,136 @@ const ManageBookings = () => {
       }
     } catch (error) {
       console.error('Error updating status:', error)
+      setError('An error occurred. Please try again.')
+      setTimeout(() => setError(''), 3000)
+    }
+  }
+
+  const toDateInputValue = (dateString) => {
+    if (!dateString) return ''
+    const d = new Date(dateString)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }
+
+  const allowedTimes = React.useMemo(() => {
+    const times = []
+    for (let h = 9; h <= 19; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        if (h === 19 && m > 0) continue
+        times.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+      }
+    }
+    return times
+  }, [])
+
+  const isEditableStatus = (booking) => ['pending', 'trial'].includes((booking?.status || '').toLowerCase())
+
+  const openEdit = (booking, mode) => {
+    const pickupTime = booking.pickupTime || '09:00'
+    const returnTime = booking.returnTime || pickupTime
+
+    setSelectedBooking(booking)
+    setEditMode(mode)
+    setEditForm({
+      pickupDate: toDateInputValue(booking.pickupDate),
+      returnDate: toDateInputValue(booking.returnDate),
+      pickupTime,
+      returnTime,
+    })
+    setError('')
+    setSuccess('')
+    setEditOpen(true)
+  }
+
+  const closeEdit = () => {
+    setEditOpen(false)
+    setSelectedBooking(null)
+    setSavingEdit(false)
+  }
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target
+    setEditForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const submitEdit = async () => {
+    if (!selectedBooking) return
+
+    try {
+      setSavingEdit(true)
+      setError('')
+      setSuccess('')
+
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
+      const payload = {
+        bookingId: selectedBooking._id || selectedBooking.id,
+        action: 'reschedule',
+        pickupDate: editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : editForm.pickupDate,
+        returnDate: editForm.returnDate,
+        pickupTime: editMode === 'extend' ? (selectedBooking.pickupTime || editForm.pickupTime) : editForm.pickupTime,
+        returnTime: editForm.returnTime,
+      }
+
+      const response = await fetch(`${API_URL}/bookings/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await response.json()
+      if (!data.success) {
+        setError(data.message || 'Failed to update booking')
+        return
+      }
+
+      setSuccess('Booking updated successfully')
+      fetchBookings()
+      setTimeout(() => setSuccess(''), 3000)
+      closeEdit()
+
+    } catch (e) {
+      console.error('Error updating booking:', e)
+      setError('An error occurred. Please try again.')
+      setTimeout(() => setError(''), 3000)
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const handleFinalizeTrial = async (bookingId) => {
+    try {
+      const token = localStorage.getItem('token')
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
+      const response = await fetch(`${API_URL}/bookings/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ bookingId, action: 'convert_to_reservation' })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Trial finalized as reservation')
+        fetchBookings()
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.message || 'Failed to finalize trial')
+        setTimeout(() => setError(''), 3000)
+      }
+    } catch (error) {
+      console.error('Error finalizing trial:', error)
       setError('An error occurred. Please try again.')
       setTimeout(() => setError(''), 3000)
     }
@@ -96,8 +261,10 @@ const ManageBookings = () => {
         return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200'
-      case 'pending':
+      case 'trial':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'pending':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
       case 'canceled':
         return 'bg-red-100 text-red-800 border-red-200'
       default:
@@ -193,7 +360,7 @@ const ManageBookings = () => {
 
           {/* Filter Tabs */}
           <div className='mb-4 sm:mb-6 flex gap-1 sm:gap-2 border-b border-gray-200 overflow-x-auto pb-px'>
-            {['all', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => (
+            {['all', 'trial', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -344,6 +511,48 @@ const ManageBookings = () => {
 
                       {/* Action Buttons: Manage Booking (pickup/return) */}
                       <div className='flex flex-col gap-2'>
+                        {/* Owner Edit Actions (pending/trial only) */}
+                        {isEditableStatus(booking) && (
+                          <div className='grid grid-cols-2 gap-2'>
+                            <button
+                              onClick={() => openEdit(booking, 'reschedule')}
+                              className='px-3 sm:px-4 py-2 text-sm sm:text-base border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold'
+                            >
+                              Reschedule
+                            </button>
+                            <button
+                              onClick={() => openEdit(booking, 'extend')}
+                              className='px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-900 text-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-colors font-semibold'
+                            >
+                              Extend
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Trial Actions */}
+                        {booking.status === 'trial' && (
+                          <div className='space-y-2'>
+                            {booking.trialExpiresAt && (
+                              <div className='p-3 bg-orange-50 border border-orange-200 rounded-lg text-xs sm:text-sm text-orange-900'>
+                                <p className='font-semibold'>Trial Hold</p>
+                                <p>Expires: <strong>{formatDate(booking.trialExpiresAt)}</strong> (no payment required)</p>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleFinalizeTrial(booking._id || booking.id)}
+                              className='w-full py-2 px-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors'
+                            >
+                              Finalize Trial (Convert to Reservation)
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
+                              className='w-full py-2 px-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors'
+                            >
+                              Cancel Trial
+                            </button>
+                          </div>
+                        )}
+
                         {/* Payment Verification - Only for pending status with pending payment */}
                         {booking.status === 'pending' && booking.payment?.status === 'pending' && (
                           <>
@@ -432,6 +641,114 @@ const ManageBookings = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Booking Modal */}
+      {editOpen && selectedBooking && (
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
+          onClick={closeEdit}
+        >
+          <div
+            className='bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className='flex items-start justify-between gap-4 mb-4'>
+              <div>
+                <h2 className='text-lg sm:text-xl font-bold text-gray-900'>
+                  {editMode === 'extend' ? 'Extend Booking' : 'Reschedule Booking'}
+                </h2>
+                <p className='text-xs sm:text-sm text-gray-600'>{selectedBooking.gown?.name}</p>
+              </div>
+              <button
+                onClick={closeEdit}
+                className='text-gray-400 hover:text-gray-600 text-2xl leading-none'
+              >
+                ×
+              </button>
+            </div>
+
+            <div className='space-y-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Date</label>
+                  <input
+                    type='date'
+                    name='pickupDate'
+                    value={editForm.pickupDate}
+                    onChange={handleEditFormChange}
+                    disabled={editMode === 'extend'}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Time</label>
+                  <select
+                    name='pickupTime'
+                    value={editForm.pickupTime}
+                    onChange={handleEditFormChange}
+                    disabled={editMode === 'extend'}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
+                  >
+                    {allowedTimes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Date</label>
+                  <input
+                    type='date'
+                    name='returnDate'
+                    value={editForm.returnDate}
+                    onChange={handleEditFormChange}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Time</label>
+                  <select
+                    name='returnTime'
+                    value={editForm.returnTime}
+                    onChange={handleEditFormChange}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  >
+                    {allowedTimes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {(selectedBooking.status || '').toLowerCase() === 'trial' && (
+                <div className='p-3 bg-orange-50 border border-orange-200 rounded-lg text-xs sm:text-sm text-orange-900'>
+                  Trial bookings always reserve a 2-day fitting window. Changing pickup date/time will auto-adjust return.
+                </div>
+              )}
+
+              <div className='flex gap-2 pt-2'>
+                <button
+                  type='button'
+                  onClick={submitEdit}
+                  disabled={savingEdit}
+                  className='flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-400'
+                >
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type='button'
+                  onClick={closeEdit}
+                  className='px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50'
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment Screenshot Modal */}
       {showPaymentModal && selectedPayment && (

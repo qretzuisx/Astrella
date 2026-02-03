@@ -272,7 +272,9 @@ const ManageGowns = () => {
                   {/* Gown Details */}
                   <div className='p-4 sm:p-6'>
                     <h3 className='text-lg sm:text-xl font-bold text-gray-900 mb-2 truncate'>{gown.name}</h3>
-                    <p className='text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2'>{gown.description}</p>
+                    {typeof gown.description === 'string' && gown.description.trim() !== '' && (
+                      <p className='text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2'>{gown.description}</p>
+                    )}
                     
                     {/* Details Grid */}
                     <div className='grid grid-cols-2 gap-1.5 sm:gap-2 mb-3 sm:mb-4 text-xs sm:text-sm'>

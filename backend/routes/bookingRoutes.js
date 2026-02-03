@@ -1,5 +1,5 @@
 import express from "express";
-import { changeBookingStatus, createBooking, getGownCalendar, getOwnerBooking, getUserBooking, validateBookingWindow, verifyPayment } from "../controllers/bookingController.js";
+import { changeBookingStatus, createBooking, getGownCalendar, getOwnerBooking, getUserBooking, updateBooking, validateBookingWindow, verifyPayment } from "../controllers/bookingController.js";
 import { protect } from "../middleware/auth.js";
 import upload from "../middleware/multer.js";
 
@@ -12,6 +12,7 @@ bookingRouter.post('/user', protect, getUserBooking)
 bookingRouter.post('/owner', protect, getOwnerBooking)
 bookingRouter.put('/change-status', protect, changeBookingStatus)
 bookingRouter.put('/verify-payment', protect, verifyPayment)
+bookingRouter.put('/update', protect, updateBooking)
 bookingRouter.get('/calendar/:gownId', getGownCalendar)
 
 export default bookingRouter;

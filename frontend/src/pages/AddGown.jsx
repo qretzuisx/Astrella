@@ -16,6 +16,8 @@ const AddGown = () => {
     price: '',
     color: '',
     size: ['Free Size'],
+    ageGroup: '',
+    gender: '',
     available: true
   })
   
@@ -124,6 +126,7 @@ const AddGown = () => {
 
       // Create FormData for file upload
       const formDataToSend = new FormData()
+
       formDataToSend.append('image', selectedImage)
       formDataToSend.append('gownData', JSON.stringify({
         name: formData.name,
@@ -132,6 +135,8 @@ const AddGown = () => {
         price: parseFloat(formData.price),
         color: formData.color,
         size: formData.size,
+        ageGroup: formData.ageGroup,
+        gender: formData.gender,
         available: formData.available
       }))
 
@@ -156,6 +161,8 @@ const AddGown = () => {
           price: '',
           color: '',
           size: ['Free Size'],
+          ageGroup: '',
+          gender: '',
           available: true
         })
         setSelectedImage(null)
@@ -332,6 +339,41 @@ const AddGown = () => {
                   className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   required
                 />
+              </div>
+
+              {/* Demographic Tags */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Age Group</label>
+                  <select
+                    name='ageGroup'
+                    value={formData.ageGroup}
+                    onChange={handleInputChange}
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  >
+                    <option value=''>Optional</option>
+                    <option value='6–9 Years'>6–9 Years</option>
+                    <option value='10–12 Years'>10–12 Years</option>
+                    <option value='13–17 Years'>13–17 Years</option>
+                    <option value='18–29 Years'>18–29 Years</option>
+                    <option value='30–59 Years'>30–59 Years</option>
+                    <option value='60+ Years'>60+ Years</option>
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Gender</label>
+                  <select
+                    name='gender'
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  >
+                    <option value=''>Optional</option>
+                    <option value='Female'>Female</option>
+                    <option value='Male'>Male</option>
+                    <option value='Unisex'>Unisex</option>
+                  </select>
+                </div>
               </div>
 
               {/* Size Selection */}

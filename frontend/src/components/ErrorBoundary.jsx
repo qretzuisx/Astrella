@@ -24,7 +24,7 @@ class ErrorBoundary extends React.Component {
             <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
             <p className="text-sm text-gray-600 mb-4">The application encountered an error while rendering. See details below.</p>
             <div className="mb-4 p-3 bg-gray-100 rounded text-xs overflow-auto" style={{maxHeight: '40vh'}}>
-              <pre className="whitespace-pre-wrap">{this.state.error && this.state.error.toString()}</pre>
+              <pre className="whitespace-pre-wrap">{this.state.error && (this.state.error.stack || this.state.error.toString())}</pre>
               <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-700">{this.state.errorInfo?.componentStack}</pre>
             </div>
             <div className="flex gap-3">

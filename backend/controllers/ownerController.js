@@ -13,6 +13,38 @@ const clampLaundryDays = (value) => {
 };
 
 // API to list gowns
+const normalizeOptionalTags = (gown) => {
+    const normalizedAgeGroup = typeof gown.ageGroup === 'string' ? gown.ageGroup.trim() : ''
+    let normalizedGender = typeof gown.gender === 'string' ? gown.gender.trim() : ''
+    if (normalizedGender) {
+        const g = normalizedGender.toLowerCase()
+        if (g === 'male') normalizedGender = 'Male'
+        else if (g === 'female') normalizedGender = 'Female'
+        else if (g === 'unisex') normalizedGender = 'Unisex'
+    }
+    return { normalizedAgeGroup, normalizedGender }
+}
+
+const uploadAndOptimizeGownImage = async (imageFile) => {
+    const fileBuffer = fs.readFileSync(imageFile.path)
+    const response = await imageKit.upload({
+        file: fileBuffer,
+        fileName: imageFile.originalname,
+        folder: '/gown',
+    })
+
+    const optimizedImageUrl = imageKit.url({
+        path: response.filePath,
+        transformation: [
+            { width: '1280' },
+            { quality: 'auto' },
+            { format: 'webp' }
+        ]
+    })
+
+    return optimizedImageUrl
+}
+
 export const addGown = async (req, res) =>{
     try {
         const {_id} = req.user;
@@ -49,33 +81,22 @@ export const addGown = async (req, res) =>{
             });
         }
 
-// upload img to imagekit
-        const fileBuffer = fs.readFileSync(imageFile.path)
-        const response = await imageKit.upload({
-            file: fileBuffer,
-            fileName: imageFile.originalname,
-            folder: '/gown',
-        })
-
-// optimize through imagekit url
-        const optimizedImageUrl = imageKit.url({
-            path : response.filePath,
-            transformation : [
-                {width: '1280'},
-                {quality: 'auto'},
-                {format: 'webp'}
-            ]
-        });
+        const optimizedImageUrl = await uploadAndOptimizeGownImage(imageFile)
 
         // Save image as array (model expects array)
         const image = [optimizedImageUrl];
-        
+
         // Get contact number from either location (shopProfile takes priority)
         const gownContactNumber = user.shopProfile?.contactNumber || user.contactNumber || ''
-        
-        // Auto-verify gowns added by owners
+
+        // Normalize ageGroup/gender (optional)
+        const { normalizedAgeGroup, normalizedGender } = normalizeOptionalTags(gown)
+
         await Gown.create({
             ...gown,
+            description: typeof gown.description === 'string' ? gown.description : '',
+            ageGroup: normalizedAgeGroup,
+            gender: normalizedGender,
             owner: _id,
             image,
             verified: true,

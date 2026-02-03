@@ -13,10 +13,21 @@ const generateToken = (userId)=>{
 // register user
 export const registerUser = async (req, res)=>{
     try {
-        const {name, email, password} = req.body
+        const {name, email, password, contactNumber, role, shopProfile} = req.body
+
+        const cleanContactNumber = (contactNumber || "").toString().replace(/\D/g, "");
+        const normalizedRole = (role || 'user').toString().toLowerCase();
 
         if(!name || !email || !password || password.length < 8){
             return res.json({success: false, message: 'Fill all the Fields !'})
+        }
+
+        if (!cleanContactNumber || cleanContactNumber.length < 10 || cleanContactNumber.length > 13) {
+            return res.json({ success: false, message: 'Contact number must be 10-13 digits.' });
+        }
+
+        if (normalizedRole !== 'user' && normalizedRole !== 'owner') {
+            return res.json({ success: false, message: 'Role must be user or owner.' });
         }
 
         const userExists = await User.findOne({email})
@@ -25,7 +36,32 @@ export const registerUser = async (req, res)=>{
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
-        const user = await User.create({name, email, password: hashedPassword})
+
+        // If signing up as owner, allow capturing initial shop profile fields.
+        const initialShopProfile = normalizedRole === 'owner' ? {
+            shopName: shopProfile?.shopName || '',
+            description: shopProfile?.description || '',
+            address: shopProfile?.address || '',
+            city: shopProfile?.city || '',
+            contactNumber: cleanContactNumber,
+            operatingHours: shopProfile?.operatingHours || '',
+            businessPermit: '',
+            dtiRegistration: '',
+            verified: false,
+            socialMedia: {
+                facebook: shopProfile?.socialMedia?.facebook || shopProfile?.facebook || '',
+                instagram: shopProfile?.socialMedia?.instagram || shopProfile?.instagram || ''
+            }
+        } : undefined;
+
+        const user = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            contactNumber: cleanContactNumber,
+            role: normalizedRole,
+            ...(initialShopProfile ? { shopProfile: initialShopProfile } : {})
+        })
         const token = generateToken(user._id.toString())
         res.json({success: true, token})
 

@@ -6,9 +6,24 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 const combineDateAndTime = (dateValue, timeValue) => {
   if (!dateValue) return null;
+
+  // IMPORTANT: Avoid using toISOString() here.
+  // toISOString() converts to UTC and can shift the date backward/forward depending on timezone,
+  // which causes UI "today" selections to appear as past days for some users.
   const safeTime = timeValue || "09:00";
-  const isoString = `${new Date(dateValue).toISOString().split("T")[0]}T${safeTime}`;
-  return new Date(isoString);
+
+  // Accept either Date or string and extract the local calendar date (YYYY-MM-DD)
+  const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return null;
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const localDate = `${yyyy}-${mm}-${dd}`;
+
+  // Create an ISO-like local datetime string and let JS parse it as local time.
+  const dateTimeString = `${localDate}T${safeTime}`;
+  return new Date(dateTimeString);
 };
 
 const isWithinBusinessHours = (timeValue) => {
@@ -26,12 +41,18 @@ const getLaundryDates = async (gownId, laundryDays) => {
   if (!laundryDays || laundryDays <= 0) return new Set();
   
   const laundryDateSet = new Set();
+  const now = new Date();
   const Bookings = await Booking.find({
     gown: gownId,
     status: { $ne: "canceled" },
+    $or: [
+      { status: { $ne: 'trial' } },
+      { status: 'trial', trialExpiresAt: { $gt: now } },
+      { status: 'trial', trialExpiresAt: { $exists: false } },
+    ]
   });
 
-  Bookings.forEach((Booking) => {
+  Bookings.forEach((booking) => {
     const returnDate = new Date(booking.returnDate);
     // Add each laundry day after return date
     for (let i = 1; i <= laundryDays; i++) {
@@ -67,9 +88,15 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
   const laundryDays = Number(options.laundryDays || 0);
   
   // Get all Bookings
+  const now = new Date();
   const Bookings = await Booking.find({
     gown,
     status: { $ne: "canceled" },
+    $or: [
+      { status: { $ne: 'trial' } },
+      { status: 'trial', trialExpiresAt: { $gt: now } },
+      { status: 'trial', trialExpiresAt: { $exists: false } },
+    ]
   });
 
   // Build a set of all blocked dates (Booking dates + laundry days)
@@ -112,7 +139,7 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
 export const createBooking = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { gown, pickupDate, returnDate, pickupTime, returnTime, contactNumber } = req.body;
+    const { gown, pickupDate, returnDate, pickupTime, returnTime, bookingType } = req.body;
 
     // Parse measurements and payment from JSON strings
     let measurements = {};
@@ -133,37 +160,62 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid JSON format for measurements or payment" });
     }
 
-    if (!gown || !pickupDate || !returnDate || !pickupTime || !returnTime) {
+    const normalizedBookingType = (bookingType || paymentInfo.bookingType || 'reservation').toString().toLowerCase();
+    const isTrial = normalizedBookingType === 'trial';
+
+    if (!gown || !pickupDate || !returnDate || !pickupTime) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // Validate payment information
-    if (!paymentInfo.transactionRef || paymentInfo.transactionRef.length < 10) {
-      return res.status(400).json({ success: false, message: "Valid GCash reference number is required" });
+    // Trial flow: no payment required, no returnTime required.
+    // Reservation flow: payment method controls requirements.
+    const paymentMethod = isTrial
+      ? 'in_store'
+      : (paymentInfo.method || 'gcash').toString().toLowerCase();
+
+    const isInStore = paymentMethod === 'in_store' || paymentMethod === 'pay_in_store';
+    const isGcash = paymentMethod === 'gcash';
+
+    if (!isTrial && !isInStore && !isGcash) {
+      return res.status(400).json({ success: false, message: "Invalid payment method" });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Payment screenshot is required" });
+    // Validate payment information (reservation + gcash only)
+    if (!isTrial && isGcash) {
+      if (!paymentInfo.transactionRef || paymentInfo.transactionRef.length < 10) {
+        return res.status(400).json({ success: false, message: "Valid GCash reference number is required" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Payment screenshot is required" });
+      }
     }
 
-    if (!isWithinBusinessHours(pickupTime) || !isWithinBusinessHours(returnTime)) {
+    const effectiveReturnTime = returnTime || pickupTime;
+
+    if (!isWithinBusinessHours(pickupTime) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime))) {
       return res.status(400).json({ success: false, message: "Selected times must be between 09:00 and 19:00 in 15-minute intervals." });
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
-    const returnDateTime = combineDateAndTime(returnDate, returnTime);
+    let returnDateTime = combineDateAndTime(returnDate, effectiveReturnTime);
 
     if (!pickupDateTime || !returnDateTime) {
       return res.status(400).json({ success: false, message: "Invalid pickup or return date." });
+    }
+
+    // Trial bookings always reserve a 2-day in-store fitting window starting at pickup.
+    if (isTrial) {
+      returnDateTime = new Date(pickupDateTime.getTime() + 2 * DAY_IN_MS);
     }
 
     if (returnDateTime <= pickupDateTime) {
       return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
     }
 
-    const cleanContactNumber = (contactNumber || "").toString().replace(/\D/g, "");
+    const cleanContactNumber = (req.user?.contactNumber || "").toString().replace(/\D/g, "");
     if (!cleanContactNumber || cleanContactNumber.length < 10 || cleanContactNumber.length > 13) {
-      return res.status(400).json({ success: false, message: "Contact number must be 10-13 digits." });
+      return res.status(400).json({ success: false, message: "Your profile contact number is missing or invalid. Please update your profile." });
     }
 
     const gownData = await Gown.findById(gown);
@@ -204,48 +256,53 @@ export const createBooking = async (req, res) => {
     const pricePerDay = gownData.pricePerDay || gownData.price || 0;
     const price = rentalDays * pricePerDay;
 
-    // Upload payment screenshot to ImageKit
-    let screenshotUrl = '';
-    try {
-      // Read file from disk (multer diskStorage)
-      const fs = await import('fs');
-      let fileBuffer;
-      
-      if (req.file.buffer) {
-        // Memory storage
-        fileBuffer = req.file.buffer;
-      } else if (req.file.path) {
-        // Disk storage
-        fileBuffer = fs.readFileSync(req.file.path);
-      } else {
-        throw new Error('No file buffer or path available');
-      }
-      
-      const uploadResponse = await imageKit.upload({
-        file: fileBuffer.toString('base64'),
-        fileName: `payment_${_id}_${Date.now()}.${req.file.mimetype.split('/')[1]}`,
-        folder: '/payment_screenshots'
-      });
-      screenshotUrl = uploadResponse.url;
-      
-      // Clean up temporary file if using disk storage
-      if (req.file.path) {
-        fs.unlinkSync(req.file.path);
-      }
-    } catch (uploadError) {
-      console.error('ImageKit upload error:', uploadError);
-      return res.status(500).json({ success: false, message: "Failed to upload payment screenshot" });
-    }
+    // Determine booking type
+    const finalBookingType = isTrial ? 'trial' : 'reservation';
 
-    // Check for duplicate reference numbers
-    const existingPayment = await Booking.findOne({
-      'payment.transactionRef': paymentInfo.transactionRef
-    });
-    if (existingPayment) {
-      return res.status(400).json({
-        success: false,
-        message: "This reference number has already been used. Please check your transaction."
+    // For trial bookings, we always hold for 2 days (in-store fitting window)
+    const finalReturnDateTime = returnDateTime;
+    const trialExpiresAt = isTrial ? new Date(finalReturnDateTime) : undefined;
+
+    // Upload payment screenshot to ImageKit (GCash only)
+    let screenshotUrl = '';
+    if (isGcash) {
+      try {
+        const fs = await import('fs');
+        let fileBuffer;
+
+        if (req.file?.buffer) {
+          fileBuffer = req.file.buffer;
+        } else if (req.file?.path) {
+          fileBuffer = fs.readFileSync(req.file.path);
+        } else {
+          throw new Error('No file buffer or path available');
+        }
+
+        const uploadResponse = await imageKit.upload({
+          file: fileBuffer.toString('base64'),
+          fileName: `payment_${_id}_${Date.now()}.${req.file.mimetype.split('/')[1]}`,
+          folder: '/payment_screenshots'
+        });
+        screenshotUrl = uploadResponse.url;
+
+        if (req.file.path) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (uploadError) {
+        console.error('ImageKit upload error:', uploadError);
+        return res.status(500).json({ success: false, message: "Failed to upload payment screenshot" });
+      }
+
+      // Check for duplicate reference numbers
+      const existingPayment = await Booking.findOne({
+        'payment.transactionRef': paymentInfo.transactionRef
       });
+      if (existingPayment) {
+        return res.status(400).json({
+          success: false,
+          message: "This reference number has already been used. Please check your transaction."
+        });
+      }
     }
 
     const newBooking = await Booking.create({
@@ -253,21 +310,24 @@ export const createBooking = async (req, res) => {
       owner: gownData.owner,
       user: _id,
       pickupDate: pickupDateTime,
-      returnDate: returnDateTime,
+      returnDate: finalReturnDateTime,
       pickupTime,
-      returnTime,
-      price,
+      returnTime: effectiveReturnTime,
+      price: isTrial ? 0 : price,
+      bookingType: finalBookingType,
+      trialExpiresAt,
       contactNumber: cleanContactNumber,
       measurements: measurements || {},
       payment: {
-        method: 'gcash',
-        depositAmount: paymentInfo.depositAmount || Math.round(price * 0.5),
-        totalAmount: paymentInfo.totalAmount || price,
-        remainingBalance: paymentInfo.remainingBalance || (price - Math.round(price * 0.5)),
-        transactionRef: paymentInfo.transactionRef,
-        screenshot: screenshotUrl,
-        status: 'pending'
-      }
+        method: isInStore || isTrial ? 'in_store' : 'gcash',
+        depositAmount: isTrial ? 0 : (paymentInfo.depositAmount || Math.round(price * 0.5)),
+        totalAmount: isTrial ? 0 : (paymentInfo.totalAmount || price),
+        remainingBalance: isTrial ? 0 : (paymentInfo.remainingBalance || (price - Math.round(price * 0.5))),
+        transactionRef: isGcash ? paymentInfo.transactionRef : undefined,
+        screenshot: isGcash ? screenshotUrl : undefined,
+        status: isGcash ? 'pending' : 'pending'
+      },
+      status: isTrial ? 'trial' : 'pending'
     });
 
     // Do NOT toggle gown.available here; availability is per-date.
@@ -279,7 +339,7 @@ export const createBooking = async (req, res) => {
       .populate('owner', 'name')
       .populate('user', 'name email')
     
-    res.json({ success: true, message: "Booking Created - Payment pending verification", Booking: populatedBooking });
+    res.json({ success: true, message: "Booking Created", booking: populatedBooking, Booking: populatedBooking });
 
   } catch (error) {
     console.log(error.message);
@@ -290,16 +350,17 @@ export const createBooking = async (req, res) => {
 export const validateBookingWindow = async (req, res) => {
   try {
     const { gownId, pickupDate, returnDate, pickupTime, returnTime } = req.body;
-    if (!gownId || !pickupDate || !returnDate || !pickupTime || !returnTime) {
-      return res.status(400).json({ success: false, message: "Please select pickup and return dates and times." });
+    const effectiveReturnTime = returnTime || pickupTime;
+    if (!gownId || !pickupDate || !returnDate || !pickupTime) {
+      return res.status(400).json({ success: false, message: "Please select pickup and return dates and a pickup time." });
     }
 
-    if (!isWithinBusinessHours(pickupTime) || !isWithinBusinessHours(returnTime)) {
+    if (!isWithinBusinessHours(pickupTime) || !isWithinBusinessHours(effectiveReturnTime)) {
       return res.status(400).json({ success: false, message: "Times must be between 09:00 and 19:00 in 15-minute increments." });
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
-    const returnDateTime = combineDateAndTime(returnDate, returnTime);
+    const returnDateTime = combineDateAndTime(returnDate, effectiveReturnTime);
 
     if (returnDateTime <= pickupDateTime) {
       return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
@@ -314,9 +375,15 @@ export const validateBookingWindow = async (req, res) => {
     
     // Build a set of all blocked dates (Booking dates + laundry days)
     const blockedDates = new Set();
+    const now = new Date();
     const Bookings = await Booking.find({
       gown: gownId,
       status: { $ne: "canceled" },
+      $or: [
+        { status: { $ne: 'trial' } },
+        { status: 'trial', trialExpiresAt: { $gt: now } },
+        { status: 'trial', trialExpiresAt: { $exists: false } },
+      ]
     })
       .populate("user", "name")
       .populate("gown", "name");
@@ -409,7 +476,7 @@ export const getUserBooking = async (req, res) => {
       .populate('owner', 'name')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, Bookings });
+    res.json({ success: true, bookings: Bookings });
 
   } catch (error) {
     console.log(error.message);
@@ -429,7 +496,7 @@ export const getOwnerBooking = async (req, res) => {
       .populate('user', '-password')
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, Bookings });
+    res.json({ success: true, bookings: Bookings });
 
   } catch (error) {
     console.log(error.message);
@@ -504,6 +571,217 @@ export const changeBookingStatus = async (req, res) => {
   }
 }
 
+// Unified endpoint for both users and owners to cancel or reschedule bookings.
+// Rules:
+// - Users can only update their own bookings.
+// - Owners can only update bookings where they are the owner.
+// - Only bookings in status 'pending' or 'trial' can be rescheduled.
+// - Cancel is allowed for pending/trial (and also for confirmed by owner, if needed).
+export const updateBooking = async (req, res) => {
+  try {
+    const actor = req.user;
+    const { bookingId, action, pickupDate, returnDate, pickupTime, returnTime } = req.body;
+
+    if (!bookingId || !action) {
+      return res.status(400).json({ success: false, message: 'bookingId and action are required.' });
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    const isUserActor = actor.role === 'user';
+    const isOwnerActor = actor.role === 'owner';
+
+    const actorId = actor._id.toString();
+    const bookingUserId = booking.user?.toString();
+    const bookingOwnerId = booking.owner?.toString();
+
+    const canAct = (isUserActor && bookingUserId === actorId) || (isOwnerActor && bookingOwnerId === actorId);
+    if (!canAct) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    if (action === 'cancel') {
+      if (['canceled', 'completed'].includes(booking.status)) {
+        return res.status(400).json({ success: false, message: 'Booking is already closed.' });
+      }
+
+      // Cancel should instantly release trial holds. Since calendar queries exclude canceled bookings,
+      // setting status to canceled is enough.
+      booking.status = 'canceled';
+      await booking.save();
+      return res.json({ success: true, message: 'Booking canceled', booking });
+    }
+
+    if (action === 'convert_to_reservation') {
+      // Owner-managed in-store decision: trial -> reservation
+      if (actor.role !== 'owner') {
+        return res.status(403).json({ success: false, message: 'Only the owner can finalize a trial booking.' });
+      }
+
+      const isTrialBooking = booking.status === 'trial' || booking.bookingType === 'trial';
+      if (!isTrialBooking) {
+        return res.status(400).json({ success: false, message: 'Only trial bookings can be converted.' });
+      }
+
+      // Final conflict check before converting
+      const gown = await Gown.findById(booking.gown).select('laundryDays');
+      if (!gown) {
+        return res.status(404).json({ success: false, message: 'Gown not found' });
+      }
+
+      const now = new Date();
+      const otherBookings = await Booking.find({
+        gown: booking.gown,
+        _id: { $ne: booking._id },
+        status: { $ne: 'canceled' },
+        $or: [
+          { status: { $ne: 'trial' } },
+          { status: 'trial', trialExpiresAt: { $gt: now } },
+          { status: 'trial', trialExpiresAt: { $exists: false } },
+        ]
+      });
+
+      const blockedDates = new Set();
+      otherBookings.forEach((b) => {
+        const s = new Date(b.pickupDate);
+        const e = new Date(b.returnDate);
+        for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+          blockedDates.add(d.toISOString().split('T')[0]);
+        }
+        const laundryDays = Math.max(gown.laundryDays || 0, 0);
+        for (let i = 1; i <= laundryDays; i++) {
+          const ld = new Date(e);
+          ld.setDate(ld.getDate() + i);
+          blockedDates.add(ld.toISOString().split('T')[0]);
+        }
+      });
+
+      const overlaps = dateRangeOverlapsBlocked(booking.pickupDate, booking.returnDate, blockedDates);
+      if (overlaps) {
+        return res.status(409).json({ success: false, message: 'Cannot finalize: schedule now conflicts with another booking/hold.' });
+      }
+
+      // Conversion: trial -> reservation pending (or confirmed later by pickup confirmation)
+      booking.bookingType = 'reservation';
+      booking.status = 'pending';
+      booking.trialExpiresAt = undefined;
+
+      // Payment handling: allow in-store paid without GCash requirements
+      booking.payment.method = 'in_store';
+      booking.payment.status = 'paid';
+      booking.payment.transactionRef = undefined;
+      booking.payment.screenshot = undefined;
+      booking.payment.verifiedAt = new Date();
+      booking.payment.verifiedBy = actor._id;
+
+      await booking.save();
+
+      const populated = await Booking.findById(booking._id)
+        .populate('gown')
+        .populate('owner', 'name')
+        .populate('user', 'name email');
+
+      return res.json({ success: true, message: 'Trial finalized as reservation', booking: populated });
+    }
+
+    if (action !== 'reschedule') {
+      return res.status(400).json({ success: false, message: 'Invalid action. Use cancel, reschedule, or convert_to_reservation.' });
+    }
+
+    // Only allow reschedule on pending/trial bookings
+    if (!['pending', 'trial'].includes(booking.status)) {
+      return res.status(400).json({ success: false, message: 'Only pending or trial bookings can be rescheduled.' });
+    }
+
+    if (!pickupDate || !returnDate || !pickupTime || !returnTime) {
+      return res.status(400).json({ success: false, message: 'pickupDate, returnDate, pickupTime, returnTime are required for reschedule.' });
+    }
+
+    if (!isWithinBusinessHours(pickupTime) || !isWithinBusinessHours(returnTime)) {
+      return res.status(400).json({ success: false, message: 'Times must be between 09:00 and 19:00 in 15-minute increments.' });
+    }
+
+    const newPickupDateTime = combineDateAndTime(pickupDate, pickupTime);
+    let newReturnDateTime = combineDateAndTime(returnDate, returnTime);
+
+    if (!newPickupDateTime || !newReturnDateTime) {
+      return res.status(400).json({ success: false, message: 'Invalid pickup or return date.' });
+    }
+
+    const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+    if (isTrial) {
+      newReturnDateTime = new Date(newPickupDateTime.getTime() + 2 * DAY_IN_MS);
+    }
+
+    if (newReturnDateTime <= newPickupDateTime) {
+      return res.status(400).json({ success: false, message: 'Return time cannot be earlier than pickup time.' });
+    }
+
+    const gown = await Gown.findById(booking.gown).select('laundryDays');
+    if (!gown) {
+      return res.status(404).json({ success: false, message: 'Gown not found' });
+    }
+
+    // Check for conflicts excluding the current booking
+    const now = new Date();
+    const otherBookings = await Booking.find({
+      gown: booking.gown,
+      _id: { $ne: booking._id },
+      status: { $ne: 'canceled' },
+      $or: [
+        { status: { $ne: 'trial' } },
+        { status: 'trial', trialExpiresAt: { $gt: now } },
+        { status: 'trial', trialExpiresAt: { $exists: false } },
+      ]
+    });
+
+    const blockedDates = new Set();
+    otherBookings.forEach((b) => {
+      const s = new Date(b.pickupDate);
+      const e = new Date(b.returnDate);
+      for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+        blockedDates.add(d.toISOString().split('T')[0]);
+      }
+      const laundryDays = Math.max(gown.laundryDays || 0, 0);
+      for (let i = 1; i <= laundryDays; i++) {
+        const ld = new Date(e);
+        ld.setDate(ld.getDate() + i);
+        blockedDates.add(ld.toISOString().split('T')[0]);
+      }
+    });
+
+    const overlaps = dateRangeOverlapsBlocked(newPickupDateTime, newReturnDateTime, blockedDates);
+    if (overlaps) {
+      return res.status(409).json({ success: false, message: 'Selected schedule overlaps an existing booking/trial/laundry hold.' });
+    }
+
+    booking.pickupDate = newPickupDateTime;
+    booking.returnDate = newReturnDateTime;
+    booking.pickupTime = pickupTime;
+    booking.returnTime = returnTime;
+
+    if (isTrial) {
+      booking.trialExpiresAt = newReturnDateTime;
+    }
+
+    await booking.save();
+
+    const populated = await Booking.findById(booking._id)
+      .populate('gown')
+      .populate('owner', 'name')
+      .populate('user', 'name email');
+
+    return res.json({ success: true, message: 'Booking updated', booking: populated });
+
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 export const getGownCalendar = async (req, res) => {
   try {
     const { gownId } = req.params;
@@ -516,12 +794,19 @@ export const getGownCalendar = async (req, res) => {
       return res.status(404).json({ success: false, message: "Gown not found" });
     }
 
+    const now = new Date();
     const Bookings = await Booking.find({
       gown: gownId,
-      status: { $ne: "canceled" }
+      status: { $ne: "canceled" },
+      $or: [
+        { status: { $ne: 'trial' } },
+        { status: 'trial', trialExpiresAt: { $gt: now } },
+        { status: 'trial', trialExpiresAt: { $exists: false } },
+      ]
     }).sort({ pickupDate: 1 });
 
     const unavailableDates = new Set();
+    const trialHoldDates = new Set();
     const laundryHoldDates = new Set();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -534,31 +819,37 @@ export const getGownCalendar = async (req, res) => {
       targetSet.add(dateObj.toISOString().split('T')[0]);
     };
 
-    Bookings.forEach((Booking) => {
-      const BookingStart = new Date(Booking.pickupDate);
-      const BookingEnd = new Date(Booking.returnDate);
+    Bookings.forEach((booking) => {
+      const bookingStart = new Date(booking.pickupDate);
+      const bookingEnd = new Date(booking.returnDate);
+      const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+
       for (
-        let cursor = new Date(BookingStart);
-        cursor <= BookingEnd;
+        let cursor = new Date(bookingStart);
+        cursor <= bookingEnd;
         cursor.setDate(cursor.getDate() + 1)
       ) {
-        captureDate(new Date(cursor), unavailableDates);
+        if (isTrial) {
+          captureDate(new Date(cursor), trialHoldDates);
+        } else {
+          // unavailableDates = confirmed reservations (red)
+          if (booking.status === 'confirmed') {
+            captureDate(new Date(cursor), unavailableDates);
+          }
+        }
       }
-    
+
       // Laundry days are fully blocked - add to both sets
       const bufferDays = Math.max(gown.laundryDays || 0, 0);
       for (let i = 1; i <= bufferDays; i += 1) {
-        const laundryDate = new Date(Booking.returnDate);
+        const laundryDate = new Date(booking.returnDate);
         laundryDate.setDate(laundryDate.getDate() + i);
         const dateString = laundryDate.toISOString().split('T')[0];
-        // Add to laundryHoldDates for highlighting
         if (laundryDate >= today && laundryDate <= horizon) {
           laundryHoldDates.add(dateString);
         }
-        // Also add to unavailableDates to fully block them
-        if (laundryDate >= today && laundryDate <= horizon) {
-          unavailableDates.add(dateString);
-        }
+        // laundry days are blocked but should be surfaced separately (blue)
+        // Do not add them into unavailableDates; frontend will block using laundryHoldDates.
       }
     });
 
@@ -567,6 +858,7 @@ export const getGownCalendar = async (req, res) => {
       calendar: {
         laundryDays: gown.laundryDays || 0,
         unavailableDates: Array.from(unavailableDates).sort(),
+        trialHoldDates: Array.from(trialHoldDates).sort(),
         laundryHoldDates: Array.from(laundryHoldDates).sort(),
       },
     });

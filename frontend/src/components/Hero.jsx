@@ -7,59 +7,48 @@ const Hero = () => {
   const navigate = useNavigate();
   const [bodyType, setBodyType] = useState(''); 
   const [skinTone, setSkinTone] = useState('');
-  const [heightFeet, setHeightFeet] = useState('');
-  const [heightInches, setHeightInches] = useState('');
   const [eventType, seteventType] = useState('');
   const [faceShape, setfaceShape] = useState('');
+  const [ageGroup, setAgeGroup] = useState('');
+  const [sex, setSex] = useState('');
   const [showImageAnalysis, setShowImageAnalysis] = useState(false);
-
-  // Convert feet and inches to height category
-  const convertFeetInchesToCategory = (feet, inches) => {
-    if ((!feet || feet === '') && (!inches || inches === '')) return '';
-    
-    const feetNum = parseFloat(feet) || 0;
-    const inchesNum = parseFloat(inches) || 0;
-    
-    // Validate inputs
-    if (isNaN(feetNum) && isNaN(inchesNum)) return '';
-    if (feetNum < 0 || feetNum > 8) return '';
-    if (inchesNum < 0 || inchesNum > 11) return '';
-    
-    // Convert to total inches
-    const totalInches = (feetNum * 12) + inchesNum;
-    
-    if (totalInches === 0) return '';
-    
-    // Categories: Small (< 5'4" or 64"), Medium (5'4" to 5'8" or 64" to 68"), Tall (> 5'8" or 68")
-    if (totalInches < 64) {
-      return 'Small';
-    } else if (totalInches <= 68) {
-      return 'Medium';
-    } else {
-      return 'Tall';
-    }
-  };
 
   const handleImageAnalysisComplete = (results) => {
     setSkinTone(results.skinTone);
     setBodyType(results.bodyType);
     setfaceShape(results.faceShape);
+    // Photo analysis may estimate age as a number; map to your age-group buckets
+    // Prefer explicit fields from ImageAnalysis
+    if (results.ageGroup) setAgeGroup(results.ageGroup)
+    if (results.sex) setSex(results.sex)
+
+    // Backward compatible: numeric age + gender
+    const estimatedAge = results.age ? parseInt(results.age, 10) : NaN;
+    if (!Number.isNaN(estimatedAge) && !results.ageGroup) {
+      if (estimatedAge >= 6 && estimatedAge <= 9) setAgeGroup('6–9 Years');
+      else if (estimatedAge >= 10 && estimatedAge <= 12) setAgeGroup('10–12 Years');
+      else if (estimatedAge >= 13 && estimatedAge <= 17) setAgeGroup('13–17 Years');
+      else if (estimatedAge >= 18 && estimatedAge <= 29) setAgeGroup('18–29 Years');
+      else if (estimatedAge >= 30 && estimatedAge <= 59) setAgeGroup('30–59 Years');
+      else if (estimatedAge >= 60) setAgeGroup('60+ Years');
+    }
+
+    if (results.gender && !results.sex) setSex(results.gender === 'female' ? 'Female' : 'Male');
     setShowImageAnalysis(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Convert height in feet and inches to category
-    const heightCategory = convertFeetInchesToCategory(heightFeet, heightInches);
-    
     // Build query params
     const params = new URLSearchParams();
     if (bodyType) params.append('bodyType', bodyType);
     if (skinTone) params.append('skinTone', skinTone);
-    if (heightCategory) params.append('height', heightCategory);
     if (eventType) params.append('eventType', eventType);
     if (faceShape) params.append('faceShape', faceShape);
+    // Keep backend-compatible params: map ageGroup -> age, sex -> gender
+    if (ageGroup) params.append('age', ageGroup);
+    if (sex) params.append('gender', sex);
 
     // Navigate to recommendations page
     navigate(`/recommendations?${params.toString()}`);
@@ -113,41 +102,6 @@ const Hero = () => {
             ))}
           </select>
 
-          <div className="w-full sm:w-auto flex items-center gap-1 px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full hover:border-primary focus-within:border-primary transition-all bg-white/60 backdrop-blur-sm shadow-md">
-            <input
-              type="number"
-              value={heightFeet}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 8)) {
-                  setHeightFeet(val);
-                }
-              }}
-              placeholder="5"
-              min="0"
-              max="8"
-              step="1"
-              className="w-8 sm:w-10 text-center text-sm sm:text-base font-semibold text-gray-800 focus:outline-none bg-transparent"
-            />
-            <span className="text-gray-700 font-semibold text-xs sm:text-sm">ft</span>
-            <input
-              type="number"
-              value={heightInches}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 11)) {
-                  setHeightInches(val);
-                }
-              }}
-              placeholder="6"
-              min="0"
-              max="11"
-              step="1"
-              className="w-8 sm:w-10 text-center text-sm sm:text-base font-semibold text-gray-800 focus:outline-none bg-transparent"
-            />
-            <span className="text-gray-700 font-semibold text-xs sm:text-sm">in</span>
-          </div>
-
           <select 
             value={eventType} 
             onChange={(e) => seteventType(e.target.value)} 
@@ -168,6 +122,30 @@ const Hero = () => {
             {faceShapeList.map((face) => (
               <option key={face} value={face}>{face}</option>
             ))}
+          </select>
+
+          <select
+            value={ageGroup}
+            onChange={(e) => setAgeGroup(e.target.value)}
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full text-sm sm:text-base text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
+          >
+            <option value="">Age Group</option>
+            <option value="6–9 Years">6–9 Years</option>
+            <option value="10–12 Years">10–12 Years</option>
+            <option value="13–17 Years">13–17 Years</option>
+            <option value="18–29 Years">18–29 Years</option>
+            <option value="30–59 Years">30–59 Years</option>
+            <option value="60+ Years">60+ Years</option>
+          </select>
+
+          <select
+            value={sex}
+            onChange={(e) => setSex(e.target.value)}
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full text-sm sm:text-base text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
+          >
+            <option value="">Sex</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
           </select>
         </div>
 

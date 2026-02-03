@@ -5,14 +5,22 @@ const bookingSchema = new mongoose.Schema({
     gown: {type: ObjectId, ref: "Gown", required: true},
     user: {type: ObjectId, ref: "User", required: true},
     owner: {type: ObjectId, ref: "User", required: true},
-    // Booking lifecycle for Manage Booking:
-    // pending -> confirmed (pickup confirmed by owner) -> completed (return confirmed by owner)
-    // or canceled at any point before completion
+    // Booking lifecycle:
+    // reservation: pending -> confirmed -> completed OR canceled
+    // trial: trial -> canceled/expired OR converted to pending
     status: {
         type: String,
-        enum: ["pending", "confirmed", "canceled", "completed"],
+        enum: ["trial", "pending", "confirmed", "canceled", "completed", "expired"],
         default: "pending"
     },
+    bookingType: {
+        type: String,
+        enum: ["reservation", "trial"],
+        default: "reservation"
+    },
+    // Used only for trial bookings. If now > trialExpiresAt, the hold should be treated as expired.
+    trialExpiresAt: { type: Date },
+
     pickupDate: {type: Date, required: true},
     returnDate: {type: Date, required: true},
     pickupTime: {type: String},
@@ -29,15 +37,15 @@ const bookingSchema = new mongoose.Schema({
     },
     // Payment information
     payment: {
-        method: { type: String, enum: ['gcash'], default: 'gcash' },
-        depositAmount: { type: Number, required: true },
-        totalAmount: { type: Number, required: true },
+        method: { type: String, enum: ['gcash', 'in_store'], default: 'gcash' },
+        depositAmount: { type: Number, required: function () { return this.bookingType !== 'trial'; }, default: 0 },
+        totalAmount: { type: Number, required: function () { return this.bookingType !== 'trial'; }, default: 0 },
         remainingBalance: { type: Number },
         transactionRef: { type: String },
         screenshot: { type: String }, // URL to uploaded screenshot
         status: {
             type: String,
-            enum: ['pending', 'verified', 'rejected'],
+            enum: ['pending', 'verified', 'rejected', 'paid'],
             default: 'pending'
         },
         verifiedAt: { type: Date },

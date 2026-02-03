@@ -3,6 +3,7 @@ import { assets } from '../assets/assets'
 
 const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
   const [paymentData, setPaymentData] = useState({
+    method: 'gcash',
     referenceNumber: '',
     screenshot: null,
     screenshotPreview: null
@@ -52,7 +53,12 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
   }
 
   const handleContinue = () => {
-    // Validation
+    if (paymentData.method === 'in_store') {
+      onContinue(paymentData)
+      return
+    }
+
+    // GCash validation
     if (!paymentData.referenceNumber || paymentData.referenceNumber.trim() === '') {
       setError('Please enter the GCash reference number')
       return
@@ -63,19 +69,18 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
       return
     }
 
-    // Reference number should be at least 10 characters
     if (paymentData.referenceNumber.length < 10) {
       setError('Please enter a valid reference number (at least 10 characters)')
       return
     }
 
-    // Continue to contract agreement with payment data
     onContinue(paymentData)
   }
 
   const handleClose = () => {
     setShowPayment(false)
     setPaymentData({
+      method: 'gcash',
       referenceNumber: '',
       screenshot: null,
       screenshotPreview: null
@@ -104,7 +109,7 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
 
         {/* Header */}
         <div className='text-center mb-6'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-2'>GCash Payment</h2>
+          <h2 className='text-3xl font-bold text-gray-900 mb-2'>Payment</h2>
           <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4'>
             <div className='space-y-2'>
               <div className='flex justify-between items-center'>
@@ -130,7 +135,29 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
           </div>
         )}
 
-        {/* Payment Instructions */}
+        {/* Payment Method */}
+        <div className='mb-6 bg-gray-50 rounded-lg p-4'>
+          <h3 className='font-semibold text-gray-900 mb-3'>Select payment method</h3>
+          <div className='flex flex-col sm:flex-row gap-3'>
+            <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'gcash' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
+              <input type='radio' name='method' value='gcash' checked={paymentData.method === 'gcash'} onChange={handleInputChange} />
+              <div>
+                <p className='font-semibold text-gray-900'>GCash</p>
+                <p className='text-xs text-gray-500'>Upload proof of payment</p>
+              </div>
+            </label>
+            <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'in_store' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
+              <input type='radio' name='method' value='in_store' checked={paymentData.method === 'in_store'} onChange={handleInputChange} />
+              <div>
+                <p className='font-semibold text-gray-900'>Pay In-Store</p>
+                <p className='text-xs text-gray-500'>Cash payment at the shop</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Payment Instructions (GCash only) */}
+        {paymentData.method === 'gcash' && (
         <div className='mb-6 bg-gray-50 rounded-lg p-4'>
           <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
             <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>1</span>
@@ -151,7 +178,10 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
             </div>
           </div>
         </div>
+        )}
 
+        {paymentData.method === 'gcash' && (
+        <>
         {/* Reference Number Input */}
         <div className='mb-6'>
           <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
@@ -224,6 +254,16 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
             will be paid during pickup.
           </p>
         </div>
+        </>
+        )}
+
+        {paymentData.method === 'in_store' && (
+          <div className='mb-6 bg-green-50 border border-green-200 rounded-lg p-4'>
+            <p className='text-sm text-green-800'>
+              You selected <strong>Pay In-Store</strong>. You can pay cash at the shop during your visit.
+            </p>
+          </div>
+        )}
 
         {/* Continue Button */}
         <button
