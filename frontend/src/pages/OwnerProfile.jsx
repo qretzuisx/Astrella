@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL, CURRENCY } from '../config'
 import GownCard from '../components/GownCard'
 
 const OwnerProfile = () => {
@@ -11,7 +12,7 @@ const OwnerProfile = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('about') // about, gowns, documents
-  const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const currency = CURRENCY
 
   useEffect(() => {
     fetchOwnerProfile()
@@ -39,7 +40,6 @@ const OwnerProfile = () => {
 
   const fetchOwnerGowns = async () => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/owner/all-gowns`)
       const data = await response.json()
       

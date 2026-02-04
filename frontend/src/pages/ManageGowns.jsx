@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const ManageGowns = () => {
@@ -12,7 +13,7 @@ const ManageGowns = () => {
   const [success, setSuccess] = useState('')
   const [laundryForm, setLaundryForm] = useState({})
   const [laundrySaving, setLaundrySaving] = useState(null)
-  const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const currency = CURRENCY
 
   useEffect(() => {
     fetchGowns()
@@ -62,8 +63,6 @@ const ManageGowns = () => {
   const handleToggleAvailability = async (gownId) => {
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const response = await fetch(`${API_URL}/owner/toogle-gown`, {
         method: 'PUT',
         headers: {
@@ -144,7 +143,6 @@ const ManageGowns = () => {
     try {
       setLaundrySaving(gownId)
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/owner/gown/laundry-days`, {
         method: 'PUT',
         headers: {

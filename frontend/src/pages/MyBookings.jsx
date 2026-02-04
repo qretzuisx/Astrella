@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL, CURRENCY } from '../config'
 
 const ALLOWED_TIMES = (() => {
   const times = []
@@ -15,6 +16,7 @@ const ALLOWED_TIMES = (() => {
 
 const MyBookings = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [success, setSuccess] = useState('')
@@ -32,8 +34,7 @@ const MyBookings = () => {
     returnTime: '09:00',
   })
 
-  const currency = import.meta.env.VITE_CURRENCY || '₱'
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  const currency = CURRENCY
 
   const fetchBookings = async () => {
     try {
@@ -136,13 +137,15 @@ const MyBookings = () => {
       }
 
       // For extend mode, keep pickup values locked.
+      const isTrial = (selectedBooking.status || '').toLowerCase() === 'trial' || (selectedBooking.bookingType || '').toLowerCase() === 'trial'
+
       const payload = {
         bookingId: selectedBooking._id || selectedBooking.id,
         action: 'reschedule',
         pickupDate: editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : form.pickupDate,
-        returnDate: form.returnDate,
+        returnDate: isTrial ? (editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : form.pickupDate) : form.returnDate,
         pickupTime: editMode === 'extend' ? (selectedBooking.pickupTime || form.pickupTime) : form.pickupTime,
-        returnTime: form.returnTime,
+        returnTime: isTrial ? (editMode === 'extend' ? (selectedBooking.pickupTime || form.pickupTime) : form.pickupTime) : form.returnTime,
       }
 
       const response = await fetch(`${API_URL}/bookings/update`, {
@@ -225,6 +228,12 @@ const MyBookings = () => {
     }
   }
 
+  const continueToBook = (booking) => {
+    const gownId = booking?.gown?._id || booking?.gown?.id || booking?.gown
+    if (!gownId) return
+    navigate(`/gown-details/${gownId}`)
+  }
+
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -234,6 +243,18 @@ const MyBookings = () => {
       day: 'numeric', 
       year: 'numeric' 
     })
+  }
+
+  // Format 24h time (HH:MM or HH:MM:SS) for display as 12h
+  const formatTime = (timeValue) => {
+    if (!timeValue) return ''
+    const parts = String(timeValue).trim().split(':')
+    const hours = parseInt(parts[0], 10)
+    const minutes = parts[1] ? parseInt(parts[1], 10) : 0
+    if (Number.isNaN(hours)) return timeValue
+    const period = hours >= 12 ? 'PM' : 'AM'
+    const h12 = hours % 12 || 12
+    return `${h12}:${String(minutes).padStart(2, '0')} ${period}`
   }
 
   // Get status badge color
@@ -322,17 +343,26 @@ const MyBookings = () => {
                     <div className='flex items-center gap-2 text-gray-700'>
                       <img src={assets.calendar_icon_colored} alt='calendar' className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
                       <div className='flex-1 min-w-0'>
-                        <p className='text-xs sm:text-sm text-gray-500'>Pickup</p>
-                        <p className='text-sm sm:text-base font-medium truncate'>{formatDate(booking.pickupDate)}</p>
+                        <p className='text-xs sm:text-sm text-gray-500'>{isTrial ? 'Trial Date' : 'Pickup'}</p>
+                        <p className='text-sm sm:text-base font-medium truncate'>
+                          {formatDate(booking.pickupDate)}
+                          {booking.pickupTime && <span className='text-gray-600 font-normal'> · {formatTime(booking.pickupTime)}</span>}
+                        </p>
                       </div>
                     </div>
-                    <div className='flex items-center gap-2 text-gray-700'>
-                      <img src={assets.calendar_icon_colored} alt='calendar' className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
-                      <div className='flex-1 min-w-0'>
-                        <p className='text-xs sm:text-sm text-gray-500'>Return</p>
-                        <p className='text-sm sm:text-base font-medium truncate'>{formatDate(booking.returnDate)}</p>
+
+                    {!isTrial && (
+                      <div className='flex items-center gap-2 text-gray-700'>
+                        <img src={assets.calendar_icon_colored} alt='calendar' className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
+                        <div className='flex-1 min-w-0'>
+                          <p className='text-xs sm:text-sm text-gray-500'>Return</p>
+                          <p className='text-sm sm:text-base font-medium truncate'>
+                            {formatDate(booking.returnDate)}
+                            {(booking.returnTime || booking.pickupTime) && <span className='text-gray-600 font-normal'> · {formatTime(booking.returnTime || booking.pickupTime)}</span>}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {isTrial && booking.trialExpiresAt && (
                       <div className='mt-2 p-2.5 bg-orange-50 border border-orange-200 rounded-lg text-xs sm:text-sm text-orange-900'>
@@ -367,18 +397,29 @@ const MyBookings = () => {
                       >
                         Reschedule
                       </button>
-                      <button
-                        type='button'
-                        onClick={() => openEdit(booking, 'extend')}
-                        disabled={!editable}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                          editable
-                            ? 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
-                            : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        Extend
-                      </button>
+
+                      {isTrial ? (
+                        <button
+                          type='button'
+                          onClick={() => continueToBook(booking)}
+                          className='px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-dull transition-colors'
+                        >
+                          Continue to Book
+                        </button>
+                      ) : (
+                        <button
+                          type='button'
+                          onClick={() => openEdit(booking, 'extend')}
+                          disabled={!editable}
+                          className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                            editable
+                              ? 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
+                              : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          Extend
+                        </button>
+                      )}
                     </div>
 
                     <button
@@ -389,7 +430,7 @@ const MyBookings = () => {
                         cancelable ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       }`}
                     >
-                      Cancel Reservation
+                      {isTrial ? 'Cancel Booking' : 'Cancel Reservation'}
                     </button>
 
                     {!editable && (
@@ -424,7 +465,7 @@ const MyBookings = () => {
             <div className='space-y-4'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Date</label>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>{(selectedBooking.status || '').toLowerCase() === 'trial' ? 'Trial Date' : 'Pickup Date'}</label>
                   <input
                     type='date'
                     name='pickupDate'
@@ -444,41 +485,43 @@ const MyBookings = () => {
                     className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
                   >
                     {allowedTimes.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                      <option key={t} value={t}>{formatTime(t)}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Date</label>
-                  <input
-                    type='date'
-                    name='returnDate'
-                    value={form.returnDate}
-                    onChange={handleFormChange}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                  />
-                </div>
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Time</label>
-                  <select
+              {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Date</label>
+                    <input
+                      type='date'
+                      name='returnDate'
+                      value={form.returnDate}
+                      onChange={handleFormChange}
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Time</label>
+                    <select
                     name='returnTime'
                     value={form.returnTime}
                     onChange={handleFormChange}
                     className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
                   >
                     {allowedTimes.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                      <option key={t} value={t}>{formatTime(t)}</option>
                     ))}
                   </select>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {(selectedBooking.status || '').toLowerCase() === 'trial' && (
                 <div className='p-3 bg-orange-50 border border-orange-200 rounded-lg text-xs sm:text-sm text-orange-900'>
-                  Trial bookings always reserve a 2-day fitting window. Changing pickup date/time will auto-adjust return.
+                  Trial bookings are single-day appointments. Changing the trial date/time will update the schedule.
                 </div>
               )}
 

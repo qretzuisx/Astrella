@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL } from '../config'
 
 const UserProfile = () => {
   const navigate = useNavigate()
@@ -45,8 +46,6 @@ const UserProfile = () => {
     }
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       // Get user data
       const userResponse = await fetch(`${API_URL}/user/data`, {
         headers: {
@@ -82,8 +81,6 @@ const UserProfile = () => {
 
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const response = await fetch(`${API_URL}/user/update-profile`, {
         method: 'PUT',
         headers: {
@@ -130,8 +127,6 @@ const UserProfile = () => {
 
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const response = await fetch(`${API_URL}/user/change-password`, {
         method: 'PUT',
         headers: {
@@ -175,8 +170,6 @@ const UserProfile = () => {
 
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const response = await fetch(`${API_URL}/user/delete-account`, {
         method: 'DELETE',
         headers: {
@@ -219,8 +212,6 @@ const UserProfile = () => {
 
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const formData = new FormData()
       formData.append('image', file)
 

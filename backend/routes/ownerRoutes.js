@@ -1,13 +1,14 @@
 import express from "express";
 import { protect } from "../middleware/auth.js";
-import { addGown, DeleteGown, getAllGowns, getDashboardData, getOwnersGowns, ToggleGownAvailability, updateLaundryDays, updateUserImage } from "../controllers/ownerController.js";
+import { addGown, DeleteGown, getAllGowns, getDashboardData, getGownById, getOwnersGowns, ToggleGownAvailability, updateLaundryDays, updateUserImage } from "../controllers/ownerController.js";
 import upload from "../middleware/multer.js";
 import { verifyOwner } from "../middleware/verify.js";
 
 const ownerRouter = express.Router();
 
-// Public route to get all gowns
+// Public routes for browsing
 ownerRouter.get("/all-gowns", getAllGowns)
+ownerRouter.get("/gowns/:id", getGownById)
 
 ownerRouter.post("/add-gown", protect, verifyOwner, upload.single("image"), addGown)
 ownerRouter.get("/gowns", protect, verifyOwner, getOwnersGowns)

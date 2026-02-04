@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL } from '../config'
 
 const LoginModal = ({ showLogin, setShowLogin }) => {
   const navigate = useNavigate()
@@ -24,7 +25,6 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotStep, setForgotStep] = useState('request')
   const [forgotEmail, setForgotEmail] = useState('')

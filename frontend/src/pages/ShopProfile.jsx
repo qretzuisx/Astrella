@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_URL } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const ShopProfile = () => {
@@ -35,7 +36,6 @@ const ShopProfile = () => {
         return
       }
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/user/data`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -135,8 +135,6 @@ const ShopProfile = () => {
 
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       // Create FormData for file uploads
       const formData = new FormData()
       formData.append('shopName', shopProfile.shopName)

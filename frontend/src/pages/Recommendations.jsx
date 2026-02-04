@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import GownCard from '../components/GownCard';
 import { assets } from '../assets/assets';
+import { API_URL } from '../config';
 
 const Recommendations = () => {
   const [searchParams] = useSearchParams();
@@ -15,8 +16,6 @@ const Recommendations = () => {
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        
         // Get preferences from URL params
         const bodyType = searchParams.get('bodyType');
         const skinTone = searchParams.get('skinTone');

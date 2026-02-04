@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 import { assets } from '../assets/assets'
+import { API_URL, CURRENCY } from '../config'
 import PaymentModal from '../components/PaymentModal'
 import ContractModal from '../components/ContractModal'
 
@@ -22,11 +23,14 @@ const normalizeTimeInput = (rawValue) => {
   }
 
   const sanitized = rawValue.replace(/[^\d:]/g, '')
-  if (!/^\d{1,2}:\d{2}$/.test(sanitized)) {
+  // Accept HH:MM or HH:MM:SS (e.g. from type="time" which may include seconds)
+  const match = sanitized.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+  if (!match) {
     return { valid: false, message: 'Please use the HH:MM format.' }
   }
 
-  let [hours, minutes] = sanitized.split(':').map(Number)
+  let hours = parseInt(match[1], 10)
+  let minutes = parseInt(match[2], 10)
   if (Number.isNaN(hours) || Number.isNaN(minutes)) {
     return { valid: false, message: 'Invalid time provided.' }
   }
@@ -58,8 +62,7 @@ const GownDetails = () => {
   const navigate = useNavigate()
   const [gown, setGown] = useState(null)
   const [loadingGown, setLoadingGown] = useState(true)
-  const currency = import.meta.env.VITE_CURRENCY || '₱'
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  const currency = CURRENCY
   const [measurements, setMeasurements] = useState({
     waist: '',
     hips: '',
@@ -69,7 +72,6 @@ const GownDetails = () => {
   // Return time is excluded from the user form. Backend will default it from pickupTime.
   const [pickupDate, setPickupDate] = useState('')
   const [returnDate, setReturnDate] = useState('')
-  const [eventName, setEventName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -91,20 +93,12 @@ const GownDetails = () => {
     const fetchGown = async () => {
       try {
         setLoadingGown(true)
-        const response = await fetch(`${API_URL}/owner/all-gowns`)
+        const response = await fetch(`${API_URL}/owner/gowns/${id}`)
         const data = await response.json()
-        
-        if (data.success && data.gowns) {
-          // Support both MongoDB (_id) and SQL (id) backends
-          const foundGown = data.gowns.find(g => g._id === id || g.id == id)
-          if (foundGown) {
-            setGown(foundGown)
-          } else {
-            setError('Gown not found')
-            navigate('/gowns')
-          }
+        if (data.success && data.gown) {
+          setGown(data.gown)
         } else {
-          setError('Failed to load gown details')
+          setError(data.message || 'Gown not found')
           navigate('/gowns')
         }
       } catch (error) {
@@ -115,11 +109,8 @@ const GownDetails = () => {
         setLoadingGown(false)
       }
     }
-
-    if (id) {
-      fetchGown()
-    }
-  }, [id, navigate])
+    if (id) fetchGown()
+  }, [id, navigate, API_URL])
 
   const allowedTimes = useMemo(() => {
     const times = []
@@ -195,11 +186,9 @@ const GownDetails = () => {
     setPickupDate(fromIso)
     setFieldError('pickupDate', '')
 
-    // Trial: auto-set return date
+    // Trial: single-day appointment (no pickup/return range)
     if (bookingType === 'trial') {
-      const autoReturn = new Date(range.from)
-      autoReturn.setDate(autoReturn.getDate() + 2)
-      setReturnDate(toIsoDate(autoReturn))
+      setReturnDate(fromIso)
       setFieldError('returnDate', '')
       return
     }
@@ -243,8 +232,10 @@ const GownDetails = () => {
 
   // Handle confirm booking button click - show payment modal
   const handleConfirmBooking = () => {
-    if (!pickupDate || !returnDate || !pickupTime) {
-      setError('Please complete pickup date, return date, and pickup time')
+    if (!pickupDate || !pickupTime || (bookingType !== 'trial' && !returnDate)) {
+      setError(bookingType === 'trial'
+        ? 'Please complete the trial date and time'
+        : 'Please complete pickup date, return date, and pickup time')
       return
     }
 
@@ -290,10 +281,14 @@ const GownDetails = () => {
     setError('')
 
     try {
-      const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
-      const effectiveReturnTime = pickupTime
-      const returnDateTime = combineDateAndTime(returnDate, effectiveReturnTime)
       const token = localStorage.getItem('token')
+
+      // For trials, backend derives returnDate/returnTime automatically.
+      // For reservations, we still provide returnDate (returnTime is assumed to match pickupTime).
+      const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
+      const returnDateTime = bookingType === 'trial'
+        ? null
+        : combineDateAndTime(returnDate, pickupTime)
 
       // Calculate deposit and remaining balance (reservation only)
       const depositAmount = Math.round(totalAmount * 0.5)
@@ -302,10 +297,15 @@ const GownDetails = () => {
       // Create FormData for file upload
       const formData = new FormData()
       formData.append('gown', gown._id || gown.id)
-      formData.append('pickupDate', pickupDateTime?.toISOString())
-      formData.append('returnDate', returnDateTime?.toISOString())
+      // Use the chosen calendar date strings to avoid timezone shifting.
+      formData.append('pickupDate', pickupDate)
       formData.append('pickupTime', pickupTime)
-      formData.append('returnTime', pickupTime)
+
+      if (bookingType !== 'trial') {
+        formData.append('returnDate', returnDate)
+        // No separate return time UI; assume same as pickupTime for now.
+        formData.append('returnTime', pickupTime)
+      }
       formData.append('measurements', JSON.stringify({
         waist: measurements.waist || null,
         hips: measurements.hips || null,
@@ -361,18 +361,12 @@ const GownDetails = () => {
   }
 
   useEffect(() => {
-    // For trials, auto-set return date to pickup+2 days and compute totals as 0
+    // Trials are single-day appointments; total is always 0
     if (bookingType === 'trial') {
-      if (pickupDate) {
-        const pickup = new Date(`${pickupDate}T00:00:00`)
-        const autoReturn = new Date(pickup)
-        autoReturn.setDate(autoReturn.getDate() + 2)
-        const autoReturnStr = autoReturn.toLocaleDateString('en-CA')
-        if (returnDate !== autoReturnStr) {
-          setReturnDate(autoReturnStr)
-        }
+      if (pickupDate && returnDate !== pickupDate) {
+        setReturnDate(pickupDate)
       }
-      setDurationDays(2)
+      setDurationDays(pickupDate ? 1 : 0)
       setTotalAmount(0)
       return
     }
@@ -408,8 +402,9 @@ const GownDetails = () => {
   }, [pickupDate, returnDate, pickupTime, gown, bookingType])
 
   useEffect(() => {
-    if (!(gown?._id || gown?.id) || !pickupDate || !returnDate || !pickupTime) {
-      setScheduleStatus({ loading: false, message: 'Select pickup and return dates and pickup time to check availability.', valid: false })
+    const effectiveReturnDate = bookingType === 'trial' ? pickupDate : returnDate
+    if (!(gown?._id || gown?.id) || !pickupDate || !effectiveReturnDate || !pickupTime) {
+      setScheduleStatus({ loading: false, message: bookingType === 'trial' ? 'Select a trial date and pickup time to check availability.' : 'Select pickup and return dates and pickup time to check availability.', valid: false })
       return
     }
 
@@ -427,10 +422,11 @@ const GownDetails = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             gownId: gown._id || gown.id,
+            bookingType,
             pickupDate,
-            returnDate,
+            ...(bookingType !== 'trial' ? { returnDate } : {}),
             pickupTime,
-            returnTime: pickupTime
+            ...(bookingType !== 'trial' ? { returnTime: pickupTime } : {})
           })
         })
         const data = await response.json()
@@ -463,13 +459,16 @@ const GownDetails = () => {
     pickupDate,
     returnDate,
     pickupTime,
+    bookingType,
     formErrors.pickupDate,
     formErrors.returnDate,
     formErrors.pickupTime
   ])
 
   const hasFieldErrors = Object.values(formErrors).some(Boolean)
-  const isFormComplete = Boolean(pickupDate && returnDate && pickupTime)
+  const isFormComplete = bookingType === 'trial'
+    ? Boolean(pickupDate && pickupTime)
+    : Boolean(pickupDate && returnDate && pickupTime)
   const confirmDisabled = !gown?.available
     || !isFormComplete
     || hasFieldErrors
@@ -481,10 +480,15 @@ const GownDetails = () => {
 
   const gownId = gown?._id || gown?.id || ''
 
-  // Format date with day name (MM-DD-YYYY, dayname format)
+  // Format date with day name (MM-DD-YYYY, dayname). Parse date-only (YYYY-MM-DD) as local to avoid timezone shift.
   const formatDateWithDay = (dateString) => {
     if (!dateString) return ''
-    const date = new Date(dateString)
+    const str = String(dateString).trim()
+    const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    const date = isoMatch
+      ? new Date(parseInt(isoMatch[1], 10), parseInt(isoMatch[2], 10) - 1, parseInt(isoMatch[3], 10))
+      : new Date(dateString)
+    if (Number.isNaN(date.getTime())) return ''
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
     const dayName = days[date.getDay()]
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -733,16 +737,16 @@ const GownDetails = () => {
             </p>
           </div>
 
-          {/* Location */}
-          <div className='mb-6 sm:mb-8'>
-            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Location</h2>
-            <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.location || 'Location not specified'}</p>
-          </div>
-
-          {/* Contact Number */}
-          <div className='mb-6 sm:mb-8'>
-            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Contact Number</h2>
-            <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+          {/* Location & Contact Number - side by side */}
+          <div className='mb-6 sm:mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
+            <div>
+              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Location</h2>
+              <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.location || 'Location not specified'}</p>
+            </div>
+            <div>
+              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Contact Number</h2>
+              <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+            </div>
           </div>
 
           {/* Category (if available) */}
@@ -804,7 +808,7 @@ const GownDetails = () => {
                     onChange={() => setBookingType('trial')}
                   />
                   <div>
-                    <p className='font-semibold text-gray-900'>2-day Trial</p>
+                    <p className='font-semibold text-gray-900'>Trial Appointment</p>
                     <p className='text-xs text-gray-500'>Try the dress in-store (hold is temporary)</p>
                   </div>
                 </label>
@@ -818,8 +822,8 @@ const GownDetails = () => {
                 <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Select Dates</h3>
               </div>
 
-              <div className='bg-white border border-gray-200 rounded-lg p-3 sm:p-4'>
-                <div className='flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-600 mb-3'>
+              <div className='bg-white border border-gray-200 rounded-lg p-3 sm:p-4 flex flex-col items-center'>
+                <div className='flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-gray-600 mb-3'>
                   <span className='flex items-center gap-1'>
                     <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
                     Reserved
@@ -839,6 +843,7 @@ const GownDetails = () => {
                 ) : calendarError ? (
                   <p className='text-sm text-red-600'>{calendarError}</p>
                 ) : (
+                  <div className='flex justify-center w-full'>
                   <DayPicker
                     mode={bookingType === 'trial' ? 'single' : 'range'}
                     numberOfMonths={1}
@@ -896,6 +901,7 @@ const GownDetails = () => {
                       laundry: 'rdp-day_laundry',
                     }}
                   />
+                  </div>
                 )}
 
                 {blockedClick && (
@@ -905,9 +911,19 @@ const GownDetails = () => {
                   </div>
                 )}
 
-                <div className='mt-3 space-y-1'>
-                  <p className='text-sm text-gray-700'><strong>Pick-up:</strong> {pickupDate ? formatDateWithDay(pickupDate) : '—'}</p>
-                  <p className='text-sm text-gray-700'><strong>Return:</strong> {returnDate ? formatDateWithDay(returnDate) : '—'}</p>
+                <div className={`mt-3 grid gap-3 text-center ${bookingType === 'trial' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  <div>
+                    <p className='text-sm font-bold text-gray-900'>{bookingType === 'trial' ? 'Trial Date' : 'Pick-up'}</p>
+                    <p className='text-sm font-bold text-gray-700 mt-0.5'>{pickupDate ? formatDateWithDay(pickupDate) : '—'}</p>
+                  </div>
+                  {bookingType !== 'trial' && (
+                    <div>
+                      <p className='text-sm font-bold text-gray-900'>Return</p>
+                      <p className='text-sm font-bold text-gray-700 mt-0.5'>{returnDate ? formatDateWithDay(returnDate) : '—'}</p>
+                    </div>
+                  )}
+                </div>
+                <div className='mt-2'>
                   {formErrors.pickupDate && <p className='text-sm text-red-600'>{formErrors.pickupDate}</p>}
                   {formErrors.returnDate && <p className='text-sm text-red-600'>{formErrors.returnDate}</p>}
                 </div>
@@ -974,6 +990,11 @@ const GownDetails = () => {
 
           {/* Action Buttons */}
           <div className='mt-6 space-y-3'>
+            {confirmDisabled && !loading && !success && (
+              <p id='confirm-booking-hint' className='text-sm text-gray-500'>
+                {!gown?.available ? 'This gown is not available to book.' : !isFormComplete ? 'Select dates and time to enable booking.' : hasFieldErrors ? 'Fix the errors above to continue.' : !scheduleStatus.valid ? (scheduleStatus.message || 'Check availability first.') : 'Checking availability…'}
+              </p>
+            )}
             <button 
               onClick={handleConfirmBooking}
               className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
@@ -982,6 +1003,7 @@ const GownDetails = () => {
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
               disabled={confirmDisabled}
+              aria-describedby={confirmDisabled && !loading && !success ? 'confirm-booking-hint' : undefined}
             >
               {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Booking' : 'Not Available'}
             </button>

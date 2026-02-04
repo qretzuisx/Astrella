@@ -109,7 +109,7 @@ export const addGown = async (req, res) =>{
 
 
     } catch (error) {
-            console.log(error.message);
+            console.error(error);
             res.json({success: false, message: error.message})
     }
 }
@@ -121,7 +121,7 @@ export const getOwnersGowns = async (req, res)=>{
         const gowns = await Gown.find({owner: _id })
         res.json({success: true, gowns})
     } catch (error) {
-            console.log(error.message);
+            console.error(error);
             res.json({success: false, message: error.message})
         
     }
@@ -135,10 +135,25 @@ export const getAllGowns = async (req, res) => {
             .sort({ createdAt: -1 })
         res.json({ success: true, gowns })
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message })
+        console.error('getAllGowns:', error);
+        res.status(500).json({ success: false, message: error.message })
     }
 }
+
+// API to get a single gown by id (public, for detail page)
+export const getGownById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const gown = await Gown.findById(id).populate('owner', 'name shopName');
+        if (!gown) {
+            return res.status(404).json({ success: false, message: 'Gown not found' });
+        }
+        res.json({ success: true, gown });
+    } catch (error) {
+        console.error('getGownById:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 // API to toggle Gown Availability
 export const ToggleGownAvailability = async (req, res)=>{
@@ -159,7 +174,7 @@ export const ToggleGownAvailability = async (req, res)=>{
         await gown.save();
         res.json({success: true, message: "Availability Toggled", available: gown.available})
     } catch (error) {
-        console.log(error.message);
+        console.error(error);
         res.json({success: false, message: error.message})
         
     }
@@ -187,7 +202,7 @@ export const DeleteGown = async (req, res)=>{
         await gown.save();
         res.json({success: true, message: "Gown Removed"})
     } catch (error) {
-        console.log(error.message);
+        console.error(error);
         res.json({success: false, message: error.message})
         
     }
@@ -216,7 +231,7 @@ export const updateLaundryDays = async (req, res) => {
 
         res.json({ success: true, message: "Laundry day updated", laundryDays: gown.laundryDays });
     } catch (error) {
-        console.log(error.message);
+        console.error(error);
         res.json({ success: false, message: error.message });
     }
 };
@@ -256,7 +271,7 @@ export const getDashboardData = async (req, res)=>{
     res.json({success: true, dashboardData});
 
     } catch (error) {
-         console.log(error.message);
+         console.error(error);
         res.json({success: false, message: error.message})
     }
 }
@@ -297,7 +312,7 @@ export const updateUserImage = async (req, res)=>{
         res.json({success: true, message: "Image Update"})
       
     } catch (error) {
-        console.log(error.message)
+        console.error(error)
         res.json({success: false, message: error.message}) 
     }
 }

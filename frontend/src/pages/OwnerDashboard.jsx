@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const OwnerDashboard = () => {
@@ -9,7 +10,7 @@ const OwnerDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [userRole, setUserRole] = useState(null)
-  const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const currency = CURRENCY
   const timeFormatOptions = { hour: '2-digit', minute: '2-digit' }
 
   const formatBookingDate = (value) => {
@@ -43,7 +44,6 @@ const OwnerDashboard = () => {
         }
 
         // First check user data to see their role
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
         const userResponse = await fetch(`${API_URL}/user/data`, {
           headers: {
             'Authorization': `Bearer ${token}`

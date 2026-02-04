@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL } from '../config'
 
 const OwnerRequest = () => {
   const navigate = useNavigate()
@@ -74,7 +75,6 @@ const OwnerRequest = () => {
         return
       }
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/user/request-owner`, {
         method: 'POST',
         headers: {

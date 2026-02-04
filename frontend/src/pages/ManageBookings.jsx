@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { assets } from '../assets/assets'
+import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const ManageBookings = () => {
@@ -8,7 +9,7 @@ const ManageBookings = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [filterStatus, setFilterStatus] = useState('all') 
-  const currency = import.meta.env.VITE_CURRENCY || '₱'
+  const currency = CURRENCY
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
@@ -37,7 +38,6 @@ const ManageBookings = () => {
         return
       }
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/bookings/owner`, {
         method: 'POST',
         headers: {
@@ -64,8 +64,6 @@ const ManageBookings = () => {
   const handleStatusChange = async (bookingId, newStatus) => {
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
       // Use unified update endpoint for cancel (instant release for trials)
       if (newStatus === 'canceled') {
         const response = await fetch(`${API_URL}/bookings/update`, {
@@ -174,8 +172,6 @@ const ManageBookings = () => {
       setSuccess('')
 
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
       const payload = {
         bookingId: selectedBooking._id || selectedBooking.id,
         action: 'reschedule',
@@ -217,8 +213,6 @@ const ManageBookings = () => {
   const handleFinalizeTrial = async (bookingId) => {
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-
       const response = await fetch(`${API_URL}/bookings/update`, {
         method: 'PUT',
         headers: {
@@ -275,8 +269,6 @@ const ManageBookings = () => {
   const handleVerifyPayment = async (bookingId, action) => {
     try {
       const token = localStorage.getItem('token')
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
       const response = await fetch(`${API_URL}/bookings/verify-payment`, {
         method: 'PUT',
         headers: {

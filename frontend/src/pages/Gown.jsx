@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import { API_URL } from '../config'
 import GownCard from '../components/GownCard'
 
 const Gown = () => {
@@ -41,7 +42,6 @@ const Gown = () => {
     // Fetch gowns from API
     const fetchGowns = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
         const response = await fetch(`${API_URL}/owner/all-gowns`)
         const data = await response.json()
         

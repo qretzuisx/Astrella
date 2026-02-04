@@ -9,23 +9,38 @@
   font-family: "Geist", sans-serif;
 }
 
-/* react-day-picker custom blocked-day colors */
-.rdp-day_reserved {
-  background: #fee2e2 !important;
-  color: #991b1b !important;
-  border-radius: 9999px;
+/* react-day-picker: maximize date space, bold, circular stamps, colors match legend */
+.rdp-root {
+  --rdp-day-height: 52px;
+  --rdp-day-width: 52px;
+  --rdp-day_button-height: 48px;
+  --rdp-day_button-width: 48px;
 }
 
-.rdp-day_trial {
-  background: #ffedd5 !important;
-  color: #9a3412 !important;
-  border-radius: 9999px;
+.rdp-root .rdp-day_button {
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.rdp-day_laundry {
-  background: #dbeafe !important;
-  color: #1e40af !important;
-  border-radius: 9999px;
+.rdp-root .rdp-day.rdp-day_reserved .rdp-day_button {
+  background: #ef4444 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+}
+
+.rdp-root .rdp-day.rdp-day_trial .rdp-day_button {
+  background: #fb923c !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+}
+
+.rdp-root .rdp-day.rdp-day_laundry .rdp-day_button {
+  background: #3b82f6 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
 }
 
 @theme {

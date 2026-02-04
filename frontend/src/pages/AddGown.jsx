@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets, eventTypeList } from '../assets/assets'
+import { API_URL } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 
 const AddGown = () => {
@@ -140,7 +141,6 @@ const AddGown = () => {
         available: formData.available
       }))
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/owner/add-gown`, {
         method: 'POST',
         headers: {
