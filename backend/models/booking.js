@@ -52,6 +52,8 @@ const bookingSchema = new mongoose.Schema({
         verifiedBy: { type: ObjectId, ref: 'User' },
         rejectionReason: { type: String }
     },
+    // Booking rejection reason (when owner rejects the booking)
+    rejectionReason: { type: String, default: '' },
     balancePaidAt: { type: Date },
     balancePaidAmount: { type: Number }
 }, {timestamps: true})

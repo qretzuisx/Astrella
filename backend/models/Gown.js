@@ -16,6 +16,12 @@ const gownSchema = new mongoose.Schema({
     available: {type: Boolean, default: true},
     verified: {type: Boolean, default: false},
     laundryDays: {type: Number, default: 1, min: 0, max: 14},
+    // Status field for gown availability
+    status: {
+        type: String,
+        enum: ['Available', 'Unavailable', 'In-Laundry', 'Reserved', 'In-Use'],
+        default: 'Available'
+    },
     // Optional demographic tags to improve browsing/recommendations
     ageGroup: {type: String, default: ''},
     gender: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},

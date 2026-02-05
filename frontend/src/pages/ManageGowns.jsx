@@ -15,6 +15,23 @@ const ManageGowns = () => {
   const [laundrySaving, setLaundrySaving] = useState(null)
   const currency = CURRENCY
 
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false)
+  const [selectedGown, setSelectedGown] = useState(null)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    price: '',
+    description: '',
+    size: [],
+    eventType: [],
+    fabric: '',
+    color: '',
+    ageGroup: '',
+    gender: '',
+    status: 'Available'
+  })
+
   useEffect(() => {
     fetchGowns()
     // Clear location state after refresh
@@ -171,6 +188,122 @@ const ManageGowns = () => {
     }
   }
 
+  const openEditModal = (gown) => {
+    setSelectedGown(gown)
+    setEditForm({
+      name: gown.name || '',
+      price: String(gown.price || ''),
+      description: gown.description || '',
+      size: Array.isArray(gown.size) ? gown.size : [gown.size || 'Free Size'],
+      eventType: Array.isArray(gown.eventType) ? gown.eventType : [gown.eventType || ''],
+      fabric: gown.fabric || '',
+      color: gown.color || '',
+      ageGroup: gown.ageGroup || '',
+      gender: gown.gender || '',
+      status: gown.status || 'Available'
+    })
+    setError('')
+    setSuccess('')
+    setEditOpen(true)
+  }
+
+  const closeEditModal = () => {
+    setEditOpen(false)
+    setSelectedGown(null)
+    setEditSaving(false)
+  }
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target
+    setEditForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSizeToggle = (size) => {
+    setEditForm(prev => {
+      if (prev.size.includes(size)) {
+        return { ...prev, size: prev.size.filter(s => s !== size) }
+      } else {
+        return { ...prev, size: [...prev.size, size] }
+      }
+    })
+  }
+
+  const handleEventTypeToggle = (eventType) => {
+    setEditForm(prev => {
+      if (prev.eventType.includes(eventType)) {
+        return { ...prev, eventType: prev.eventType.filter(e => e !== eventType) }
+      } else {
+        return { ...prev, eventType: [...prev.eventType, eventType] }
+      }
+    })
+  }
+
+  const submitEditGown = async () => {
+    if (!selectedGown) return
+
+    // Validation
+    if (!editForm.name || !editForm.fabric || !editForm.price || !editForm.color) {
+      setError('Please fill in all required fields')
+      return
+    }
+
+    if (editForm.size.length === 0) {
+      setError('Please select at least one size')
+      return
+    }
+
+    if (editForm.eventType.length === 0) {
+      setError('Please select at least one event type')
+      return
+    }
+
+    try {
+      setEditSaving(true)
+      setError('')
+      setSuccess('')
+
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/owner/gown/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          gownID: selectedGown._id || selectedGown.id,
+          name: editForm.name,
+          price: parseFloat(editForm.price),
+          description: editForm.description,
+          size: editForm.size,
+          eventType: editForm.eventType.map(e => e.toLowerCase()),
+          fabric: editForm.fabric,
+          color: editForm.color,
+          ageGroup: editForm.ageGroup,
+          gender: editForm.gender,
+          status: editForm.status
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Gown updated successfully')
+        fetchGowns()
+        setTimeout(() => setSuccess(''), 3000)
+        closeEditModal()
+      } else {
+        setError(data.message || 'Failed to update gown')
+        setTimeout(() => setError(''), 3000)
+      }
+    } catch (error) {
+      console.error('Error updating gown:', error)
+      setError('An error occurred. Please try again.')
+      setTimeout(() => setError(''), 3000)
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className='flex min-h-screen'>
@@ -300,7 +433,11 @@ const ManageGowns = () => {
                       </div>
                     </div>
 
-                    {/* Laundry Days */}
+                    {/* Status Field */}
+                    <div className='mb-3 sm:mb-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200'>
+                      <p className='text-xs sm:text-sm font-semibold text-blue-800 mb-2'>Status</p>
+                      <p className='text-sm sm:text-base font-semibold text-blue-900'>{gown.status || 'Available'}</p>
+                    </div>
                     <div className='mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300'>
                       <div className='flex items-center justify-between mb-2 sm:mb-3'>
                         <p className='text-xs sm:text-sm font-semibold text-gray-700'>Laundry Days</p>
@@ -334,6 +471,12 @@ const ManageGowns = () => {
                     {/* Action Buttons */}
                     <div className='flex gap-2 pt-3 sm:pt-4 border-t border-gray-200 mt-3 sm:mt-4'>
                       <button
+                        onClick={() => openEditModal(gown)}
+                        className='flex-1 px-3 sm:px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-semibold'
+                      >
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleToggleAvailability(gown._id || gown.id)}
                         className={`flex-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                           gown.available
@@ -357,6 +500,217 @@ const ManageGowns = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Gown Modal */}
+      {editOpen && selectedGown && (
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
+          onClick={closeEditModal}
+        >
+          <div
+            className='bg-white rounded-xl shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className='flex items-start justify-between gap-4 mb-6'>
+              <div>
+                <h2 className='text-lg sm:text-xl font-bold text-gray-900'>Edit Apparel</h2>
+                <p className='text-xs sm:text-sm text-gray-600'>{selectedGown.name}</p>
+              </div>
+              <button
+                onClick={closeEditModal}
+                className='text-gray-400 hover:text-gray-600 text-2xl leading-none'
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Error Messages */}
+            {error && (
+              <div className='mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
+                <p className='text-red-800 text-sm sm:text-base'>{error}</p>
+              </div>
+            )}
+
+            <div className='space-y-4'>
+              {/* Name */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Name *</label>
+                <input
+                  type='text'
+                  name='name'
+                  value={editForm.name}
+                  onChange={handleEditFormChange}
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                />
+              </div>
+
+              {/* Price */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Price (₱) *</label>
+                <input
+                  type='number'
+                  name='price'
+                  min='0'
+                  step='100'
+                  value={editForm.price}
+                  onChange={handleEditFormChange}
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Description</label>
+                <textarea
+                  name='description'
+                  value={editForm.description}
+                  onChange={handleEditFormChange}
+                  rows='3'
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none text-sm'
+                />
+              </div>
+
+              {/* Fabric */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Fabric *</label>
+                <input
+                  type='text'
+                  name='fabric'
+                  value={editForm.fabric}
+                  onChange={handleEditFormChange}
+                  placeholder='e.g., Silk, Chiffon, Cotton'
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                />
+              </div>
+
+              {/* Color */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Color *</label>
+                <input
+                  type='text'
+                  name='color'
+                  value={editForm.color}
+                  onChange={handleEditFormChange}
+                  placeholder='e.g., Red, Blue, Gold'
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                />
+              </div>
+
+              {/* Event Types */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-2'>Event Type *</label>
+                <div className='grid grid-cols-2 gap-2'>
+                  {['wedding', 'traditional', 'prom', 'formal', 'themed'].map((event) => (
+                    <button
+                      key={event}
+                      type='button'
+                      onClick={() => handleEventTypeToggle(event)}
+                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${
+                        editForm.eventType.includes(event)
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      }`}
+                    >
+                      {event.charAt(0).toUpperCase() + event.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sizes */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-2'>Size *</label>
+                <div className='grid grid-cols-4 gap-2'>
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'].map((size) => (
+                    <button
+                      key={size}
+                      type='button'
+                      onClick={() => handleSizeToggle(size)}
+                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors border ${
+                        editForm.size.includes(size)
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Age Group */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Age Group (Optional)</label>
+                <input
+                  type='text'
+                  name='ageGroup'
+                  value={editForm.ageGroup}
+                  onChange={handleEditFormChange}
+                  placeholder='e.g., Kids, Teens, Adults'
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                />
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-2'>Gender (Optional)</label>
+                <div className='grid grid-cols-3 gap-2'>
+                  {['Male', 'Female', 'Unisex'].map((gender) => (
+                    <button
+                      key={gender}
+                      type='button'
+                      onClick={() => setEditForm(prev => ({ ...prev, gender: prev.gender === gender ? '' : gender }))}
+                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${
+                        editForm.gender === gender
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      }`}
+                    >
+                      {gender}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className='block text-sm font-semibold text-gray-700 mb-2'>Status</label>
+                <select
+                  name='status'
+                  value={editForm.status}
+                  onChange={handleEditFormChange}
+                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                >
+                  <option value='Available'>Available</option>
+                  <option value='Unavailable'>Unavailable</option>
+                  <option value='In-Laundry'>In-Laundry</option>
+                  <option value='Reserved'>Reserved</option>
+                  <option value='In-Use'>In-Use</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className='flex gap-2 pt-4 border-t border-gray-200'>
+                <button
+                  type='button'
+                  onClick={submitEditGown}
+                  disabled={editSaving}
+                  className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                >
+                  {editSaving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type='button'
+                  onClick={closeEditModal}
+                  className='px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors'
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

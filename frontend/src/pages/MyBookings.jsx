@@ -14,13 +14,15 @@ const ALLOWED_TIMES = (() => {
   return times
 })()
 
-const MyBookings = () => {
+const MyBookings = ({ setShowLogin }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showLoginRequired, setShowLoginRequired] = useState(false)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editMode, setEditMode] = useState('reschedule') // reschedule | extend
@@ -35,6 +37,16 @@ const MyBookings = () => {
   })
 
   const currency = CURRENCY
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setShowLoginRequired(true)
+      return
+    }
+    setIsAuthenticated(true)
+  }, [navigate])
 
   const fetchBookings = async () => {
     try {
@@ -78,9 +90,11 @@ const MyBookings = () => {
   }
 
   useEffect(() => {
-    fetchBookings()
+    if (isAuthenticated) {
+      fetchBookings()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isAuthenticated])
 
   const toDateInputValue = (dateString) => {
     if (!dateString) return ''
@@ -273,6 +287,50 @@ const MyBookings = () => {
 
   const allowedTimes = ALLOWED_TIMES
 
+  // Show login required message if not authenticated
+  if (showLoginRequired) {
+    return (
+      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+        <div className='bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8 mx-4'>
+          <div className='text-center mb-6'>
+            <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+              </svg>
+            </div>
+            <h2 className='text-2xl font-bold text-gray-900 mb-3'>Login Required</h2>
+            <p className='text-gray-600 mb-6'>
+              Please log in first to view your bookings. Sign in with your account to access all your booking information and manage your reservations.
+            </p>
+          </div>
+
+          <div className='space-y-3'>
+            <button
+              onClick={() => {
+                setShowLoginRequired(false)
+                setShowLogin(true)
+              }}
+              className='w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold'
+            >
+              Go to Login
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className='w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold'
+            >
+              Return to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null
+  }
+
   if (loading) {
     return (
       <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
@@ -337,6 +395,14 @@ const MyBookings = () => {
                   <p className='text-sm sm:text-base text-gray-600 mb-3 sm:mb-4'>
                     by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
                   </p>
+
+                  {/* Rejection Reason Display */}
+                  {(booking.status?.toLowerCase() === 'canceled' && booking.payment?.status?.toLowerCase() === 'rejected' && booking.payment?.rejectionReason) && (
+                    <div className='mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
+                      <p className='text-xs sm:text-sm font-semibold text-red-800 mb-1'>Payment Rejected</p>
+                      <p className='text-xs sm:text-sm text-red-700'>{booking.payment.rejectionReason}</p>
+                    </div>
+                  )}
 
                   {/* Date Information */}
                   <div className='space-y-2 sm:space-y-3 mb-3 sm:mb-4'>

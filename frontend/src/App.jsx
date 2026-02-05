@@ -30,7 +30,7 @@ const App = () => {
         <Route path='/owner-profile/:ownerId' element={<OwnerProfile/>}/>
         <Route path='/gowns' element={<Gown/>}/>
         <Route path='/recommendations' element={<Recommendations/>}/>
-        <Route path='/my-bookings' element={<MyBookings/>}/> 
+        <Route path='/my-bookings' element={<MyBookings setShowLogin={setShowLogin}/>}/> 
         <Route path='/profile' element={<UserProfile/>}/>
         <Route path='/request-owner' element={<OwnerRequest/>}/>
         <Route path='/owner' element={<OwnerDashboard/>}/>

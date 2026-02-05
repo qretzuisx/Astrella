@@ -236,6 +236,53 @@ export const updateLaundryDays = async (req, res) => {
     }
 };
 
+// API to update gown details (name, price, description, size, etc.)
+export const updateGown = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { gownID } = req.body;
+
+        if (!gownID) {
+            return res.status(400).json({ success: false, message: "Missing gownID" });
+        }
+
+        const gown = await Gown.findById(gownID);
+        if (!gown) {
+            return res.status(404).json({ success: false, message: "Gown not found" });
+        }
+
+        if (gown.owner?.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+
+        // Fields that can be updated
+        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'gender', 'status'];
+        
+        // Update each provided field
+        updatableFields.forEach(field => {
+            if (req.body.hasOwnProperty(field) && req.body[field] !== undefined) {
+                gown[field] = req.body[field];
+            }
+        });
+
+        // Normalize ageGroup/gender (optional)
+        const { normalizedAgeGroup, normalizedGender } = normalizeOptionalTags(gown);
+        gown.ageGroup = normalizedAgeGroup;
+        gown.gender = normalizedGender;
+
+        await gown.save();
+
+        res.json({ 
+            success: true, 
+            message: "Gown updated successfully",
+            gown 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // API Dashboard data
 export const getDashboardData = async (req, res)=>{
     try {

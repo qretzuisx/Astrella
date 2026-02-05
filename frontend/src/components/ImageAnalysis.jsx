@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import * as faceapi from 'face-api.js';
+// import * as faceapi from 'face-api.js'; // Disabled due to package.json export issues
 import { bodyTypeList, skinToneList, faceShapeList } from '../assets/assets';
 
 const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {

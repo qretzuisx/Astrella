@@ -12,6 +12,8 @@ const ManageBookings = () => {
   const currency = CURRENCY
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectingPayment, setRejectingPayment] = useState(false)
 
   // Reschedule / Extend modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -268,6 +270,15 @@ const ManageBookings = () => {
 
   const handleVerifyPayment = async (bookingId, action) => {
     try {
+      // For reject action, validate that rejection reason is provided
+      if (action === 'reject') {
+        if (!rejectionReason.trim()) {
+          setError('Please provide a reason for rejecting the payment')
+          return
+        }
+        setRejectingPayment(true)
+      }
+
       const token = localStorage.getItem('token')
       const response = await fetch(`${API_URL}/bookings/verify-payment`, {
         method: 'PUT',
@@ -276,9 +287,9 @@ const ManageBookings = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ 
-          bookingId, 
+          BookingId: bookingId, 
           action, // 'approve' or 'reject'
-          rejectionReason: action === 'reject' ? 'Payment verification failed' : undefined
+          rejectionReason: action === 'reject' ? rejectionReason : undefined
         })
       })
 
@@ -288,6 +299,7 @@ const ManageBookings = () => {
         setSuccess(`Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
         setShowPaymentModal(false)
         setSelectedPayment(null)
+        setRejectionReason('')
         fetchBookings()
         setTimeout(() => setSuccess(''), 3000)
       } else {
@@ -298,11 +310,14 @@ const ManageBookings = () => {
       console.error('Error verifying payment:', error)
       setError('An error occurred. Please try again.')
       setTimeout(() => setError(''), 3000)
+    } finally {
+      setRejectingPayment(false)
     }
   }
 
   const openPaymentModal = (booking) => {
     setSelectedPayment(booking)
+    setRejectionReason('')
     setShowPaymentModal(true)
   }
 
@@ -837,6 +852,22 @@ const ManageBookings = () => {
               </p>
             </div>
 
+            {/* Rejection Reason - Conditional */}
+            {/* This field appears when admin is about to reject */}
+            <div className='mb-4 sm:mb-6' id='rejectionReasonField'>
+              <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                Rejection Reason (mandatory if rejecting)
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder='Explain why you are rejecting this payment. This message will be shown to the customer.'
+                rows={3}
+                className='w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none'
+              />
+              <p className='text-xs text-gray-500 mt-1'>The customer will see this reason when they check their booking.</p>
+            </div>
+
             {/* Action Buttons */}
             <div className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
               <button
@@ -847,9 +878,10 @@ const ManageBookings = () => {
               </button>
               <button
                 onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'reject')}
-                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
+                disabled={rejectingPayment}
+                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:bg-red-400 disabled:cursor-not-allowed'
               >
-                Reject Payment
+                {rejectingPayment ? 'Rejecting...' : 'Reject Payment'}
               </button>
             </div>
           </div>
