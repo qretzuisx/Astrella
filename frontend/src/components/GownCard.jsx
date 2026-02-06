@@ -6,6 +6,25 @@ const GownCard = ({ gown }) => {
   const currency = import.meta.env.VITE_CURRENCY
   const navigate = useNavigate()
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'available':
+        return 'bg-green-100 text-green-800'
+      case 'unavailable':
+        return 'bg-red-100 text-red-800'
+      case 'in-laundry':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'reserved':
+        return 'bg-blue-100 text-blue-800'
+      case 'in-use':
+        return 'bg-orange-100 text-orange-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const statusText = gown.status || 'Available'
+
   return (
     <div onClick={()=> {navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0,0)}}
       className="group rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:-translate-y-2
@@ -19,10 +38,31 @@ const GownCard = ({ gown }) => {
           className="w-full h-auto max-h-96 object-contain transition-transform duration-500 group-hover:scale-105"
         />
 
-        {gown.available && (
-          <p className="absolute top-4 left-4 bg-primary text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-md">
-            Available Now
-          </p>
+        {/* Status Badge */}
+        {gown.status === 'Available' && (
+          <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+            {gown.status}
+          </div>
+        )}
+        {gown.status === 'Unavailable' && (
+          <div className="absolute top-4 left-4 bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+            {gown.status}
+          </div>
+        )}
+        {gown.status === 'In-Laundry' && (
+          <div className="absolute top-4 left-4 bg-blue-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+            {gown.status}
+          </div>
+        )}
+        {gown.status === 'Reserved' && (
+          <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+            {gown.status}
+          </div>
+        )}
+        {gown.status === 'In-Use' && (
+          <div className="absolute top-4 left-4 bg-gray-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+            {gown.status}
+          </div>
         )}
 
         <div className="absolute bottom-4 right-4 bg-white/90 text-gray-800 px-4 py-2 rounded-full border border-gray-200 shadow-md">

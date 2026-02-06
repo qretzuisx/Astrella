@@ -11,9 +11,12 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
 
-  // Calculate deposit (50% of total)
+  // Calculate deposit (50% of total) - only for GCash
   const depositAmount = Math.round(total * 0.5)
   const remainingBalance = total - depositAmount
+  
+  // For in-store, show full amount
+  const displayAmount = paymentData.method === 'in_store' ? total : depositAmount
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -116,14 +119,24 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
                 <span className='text-gray-600 font-medium'>Total Amount:</span>
                 <span className='text-2xl font-bold text-gray-900'>₱{total?.toLocaleString() || '0'}</span>
               </div>
-              <div className='flex justify-between items-center text-green-700'>
-                <span className='font-medium'>Deposit Required (50%):</span>
-                <span className='text-xl font-bold'>₱{depositAmount?.toLocaleString() || '0'}</span>
-              </div>
-              <div className='flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-blue-200'>
-                <span>Balance (pay on pickup):</span>
-                <span className='font-semibold'>₱{remainingBalance?.toLocaleString() || '0'}</span>
-              </div>
+              {paymentData.method === 'gcash' && (
+                <>
+                  <div className='flex justify-between items-center text-green-700'>
+                    <span className='font-medium'>Deposit Required (50%):</span>
+                    <span className='text-xl font-bold'>₱{depositAmount?.toLocaleString() || '0'}</span>
+                  </div>
+                  <div className='flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-blue-200'>
+                    <span>Balance (pay on pickup):</span>
+                    <span className='font-semibold'>₱{remainingBalance?.toLocaleString() || '0'}</span>
+                  </div>
+                </>
+              )}
+              {paymentData.method === 'in_store' && (
+                <div className='flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-blue-200'>
+                  <span>Full amount to be paid in-store:</span>
+                  <span className='font-semibold text-lg text-green-600'>₱{total?.toLocaleString() || '0'}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

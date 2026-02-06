@@ -42,15 +42,17 @@ const Gown = () => {
     // Fetch gowns from API
     const fetchGowns = async () => {
       try {
-        const response = await fetch(`${API_URL}/owner/all-gowns`)
+        const response = await fetch(`${API_URL}/owner/all-gowns`, { cache: 'no-store' })
         const data = await response.json()
         
         if (data.success && data.gowns) {
-          setGowns(data.gowns)
-          setFilteredGowns(data.gowns)
+          // Only show gowns that have an owner (deleted gowns won't have owner)
+          const validGowns = data.gowns.filter(gown => gown.owner && gown.owner._id)
+          setGowns(validGowns)
+          setFilteredGowns(validGowns)
           
           // Extract unique fabrics for filter options
-          const fabrics = [...new Set(data.gowns.map(g => g.fabric).filter(Boolean))]
+          const fabrics = [...new Set(validGowns.map(g => g.fabric).filter(Boolean))]
           setAvailableFabrics(fabrics.sort())
         } else {
           // Show empty state if no gowns or API error
@@ -152,9 +154,6 @@ const Gown = () => {
     if (selectedGender) {
       filtered = filtered.filter(gown => (gown.gender || '').toLowerCase() === selectedGender.toLowerCase())
     }
-
-    // Filter only available gowns
-    filtered = filtered.filter(gown => gown.available !== false)
 
     setFilteredGowns(filtered)
   }, [searchQuery, selectedColor, selectedEventType, selectedFabric, selectedSize, selectedAgeGroup, selectedGender, gowns])

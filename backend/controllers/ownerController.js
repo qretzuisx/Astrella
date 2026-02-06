@@ -195,12 +195,25 @@ export const DeleteGown = async (req, res)=>{
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
-        // Remove ownership and mark unavailable
-        gown.owner = null;
-        gown.available = false;
+        // Check if there are any active bookings for this gown
+        const activeBookings = await Booking.findOne({
+            gown: gownID,
+            status: { $nin: ['canceled', 'completed'] }
+        })
 
-        await gown.save();
-        res.json({success: true, message: "Gown Removed"})
+        if (activeBookings) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Cannot delete gown with active bookings. Please cancel or complete all bookings first.' 
+            })
+        }
+
+        // Delete all bookings associated with this gown (completed and canceled ones)
+        await Booking.deleteMany({ gown: gownID })
+
+        // Delete the gown from the database
+        await Gown.findByIdAndDelete(gownID)
+        res.json({success: true, message: "Gown and all associated booking records deleted successfully"})
     } catch (error) {
         console.error(error);
         res.json({success: false, message: error.message})

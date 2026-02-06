@@ -51,7 +51,9 @@ const ManageBookings = () => {
       const data = await response.json()
       
       if (data.success) {
-        setBookings(data.bookings || [])
+        // Filter out bookings with deleted/missing gown data
+        const validBookings = (data.bookings || []).filter(booking => booking.gown && booking.gown._id)
+        setBookings(validBookings)
       } else {
         setError(data.message || 'Failed to load bookings')
       }
@@ -495,14 +497,30 @@ const ManageBookings = () => {
                         
                         {/* Payment Info */}
                         {booking.payment && (
-                          <div className='mt-2 sm:mt-3 text-xs sm:text-sm text-left bg-green-50 rounded-lg p-2.5 sm:p-3 border border-green-200'>
-                            <p className='font-semibold text-gray-700 mb-1.5 sm:mb-2'>Deposit Paid:</p>
-                            <p className='text-xl sm:text-2xl font-bold text-green-600 mb-1.5 sm:mb-2'>
-                              {currency}{booking.payment.depositAmount?.toLocaleString()}
-                            </p>
-                            <p className='text-gray-600 text-xs mb-1.5 sm:mb-2 break-all'>
-                              Ref: <span className='font-mono'>{booking.payment.transactionRef}</span>
-                            </p>
+                          <div className={`mt-2 sm:mt-3 text-xs sm:text-sm text-left rounded-lg p-2.5 sm:p-3 border ${
+                            booking.payment.method === 'in_store'
+                              ? 'bg-blue-50 border-blue-200'
+                              : 'bg-green-50 border-green-200'
+                          }`}>
+                            {booking.payment.method === 'in_store' ? (
+                              <>
+                                <p className='font-semibold text-gray-700 mb-1.5 sm:mb-2'>Cash Payment:</p>
+                                <p className='text-xl sm:text-2xl font-bold text-blue-600 mb-1.5 sm:mb-2'>
+                                  {currency}{booking.price?.toLocaleString()}
+                                </p>
+                                <p className='text-gray-600 text-xs mb-1.5 sm:mb-2'>To be paid at pickup</p>
+                              </>
+                            ) : (
+                              <>
+                                <p className='font-semibold text-gray-700 mb-1.5 sm:mb-2'>Deposit Paid:</p>
+                                <p className='text-xl sm:text-2xl font-bold text-green-600 mb-1.5 sm:mb-2'>
+                                  {currency}{booking.payment.depositAmount?.toLocaleString()}
+                                </p>
+                                <p className='text-gray-600 text-xs mb-1.5 sm:mb-2 break-all'>
+                                  Ref: <span className='font-mono'>{booking.payment.transactionRef}</span>
+                                </p>
+                              </>
+                            )}
                             {booking.payment.status !== 'pending' && (
                               <div className={`mt-1.5 sm:mt-2 px-2 py-1 rounded text-xs font-semibold ${
                                 booking.payment.status === 'verified' 
@@ -514,6 +532,7 @@ const ManageBookings = () => {
                             )}
                           </div>
                         )}
+
                       </div>
 
                       {/* Action Buttons: Manage Booking (pickup/return) */}
@@ -560,8 +579,8 @@ const ManageBookings = () => {
                           </div>
                         )}
 
-                        {/* Payment Verification - Only for pending status with pending payment */}
-                        {booking.status === 'pending' && booking.payment?.status === 'pending' && (
+                        {/* Payment Verification - Only for pending status with pending GCash payment (skip for in_store) */}
+                        {booking.status === 'pending' && booking.payment?.status === 'pending' && booking.payment?.method === 'gcash' && (
                           <>
                             <button
                               onClick={() => openPaymentModal(booking)}
@@ -578,8 +597,26 @@ const ManageBookings = () => {
                           </>
                         )}
 
-                        {/* After payment verified - show confirm pickup button */}
-                        {booking.status === 'pending' && booking.payment?.status === 'verified' && (
+                        {/* For in_store payments - skip review and go straight to confirm pickup */}
+                        {booking.status === 'pending' && booking.payment?.method === 'in_store' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
+                              className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
+                            >
+                              Confirm Pick-up
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
+                              className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
+                            >
+                              Cancel Booking
+                            </button>
+                          </>
+                        )}
+
+                        {/* After GCash payment verified - show confirm pickup button */}
+                        {booking.status === 'pending' && booking.payment?.method === 'gcash' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid') && (
                           <>
                             <button
                               onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
@@ -777,8 +814,14 @@ const ManageBookings = () => {
 
             {/* Header */}
             <div className='mb-4 sm:mb-6 pr-8'>
-              <h2 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>Payment Verification</h2>
-              <p className='text-sm sm:text-base text-gray-600'>Review and verify the payment screenshot submitted by the customer.</p>
+              <h2 className='text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2'>
+                {selectedPayment.payment?.method === 'in_store' ? 'Confirm Cash Payment' : 'Payment Verification'}
+              </h2>
+              <p className='text-sm sm:text-base text-gray-600'>
+                {selectedPayment.payment?.method === 'in_store' 
+                  ? 'Confirm that the customer paid the full amount in-store.' 
+                  : 'Review and verify the payment screenshot submitted by the customer.'}
+              </p>
             </div>
 
             {/* Customer & Booking Info */}
@@ -796,14 +839,17 @@ const ManageBookings = () => {
                   <p className='text-gray-500'>Total Booking:</p>
                   <p className='font-semibold text-primary'>{currency}{selectedPayment.price?.toLocaleString()}</p>
                 </div>
-                <div>
-                  <p className='text-gray-500'>Deposit (50%):</p>
-                  <p className='font-semibold text-green-600'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</p>
-                </div>
+                {selectedPayment.payment?.method === 'gcash' && (
+                  <div>
+                    <p className='text-gray-500'>Deposit (50%):</p>
+                    <p className='font-semibold text-green-600'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Payment Details */}
+            {/* Payment Details - Only show for GCash */}
+            {selectedPayment.payment?.method === 'gcash' && (
             <div className='mb-4 sm:mb-6'>
               <h3 className='text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3'>Deposit Payment Details</h3>
               <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4'>
@@ -826,8 +872,10 @@ const ManageBookings = () => {
                 Note: Balance will be collected during pickup
               </p>
             </div>
+            )}
 
-            {/* Screenshot */}
+            {/* Screenshot - Only for GCash */}
+            {selectedPayment.payment?.method === 'gcash' && (
             <div className='mb-4 sm:mb-6'>
               <h3 className='text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3'>Transaction Screenshot</h3>
               <div className='border border-gray-300 rounded-lg overflow-hidden bg-gray-100'>
@@ -844,16 +892,28 @@ const ManageBookings = () => {
                 )}
               </div>
             </div>
+            )}
 
-            {/* Warning */}
+            {/* Warning - Conditional based on payment method */}
+            {selectedPayment.payment?.method === 'gcash' && (
             <div className='mb-4 sm:mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4'>
               <p className='text-xs sm:text-sm text-yellow-800'>
                 <strong>Important:</strong> Please verify that the reference number matches the GCash transaction and the amount is correct before approving.
               </p>
             </div>
+            )}
 
-            {/* Rejection Reason - Conditional */}
-            {/* This field appears when admin is about to reject */}
+            {selectedPayment.payment?.method === 'in_store' && (
+            <div className='mb-4 sm:mb-6 bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4'>
+              <p className='text-xs sm:text-sm text-green-800'>
+                <strong>Cash Payment:</strong> The customer will pay ₱{selectedPayment.price?.toLocaleString()} in full at the shop during pickup.
+
+              </p>
+            </div>
+            )}
+
+            {/* Rejection Reason - Only for GCash */}
+            {selectedPayment.payment?.method === 'gcash' && (
             <div className='mb-4 sm:mb-6' id='rejectionReasonField'>
               <label className='block text-sm font-semibold text-gray-700 mb-2'>
                 Rejection Reason (mandatory if rejecting)
@@ -867,8 +927,10 @@ const ManageBookings = () => {
               />
               <p className='text-xs text-gray-500 mt-1'>The customer will see this reason when they check their booking.</p>
             </div>
+            )}
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Conditional rendering based on payment method */}
+            {selectedPayment.payment?.method === 'gcash' && (
             <div className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
               <button
                 onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'approve')}
@@ -884,6 +946,24 @@ const ManageBookings = () => {
                 {rejectingPayment ? 'Rejecting...' : 'Reject Payment'}
               </button>
             </div>
+            )}
+
+            {selectedPayment.payment?.method === 'in_store' && (
+            <div className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
+              <button
+                onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'approve')}
+                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+              >
+                Confirm Cash Payment Received
+              </button>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors font-semibold'
+              >
+                Close
+              </button>
+            </div>
+            )}
           </div>
         </div>
       )}

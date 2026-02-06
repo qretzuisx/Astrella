@@ -69,7 +69,7 @@ const GownDetails = () => {
     unit: 'inches' // default unit
   })
   const [pickupTime, setPickupTime] = useState('')
-  // Return time is excluded from the user form. Backend will default it from pickupTime.
+  const [returnTime, setReturnTime] = useState('')
   const [pickupDate, setPickupDate] = useState('')
   const [returnDate, setReturnDate] = useState('')
   const [loading, setLoading] = useState(false)
@@ -303,8 +303,8 @@ const GownDetails = () => {
 
       if (bookingType !== 'trial') {
         formData.append('returnDate', returnDate)
-        // No separate return time UI; assume same as pickupTime for now.
-        formData.append('returnTime', pickupTime)
+        // Use returnTime if specified, otherwise default to pickupTime
+        formData.append('returnTime', returnTime || pickupTime)
       }
       formData.append('measurements', JSON.stringify({
         waist: measurements.waist || null,
@@ -378,7 +378,7 @@ const GownDetails = () => {
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
-    const returnDateTime = combineDateAndTime(returnDate, pickupTime)
+    const returnDateTime = combineDateAndTime(returnDate, returnTime || pickupTime)
 
     if (!pickupDateTime || !returnDateTime) {
       setDurationDays(0)
@@ -386,20 +386,29 @@ const GownDetails = () => {
       return
     }
 
-    if (returnDateTime <= pickupDateTime) {
+    // For same-day bookings: return time must be same or after pickup time (can't return before picking up!)
+    if (pickupDate === returnDate && returnDateTime < pickupDateTime) {
       setDurationDays(0)
       setTotalAmount(0)
-      setFieldError('returnDate', 'Return date/time cannot be earlier than pickup date/time.')
+      setFieldError('returnDate', 'Return time cannot be earlier than pickup time on same-day bookings.')
       return
     }
-
+    
+    // Clear any return date errors if validation passes
     setFieldError('returnDate', '')
     const diffMs = returnDateTime - pickupDateTime
     const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
     setDurationDays(diffDays)
     const pricePerDay = gown?.pricePerDay || gown?.price || 0
     setTotalAmount(diffDays * pricePerDay)
-  }, [pickupDate, returnDate, pickupTime, gown, bookingType])
+  }, [pickupDate, returnDate, pickupTime, returnTime, gown, bookingType])
+
+  // Auto-populate return time when pickup time changes
+  useEffect(() => {
+    if (pickupTime && !returnTime) {
+      setReturnTime(pickupTime)
+    }
+  }, [pickupTime, returnTime])
 
   useEffect(() => {
     const effectiveReturnDate = bookingType === 'trial' ? pickupDate : returnDate
@@ -426,7 +435,7 @@ const GownDetails = () => {
             pickupDate,
             ...(bookingType !== 'trial' ? { returnDate } : {}),
             pickupTime,
-            ...(bookingType !== 'trial' ? { returnTime: pickupTime } : {})
+            ...(bookingType !== 'trial' ? { returnTime: returnTime || pickupTime } : {})
           })
         })
         const data = await response.json()
@@ -469,7 +478,11 @@ const GownDetails = () => {
   const isFormComplete = bookingType === 'trial'
     ? Boolean(pickupDate && pickupTime)
     : Boolean(pickupDate && returnDate && pickupTime)
-  const confirmDisabled = !gown?.available
+  // NOTE: Only disable booking if gown status is 'Unavailable' (owner's manual toggle).
+  // Temporary statuses (In-Use, In-Laundry, Reserved) should NOT block future bookings.
+  // Date-based availability is checked through scheduleStatus.valid.
+  const gownIsManuallyUnavailable = gown?.status === 'Unavailable'
+  const confirmDisabled = gownIsManuallyUnavailable
     || !isFormComplete
     || hasFieldErrors
     || !scheduleStatus.valid
@@ -577,81 +590,77 @@ const GownDetails = () => {
         </button> 
 
       {/* Main Content */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12'>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8'>
         {/* Left Column - Image and Measurements */}
-        <div className='w-full flex flex-col gap-6 sm:gap-8'>
+        <div className='w-full flex flex-col gap-3 sm:gap-4'>
           {/* Image Section */}
           <div className='relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl bg-gray-100'>
             <img 
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image} 
               alt={gown.name}
-              className='w-full h-auto max-h-[400px] sm:max-h-[600px] object-contain'
+              className='w-full h-auto max-h-[450px] sm:max-h-[500px] object-contain'
             />
-            {gown?.available && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2'>
-                <img src={assets.check_icon} alt="check" className='w-3 h-3 sm:w-4 sm:h-4' />
-                Available Now
+            {gown?.status === 'Available' && (
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+                {gown.status}
               </div>
             )}
-            {!gown?.available && (
+            {gown?.status === 'Unavailable' && (
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+                {gown.status}
+              </div>
+            )}
+            {gown?.status === 'In-Laundry' && (
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-blue-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+                {gown.status}
+              </div>
+            )}
+            {gown?.status === 'Reserved' && (
               <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-red-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
-                Currently Unavailable
+                {gown.status}
+              </div>
+            )}
+            {gown?.status === 'In-Use' && (
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-gray-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+                {gown.status}
               </div>
             )}
           </div>
 
-          {/* Size Measurement Section */}
-          <div>
-            <div className='flex justify-between items-center mb-3 sm:mb-4'>
-              <h2 className='text-lg sm:text-xl font-semibold text-gray-900'>Size Measurement</h2>
-              <select
-                value={measurements.unit}
-                onChange={(e) => setMeasurements({...measurements, unit: e.target.value})}
-                className='px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-xs sm:text-sm'
+          {/* Title and Owner */}
+          <div className='mb-2 sm:mb-3'>
+            <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1'>{gown.name}</h1>
+            <p className='text-sm sm:text-base text-gray-600'>
+              by{' '}
+              <button
+                onClick={() => {
+                  const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+                  navigate(`/owner-profile/${ownerId}`)
+                }}
+                className='text-primary hover:text-primary-dull font-semibold hover:underline transition-colors'
               >
-                <option value='inches'>Inches</option>
-                <option value='cm'>Centimeters</option>
-              </select>
-            </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3'>
-              <div>
-                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
-                  Waist (optional)
-                </label>
-                <div className='relative'>
-                  <input
-                    type='number'
-                    value={measurements.waist}
-                    onChange={(e) => setMeasurements({...measurements, waist: e.target.value})}
-                    placeholder='Enter waist'
-                    className='w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  />
-                  <span className='absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs sm:text-sm'>
-                    {measurements.unit}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
-                  Hips (optional)
-                </label>
-                <div className='relative'>
-                  <input
-                    type='number'
-                    value={measurements.hips}
-                    onChange={(e) => setMeasurements({...measurements, hips: e.target.value})}
-                    placeholder='Enter hips'
-                    className='w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  />
-                  <span className='absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs sm:text-sm'>
-                    {measurements.unit}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <p className='text-xs sm:text-sm text-gray-500 italic'>
-              Note: Measurements are preferably done in-person for the best fit.
+                {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
+              </button>
             </p>
+          </div>
+
+          {/* Price */}
+          <div className='mb-2 sm:mb-3'>
+            <p className='text-xl sm:text-2xl font-bold text-primary'>
+              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Location & Contact Number - side by side */}
+          <div className='mb-3 sm:mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+            <div>
+              <h2 className='text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-1.5'>Location</h2>
+              <p className='text-sm text-gray-600'>{gown.location || 'Location not specified'}</p>
+            </div>
+            <div>
+              <h2 className='text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-1.5'>Contact Number</h2>
+              <p className='text-sm text-gray-600'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+            </div>
           </div>
 
           {/* Gown Details Grid - Moved here */}
@@ -713,42 +722,6 @@ const GownDetails = () => {
 
         {/* Details Section */}
         <div className='flex flex-col'>
-          {/* Title and Owner */}
-          <div className='mb-4 sm:mb-6'>
-            <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2'>{gown.name}</h1>
-            <p className='text-base sm:text-lg text-gray-600'>
-              by{' '}
-              <button
-                onClick={() => {
-                  const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
-                  navigate(`/owner-profile/${ownerId}`)
-                }}
-                className='text-primary hover:text-primary-dull font-semibold hover:underline transition-colors'
-              >
-                {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
-              </button>
-            </p>
-          </div>
-
-          {/* Price */}
-          <div className='mb-4 sm:mb-6'>
-            <p className='text-2xl sm:text-3xl font-bold text-primary'>
-              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
-            </p>
-          </div>
-
-          {/* Location & Contact Number - side by side */}
-          <div className='mb-6 sm:mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
-            <div>
-              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Location</h2>
-              <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.location || 'Location not specified'}</p>
-            </div>
-            <div>
-              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3'>Contact Number</h2>
-              <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
-            </div>
-          </div>
-
           {/* Category (if available) */}
           {gown.category && (
             <div className='mb-6 sm:mb-8'>
@@ -808,8 +781,8 @@ const GownDetails = () => {
                     onChange={() => setBookingType('trial')}
                   />
                   <div>
-                    <p className='font-semibold text-gray-900'>Trial Appointment</p>
-                    <p className='text-xs text-gray-500'>Try the dress in-store (hold is temporary)</p>
+                    <p className='font-semibold text-gray-900'>Visit & Try-On</p>
+                    <p className='text-xs text-gray-500'>See and try the gown in person</p>
                   </div>
                 </label>
               </div>
@@ -829,7 +802,7 @@ const GownDetails = () => {
                     Reserved
                   </span>
                   <span className='flex items-center gap-1'>
-                    <span className='w-3 h-3 rounded-full bg-orange-400 inline-block'></span>
+                    <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
                     Trial Hold
                   </span>
                   <span className='flex items-center gap-1'>
@@ -941,27 +914,59 @@ const GownDetails = () => {
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-2'>Pick-up Time</label>
-                  <input
-                    type='time'
-                    min='09:00'
-                    max='19:00'
-                    step='900'
-                    list='allowed-times'
+                  <select
                     value={pickupTime}
-                    onChange={(e) => handleTimeChange(e.target.value, setPickupTime, 'pickupTime')}
-                    onBlur={(e) => handleTimeChange(e.target.value, setPickupTime, 'pickupTime')}
+                    onChange={(e) => {
+                      setPickupTime(e.target.value)
+                      setFieldError('pickupTime', '')
+                    }}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupTime ? 'border-red-400' : 'border-gray-300'}`}
-                  />
+                  >
+                    <option value=''>Select pickup time</option>
+                    {allowedTimes.map(time => {
+                      // If booking for today, filter out past times
+                      if (pickupDate === toIsoDate(new Date())) {
+                        const currentTime = new Date().toTimeString().slice(0, 5)
+                        if (time < currentTime) return null
+                      }
+                      return <option key={time} value={time}>{formatTimeLabel(time)}</option>
+                    })}
+                  </select>
                   {formErrors.pickupTime && (
                     <p className='text-sm text-red-600 mt-1'>{formErrors.pickupTime}</p>
                   )}
                 </div>
+                {bookingType !== 'trial' && (
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>Return Time</label>
+                    <select
+                      value={returnTime}
+                      onChange={(e) => {
+                        setReturnTime(e.target.value)
+                        setFieldError('returnTime', '')
+                      }}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnTime ? 'border-red-400' : 'border-gray-300'}`}
+                    >
+                      <option value=''>Select return time</option>
+                      {allowedTimes.map(time => {
+                        // If same-day booking and pickup time is selected, filter times before pickup
+                        if (pickupDate === returnDate && pickupTime && time < pickupTime) {
+                          return null
+                        }
+                        // If booking for today, filter out past times
+                        if (returnDate === toIsoDate(new Date())) {
+                          const currentTime = new Date().toTimeString().slice(0, 5)
+                          if (time < currentTime) return null
+                        }
+                        return <option key={time} value={time}>{formatTimeLabel(time)}</option>
+                      })}
+                    </select>
+                    {formErrors.returnTime && (
+                      <p className='text-sm text-red-600 mt-1'>{formErrors.returnTime}</p>
+                    )}
+                  </div>
+                )}
               </div>
-              <datalist id='allowed-times'>
-                {allowedTimes.map(time => (
-                  <option key={time} value={time}>{formatTimeLabel(time)}</option>
-                ))}
-              </datalist>
               {(scheduleStatus.loading || scheduleStatus.message) && (
                 <p className={`text-sm mt-2 ${scheduleStatus.loading ? 'text-blue-600' : scheduleStatus.valid ? 'text-green-600' : 'text-red-600'}`}>
                   {scheduleStatus.loading ? 'Checking availability…' : scheduleStatus.message}
@@ -992,7 +997,7 @@ const GownDetails = () => {
           <div className='mt-6 space-y-3'>
             {confirmDisabled && !loading && !success && (
               <p id='confirm-booking-hint' className='text-sm text-gray-500'>
-                {!gown?.available ? 'This gown is not available to book.' : !isFormComplete ? 'Select dates and time to enable booking.' : hasFieldErrors ? 'Fix the errors above to continue.' : !scheduleStatus.valid ? (scheduleStatus.message || 'Check availability first.') : 'Checking availability…'}
+                {gown?.status === 'Unavailable' ? 'This gown is not available to book.' : !isFormComplete ? 'Select dates and time to enable booking.' : hasFieldErrors ? 'Fix the errors above to continue.' : !scheduleStatus.valid ? (scheduleStatus.message || 'Check availability first.') : 'Checking availability…'}
               </p>
             )}
             <button 
@@ -1005,7 +1010,7 @@ const GownDetails = () => {
               disabled={confirmDisabled}
               aria-describedby={confirmDisabled && !loading && !success ? 'confirm-booking-hint' : undefined}
             >
-              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.available ? 'Confirm Booking' : 'Not Available'}
+              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.status === 'Unavailable' ? 'Not Available' : 'Confirm Booking'}
             </button>
 
             {/* Payment Modal */}
@@ -1022,28 +1027,6 @@ const GownDetails = () => {
               setShowContract={setShowContract}
               onSubmit={handleContractSubmit}
             />
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Information Section */}
-      <div className='mt-16 pt-8 border-t border-gray-200'>
-        <h2 className='text-2xl font-bold text-gray-900 mb-6'>Additional Information</h2>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          <div>
-            <h3 className='text-lg font-semibold text-gray-900 mb-2'>Availability</h3>
-            <p className='text-gray-600'>
-              {gown?.available 
-                ? 'This gown is currently available for booking. Please select your preferred dates to proceed with the booking.'
-                : 'This gown is currently unavailable. Please check back later or contact the owner for more information.'}
-            </p>
-          </div>
-          <div>
-            <h3 className='text-lg font-semibold text-gray-900 mb-2'>Rental Terms</h3>
-            <p className='text-gray-600'>
-              Please ensure to return the gown in its original condition. 
-              Contact the owner for specific rental terms and conditions.
-            </p>
           </div>
         </div>
       </div>

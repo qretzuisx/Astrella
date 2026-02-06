@@ -212,7 +212,8 @@ export const createBooking = async (req, res) => {
     }
 
     // For trials, returnDateTime may equal pickupDateTime (single-day appointment).
-    if (isTrial ? (returnDateTime < pickupDateTime) : (returnDateTime <= pickupDateTime)) {
+    // For reservations, returnDateTime can equal pickupDateTime (same-day bookings allowed).
+    if (returnDateTime < pickupDateTime) {
       return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
     }
 
@@ -379,8 +380,9 @@ export const validateBookingWindow = async (req, res) => {
       returnDateTime = new Date(pickupDateTime);
     }
 
-    // For trials, returnDateTime may equal pickupDateTime (single-day appointment).
-    if (isTrial ? (returnDateTime < pickupDateTime) : (returnDateTime <= pickupDateTime)) {
+    // For trials, return must be strictly after pickup (appointment has duration).
+    // For reservations, return can equal pickup (same-day bookings allowed).
+    if (returnDateTime < pickupDateTime) {
       return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
     }
 
@@ -515,59 +517,75 @@ export const getOwnerBooking = async (req, res) => {
 export const changeBookingStatus = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { BookingId, status } = req.body;
+    const { bookingId, status } = req.body;
 
-    if (!BookingId || !status) {
-      return res.status(400).json({ success: false, message: "Missing BookingId or status" });
+    if (!bookingId || !status) {
+      return res.status(400).json({ success: false, message: "Missing bookingId or status" });
     }
 
-    const Booking = await Booking.findById(BookingId);
-    if (!Booking) {
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
-    if (Booking.owner.toString() !== _id.toString()) {
+    if (booking.owner.toString() !== _id.toString()) {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const prevStatus = Booking.status;
+    const prevStatus = booking.status;
 
     // Track owner confirmations for Manage Booking
-    if (status === 'confirmed' && !Booking.pickupConfirmedAt) {
-      Booking.pickupConfirmedAt = new Date();
+    if (status === 'confirmed' && !booking.pickupConfirmedAt) {
+      booking.pickupConfirmedAt = new Date();
     }
-    if (status === 'completed' && !Booking.returnConfirmedAt) {
-      Booking.returnConfirmedAt = new Date();
+    if (status === 'completed' && !booking.returnConfirmedAt) {
+      booking.returnConfirmedAt = new Date();
     }
 
-    Booking.status = status;
-    await Booking.save();
+    booking.status = status;
+    await booking.save();
 
-    // Keep a simple gown-level availability flag in sync for listing visibility.
+    // Automatically update gown status based on booking lifecycle
+    // NOTE: gown.available is a global flag (owner's manual toggle) and should NOT be changed by booking status.
+    // Only the gown.status field should reflect temporary booking states.
+    // Date-based availability is checked through booking conflict detection.
     try {
-      const gown = await Gown.findById(Booking.gown);
-    
-      // When a Booking is confirmed (pickup), ensure the gown is generally not
-      // listed as freely available, as it is now in active use.
-      if (status === 'confirmed') {
-        gown.available = false;
+      const gown = await Gown.findById(booking.gown);
+      if (gown) {
+        // Set gown status based on booking status
+        if (status === 'confirmed') {
+          // Booking confirmed (picked up) → gown is In-Use
+          gown.status = 'In-Use';
+          // DO NOT set gown.available = false; availability is date-based, not global
+        } else if (status === 'completed') {
+          // Booking completed (returned) → gown is In-Laundry
+          gown.status = 'In-Laundry';
+          // DO NOT set gown.available = false; availability is date-based, not global
+        } else if (status === 'canceled') {
+          // Booking canceled → check if gown should go back to Available
+          const overlapping = await Booking.findOne({
+            gown: booking.gown,
+            status: { $in: ['confirmed', 'completed'] },
+            _id: { $ne: bookingId }
+          });
+          if (!overlapping) {
+            gown.status = 'Available';
+            // DO NOT modify gown.available; it's the owner's manual toggle
+          }
+        } else if (status === 'pending') {
+          // Pending bookings don't affect status yet, keep as is or set to Reserved
+          gown.status = 'Reserved';
+          // DO NOT set gown.available = false; availability is date-based, not global
+        } else if (status === 'trial') {
+          // Trial hold → gown status becomes Reserved
+          gown.status = 'Reserved';
+          // DO NOT set gown.available = false; availability is date-based, not global
+        }
+        
         await gown.save();
       }
-    
-      // If Booking is canceled or completed and was previously confirmed,
-      // try to make the gown available again if there is no other confirmed Booking.
-      if ((status === 'canceled' || status === 'completed') && prevStatus === 'confirmed') {
-        const overlapping = await Booking.findOne({
-          gown: Booking.gown,
-          status: 'confirmed',
-        });
-        if (!overlapping) {
-          gown.available = true;
-          await gown.save();
-        }
-      }
     } catch (err) {
-      console.error('Failed to update gown availability on status change:', err.message);
+      console.error('Failed to update gown status on booking status change:', err.message);
     }
 
     res.json({ success: true, message: "Status Updated" });
@@ -685,6 +703,18 @@ export const updateBooking = async (req, res) => {
       booking.payment.verifiedBy = actor._id;
 
       await booking.save();
+
+      // Update gown status to Reserved when trial is converted to reservation
+      try {
+        const gown = await Gown.findById(booking.gown);
+        if (gown) {
+          gown.status = 'Reserved';
+          // DO NOT set gown.available = false; availability is date-based, not global
+          await gown.save();
+        }
+      } catch (err) {
+        console.error('Failed to update gown status on trial conversion:', err.message);
+      }
 
       const populated = await Booking.findById(booking._id)
         .populate('gown')
@@ -895,34 +925,72 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Action must be 'approve' or 'reject'" });
     }
 
-    const Booking = await Booking.findById(BookingId);
-    if (!Booking) {
+    const booking = await Booking.findById(BookingId);
+    if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
     // Verify owner authorization
-    if (Booking.owner.toString() !== _id.toString()) {
+    if (booking.owner.toString() !== _id.toString()) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     // Check if payment exists
-    if (!Booking.payment) {
+    if (!booking.payment) {
       return res.status(400).json({ success: false, message: "No payment information found" });
     }
 
-    // Update payment status
-    if (action === 'approve') {
-      Booking.payment.status = 'verified';
-      Booking.payment.verifiedAt = new Date();
-      Booking.payment.verifiedBy = _id;
-      // Keep status as 'pending' - owner still needs to confirm pickup separately
+    // For in-store (cash) payments, only allow approve action
+    if (booking.payment.method === 'in_store') {
+      if (action !== 'approve') {
+        return res.status(400).json({ success: false, message: "Cash payments can only be approved, not rejected" });
+      }
+      // For in-store, mark as paid immediately (full payment collected)
+      booking.payment.status = 'paid';
+      booking.payment.verifiedAt = new Date();
+      booking.payment.verifiedBy = _id;
     } else {
-      Booking.payment.status = 'rejected';
-      Booking.payment.rejectionReason = rejectionReason || 'Payment verification failed';
-      Booking.status = 'canceled'; // Cancel Booking if payment rejected
+      // For GCash payments, handle as deposit (50%)
+      if (action === 'approve') {
+        booking.payment.status = 'verified';
+        booking.payment.verifiedAt = new Date();
+        booking.payment.verifiedBy = _id;
+      } else {
+        booking.payment.status = 'rejected';
+        booking.payment.rejectionReason = rejectionReason || 'Payment verification failed';
+        booking.status = 'canceled'; // Cancel booking if payment rejected
+      }
     }
 
-    await Booking.save();
+    await booking.save();
+
+    // Update gown status when payment is approved
+    // NOTE: gown.available is a global flag (owner's manual toggle) and should NOT be changed by booking status.
+    // Only the gown.status field should reflect temporary booking states.
+    if (action === 'approve') {
+      try {
+        const gown = await Gown.findById(booking.gown);
+        if (gown) {
+          gown.status = 'Reserved';
+          // DO NOT set gown.available = false; availability is date-based, not global
+          await gown.save();
+        }
+      } catch (err) {
+        console.error('Failed to update gown status on payment approval:', err.message);
+      }
+    } else if (action === 'reject') {
+      // If payment rejected, revert gown to Available
+      try {
+        const gown = await Gown.findById(booking.gown);
+        if (gown) {
+          gown.status = 'Available';
+          // DO NOT modify gown.available; it's the owner's manual toggle
+          await gown.save();
+        }
+      } catch (err) {
+        console.error('Failed to revert gown status on payment rejection:', err.message);
+      }
+    }
 
     res.json({
       success: true,
