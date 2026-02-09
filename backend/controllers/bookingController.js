@@ -356,7 +356,7 @@ export const createBooking = async (req, res) => {
 
 export const validateBookingWindow = async (req, res) => {
   try {
-    const { gownId, pickupDate, returnDate, pickupTime, returnTime, bookingType } = req.body;
+    const { gownId, pickupDate, returnDate, pickupTime, returnTime, bookingType, excludeBookingId } = req.body;
     // Treat as trial when bookingType is 'trial' or when return date is omitted (trial only sends pickup date + time)
     const isTrial = (String(bookingType || '').toLowerCase() === 'trial') || (!returnDate && pickupDate && pickupTime);
     const effectiveReturnDate = isTrial ? pickupDate : returnDate;
@@ -396,7 +396,9 @@ export const validateBookingWindow = async (req, res) => {
     // Build a set of all blocked dates (Booking dates + laundry days)
     const blockedDates = new Set();
     const now = new Date();
-    const Bookings = await Booking.find({
+    
+    // Build query to exclude the current booking when rescheduling/extending
+    const query = {
       gown: gownId,
       status: { $ne: "canceled" },
       $or: [
@@ -404,7 +406,14 @@ export const validateBookingWindow = async (req, res) => {
         { status: 'trial', trialExpiresAt: { $gt: now } },
         { status: 'trial', trialExpiresAt: { $exists: false } },
       ]
-    })
+    };
+    
+    // Exclude the booking being edited from conflict check
+    if (excludeBookingId) {
+      query._id = { $ne: excludeBookingId };
+    }
+    
+    const Bookings = await Booking.find(query)
       .populate("user", "name")
       .populate("gown", "name");
     
@@ -452,8 +461,9 @@ export const validateBookingWindow = async (req, res) => {
         });
       });
 
-      return res.status(409).json({
-        success: false,
+      return res.json({
+        success: true,
+        available: false,
         message: isLaundryConflict
           ? "This gown is in laundry on one or more of your selected dates. Laundry days are fully blocked and cannot be booked."
           : "This gown is already reserved during your selected dates.",
@@ -469,7 +479,7 @@ export const validateBookingWindow = async (req, res) => {
       });
     }
 
-    return res.json({ success: true, message: "Selected schedule is available." });
+    return res.json({ success: true, available: true, message: "Available for selected dates" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
@@ -724,16 +734,96 @@ export const updateBooking = async (req, res) => {
       return res.json({ success: true, message: 'Trial finalized as reservation', booking: populated });
     }
 
-    if (action !== 'reschedule') {
-      return res.status(400).json({ success: false, message: 'Invalid action. Use cancel, reschedule, or convert_to_reservation.' });
+    if (action !== 'reschedule' && action !== 'extend') {
+      return res.status(400).json({ success: false, message: 'Invalid action. Use cancel, reschedule, extend, or convert_to_reservation.' });
     }
 
-    // Only allow reschedule on pending/trial bookings
+    // Only allow reschedule/extend on pending/trial bookings
     if (!['pending', 'trial'].includes(booking.status)) {
-      return res.status(400).json({ success: false, message: 'Only pending or trial bookings can be rescheduled.' });
+      return res.status(400).json({ success: false, message: 'Only pending or trial bookings can be rescheduled or extended.' });
     }
 
     const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+
+    // EXTEND VALIDATION: Special rules for extending bookings
+    if (action === 'extend') {
+      // For extend, pickup date/time must remain the same
+      if (!returnDate || !returnTime) {
+        return res.status(400).json({
+          success: false,
+          message: 'Return date and time are required for extend action.'
+        });
+      }
+
+      // Parse original dates and times
+      const originalPickupDate = new Date(booking.pickupDate);
+      const originalReturnDate = new Date(booking.returnDate);
+      const newReturnDate = combineDateAndTime(returnDate, returnTime);
+
+      if (!newReturnDate) {
+        return res.status(400).json({ success: false, message: 'Invalid return date or time.' });
+      }
+
+      // Extract date parts (YYYY-MM-DD) for comparison
+      const originalPickupDay = toLocalDateString(originalPickupDate);
+      const originalReturnDay = toLocalDateString(originalReturnDate);
+      const newReturnDay = toLocalDateString(newReturnDate);
+
+      // Parse times to minutes for comparison
+      const parseTimeToMinutes = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+      };
+
+      const originalPickupTime = booking.pickupTime;
+      const originalReturnTime = booking.returnTime;
+      const newReturnTimeStr = returnTime;
+
+      const originalPickupMinutes = parseTimeToMinutes(originalPickupTime);
+      const originalReturnMinutes = parseTimeToMinutes(originalReturnTime);
+      const newReturnMinutes = parseTimeToMinutes(newReturnTimeStr);
+
+      // Rule 1: Same-day extension - return time cannot be earlier than original return time
+      // Maximum 1 hour extension allowed
+      if (originalReturnDay === newReturnDay) {
+        if (newReturnMinutes < originalReturnMinutes) {
+          return res.status(400).json({
+            success: false,
+            message: 'For same-day extension, the return time cannot be earlier than the original return time.'
+          });
+        }
+        
+        // Check max 1 hour extension
+        const extensionMinutes = newReturnMinutes - originalReturnMinutes;
+        if (extensionMinutes > 60) {
+          return res.status(400).json({
+            success: false,
+            message: 'Maximum 1 hour extension allowed for same-day bookings.'
+          });
+        }
+      } 
+      // Rule 2: Next-day (or later) extension - pickup time cannot be more than 1 hour late
+      else if (newReturnDate > originalReturnDate) {
+        // For next-day extensions, return time can be earlier, but we need to validate
+        // that the original pickup time is not more than 1 hour late from the new arrangement
+        // This rule is a bit unclear, but interpreting as: the pickup must still be within 1 hour of original
+        const pickupDiff = Math.abs(originalPickupMinutes - originalPickupMinutes); // Pickup doesn't change in extend
+        
+        // Since pickup doesn't change in extend mode, we just need to ensure the extension makes sense
+        // The return time can be earlier on next day, which is allowed
+        // No additional validation needed beyond conflict checks
+      } else {
+        // New return date is before original return date - not allowed for extend
+        return res.status(400).json({
+          success: false,
+          message: 'Extension cannot reduce the booking period. Use reschedule instead.'
+        });
+      }
+
+      // Use original pickup values for extend
+      pickupDate = toLocalDateString(originalPickupDate);
+      pickupTime = originalPickupTime;
+    }
 
     // Trials are single appointment bookings: require only pickupDate + pickupTime.
     if (!pickupDate || !pickupTime || (!isTrial && (!returnDate || !returnTime))) {

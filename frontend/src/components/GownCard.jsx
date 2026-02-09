@@ -40,27 +40,27 @@ const GownCard = ({ gown }) => {
 
         {/* Status Badge */}
         {gown.status === 'Available' && (
-          <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+          <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'Unavailable' && (
-          <div className="absolute top-4 left-4 bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+          <div className="absolute top-4 left-4 bg-orange-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'In-Laundry' && (
-          <div className="absolute top-4 left-4 bg-blue-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+          <div className="absolute top-4 left-4 bg-blue-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'Reserved' && (
-          <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+          <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'In-Use' && (
-          <div className="absolute top-4 left-4 bg-gray-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-semibold text-xs shadow-md">
+          <div className="absolute top-4 left-4 bg-gray-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
             {gown.status}
           </div>
         )}

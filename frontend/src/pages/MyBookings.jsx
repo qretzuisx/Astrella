@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { DayPicker } from 'react-day-picker'
+import 'react-day-picker/dist/style.css'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
 
@@ -36,7 +38,53 @@ const MyBookings = ({ setShowLogin }) => {
     returnTime: '09:00',
   })
 
+  // Availability checking state for reschedule/extend
+  const [availabilityStatus, setAvailabilityStatus] = useState({ loading: false, message: '', valid: false })
+  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialHoldDates: [], laundryHoldDates: [] })
+
   const currency = CURRENCY
+
+  // Helper functions for calendar
+  const toIsoDate = (date) => {
+    if (!date) return ''
+    const d = new Date(date)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  const isPastIsoDate = (isoDate) => {
+    const today = toIsoDate(new Date())
+    return isoDate < today
+  }
+
+  const blockedReasonForDate = (isoDate) => {
+    if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
+    if (calendarInfo.trialHoldDates.includes(isoDate)) return { reason: 'trial', message: 'Trial hold date.' }
+    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
+    return null
+  }
+
+  const handleCalendarSelect = (range) => {
+    if (!range) return
+    const isTrial = (selectedBooking?.status || '').toLowerCase() === 'trial'
+    
+    if (isTrial || !range.from) {
+      const singleDate = range.from || range
+      setForm(prev => ({
+        ...prev,
+        pickupDate: toIsoDate(singleDate),
+        returnDate: toIsoDate(singleDate)
+      }))
+    } else {
+      setForm(prev => ({
+        ...prev,
+        pickupDate: toIsoDate(range.from),
+        returnDate: range.to ? toIsoDate(range.to) : toIsoDate(range.from)
+      }))
+    }
+  }
 
   // Check authentication on mount
   useEffect(() => {
@@ -108,7 +156,7 @@ const MyBookings = ({ setShowLogin }) => {
   const isEditableStatus = (booking) => ['pending', 'trial'].includes((booking?.status || '').toLowerCase())
   const canCancelStatus = (booking) => !['canceled', 'completed', 'expired'].includes((booking?.status || '').toLowerCase())
 
-  const openEdit = (booking, mode) => {
+  const openEdit = async (booking, mode) => {
     const pickupTime = booking.pickupTime || '09:00'
     const returnTime = booking.returnTime || pickupTime
 
@@ -123,6 +171,28 @@ const MyBookings = ({ setShowLogin }) => {
     setError('')
     setSuccess('')
     setEditOpen(true)
+    
+    // Fetch calendar availability for the gown
+    const gownId = booking.gown?._id || booking.gown?.id || booking.gown
+    if (gownId) {
+      await fetchCalendarAvailability(gownId)
+    }
+  }
+
+  const fetchCalendarAvailability = async (gownId) => {
+    try {
+      const response = await fetch(`${API_URL}/bookings/calendar/${gownId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCalendarInfo({
+          unavailableDates: data.unavailableDates || [],
+          trialHoldDates: data.trialHoldDates || [],
+          laundryHoldDates: data.laundryHoldDates || []
+        })
+      }
+    } catch (e) {
+      console.error('Error fetching calendar:', e)
+    }
   }
 
   const closeEdit = () => {
@@ -134,6 +204,58 @@ const MyBookings = ({ setShowLogin }) => {
   const handleFormChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+    
+    // Trigger availability check when dates/times change
+    if (['pickupDate', 'returnDate', 'pickupTime', 'returnTime'].includes(name)) {
+      // Use setTimeout to wait for state to update
+      setTimeout(() => checkAvailability(), 100)
+    }
+  }
+
+  const checkAvailability = async () => {
+    if (!selectedBooking || !form.pickupDate || !form.returnDate || !form.pickupTime || !form.returnTime) {
+      setAvailabilityStatus({ loading: false, message: '', valid: false })
+      return
+    }
+
+    const gownId = selectedBooking.gown?._id || selectedBooking.gown?.id || selectedBooking.gown
+    if (!gownId) return
+
+    setAvailabilityStatus({ loading: true, message: 'Checking availability...', valid: false })
+
+    try {
+      const isTrial = (selectedBooking.status || '').toLowerCase() === 'trial'
+      const response = await fetch(`${API_URL}/bookings/check-availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gownId,
+          pickupDate: form.pickupDate,
+          returnDate: isTrial ? form.pickupDate : form.returnDate,
+          pickupTime: form.pickupTime,
+          returnTime: isTrial ? form.pickupTime : form.returnTime,
+          excludeBookingId: selectedBooking._id || selectedBooking.id
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setAvailabilityStatus({ 
+          loading: false, 
+          message: data.available ? '✓ Available' : data.message || 'Not available', 
+          valid: data.available 
+        })
+      } else {
+        setAvailabilityStatus({ 
+          loading: false, 
+          message: data.message || 'Unable to check availability', 
+          valid: false 
+        })
+      }
+    } catch (e) {
+      console.error('Error checking availability:', e)
+      setAvailabilityStatus({ loading: false, message: 'Error checking availability', valid: false })
+    }
   }
 
   const submitReschedule = async () => {
@@ -155,7 +277,7 @@ const MyBookings = ({ setShowLogin }) => {
 
       const payload = {
         bookingId: selectedBooking._id || selectedBooking.id,
-        action: 'reschedule',
+        action: editMode === 'extend' ? 'extend' : 'reschedule',
         pickupDate: editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : form.pickupDate,
         returnDate: isTrial ? (editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : form.pickupDate) : form.returnDate,
         pickupTime: editMode === 'extend' ? (selectedBooking.pickupTime || form.pickupTime) : form.pickupTime,
@@ -382,7 +504,7 @@ const MyBookings = ({ setShowLogin }) => {
                     alt={booking.gown?.name || 'Gown'}
                     className='w-full h-auto max-h-64 sm:max-h-80 md:max-h-96 object-contain'
                   />
-                  <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(booking.status)}`}>
+                  <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-base sm:text-lg font-bold border-2 ${getStatusColor(booking.status)}`}>
                     {booking.status?.toUpperCase() || 'PENDING'}
                   </div>
                 </div>
@@ -529,59 +651,267 @@ const MyBookings = ({ setShowLogin }) => {
             </div>
 
             <div className='space-y-4'>
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-1'>{(selectedBooking.status || '').toLowerCase() === 'trial' ? 'Trial Date' : 'Pickup Date'}</label>
-                  <input
-                    type='date'
-                    name='pickupDate'
-                    value={form.pickupDate}
-                    onChange={handleFormChange}
-                    disabled={editMode === 'extend'}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
-                  />
+              {/* Gown Status Display */}
+              {selectedBooking.gown?.status && (
+                <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm font-semibold text-gray-700'>Current Gown Status:</span>
+                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                      selectedBooking.gown.status === 'Available' ? 'bg-green-100 text-green-800' :
+                      selectedBooking.gown.status === 'In-Use' ? 'bg-gray-100 text-gray-800' :
+                      selectedBooking.gown.status === 'In-Laundry' ? 'bg-blue-100 text-blue-800' :
+                      selectedBooking.gown.status === 'Reserved' ? 'bg-red-100 text-red-800' :
+                      selectedBooking.gown.status === 'Unavailable' ? 'bg-orange-100 text-orange-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {selectedBooking.gown.status}
+                    </div>
+                  </div>
+                  {selectedBooking.gown.status !== 'Available' && (
+                    <p className='text-xs text-gray-600 mt-1'>
+                      Note: Status may change after current bookings are completed.
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Time</label>
-                  <select
-                    name='pickupTime'
-                    value={form.pickupTime}
-                    onChange={handleFormChange}
-                    disabled={editMode === 'extend'}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
-                  >
-                    {allowedTimes.map((t) => (
-                      <option key={t} value={t}>{formatTime(t)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
 
-              {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                  <div>
-                    <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Date</label>
-                    <input
-                      type='date'
-                      name='returnDate'
-                      value={form.returnDate}
-                      onChange={handleFormChange}
-                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                    />
+              {/* Show Reserved/Blocked Dates Info */}
+              {(calendarInfo.unavailableDates.length > 0 || calendarInfo.trialHoldDates.length > 0 || calendarInfo.laundryHoldDates.length > 0) && (
+                <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
+                  <p className='text-xs font-semibold text-gray-700 mb-2'>Blocked Dates:</p>
+                  <div className='flex flex-wrap gap-2 text-xs'>
+                    {calendarInfo.unavailableDates.length > 0 && (
+                      <span className='flex items-center gap-1'>
+                        <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
+                        Reserved ({calendarInfo.unavailableDates.length})
+                      </span>
+                    )}
+                    {calendarInfo.trialHoldDates.length > 0 && (
+                      <span className='flex items-center gap-1'>
+                        <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
+                        Trial Hold ({calendarInfo.trialHoldDates.length})
+                      </span>
+                    )}
+                    {calendarInfo.laundryHoldDates.length > 0 && (
+                      <span className='flex items-center gap-1'>
+                        <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
+                        Laundry ({calendarInfo.laundryHoldDates.length})
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Time</label>
-                    <select
-                    name='returnTime'
-                    value={form.returnTime}
-                    onChange={handleFormChange}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                  >
-                    {allowedTimes.map((t) => (
-                      <option key={t} value={t}>{formatTime(t)}</option>
-                    ))}
-                  </select>
+                </div>
+              )}
+
+              {/* EXTEND MODE: Only show return date/time (pickup is locked) */}
+              {editMode === 'extend' && (
+                <div>
+                  <div className='p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900 mb-4'>
+                    <p className='font-semibold'>Extending Reservation</p>
+                    <p className='text-xs mt-1'>Pickup date and time remain the same. Only update the return date/time.</p>
+                    <p className='text-xs mt-2'>
+                      <strong>Rules:</strong> Same-day extension allows max 1 hour later. 
+                      Next-day extension allows earlier return times.
+                    </p>
                   </div>
+                  
+                  {/* Show current pickup info */}
+                  <div className='mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg'>
+                    <p className='text-xs font-semibold text-gray-700 mb-2'>Current Pickup:</p>
+                    <div className='flex gap-4 text-sm'>
+                      <div>
+                        <span className='text-gray-600'>Date:</span>
+                        <span className='font-semibold ml-1'>{form.pickupDate}</span>
+                      </div>
+                      <div>
+                        <span className='text-gray-600'>Time:</span>
+                        <span className='font-semibold ml-1'>{formatTime(form.pickupTime)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Return date/time fields */}
+                  {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                      <div>
+                        <label className='block text-sm font-semibold text-gray-700 mb-1'>New Return Date</label>
+                        <input
+                          type='date'
+                          name='returnDate'
+                          value={form.returnDate}
+                          onChange={handleFormChange}
+                          min={form.pickupDate || new Date().toISOString().split('T')[0]}
+                          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-sm font-semibold text-gray-700 mb-1'>New Return Time</label>
+                        <select
+                          name='returnTime'
+                          value={form.returnTime}
+                          onChange={handleFormChange}
+                          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                        >
+                          {allowedTimes.map((t) => {
+                            const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
+                            const originalReturnTime = selectedBooking.returnTime || selectedBooking.pickupTime || '09:00'
+                            const originalReturnMinutes = parseInt(originalReturnTime.split(':')[0]) * 60 + parseInt(originalReturnTime.split(':')[1])
+                            const originalReturnDate = toDateInputValue(selectedBooking.returnDate)
+                            
+                            // Same-day extension: only show times >= original return time and max 1 hour later
+                            if (form.returnDate === originalReturnDate) {
+                              if (timeMinutes < originalReturnMinutes) return null
+                              if (timeMinutes > originalReturnMinutes + 60) return null
+                            }
+                            // Next-day extension: return time can be earlier (no restrictions)
+                            
+                            return <option key={t} value={t}>{formatTime(t)}</option>
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* RESCHEDULE MODE: Show calendar and time selection */}
+              {editMode === 'reschedule' && (
+                <div>
+                  {/* Calendar Section */}
+                  <div className='mb-4'>
+                    <div className='flex items-center gap-2 mb-3'>
+                      <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                      </svg>
+                      <h3 className='text-base font-semibold text-gray-900'>Select Dates</h3>
+                    </div>
+                    
+                    <div className='bg-white border border-gray-200 rounded-lg p-3'>
+                      <div className='flex flex-wrap items-center justify-center gap-3 text-xs text-gray-600 mb-3'>
+                        <span className='flex items-center gap-1'>
+                          <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
+                          Reserved
+                        </span>
+                        <span className='flex items-center gap-1'>
+                          <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
+                          Trial Hold
+                        </span>
+                        <span className='flex items-center gap-1'>
+                          <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
+                          Laundry
+                        </span>
+                      </div>
+                      
+                      <div className='flex justify-center w-full'>
+                        <DayPicker
+                          mode={(selectedBooking.status || '').toLowerCase() === 'trial' ? 'single' : 'range'}
+                          numberOfMonths={1}
+                          selected={(selectedBooking.status || '').toLowerCase() === 'trial'
+                            ? (form.pickupDate ? new Date(`${form.pickupDate}T00:00:00`) : undefined)
+                            : {
+                                from: form.pickupDate ? new Date(`${form.pickupDate}T00:00:00`) : undefined,
+                                to: form.returnDate ? new Date(`${form.returnDate}T00:00:00`) : undefined,
+                              }
+                          }
+                          onSelect={(sel) => {
+                            if ((selectedBooking.status || '').toLowerCase() === 'trial') {
+                              if (!sel) return
+                              handleCalendarSelect({ from: sel, to: sel })
+                            } else {
+                              handleCalendarSelect(sel)
+                            }
+                            setTimeout(() => checkAvailability(), 100)
+                          }}
+                          disabled={(date) => {
+                            const iso = toIsoDate(date)
+                            if (isPastIsoDate(iso)) return true
+                            return Boolean(blockedReasonForDate(iso))
+                          }}
+                          modifiers={{
+                            reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
+                            trial: (date) => calendarInfo.trialHoldDates.includes(toIsoDate(date)),
+                            laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
+                          }}
+                          modifiersClassNames={{
+                            reserved: 'rdp-day_reserved',
+                            trial: 'rdp-day_trial',
+                            laundry: 'rdp-day_laundry',
+                          }}
+                        />
+                      </div>
+                      
+                      <div className='mt-3 grid gap-2 text-center grid-cols-2'>
+                        <div>
+                          <p className='text-sm font-bold text-gray-900'>Pick-up</p>
+                          <p className='text-sm font-bold text-gray-700 mt-0.5'>{form.pickupDate || '—'}</p>
+                        </div>
+                        {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
+                          <div>
+                            <p className='text-sm font-bold text-gray-900'>Return</p>
+                            <p className='text-sm font-bold text-gray-700 mt-0.5'>{form.returnDate || '—'}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time Section */}
+                  <div>
+                    <div className='flex items-center gap-2 mb-3'>
+                      <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                      </svg>
+                      <h3 className='text-base font-semibold text-gray-900'>Time</h3>
+                    </div>
+                    
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                      <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>Pick-up Time</label>
+                        <select
+                          name='pickupTime'
+                          value={form.pickupTime}
+                          onChange={handleFormChange}
+                          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                        >
+                          {allowedTimes.map((t) => (
+                            <option key={t} value={t}>{formatTime(t)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
+                        <div>
+                          <label className='block text-sm font-medium text-gray-700 mb-1'>Return Time</label>
+                          <select
+                            name='returnTime'
+                            value={form.returnTime}
+                            onChange={handleFormChange}
+                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                          >
+                            {allowedTimes.map((t) => {
+                              // If same day, only show times at least 1 hour after pickup
+                              if (form.pickupDate === form.returnDate && form.pickupTime) {
+                                const pickupMinutes = parseInt(form.pickupTime.split(':')[0]) * 60 + parseInt(form.pickupTime.split(':')[1])
+                                const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
+                                if (timeMinutes < pickupMinutes + 60) return null
+                              }
+                              return <option key={t} value={t}>{formatTime(t)}</option>
+                            })}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Availability Status */}
+              {(availabilityStatus.loading || availabilityStatus.message) && (
+                <div className={`p-3 rounded-lg text-sm font-semibold ${
+                  availabilityStatus.loading ? 'bg-blue-50 text-blue-800' :
+                  availabilityStatus.valid ? 'bg-green-50 text-green-800' :
+                  'bg-red-50 text-red-800'
+                }`}>
+                  {availabilityStatus.message}
                 </div>
               )}
 
@@ -595,8 +925,8 @@ const MyBookings = ({ setShowLogin }) => {
                 <button
                   type='button'
                   onClick={submitReschedule}
-                  disabled={saving}
-                  className='flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-400'
+                  disabled={saving || (availabilityStatus.message && !availabilityStatus.valid)}
+                  className='flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-400 disabled:cursor-not-allowed'
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>

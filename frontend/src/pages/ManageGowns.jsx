@@ -414,7 +414,7 @@ const ManageGowns = () => {
                       className='w-full h-full object-cover'
                     />
                     {/* Status Badge */}
-                    <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold text-white ${
+                    <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-base sm:text-lg font-bold text-white shadow-lg ${
                       gown.status === 'Available' ? 'bg-green-500' :
                       gown.status === 'Unavailable' ? 'bg-orange-500' :
                       gown.status === 'Reserved' ? 'bg-red-500' :

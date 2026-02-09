@@ -242,7 +242,7 @@ const OwnerDashboard = () => {
                         </div>
                       </div>
                       <div className='text-right'>
-                        <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        <div className={`px-4 py-1.5 rounded-full text-base font-bold ${
                           booking.status === 'confirmed' 
                             ? 'bg-green-100 text-green-800' 
                             : booking.status === 'pending'

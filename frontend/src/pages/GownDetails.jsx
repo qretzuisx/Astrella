@@ -601,27 +601,27 @@ const GownDetails = () => {
               className='w-full h-auto max-h-[450px] sm:max-h-[500px] object-contain'
             />
             {gown?.status === 'Available' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
                 {gown.status}
               </div>
             )}
             {gown?.status === 'Unavailable' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-orange-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
                 {gown.status}
               </div>
             )}
             {gown?.status === 'In-Laundry' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-blue-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-blue-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
                 {gown.status}
               </div>
             )}
             {gown?.status === 'Reserved' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-red-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
                 {gown.status}
               </div>
             )}
             {gown?.status === 'In-Use' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-gray-500/90 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium'>
+              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-gray-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
                 {gown.status}
               </div>
             )}
@@ -787,6 +787,50 @@ const GownDetails = () => {
                 </label>
               </div>
             </div>
+
+            {/* Gown Status Information */}
+            {gown?.status && (
+              <div className='mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg'>
+                <div className='flex items-center justify-between mb-2'>
+                  <span className='text-sm font-semibold text-gray-700'>Current Gown Status:</span>
+                  <div className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                    gown.status === 'Available' ? 'bg-green-100 text-green-800' :
+                    gown.status === 'In-Use' ? 'bg-gray-100 text-gray-800' :
+                    gown.status === 'In-Laundry' ? 'bg-blue-100 text-blue-800' :
+                    gown.status === 'Reserved' ? 'bg-red-100 text-red-800' :
+                    gown.status === 'Unavailable' ? 'bg-orange-100 text-orange-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {gown.status}
+                  </div>
+                </div>
+                {gown.status === 'Available' && (
+                  <p className='text-xs text-gray-600'>
+                    ✓ This gown is currently available for booking.
+                  </p>
+                )}
+                {gown.status === 'In-Use' && (
+                  <p className='text-xs text-gray-600'>
+                    This gown is currently in use. You can still book for future dates once it becomes available.
+                  </p>
+                )}
+                {gown.status === 'In-Laundry' && (
+                  <p className='text-xs text-gray-600'>
+                    This gown is currently being cleaned. You can book for future dates after the laundry period.
+                  </p>
+                )}
+                {gown.status === 'Reserved' && (
+                  <p className='text-xs text-gray-600'>
+                    This gown is currently reserved. You can book for future dates when it becomes available.
+                  </p>
+                )}
+                {gown.status === 'Unavailable' && (
+                  <p className='text-xs text-red-600'>
+                    ⚠ This gown has been marked as unavailable by the owner and cannot be booked at this time.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Date Selection */}
             <div className='mb-4 sm:mb-6'>
@@ -968,9 +1012,13 @@ const GownDetails = () => {
                 )}
               </div>
               {(scheduleStatus.loading || scheduleStatus.message) && (
-                <p className={`text-sm mt-2 ${scheduleStatus.loading ? 'text-blue-600' : scheduleStatus.valid ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`mt-3 p-3 rounded-lg text-sm font-semibold ${
+                  scheduleStatus.loading ? 'bg-blue-50 text-blue-800' :
+                  scheduleStatus.valid ? 'bg-green-50 text-green-800' :
+                  'bg-red-50 text-red-800'
+                }`}>
                   {scheduleStatus.loading ? 'Checking availability…' : scheduleStatus.message}
-                </p>
+                </div>
               )}
             </div>
 
