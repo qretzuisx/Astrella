@@ -12,43 +12,81 @@ const Hero = () => {
   const [ageGroup, setAgeGroup] = useState('');
   const [sex, setSex] = useState('');
   const [showImageAnalysis, setShowImageAnalysis] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   const handleImageAnalysisComplete = (results) => {
-    setSkinTone(results.skinTone);
-    setBodyType(results.bodyType);
-    setfaceShape(results.faceShape);
-    // Photo analysis may estimate age as a number; map to your age-group buckets
-    // Prefer explicit fields from ImageAnalysis
-    if (results.ageGroup) setAgeGroup(results.ageGroup)
-    if (results.sex) setSex(results.sex)
-
-    // Backward compatible: numeric age + gender
-    const estimatedAge = results.age ? parseInt(results.age, 10) : NaN;
-    if (!Number.isNaN(estimatedAge) && !results.ageGroup) {
+    console.log('📥 Received analysis results:', results);
+    
+    // Set detected attributes
+    setSkinTone(results.skinTone || 'Neutral');
+    setBodyType(results.bodyType || 'Rectangle');
+    setfaceShape(results.faceShape || 'Oval');
+    
+    // Set age group
+    if (results.ageGroup) {
+      console.log('✅ Setting age group from results.ageGroup:', results.ageGroup);
+      setAgeGroup(results.ageGroup);
+    } else if (results.age) {
+      // Backward compatible: numeric age
+      const estimatedAge = parseInt(results.age, 10);
+      console.log('🔢 Mapping numeric age to group. Age:', estimatedAge);
       if (estimatedAge >= 6 && estimatedAge <= 9) setAgeGroup('6–9 Years');
       else if (estimatedAge >= 10 && estimatedAge <= 12) setAgeGroup('10–12 Years');
       else if (estimatedAge >= 13 && estimatedAge <= 17) setAgeGroup('13–17 Years');
       else if (estimatedAge >= 18 && estimatedAge <= 29) setAgeGroup('18–29 Years');
       else if (estimatedAge >= 30 && estimatedAge <= 59) setAgeGroup('30–59 Years');
       else if (estimatedAge >= 60) setAgeGroup('60+ Years');
+    } else {
+      console.warn('⚠️ No age data available in results');
+    }
+    
+    // Set sex
+    if (results.sex) {
+      console.log('✅ Setting sex from results.sex:', results.sex);
+      setSex(results.sex);
+    } else {
+      console.warn('⚠️ No sex data available in results');
     }
 
-    if (results.gender && !results.sex) setSex(results.gender === 'female' ? 'Female' : 'Male');
+    console.log('📝 Final state after analysis:', {
+      skinTone: results.skinTone,
+      bodyType: results.bodyType,
+      faceShape: results.faceShape,
+      ageGroup: results.ageGroup || 'Not set',
+      sex: results.sex || 'Not set'
+    });
+
+    // Close modal and show populated form for user to verify
     setShowImageAnalysis(false);
+    setValidationError(''); // Clear any previous errors
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setValidationError('');
+    
+    // Validate: ALL fields must be filled (except eventType which is user's choice)
+    const missingFields = [];
+    if (!bodyType) missingFields.push('Body Type');
+    if (!skinTone) missingFields.push('Skin Tone');
+    if (!eventType) missingFields.push('Event Type');
+    if (!faceShape) missingFields.push('Face Shape');
+    if (!ageGroup) missingFields.push('Age Group');
+    if (!sex) missingFields.push('Sex');
+    
+    if (missingFields.length > 0) {
+      setValidationError(`Please select: ${missingFields.join(', ')}`);
+      return;
+    }
     
     // Build query params
     const params = new URLSearchParams();
-    if (bodyType) params.append('bodyType', bodyType);
-    if (skinTone) params.append('skinTone', skinTone);
-    if (eventType) params.append('eventType', eventType);
-    if (faceShape) params.append('faceShape', faceShape);
-    // Keep backend-compatible params: map ageGroup -> age, sex -> gender
-    if (ageGroup) params.append('age', ageGroup);
-    if (sex) params.append('gender', sex);
+    params.append('bodyType', bodyType);
+    params.append('skinTone', skinTone);
+    params.append('eventType', eventType);
+    params.append('faceShape', faceShape);
+    params.append('age', ageGroup);
+    params.append('sex', sex);
 
     // Navigate to recommendations page
     navigate(`/recommendations?${params.toString()}`);
@@ -148,6 +186,16 @@ const Hero = () => {
             <option value="Male">Male</option>
           </select>
         </div>
+
+        {/* Validation Error */}
+        {validationError && (
+          <div className="w-full max-w-2xl bg-red-100 border-2 border-red-400 text-red-800 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span className="font-semibold">{validationError}</span>
+          </div>
+        )}
 
         {/* Glassmorphism Buttons */}
         <div className="flex flex-col items-center gap-4 w-full px-4">

@@ -95,46 +95,46 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
 
   return (
     <div 
-      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto'
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto'
       onClick={handleClose}
     >
       <div 
-        className='bg-white rounded-2xl shadow-xl max-w-2xl w-full p-8 relative my-8'
+        className='bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full p-4 sm:p-6 md:p-8 relative my-4 sm:my-8'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className='absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl'
+          className='absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 text-2xl sm:text-3xl'
         >
           ×
         </button>
 
         {/* Header */}
-        <div className='text-center mb-6'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-2'>Payment</h2>
-          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4'>
-            <div className='space-y-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-gray-600 font-medium'>Total Amount:</span>
-                <span className='text-2xl font-bold text-gray-900'>₱{total?.toLocaleString() || '0'}</span>
+        <div className='text-center mb-4 sm:mb-6 pr-8'>
+          <h2 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2'>Payment</h2>
+          <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mt-3 sm:mt-4'>
+            <div className='space-y-1.5 sm:space-y-2'>
+              <div className='flex justify-between items-center gap-2'>
+                <span className='text-xs sm:text-sm text-gray-600 font-medium'>Total Amount:</span>
+                <span className='text-lg sm:text-xl md:text-2xl font-bold text-gray-900'>₱{total?.toLocaleString() || '0'}</span>
               </div>
               {paymentData.method === 'gcash' && (
                 <>
-                  <div className='flex justify-between items-center text-green-700'>
-                    <span className='font-medium'>Deposit Required (50%):</span>
-                    <span className='text-xl font-bold'>₱{depositAmount?.toLocaleString() || '0'}</span>
+                  <div className='flex justify-between items-center gap-2 text-green-700'>
+                    <span className='text-xs sm:text-sm font-medium'>Deposit Required (50%):</span>
+                    <span className='text-base sm:text-lg md:text-xl font-bold'>₱{depositAmount?.toLocaleString() || '0'}</span>
                   </div>
-                  <div className='flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-blue-200'>
+                  <div className='flex justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 pt-2 border-t border-blue-200'>
                     <span>Balance (pay on pickup):</span>
                     <span className='font-semibold'>₱{remainingBalance?.toLocaleString() || '0'}</span>
                   </div>
                 </>
               )}
               {paymentData.method === 'in_store' && (
-                <div className='flex justify-between items-center text-sm text-gray-600 pt-2 border-t border-blue-200'>
+                <div className='flex justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 pt-2 border-t border-blue-200'>
                   <span>Full amount to be paid in-store:</span>
-                  <span className='font-semibold text-lg text-green-600'>₱{total?.toLocaleString() || '0'}</span>
+                  <span className='font-semibold text-base sm:text-lg text-green-600'>₱{total?.toLocaleString() || '0'}</span>
                 </div>
               )}
             </div>
@@ -149,20 +149,20 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
         )}
 
         {/* Payment Method */}
-        <div className='mb-6 bg-gray-50 rounded-lg p-4'>
-          <h3 className='font-semibold text-gray-900 mb-3'>Select payment method</h3>
-          <div className='flex flex-col sm:flex-row gap-3'>
-            <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'gcash' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
-              <input type='radio' name='method' value='gcash' checked={paymentData.method === 'gcash'} onChange={handleInputChange} />
+        <div className='mb-4 sm:mb-6 bg-gray-50 rounded-lg p-3 sm:p-4'>
+          <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Select payment method</h3>
+          <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
+            <label className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'gcash' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
+              <input type='radio' name='method' value='gcash' checked={paymentData.method === 'gcash'} onChange={handleInputChange} className='flex-shrink-0' />
               <div>
-                <p className='font-semibold text-gray-900'>GCash</p>
+                <p className='font-semibold text-gray-900 text-sm sm:text-base'>GCash</p>
                 <p className='text-xs text-gray-500'>Upload proof of payment</p>
               </div>
             </label>
-            <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'in_store' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
-              <input type='radio' name='method' value='in_store' checked={paymentData.method === 'in_store'} onChange={handleInputChange} />
+            <label className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'in_store' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
+              <input type='radio' name='method' value='in_store' checked={paymentData.method === 'in_store'} onChange={handleInputChange} className='flex-shrink-0' />
               <div>
-                <p className='font-semibold text-gray-900'>Pay In-Store</p>
+                <p className='font-semibold text-gray-900 text-sm sm:text-base'>Pay In-Store</p>
                 <p className='text-xs text-gray-500'>Cash payment at the shop</p>
               </div>
             </label>
@@ -171,21 +171,21 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
 
         {/* Payment Instructions (GCash only) */}
         {paymentData.method === 'gcash' && (
-        <div className='mb-6 bg-gray-50 rounded-lg p-4'>
-          <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-            <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>1</span>
+        <div className='mb-4 sm:mb-6 bg-gray-50 rounded-lg p-3 sm:p-4'>
+          <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base'>
+            <span className='bg-primary text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm flex-shrink-0'>1</span>
             Scan QR Code with GCash
           </h3>
           
           {/* QR Code Display */}
-          <div className='flex justify-center my-6'>
-            <div className='bg-white p-4 rounded-xl shadow-md border-2 border-primary'>
+          <div className='flex justify-center my-4 sm:my-6'>
+            <div className='bg-white p-3 sm:p-4 rounded-xl shadow-md border-2 border-primary'>
               <img 
                 src={assets.gcash_qr} 
                 alt="GCash QR Code" 
-                className='w-48 h-48 object-contain'
+                className='w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain'
               />
-              <p className='text-center text-sm text-gray-600 mt-2 font-medium'>
+              <p className='text-center text-xs sm:text-sm text-gray-600 mt-2 font-medium'>
                 Pay ₱{depositAmount?.toLocaleString()}
               </p>
             </div>

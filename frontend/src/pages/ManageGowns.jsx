@@ -29,7 +29,7 @@ const ManageGowns = () => {
     fabric: '',
     color: '',
     ageGroup: '',
-    gender: '',
+    sex: '',
     status: 'Available'
   })
 
@@ -200,7 +200,7 @@ const ManageGowns = () => {
       fabric: gown.fabric || '',
       color: gown.color || '',
       ageGroup: gown.ageGroup || '',
-      gender: gown.gender || '',
+      sex: gown.sex || '',
       status: gown.status || 'Available'
     })
     setError('')
@@ -280,7 +280,7 @@ const ManageGowns = () => {
           fabric: editForm.fabric,
           color: editForm.color,
           ageGroup: editForm.ageGroup,
-          gender: editForm.gender,
+          sex: editForm.sex,
           status: editForm.status
         })
       })
@@ -400,21 +400,21 @@ const ManageGowns = () => {
               )}
             </div>
           ) : (
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
+            <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5'>
               {filteredGowns.map((gown) => (
                 <div 
                   key={gown._id || gown.id} 
                   className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow'
                 >
                   {/* Gown Image */}
-                  <div className='relative h-48 sm:h-56 md:h-64 overflow-hidden'>
+                  <div className='relative h-36 sm:h-48 md:h-56 overflow-hidden'>
                     <img 
                       src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1} 
                       alt={gown.name}
                       className='w-full h-full object-cover'
                     />
                     {/* Status Badge */}
-                    <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-base sm:text-lg font-bold text-white shadow-lg ${
+                    <div className={`absolute top-1.5 left-1.5 sm:top-3 sm:left-3 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-base font-bold text-white shadow-lg ${
                       gown.status === 'Available' ? 'bg-green-500' :
                       gown.status === 'Unavailable' ? 'bg-orange-500' :
                       gown.status === 'Reserved' ? 'bg-red-500' :
@@ -425,20 +425,20 @@ const ManageGowns = () => {
                       {gown.status || 'Available'}
                     </div>
                     {/* Price Badge */}
-                    <div className='absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-black/80 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg'>
-                      <span className='text-sm sm:text-base font-semibold'>{currency}{gown.price?.toLocaleString() || 0}</span>
+                    <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-black/80 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-2 rounded-lg'>
+                      <span className='text-xs sm:text-base font-semibold'>{currency}{gown.price?.toLocaleString() || 0}</span>
                     </div>
                   </div>
 
                   {/* Gown Details */}
-                  <div className='p-4 sm:p-6'>
-                    <h3 className='text-lg sm:text-xl font-bold text-gray-900 mb-2 truncate'>{gown.name}</h3>
+                  <div className='p-3 sm:p-4'>
+                    <h3 className='text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2 truncate'>{gown.name}</h3>
                     {typeof gown.description === 'string' && gown.description.trim() !== '' && (
-                      <p className='text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2'>{gown.description}</p>
+                      <p className='text-gray-600 text-xs mb-2 line-clamp-2'>{gown.description}</p>
                     )}
                     
                     {/* Details Grid */}
-                    <div className='grid grid-cols-2 gap-1.5 sm:gap-2 mb-3 sm:mb-4 text-xs sm:text-sm'>
+                    <div className='grid grid-cols-2 gap-1 text-xs sm:text-sm'>
                       <div className='flex items-center gap-1.5 sm:gap-2 text-gray-600'>
                         <img src={assets.fabric_icon} alt="fabric" className='w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0' />
                         <span className='truncate'>{gown.fabric}</span>
@@ -464,38 +464,36 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Laundry Days */}
-                    <div className='mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300'>
-                      <div className='flex items-center justify-between mb-2 sm:mb-3'>
-                        <p className='text-xs sm:text-sm font-semibold text-gray-700'>Laundry Days</p>
+                    <div className='mt-2 sm:mt-3 p-2 sm:p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300'>
+                      <div className='flex items-center justify-between mb-1 sm:mb-2'>
+                        <p className='text-xs font-semibold text-gray-700'>Laundry</p>
                       </div>
-                      <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3'>
-                        <div className='flex items-center gap-2'>
-                          <input
-                            type='number'
-                            min='0'
-                            max='14'
-                            value={laundryForm[gown._id || gown.id] ?? String(gown.laundryDays ?? 0)}
-                            onChange={(e) => handleLaundryInputChange(gown._id || gown.id, e.target.value)}
-                            className='w-20 sm:w-24 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-xs sm:text-sm'
-                          />
-                          <span className='text-xs sm:text-sm text-gray-600'>day(s)</span>
-                        </div>
+                      <div className='flex items-center gap-2'>
+                        <input
+                          type='number'
+                          min='0'
+                          max='14'
+                          value={laundryForm[gown._id || gown.id] ?? String(gown.laundryDays ?? 0)}
+                          onChange={(e) => handleLaundryInputChange(gown._id || gown.id, e.target.value)}
+                          className='w-16 sm:w-20 px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-xs'
+                        />
+                        <span className='text-xs text-gray-600'>day(s)</span>
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
+                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                             laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                               : 'bg-primary text-white hover:bg-primary-dull'
                           }`}
                         >
-                          {laundrySaving === (gown._id || gown.id) ? 'Saving...' : 'Save'}
+                          {laundrySaving === (gown._id || gown.id) ? '...' : 'Save'}
                         </button>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className='flex gap-2 pt-3 sm:pt-4 border-t border-gray-200 mt-3 sm:mt-4'>
+                    <div className='flex gap-1.5 pt-2 sm:pt-3 border-t border-gray-200 mt-2 sm:mt-3'>
                       <button
                         onClick={() => openEditModal(gown)}
                         className='flex-1 px-3 sm:px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-semibold'
@@ -516,7 +514,7 @@ const ManageGowns = () => {
                         onClick={() => handleDeleteGown(gown._id || gown.id)}
                         className='px-3 sm:px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors text-xs sm:text-sm font-semibold'
                       >
-                        <img src={assets.delete_icon} alt="delete" className='w-8 h-8 mx-auto' />
+                        <img src={assets.delete_icon} alt="delete" className='w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto' />
                       </button>
                     </div>
                   </div>
@@ -679,20 +677,20 @@ const ManageGowns = () => {
 
               {/* Gender */}
               <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>Gender</label>
+                <label className='block text-sm font-semibold text-gray-700 mb-2'>Sex</label>
                 <div className='grid grid-cols-3 gap-2'>
-                  {['Male', 'Female', 'Unisex'].map((gender) => (
+                  {['Male', 'Female', 'Unisex'].map((sex) => (
                     <button
-                      key={gender}
+                      key={sex}
                       type='button'
-                      onClick={() => setEditForm(prev => ({ ...prev, gender: prev.gender === gender ? '' : gender }))}
+                      onClick={() => setEditForm(prev => ({ ...prev, sex: prev.sex === sex ? '' : sex }))}
                       className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${
-                        editForm.gender === gender
+                        editForm.sex === sex
                           ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
                       }`}
                     >
-                      {gender}
+                      {sex}
                     </button>
                   ))}
                 </div>

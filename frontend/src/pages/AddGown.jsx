@@ -18,7 +18,7 @@ const AddGown = () => {
     color: '',
     size: ['Free Size'],
     ageGroup: '',
-    gender: '',
+    sex: '',
     available: true
   })
   
@@ -137,7 +137,7 @@ const AddGown = () => {
         color: formData.color,
         size: formData.size,
         ageGroup: formData.ageGroup,
-        gender: formData.gender,
+        sex: formData.sex,
         available: formData.available
       }))
 
@@ -162,7 +162,7 @@ const AddGown = () => {
           color: '',
           size: ['Free Size'],
           ageGroup: '',
-          gender: '',
+          sex: '',
           available: true
         })
         setSelectedImage(null)
@@ -361,10 +361,10 @@ const AddGown = () => {
                   </select>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Gender</label>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Sex</label>
                   <select
-                    name='gender'
-                    value={formData.gender}
+                    name='sex'
+                    value={formData.sex}
                     onChange={handleInputChange}
                     className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
                   >

@@ -27,7 +27,7 @@ const GownCard = ({ gown }) => {
 
   return (
     <div onClick={()=> {navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0,0)}}
-      className="group rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:-translate-y-2
+      className="group rounded-lg sm:rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.1)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:-translate-y-1 sm:hover:-translate-y-2
       transition-all duration-300 cursor-pointer flex flex-col h-full bg-white border border-gray-200"
     >
 
@@ -35,78 +35,80 @@ const GownCard = ({ gown }) => {
         <img
           src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
           alt={gown.name}
-          className="w-full h-auto max-h-96 object-contain transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-auto max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-96 object-contain transition-transform duration-500 group-hover:scale-105"
         />
 
         {/* Status Badge */}
         {gown.status === 'Available' && (
-          <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-green-500/90 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'Unavailable' && (
-          <div className="absolute top-4 left-4 bg-orange-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-orange-500/90 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'In-Laundry' && (
-          <div className="absolute top-4 left-4 bg-blue-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-blue-500/90 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'Reserved' && (
-          <div className="absolute top-4 left-4 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-500/90 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
             {gown.status}
           </div>
         )}
         {gown.status === 'In-Use' && (
-          <div className="absolute top-4 left-4 bg-gray-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold text-base shadow-lg">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-gray-500/90 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
             {gown.status}
           </div>
         )}
 
-        <div className="absolute bottom-4 right-4 bg-white/90 text-gray-800 px-4 py-2 rounded-full border border-gray-200 shadow-md">
-          <span className="font-bold">{currency}{gown.pricePerDay || gown.price || 0}</span>
+        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm text-gray-900 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 border-gray-300 shadow-lg">
+          <span className="font-extrabold text-sm sm:text-base">{currency}{gown.pricePerDay || gown.price || 0}</span>
+          <span className="text-xs text-gray-600 ml-0.5 sm:ml-1">/day</span>
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 flex flex-col flex-grow bg-white">
-        <h3 className="text-lg font-bold text-gray-900">{gown.name}</h3>
+      <div className="p-3 sm:p-4 md:p-5 flex flex-col flex-grow bg-white">
+        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-1 line-clamp-1">{gown.name}</h3>
         <button
           onClick={(e) => {
             e.stopPropagation()
             const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
             navigate(`/owner-profile/${ownerId}`)
           }}
-          className="text-gray-700 hover:text-primary text-sm mb-2 font-medium text-left hover:underline transition-colors"
+          className="text-gray-600 hover:text-primary text-xs sm:text-sm mb-2 sm:mb-3 font-medium text-left hover:underline transition-colors line-clamp-1"
         >
           {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
         </button>
 
         {/* Location Info */}
         {gown.location && (
-          <div className="flex items-start gap-1 mb-4">
-            <img src={assets.location_icon_colored} alt="location" className="h-4 w-4 mt-0.5 flex-shrink-0 opacity-70" />
-            <span className="text-xs text-gray-600 line-clamp-1">{gown.location}</span>
+          <div className="flex items-start gap-1 sm:gap-1.5 mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-gray-100">
+            <img src={assets.location_icon_colored} alt="location" className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-gray-700 line-clamp-1 font-medium">{gown.location}</span>
           </div>
         )}
 
-        <div className="mt-auto grid grid-cols-2 gap-y-2 text-gray-800">
-          <div className="flex items-center text-sm font-semibold">
-            <img src={assets.fabric_icon} alt="" className="h-4 mr-2 opacity-80" />
-            <span>{gown.fabric}</span>
+        {/* Details - Clean list without grid lines */}
+        <div className="mt-auto space-y-1.5 sm:space-y-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img src={assets.fabric_icon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-70 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-1">{gown.fabric}</span>
           </div>
-          <div className="flex items-center text-sm font-semibold">
-            <img src={assets.size_icon} alt="" className="h-4 mr-2 opacity-80" />
-            <span>{Array.isArray(gown.size) ? gown.size.join(', ') : gown.size || 'N/A'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img src={assets.size_icon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-70 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-1">{Array.isArray(gown.size) ? gown.size.join(', ') : gown.size || 'N/A'}</span>
           </div>
-          <div className="flex items-center text-sm font-semibold">
-            <img src={assets.color_icon} alt="" className="h-4 mr-2 opacity-80" />
-            <span>{gown.color}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img src={assets.color_icon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-70 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-1">{gown.color}</span>
           </div>
-          <div className="flex items-center text-sm font-semibold">
-            <img src={assets.event_icon} alt="" className="h-4 mr-2 opacity-80" />
-            <span className="capitalize">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img src={assets.event_icon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-70 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-gray-800 capitalize line-clamp-1">
               {Array.isArray(gown.eventType) && gown.eventType.length > 0
                 ? gown.eventType.join(', ')
                 : gown.eventtype || gown.eventType || 'N/A'}

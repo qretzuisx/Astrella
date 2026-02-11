@@ -150,9 +150,9 @@ const Gown = () => {
       filtered = filtered.filter(gown => (gown.ageGroup || '').toLowerCase() === selectedAgeGroup.toLowerCase())
     }
 
-    // Filter by gender
+    // Filter by sex
     if (selectedGender) {
-      filtered = filtered.filter(gown => (gown.gender || '').toLowerCase() === selectedGender.toLowerCase())
+      filtered = filtered.filter(gown => (gown.sex || '').toLowerCase() === selectedGender.toLowerCase())
     }
 
     setFilteredGowns(filtered)
@@ -427,7 +427,7 @@ const Gown = () => {
           )}
         </div>
       ) : (
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8'>
+        <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6'>
           {filteredGowns.map((gown) => (
             <GownCard key={gown._id || gown.id} gown={gown} />
           ))}

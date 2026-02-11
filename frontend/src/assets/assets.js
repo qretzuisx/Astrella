@@ -27,6 +27,9 @@ import home_bg from "./home-bg.png"
 import upload_icon from "./upload_icon.svg"
 import gcash_qr from "./gcash-qr.png"
 import apparel_bg from "./apparel-bg.png"
+import star_gold from "./star-gold.svg"
+import star_blue from "./star-blue.svg"
+import star_green from "./star-green.svg"
 
 
 // AI RECCOMENDATION LIST
@@ -65,6 +68,9 @@ export const assets = {
     home_bg,
     gcash_qr,
     apparel_bg,
+    star_gold,
+    star_blue,
+    star_green,
 }
 
 export const menuLinks = [

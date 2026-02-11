@@ -15,14 +15,14 @@ const clampLaundryDays = (value) => {
 // API to list gowns
 const normalizeOptionalTags = (gown) => {
     const normalizedAgeGroup = typeof gown.ageGroup === 'string' ? gown.ageGroup.trim() : ''
-    let normalizedGender = typeof gown.gender === 'string' ? gown.gender.trim() : ''
-    if (normalizedGender) {
-        const g = normalizedGender.toLowerCase()
-        if (g === 'male') normalizedGender = 'Male'
-        else if (g === 'female') normalizedGender = 'Female'
-        else if (g === 'unisex') normalizedGender = 'Unisex'
+    let normalizedSex = typeof gown.sex === 'string' ? gown.sex.trim() : ''
+    if (normalizedSex) {
+        const s = normalizedSex.toLowerCase()
+        if (s === 'male') normalizedSex = 'Male'
+        else if (s === 'female') normalizedSex = 'Female'
+        else if (s === 'unisex') normalizedSex = 'Unisex'
     }
-    return { normalizedAgeGroup, normalizedGender }
+    return { normalizedAgeGroup, normalizedSex }
 }
 
 const uploadAndOptimizeGownImage = async (imageFile) => {
@@ -89,14 +89,14 @@ export const addGown = async (req, res) =>{
         // Get contact number from either location (shopProfile takes priority)
         const gownContactNumber = user.shopProfile?.contactNumber || user.contactNumber || ''
 
-        // Normalize ageGroup/gender (optional)
-        const { normalizedAgeGroup, normalizedGender } = normalizeOptionalTags(gown)
+        // Normalize ageGroup/sex (optional)
+        const { normalizedAgeGroup, normalizedSex } = normalizeOptionalTags(gown)
 
         await Gown.create({
             ...gown,
             description: typeof gown.description === 'string' ? gown.description : '',
             ageGroup: normalizedAgeGroup,
-            gender: normalizedGender,
+            sex: normalizedSex,
             owner: _id,
             image,
             verified: true,
@@ -269,7 +269,7 @@ export const updateGown = async (req, res) => {
         }
 
         // Fields that can be updated
-        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'gender', 'status'];
+        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'sex', 'status'];
         
         // Update each provided field
         updatableFields.forEach(field => {
@@ -278,10 +278,10 @@ export const updateGown = async (req, res) => {
             }
         });
 
-        // Normalize ageGroup/gender (optional)
-        const { normalizedAgeGroup, normalizedGender } = normalizeOptionalTags(gown);
+        // Normalize ageGroup/sex (optional)
+        const { normalizedAgeGroup, normalizedSex } = normalizeOptionalTags(gown);
         gown.ageGroup = normalizedAgeGroup;
-        gown.gender = normalizedGender;
+        gown.sex = normalizedSex;
 
         await gown.save();
 

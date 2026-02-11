@@ -12,7 +12,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
    const fileInputRef = useRef(null);
    const canvasRef = useRef(null);
 
-  // Load face-api models for age, gender & facial landmarks
+  // Load face-api models for age, sex & facial landmarks
   useEffect(() => {
     let mounted = true;
     const loadModels = async () => {
@@ -30,7 +30,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         }
       } catch (e) {
         console.error('Failed to load face-api models:', e);
-        if (mounted) setModelsLoaded(true); // Allow analysis to continue without age/gender
+        if (mounted) setModelsLoaded(true); // Allow analysis to continue without age/sex
       }
     };
     loadModels();
@@ -474,7 +474,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       // First, get facial landmarks for improved analysis
       let faceLandmarks = null;
       let age = null;
-      let gender = null;
+      let detectedSex = null; // Temporary variable for face-api result
       let ageGroup = '';
       let sex = '';
 
@@ -489,7 +489,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         if (detection) {
           faceLandmarks = detection.landmarks;
           age = Math.round(detection.age);
-          gender = detection.gender; // 'male' | 'female'
+          detectedSex = detection.gender; // face-api returns 'male' | 'female'
 
           console.log('✅ Face detected with', faceLandmarks.positions.length, 'landmarks');
 
@@ -501,7 +501,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
           else if (age >= 30 && age <= 59) ageGroup = '30–59 Years'
           else if (age >= 60) ageGroup = '60+ Years'
 
-          sex = gender === 'female' ? 'Female' : gender === 'male' ? 'Male' : ''
+          sex = detectedSex === 'female' ? 'Female' : detectedSex === 'male' ? 'Male' : ''
         } else {
           console.warn('⚠️ No face detected, using fallback analysis methods');
         }
@@ -526,14 +526,15 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         faceShape: faceShape || 'Oval',
         ageGroup,
         sex,
-        // keep original raw values for debugging/backward compat
+        // keep original raw values for debugging
         age: age ?? '',
-        gender: gender ?? '',
-        confidence: age && gender ? 'High' : 'Medium'
+        confidence: age && sex ? 'High' : 'Medium'
       };
 
-      setResults(analysisResults);
-      console.log('Results set:', analysisResults);
+      console.log('Analysis complete, sending results to Hero:', analysisResults);
+      
+      // Automatically send results to Hero component and close modal
+      onAnalysisComplete(analysisResults);
     } catch (error) {
       console.error('Analysis error:', error);
   
@@ -541,11 +542,14 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         skinTone: 'Neutral',
         bodyType: 'Rectangle',
         faceShape: 'Oval',
+        ageGroup: '',
+        sex: '',
         age: '',
-        gender: '',
         confidence: 'Low'
       };
-      setResults(analysisResults);
+      
+      // Even on error, send results back
+      onAnalysisComplete(analysisResults);
     } finally {
       setAnalyzing(false);
       setAnalysisProgress('');
@@ -566,25 +570,25 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Upload Photo for Analysis</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold pr-2">Upload Photo for Analysis</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl flex-shrink-0"
             >
               ×
             </button>
           </div>
 
-          <p className="text-gray-600 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
             Upload a full-body or face photo. We'll analyze it to detect your body type, skin tone, and face shape.
           </p>
 
           {!preview ? (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -594,153 +598,54 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all"
+                className="bg-primary text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-primary-dull transition-all text-sm sm:text-base"
               >
                 Choose Photo
               </button>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs sm:text-sm text-gray-500 mt-2">
                 JPG, PNG up to 5MB
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="relative">
                 <img
                   src={preview}
                   alt="Preview"
-                  className="w-full h-auto rounded-lg max-h-96 object-contain mx-auto"
+                  className="w-full h-auto rounded-lg max-h-64 sm:max-h-96 object-contain mx-auto"
                 />
                 <canvas ref={canvasRef} className="hidden" />
               </div>
 
-              {!results ? (
-                <div className="space-y-3">
-                  {analyzing && analysisProgress && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                        <span className="text-sm text-blue-800">{analysisProgress}</span>
-                      </div>
+              <div className="space-y-2 sm:space-y-3">
+                {analyzing && analysisProgress && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                      <span className="text-xs sm:text-sm text-blue-800">{analysisProgress}</span>
                     </div>
-                  )}
-                  <div className="flex gap-4">
-                    <button
-                      onClick={analyzeImage}
-                      disabled={analyzing || !modelsLoaded || !image}
-                      className="flex-1 bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50"
-                    >
-                      {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setPreview(null);
-                        setImage(null);
-                        setResults(null);
-                      }}
-                      className="px-6 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
-                    >
-                      Change Photo
-                    </button>
                   </div>
+                )}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                  <button
+                    onClick={analyzeImage}
+                    disabled={analyzing || !modelsLoaded || !image}
+                    className="flex-1 bg-primary text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50 text-sm sm:text-base font-medium"
+                  >
+                    {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPreview(null);
+                      setImage(null);
+                      setResults(null);
+                    }}
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-all text-sm sm:text-base"
+                  >
+                    Change Photo
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold mb-3">Detected Attributes</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm text-gray-600">Skin Tone</label>
-                        <select
-                          value={results.skinTone}
-                          onChange={(e) => handleEdit('skinTone', e.target.value)}
-                          className="w-full mt-1 p-2 border rounded"
-                        >
-                          {skinToneList.map(tone => (
-                            <option key={tone} value={tone}>{tone}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm text-gray-600">Body Type</label>
-                        <select
-                          value={results.bodyType}
-                          onChange={(e) => handleEdit('bodyType', e.target.value)}
-                          className="w-full mt-1 p-2 border rounded"
-                        >
-                          {bodyTypeList.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm text-gray-600">Face Shape</label>
-                        <select
-                          value={results.faceShape}
-                          onChange={(e) => handleEdit('faceShape', e.target.value)}
-                          className="w-full mt-1 p-2 border rounded"
-                        >
-                          {faceShapeList.map(shape => (
-                            <option key={shape} value={shape}>{shape}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                        <div>
-                          <label className="text-sm text-gray-600">Age Group</label>
-                          <select
-                            value={results.ageGroup || ''}
-                            onChange={(e) => handleEdit('ageGroup', e.target.value)}
-                            className="w-full mt-1 p-2 border rounded"
-                          >
-                            <option value=''>Select age group</option>
-                            <option value='6–9 Years'>6–9 Years</option>
-                            <option value='10–12 Years'>10–12 Years</option>
-                            <option value='13–17 Years'>13–17 Years</option>
-                            <option value='18–29 Years'>18–29 Years</option>
-                            <option value='30–59 Years'>30–59 Years</option>
-                            <option value='60+ Years'>60+ Years</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600">Sex</label>
-                          <select
-                            value={results.sex || ''}
-                            onChange={(e) => handleEdit('sex', e.target.value)}
-                            className="w-full mt-1 p-2 border rounded"
-                          >
-                            <option value=''>Select sex</option>
-                            <option value='Female'>Female</option>
-                            <option value='Male'>Male</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      The attributes above have been automatically detected and populated. Review and adjust if needed, then apply them.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handleConfirm}
-                      className="flex-1 bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all"
-                    >
-                      Apply Detected Attributes
-                    </button>
-                    <button
-                      onClick={() => {
-                        setPreview(null);
-                        setImage(null);
-                        setResults(null);
-                      }}
-                      className="px-6 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </div>

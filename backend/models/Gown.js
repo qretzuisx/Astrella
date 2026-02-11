@@ -24,7 +24,7 @@ const gownSchema = new mongoose.Schema({
     },
     // Optional demographic tags to improve browsing/recommendations
     ageGroup: {type: String, default: ''},
-    gender: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},
+    sex: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},
 }, {timestamps: true})
 
 const Gown = mongoose.model('Gown', gownSchema) 
