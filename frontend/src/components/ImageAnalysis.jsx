@@ -631,16 +631,17 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                     >
                       {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
                     </button>
-                  <button
-                    onClick={() => {
-                      setPreview(null);
-                      setImage(null);
-                      setResults(null);
-                    }}
-                    className="px-6 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
-                  >
-                    Change Photo
-                  </button>
+                    <button
+                      onClick={() => {
+                        setPreview(null);
+                        setImage(null);
+                        setResults(null);
+                      }}
+                      className="px-6 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
+                    >
+                      Change Photo
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
