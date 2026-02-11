@@ -104,11 +104,10 @@ export const getUserData = async (req, res) =>{
     }
 }
 
-// Request to become owner
+// Request to become owner (instant approval - no admin needed)
 export const requestOwnerRole = async (req, res) => {
     try {
         const { _id } = req.user;
-        const { message } = req.body;
 
         // Check if user is already an owner
         const user = await User.findById(_id);
@@ -116,53 +115,10 @@ export const requestOwnerRole = async (req, res) => {
             return res.json({ success: false, message: "You already have owner privileges" });
         }
 
-        // Grant owner role immediately and store a record for history
-        const OwnerRequest = (await import("../models/OwnerRequest.js")).default;
+        // Grant owner role immediately
         await User.findByIdAndUpdate(_id, { role: 'owner' });
-        await OwnerRequest.create({
-            user: _id,
-            message: message || '',
-            status: 'approved',
-            systemNote: 'Owner access granted automatically',
-        });
 
-        res.json({ success: true, message: "Owner access granted immediately. You can now open the owner dashboard." });
-
-    } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
-    }
-}
-
-// Get user's owner request status
-export const getOwnerRequestStatus = async (req, res) => {
-    try {
-        const { _id } = req.user;
-        const OwnerRequest = (await import("../models/OwnerRequest.js")).default;
-        
-        const request = await OwnerRequest.findOne({ user: _id })
-            .sort({ createdAt: -1 });
-
-        if (request) {
-            return res.json({ success: true, request });
-        }
-
-        const user = await User.findById(_id);
-        if (user?.role === 'owner') {
-            return res.json({ 
-                success: true, 
-                request: {
-                    _id: user._id,
-                    status: 'approved',
-                    message: 'Owner access active',
-                    systemNote: 'Owner access granted automatically',
-                    createdAt: user.updatedAt,
-                    updatedAt: user.updatedAt
-                } 
-            });
-        }
-
-        res.json({ success: true, request: null });
+        res.json({ success: true, message: "Owner access granted! You can now access the owner dashboard." });
 
     } catch (error) {
         console.log(error.message);
@@ -494,10 +450,6 @@ export const deleteAccount = async (req, res) => {
                 message: 'Please cancel or complete all active bookings before deleting your account' 
             });
         }
-
-        // Delete user's owner requests if any
-        const OwnerRequest = (await import("../models/OwnerRequest.js")).default;
-        await OwnerRequest.deleteMany({ user: _id });
 
         // Delete user's bookings history
         await Booking.deleteMany({ user: _id });

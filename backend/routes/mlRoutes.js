@@ -21,7 +21,7 @@ mlRouter.get('/recommendations', getMLRecommendations);
 mlRouter.get('/similar-users', protect, getSimilarUserRecommendations);
 mlRouter.get('/personalized-feed', protect, getPersonalizedFeed);
 
-// Admin/Testing routes
+// Testing/utility routes
 mlRouter.post('/retrain', retrainModel);
 mlRouter.get('/stats', getModelStats);
 

@@ -102,7 +102,7 @@ export const getSimilarUserRecommendations = async (req, res) => {
 };
 
 /**
- * Force retrain the ML model (admin/testing purposes)
+ * Force retrain the ML model (testing/utility purposes)
  */
 export const retrainModel = async (req, res) => {
     try {

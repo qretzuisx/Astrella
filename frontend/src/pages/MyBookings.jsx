@@ -710,7 +710,7 @@ const MyBookings = ({ setShowLogin }) => {
                     <p className='text-xs mt-1'>Pickup date and time remain the same. Only update the return date/time.</p>
                     <p className='text-xs mt-2'>
                       <strong>Rules:</strong> Same-day extension allows max 1 hour later. 
-                      Next-day extension allows earlier return times.
+                      Next-day extension allows earlier return times, but not more than 1 hour later than pickup time.
                     </p>
                   </div>
                   
@@ -756,13 +756,19 @@ const MyBookings = ({ setShowLogin }) => {
                             const originalReturnTime = selectedBooking.returnTime || selectedBooking.pickupTime || '09:00'
                             const originalReturnMinutes = parseInt(originalReturnTime.split(':')[0]) * 60 + parseInt(originalReturnTime.split(':')[1])
                             const originalReturnDate = toDateInputValue(selectedBooking.returnDate)
+                            const originalPickupTime = selectedBooking.pickupTime || '09:00'
+                            const originalPickupMinutes = parseInt(originalPickupTime.split(':')[0]) * 60 + parseInt(originalPickupTime.split(':')[1])
                             
                             // Same-day extension: only show times >= original return time and max 1 hour later
                             if (form.returnDate === originalReturnDate) {
                               if (timeMinutes < originalReturnMinutes) return null
                               if (timeMinutes > originalReturnMinutes + 60) return null
                             }
-                            // Next-day extension: return time can be earlier (no restrictions)
+                            // Next-day extension: return time can be earlier but not more than 1 hour later than pickup time
+                            else if (form.returnDate > originalReturnDate) {
+                              // Allow earlier times, but not more than 1 hour later than pickup time
+                              if (timeMinutes > originalPickupMinutes + 60) return null
+                            }
                             
                             return <option key={t} value={t}>{formatTime(t)}</option>
                           })}

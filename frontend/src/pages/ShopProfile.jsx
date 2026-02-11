@@ -338,7 +338,7 @@ const ShopProfile = () => {
 
             {/* Business Verification Documents */}
             <div className='mb-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Business Verification</h3>
+              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Business Verification (Optional)</h3>
               <p className='text-sm text-gray-600 mb-4'>
                 Upload your business documents to build trust with customers. Verified shops get a badge.
               </p>

@@ -4,7 +4,6 @@ import {
     loginUser, 
     registerUser, 
     requestOwnerRole, 
-    getOwnerRequestStatus, 
     getRecommendations,
     updateProfile,
     changePassword,
@@ -30,7 +29,6 @@ userRouter.put('/change-password', protect, changePassword)
 userRouter.get('/statistics', protect, getUserStatistics)
 userRouter.delete('/delete-account', protect, deleteAccount)
 userRouter.post('/request-owner', protect, requestOwnerRole)
-userRouter.get('/owner-request-status', protect, getOwnerRequestStatus)
 userRouter.get('/recommendations', getRecommendations)
 userRouter.put('/shop-profile', protect, upload.fields([
     { name: 'businessPermit', maxCount: 1 },

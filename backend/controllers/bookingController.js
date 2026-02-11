@@ -257,9 +257,20 @@ export const createBooking = async (req, res) => {
     }
 
     // Dynamic rental pricing based on number of days selected
+    // Grace period: if return is within 1 hour of pickup time, still counts as same day (1 day)
     const msDiff = returnDateTime.getTime() - pickupDateTime.getTime();
+    const hoursDiff = msDiff / (60 * 60 * 1000); // Convert to hours
     const rawDays = msDiff / DAY_IN_MS;
-    const rentalDays = Math.max(1, Math.ceil(rawDays));
+    
+    // If return is within 1 hour of pickup, count as 1 day (grace period)
+    // Otherwise, round up to the next day
+    let rentalDays;
+    if (hoursDiff <= 1) {
+      rentalDays = 1; // 1-hour grace period = still 1 day
+    } else {
+      rentalDays = Math.max(1, Math.ceil(rawDays));
+    }
+    
     const pricePerDay = gownData.pricePerDay || gownData.price || 0;
     const price = rentalDays * pricePerDay;
 
@@ -802,16 +813,21 @@ export const updateBooking = async (req, res) => {
           });
         }
       } 
-      // Rule 2: Next-day (or later) extension - pickup time cannot be more than 1 hour late
+      // Rule 2: Next-day (or later) extension - return time can be earlier but not more than 1 hour late from pickup
       else if (newReturnDate > originalReturnDate) {
-        // For next-day extensions, return time can be earlier, but we need to validate
-        // that the original pickup time is not more than 1 hour late from the new arrangement
-        // This rule is a bit unclear, but interpreting as: the pickup must still be within 1 hour of original
-        const pickupDiff = Math.abs(originalPickupMinutes - originalPickupMinutes); // Pickup doesn't change in extend
+        // For next-day extensions, return time can be earlier than the original return time
+        // But the return time cannot be more than 1 hour later than the pickup time on the new return day
         
-        // Since pickup doesn't change in extend mode, we just need to ensure the extension makes sense
-        // The return time can be earlier on next day, which is allowed
-        // No additional validation needed beyond conflict checks
+        // Check if return time is not more than 1 hour late from pickup time
+        const timeDiffMinutes = newReturnMinutes - originalPickupMinutes;
+        
+        // Allow earlier times (negative diff), but not more than 1 hour late
+        if (timeDiffMinutes > 60) {
+          return res.status(400).json({
+            success: false,
+            message: 'For next-day extension, the return time cannot be more than 1 hour later than the pickup time.'
+          });
+        }
       } else {
         // New return date is before original return date - not allowed for extend
         return res.status(400).json({
@@ -903,6 +919,32 @@ export const updateBooking = async (req, res) => {
 
     if (isTrial) {
       booking.trialExpiresAt = newReturnDateTime;
+    }
+
+    // Recalculate price based on new rental period (for non-trial bookings)
+    if (!isTrial) {
+      const msDiff = newReturnDateTime.getTime() - newPickupDateTime.getTime();
+      const hoursDiff = msDiff / (60 * 60 * 1000);
+      const rawDays = msDiff / DAY_IN_MS;
+      
+      // Apply 1-hour grace period for rental day calculation
+      let rentalDays;
+      if (hoursDiff <= 1) {
+        rentalDays = 1;
+      } else {
+        rentalDays = Math.max(1, Math.ceil(rawDays));
+      }
+      
+      const gownData = await Gown.findById(booking.gown).select('price pricePerDay');
+      const pricePerDay = gownData.pricePerDay || gownData.price || 0;
+      const newPrice = rentalDays * pricePerDay;
+      
+      // Update booking price and payment details
+      booking.price = newPrice;
+      if (booking.payment) {
+        booking.payment.totalAmount = newPrice;
+        booking.payment.remainingBalance = newPrice - (booking.payment.depositAmount || 0);
+      }
     }
 
     await booking.save();

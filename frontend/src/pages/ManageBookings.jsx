@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { DayPicker } from 'react-day-picker'
-import 'react-day-picker/dist/style.css'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
@@ -32,48 +30,6 @@ const ManageBookings = () => {
   // Availability checking state for reschedule/extend
   const [availabilityStatus, setAvailabilityStatus] = useState({ loading: false, message: '', valid: false })
   const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialHoldDates: [], laundryHoldDates: [] })
-
-  // Helper functions for calendar
-  const toIsoDate = (date) => {
-    if (!date) return ''
-    const d = new Date(date)
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  const isPastIsoDate = (isoDate) => {
-    const today = toIsoDate(new Date())
-    return isoDate < today
-  }
-
-  const blockedReasonForDate = (isoDate) => {
-    if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
-    if (calendarInfo.trialHoldDates.includes(isoDate)) return { reason: 'trial', message: 'Trial hold date.' }
-    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
-    return null
-  }
-
-  const handleCalendarSelect = (range) => {
-    if (!range) return
-    const isTrial = (selectedBooking?.status || '').toLowerCase() === 'trial'
-    
-    if (isTrial || !range.from) {
-      const singleDate = range.from || range
-      setEditForm(prev => ({
-        ...prev,
-        pickupDate: toIsoDate(singleDate),
-        returnDate: toIsoDate(singleDate)
-      }))
-    } else {
-      setEditForm(prev => ({
-        ...prev,
-        pickupDate: toIsoDate(range.from),
-        returnDate: range.to ? toIsoDate(range.to) : toIsoDate(range.from)
-      }))
-    }
-  }
 
   useEffect(() => {
     fetchBookings()
@@ -299,7 +255,7 @@ const ManageBookings = () => {
       const token = localStorage.getItem('token')
       const payload = {
         bookingId: selectedBooking._id || selectedBooking.id,
-        action: editMode === 'extend' ? 'extend' : 'reschedule',
+        action: 'reschedule',
         pickupDate: editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : editForm.pickupDate,
         returnDate: editForm.returnDate,
         pickupTime: editMode === 'extend' ? (selectedBooking.pickupTime || editForm.pickupTime) : editForm.pickupTime,
@@ -654,6 +610,22 @@ const ManageBookings = () => {
                           </div>
                         )}
 
+                        {/* Gown Status */}
+                        {booking.gown && (
+                          <div className='mt-3 sm:mt-4 text-xs sm:text-sm text-left'>
+                            <p className='font-semibold text-gray-700 mb-2'>Apparel Status:</p>
+                            <div className={`w-full rounded-lg p-3 sm:p-4 border font-semibold text-center ${
+                              booking.gown.status === 'Available' ? 'bg-green-50 border-green-300 text-green-800' :
+                              booking.gown.status === 'Unavailable' ? 'bg-orange-50 border-orange-300 text-orange-800' :
+                              booking.gown.status === 'In-Laundry' ? 'bg-blue-50 border-blue-300 text-blue-800' :
+                              booking.gown.status === 'Reserved' ? 'bg-red-50 border-red-300 text-red-800' :
+                              booking.gown.status === 'In-Use' ? 'bg-gray-50 border-gray-300 text-gray-800' :
+                              'bg-gray-100 border-gray-400 text-gray-900'
+                            }`}>
+                              {booking.gown.status || 'Available'}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Buttons: Manage Booking (pickup/return) */}
@@ -700,8 +672,8 @@ const ManageBookings = () => {
                           </div>
                         )}
 
-                        {/* Payment Verification - Only for pending status with pending GCash payment (skip for in_store) */}
-                        {booking.status === 'pending' && booking.payment?.status === 'pending' && booking.payment?.method === 'gcash' && (
+                        {/* Payment Verification - Only for pending status with pending payment */}
+                        {booking.status === 'pending' && booking.payment?.status === 'pending' && (
                           <>
                             <button
                               onClick={() => openPaymentModal(booking)}
@@ -718,26 +690,8 @@ const ManageBookings = () => {
                           </>
                         )}
 
-                        {/* For in_store payments - skip review and go straight to confirm pickup */}
-                        {booking.status === 'pending' && booking.payment?.method === 'in_store' && (
-                          <>
-                            <button
-                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
-                              className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold'
-                            >
-                              Confirm Pick-up
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
-                              className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold'
-                            >
-                              Cancel Booking
-                            </button>
-                          </>
-                        )}
-
-                        {/* After GCash payment verified - show confirm pickup button */}
-                        {booking.status === 'pending' && booking.payment?.method === 'gcash' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid') && (
+                        {/* After payment verified - show confirm pickup button */}
+                        {booking.status === 'pending' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid') && (
                           <>
                             <button
                               onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
@@ -857,232 +811,61 @@ const ManageBookings = () => {
                 </div>
               )}
 
-              {/* Show Reserved/Blocked Dates Info */}
-              {(calendarInfo.unavailableDates.length > 0 || calendarInfo.trialHoldDates.length > 0 || calendarInfo.laundryHoldDates.length > 0) && (
-                <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
-                  <p className='text-xs font-semibold text-gray-700 mb-2'>Blocked Dates:</p>
-                  <div className='flex flex-wrap gap-2 text-xs'>
-                    {calendarInfo.unavailableDates.length > 0 && (
-                      <span className='flex items-center gap-1'>
-                        <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
-                        Reserved ({calendarInfo.unavailableDates.length})
-                      </span>
-                    )}
-                    {calendarInfo.trialHoldDates.length > 0 && (
-                      <span className='flex items-center gap-1'>
-                        <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
-                        Trial Hold ({calendarInfo.trialHoldDates.length})
-                      </span>
-                    )}
-                    {calendarInfo.laundryHoldDates.length > 0 && (
-                      <span className='flex items-center gap-1'>
-                        <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
-                        Laundry ({calendarInfo.laundryHoldDates.length})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* EXTEND MODE: Only show return date/time (pickup is locked) */}
-              {editMode === 'extend' && (
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div>
-                  <div className='p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900 mb-4'>
-                    <p className='font-semibold'>Extending Booking</p>
-                    <p className='text-xs mt-1'>Pickup date and time remain the same. Only update the return date/time.</p>
-                    <p className='text-xs mt-2'>
-                      <strong>Rules:</strong> Same-day extension allows max 1 hour later. 
-                      Next-day extension allows earlier return times.
-                    </p>
-                  </div>
-                  
-                  {/* Show current pickup info */}
-                  <div className='mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg'>
-                    <p className='text-xs font-semibold text-gray-700 mb-2'>Current Pickup:</p>
-                    <div className='flex gap-4 text-sm'>
-                      <div>
-                        <span className='text-gray-600'>Date:</span>
-                        <span className='font-semibold ml-1'>{editForm.pickupDate}</span>
-                      </div>
-                      <div>
-                        <span className='text-gray-600'>Time:</span>
-                        <span className='font-semibold ml-1'>{editForm.pickupTime}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Return date/time fields */}
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                    <div>
-                      <label className='block text-sm font-semibold text-gray-700 mb-1'>New Return Date</label>
-                      <input
-                        type='date'
-                        name='returnDate'
-                        value={editForm.returnDate}
-                        onChange={handleEditFormChange}
-                        min={editForm.pickupDate || new Date().toISOString().split('T')[0]}
-                        className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-semibold text-gray-700 mb-1'>New Return Time</label>
-                      <select
-                        name='returnTime'
-                        value={editForm.returnTime}
-                        onChange={handleEditFormChange}
-                        className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                      >
-                        {allowedTimes.map((t) => {
-                          const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
-                          const originalReturnTime = selectedBooking.returnTime || selectedBooking.pickupTime || '09:00'
-                          const originalReturnMinutes = parseInt(originalReturnTime.split(':')[0]) * 60 + parseInt(originalReturnTime.split(':')[1])
-                          const originalReturnDate = toDateInputValue(selectedBooking.returnDate)
-                          
-                          // Same-day extension: only show times >= original return time and max 1 hour later
-                          if (editForm.returnDate === originalReturnDate) {
-                            if (timeMinutes < originalReturnMinutes) return null
-                            if (timeMinutes > originalReturnMinutes + 60) return null
-                          }
-                          // Next-day extension: return time can be earlier (no restrictions)
-                          
-                          return <option key={t} value={t}>{t}</option>
-                        })}
-                      </select>
-                    </div>
-                  </div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Date</label>
+                  <input
+                    type='date'
+                    name='pickupDate'
+                    value={editForm.pickupDate}
+                    onChange={handleEditFormChange}
+                    disabled={editMode === 'extend'}
+                    min={new Date().toISOString().split('T')[0]}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
+                  />
                 </div>
-              )}
-
-              {/* RESCHEDULE MODE: Show calendar and time selection */}
-              {editMode === 'reschedule' && (
                 <div>
-                  {/* Calendar Section */}
-                  <div className='mb-4'>
-                    <div className='flex items-center gap-2 mb-3'>
-                      <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-                      </svg>
-                      <h3 className='text-base font-semibold text-gray-900'>Select Dates</h3>
-                    </div>
-                    
-                    <div className='bg-white border border-gray-200 rounded-lg p-3'>
-                      <div className='flex flex-wrap items-center justify-center gap-3 text-xs text-gray-600 mb-3'>
-                        <span className='flex items-center gap-1'>
-                          <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
-                          Reserved
-                        </span>
-                        <span className='flex items-center gap-1'>
-                          <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
-                          Trial Hold
-                        </span>
-                        <span className='flex items-center gap-1'>
-                          <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
-                          Laundry
-                        </span>
-                      </div>
-                      
-                      <div className='flex justify-center w-full'>
-                        <DayPicker
-                          mode={(selectedBooking.status || '').toLowerCase() === 'trial' ? 'single' : 'range'}
-                          numberOfMonths={1}
-                          selected={(selectedBooking.status || '').toLowerCase() === 'trial'
-                            ? (editForm.pickupDate ? new Date(`${editForm.pickupDate}T00:00:00`) : undefined)
-                            : {
-                                from: editForm.pickupDate ? new Date(`${editForm.pickupDate}T00:00:00`) : undefined,
-                                to: editForm.returnDate ? new Date(`${editForm.returnDate}T00:00:00`) : undefined,
-                              }
-                          }
-                          onSelect={(sel) => {
-                            if ((selectedBooking.status || '').toLowerCase() === 'trial') {
-                              if (!sel) return
-                              handleCalendarSelect({ from: sel, to: sel })
-                            } else {
-                              handleCalendarSelect(sel)
-                            }
-                            setTimeout(() => checkAvailability(), 100)
-                          }}
-                          disabled={(date) => {
-                            const iso = toIsoDate(date)
-                            if (isPastIsoDate(iso)) return true
-                            return Boolean(blockedReasonForDate(iso))
-                          }}
-                          modifiers={{
-                            reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
-                            trial: (date) => calendarInfo.trialHoldDates.includes(toIsoDate(date)),
-                            laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
-                          }}
-                          modifiersClassNames={{
-                            reserved: 'rdp-day_reserved',
-                            trial: 'rdp-day_trial',
-                            laundry: 'rdp-day_laundry',
-                          }}
-                        />
-                      </div>
-                      
-                      <div className='mt-3 grid gap-2 text-center grid-cols-2'>
-                        <div>
-                          <p className='text-sm font-bold text-gray-900'>Pick-up</p>
-                          <p className='text-sm font-bold text-gray-700 mt-0.5'>{editForm.pickupDate || '—'}</p>
-                        </div>
-                        {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
-                          <div>
-                            <p className='text-sm font-bold text-gray-900'>Return</p>
-                            <p className='text-sm font-bold text-gray-700 mt-0.5'>{editForm.returnDate || '—'}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Time Section */}
-                  <div>
-                    <div className='flex items-center gap-2 mb-3'>
-                      <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                      </svg>
-                      <h3 className='text-base font-semibold text-gray-900'>Time</h3>
-                    </div>
-                    
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>Pick-up Time</label>
-                        <select
-                          name='pickupTime'
-                          value={editForm.pickupTime}
-                          onChange={handleEditFormChange}
-                          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                        >
-                          {allowedTimes.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {((selectedBooking.status || '').toLowerCase() !== 'trial') && (
-                        <div>
-                          <label className='block text-sm font-medium text-gray-700 mb-1'>Return Time</label>
-                          <select
-                            name='returnTime'
-                            value={editForm.returnTime}
-                            onChange={handleEditFormChange}
-                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
-                          >
-                            {allowedTimes.map((t) => {
-                              // If same day, only show times at least 1 hour after pickup
-                              if (editForm.pickupDate === editForm.returnDate && editForm.pickupTime) {
-                                const pickupMinutes = parseInt(editForm.pickupTime.split(':')[0]) * 60 + parseInt(editForm.pickupTime.split(':')[1])
-                                const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
-                                if (timeMinutes < pickupMinutes + 60) return null
-                              }
-                              return <option key={t} value={t}>{t}</option>
-                            })}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Time</label>
+                  <select
+                    name='pickupTime'
+                    value={editForm.pickupTime}
+                    onChange={handleEditFormChange}
+                    disabled={editMode === 'extend'}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:bg-gray-100'
+                  >
+                    {allowedTimes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Date</label>
+                  <input
+                    type='date'
+                    name='returnDate'
+                    value={editForm.returnDate}
+                    onChange={handleEditFormChange}
+                    min={editForm.pickupDate || new Date().toISOString().split('T')[0]}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>Return Time</label>
+                  <select
+                    name='returnTime'
+                    value={editForm.returnTime}
+                    onChange={handleEditFormChange}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  >
+                    {allowedTimes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               {/* Availability Status */}
               {(availabilityStatus.loading || availabilityStatus.message) && (

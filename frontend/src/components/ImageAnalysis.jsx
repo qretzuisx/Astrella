@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-// import * as faceapi from 'face-api.js'; // Disabled due to package.json export issues
+import * as faceapi from 'face-api.js';
 import { bodyTypeList, skinToneList, faceShapeList } from '../assets/assets';
 
 const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
    const [image, setImage] = useState(null);
    const [analyzing, setAnalyzing] = useState(false);
+   const [analysisProgress, setAnalysisProgress] = useState('');
    const [results, setResults] = useState(null);
    const [preview, setPreview] = useState(null);
    const [modelsLoaded, setModelsLoaded] = useState(false);
    const fileInputRef = useRef(null);
    const canvasRef = useRef(null);
 
-  // Load face-api models for age & gender estimation
+  // Load face-api models for age, gender & facial landmarks
   useEffect(() => {
     let mounted = true;
     const loadModels = async () => {
@@ -21,8 +22,12 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // For precise face shape detection
         ]);
-        if (mounted) setModelsLoaded(true);
+        if (mounted) {
+          setModelsLoaded(true);
+          console.log('✅ All face-api models loaded successfully');
+        }
       } catch (e) {
         console.error('Failed to load face-api models:', e);
         if (mounted) setModelsLoaded(true); // Allow analysis to continue without age/gender
@@ -32,8 +37,29 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     return () => { mounted = false; };
   }, []);
 
-   // SKIN TONE ANALYSIS (Improved)
-   const analyzeSkinTone = async (imgElement) => {
+   // Helper: RGB to HSL conversion (for lighting-independent color analysis)
+   const rgbToHsl = (r, g, b) => {
+     r /= 255; g /= 255; b /= 255;
+     const max = Math.max(r, g, b);
+     const min = Math.min(r, g, b);
+     let h, s, l = (max + min) / 2;
+
+     if (max === min) {
+       h = s = 0; // achromatic
+     } else {
+       const d = max - min;
+       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+       switch (max) {
+         case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+         case g: h = ((b - r) / d + 2) / 6; break;
+         case b: h = ((r - g) / d + 4) / 6; break;
+       }
+     }
+     return { h: h * 360, s, l };
+   };
+
+   // IMPROVED SKIN TONE ANALYSIS with Lighting Normalization
+   const analyzeSkinTone = async (imgElement, faceLandmarks) => {
      try {
        const canvas = document.createElement('canvas');
        const ctx = canvas.getContext('2d');
@@ -41,64 +67,113 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
        canvas.height = imgElement.height;
        ctx.drawImage(imgElement, 0, 0);
 
-       // Focus on face regions (more accurate for skin tone)
-       const regions = [
-         { x: 0.38, y: 0.2, w: 0.24, h: 0.15 },  // forehead
-         { x: 0.35, y: 0.35, w: 0.12, h: 0.12 }, // left cheek
-         { x: 0.53, y: 0.35, w: 0.12, h: 0.12 }, // right cheek
-         { x: 0.42, y: 0.48, w: 0.16, h: 0.08 }  // upper chin
-       ];
+       let regions = [];
+       
+       // If we have face landmarks, use them for precise regions
+       if (faceLandmarks) {
+         const landmarks = faceLandmarks.positions;
+         // Use specific landmark points for skin sampling
+         // Points 1-15: Jaw line, Points 19-24: Eyebrow area
+         const foreheadY = landmarks[19].y - 20; // Above eyebrows
+         const foreheadX = (landmarks[19].x + landmarks[24].x) / 2;
+         const leftCheekX = landmarks[3].x;
+         const leftCheekY = landmarks[31].y; // Nose reference
+         const rightCheekX = landmarks[13].x;
+         const rightCheekY = landmarks[31].y;
+         
+         regions = [
+           { x: foreheadX - 15, y: foreheadY, w: 30, h: 20 },
+           { x: leftCheekX, y: leftCheekY, w: 25, h: 25 },
+           { x: rightCheekX - 25, y: rightCheekY, w: 25, h: 25 },
+         ];
+       } else {
+         // Fallback to percentage-based regions if no landmarks
+         regions = [
+           { x: canvas.width * 0.38, y: canvas.height * 0.2, w: canvas.width * 0.24, h: canvas.height * 0.15 },
+           { x: canvas.width * 0.35, y: canvas.height * 0.35, w: canvas.width * 0.12, h: canvas.height * 0.12 },
+           { x: canvas.width * 0.53, y: canvas.height * 0.35, w: canvas.width * 0.12, h: canvas.height * 0.12 },
+         ];
+       }
 
        let skinPixels = [];
 
        regions.forEach(region => {
-         const startX = Math.floor(canvas.width * region.x);
-         const endX = Math.floor(canvas.width * (region.x + region.w));
-         const startY = Math.floor(canvas.height * region.y);
-         const endY = Math.floor(canvas.height * (region.y + region.h));
+         const startX = Math.floor(region.x);
+         const endX = Math.floor(region.x + region.w);
+         const startY = Math.floor(region.y);
+         const endY = Math.floor(region.y + region.h);
 
-         for (let y = startY; y < endY; y += 2) {
-           for (let x = startX; x < endX; x += 2) {
+         for (let y = startY; y < endY; y += 3) {  // Increased from 2 to 3 for faster sampling
+           for (let x = startX; x < endX; x += 3) {  // Increased from 2 to 3
+             if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) continue;
+             
              const { data } = ctx.getImageData(x, y, 1, 1);
              const [r, g, b] = [data[0], data[1], data[2]];
+             const hsl = rgbToHsl(r, g, b);
 
-             // Improved skin detection using YCbCr color space approximation
+             // IMPROVED skin detection using HSL (lighting-independent)
+             // Skin hues are typically in the orange-yellow range (0-50°)
+             // Saturation should be moderate (not gray, not super vibrant)
              const isSkinLike = (
-               r > 95 && g > 40 && b > 20 &&
-               r > g && r > b &&
-               Math.abs(r - g) > 15 &&
-               Math.max(r, g, b) - Math.min(r, g, b) > 15 &&
-               r < 250 && g < 230 && b < 220
+               (hsl.h >= 0 && hsl.h <= 50) &&  // Skin tone hue range
+               (hsl.s >= 0.20 && hsl.s <= 0.85) && // Not too gray or oversaturated
+               (hsl.l >= 0.15 && hsl.l <= 0.85) && // Not too dark or too bright
+               r > g && r > b // Red channel dominance (skin characteristic)
              );
 
              if (isSkinLike) {
-               skinPixels.push({ r, g, b });
+               skinPixels.push({ r, g, b, h: hsl.h, s: hsl.s, l: hsl.l });
              }
            }
          }
        });
 
-       if (skinPixels.length < 50) return 'Neutral';
+       if (skinPixels.length < 30) {
+         console.warn('Not enough skin pixels detected, defaulting to Neutral');
+         return 'Neutral';
+       }
 
-       // Calculate median instead of average (more robust to outliers)
+       // Calculate median RGB and HSL values (robust against outliers)
        skinPixels.sort((a, b) => (a.r + a.g + a.b) - (b.r + b.g + b.b));
        const medianIndex = Math.floor(skinPixels.length / 2);
-       const medianPixel = skinPixels[medianIndex];
+       const median = skinPixels[medianIndex];
 
-       const { r: avgR, g: avgG, b: avgB } = medianPixel;
+       console.log('Skin tone analysis:', { 
+         pixelsDetected: skinPixels.length,
+         medianRGB: `rgb(${median.r}, ${median.g}, ${median.b})`,
+         medianHSL: `hsl(${median.h.toFixed(1)}°, ${(median.s*100).toFixed(1)}%, ${(median.l*100).toFixed(1)}%)` 
+       });
 
-       // Use ITA° (Individual Typology Angle) method for better accuracy
-       const L = 0.2126 * avgR + 0.7152 * avgG + 0.0722 * avgB;
-       const a = avgR - avgG;
-       const b = avgG - avgB;
+       // MULTI-METHOD UNDERTONE DETECTION (more reliable)
+       let warmVotes = 0;
+       let coolVotes = 0;
+
+       // Method 1: RGB ratio analysis
+       const rgRatio = median.r / Math.max(median.g, 1);
+       const rbRatio = median.r / Math.max(median.b, 1);
+       const bgRatio = median.b / Math.max(median.g, 1);
        
-       // Calculate undertone
-       const warmScore = a - b;
-       const coolScore = b - a;
+       if (rgRatio > 1.05 && median.r > median.b) warmVotes++; // More red than green
+       if (bgRatio > 1.02) coolVotes++; // More blue than green
 
-       if (warmScore > 8) return 'Warm';
-       else if (coolScore > 8) return 'Cool';
+       // Method 2: HSL hue analysis
+       if (median.h >= 0 && median.h <= 30) warmVotes++; // Orange/peachy hues
+       if (median.h >= 15 && median.h <= 45) warmVotes++; // Yellow undertones
+       if (median.h > 180 && median.h < 240) coolVotes++; // Blue/cyan undertones (rare but possible)
+
+       // Method 3: Green channel dominance (cool skin often has more green)
+       if (median.g > median.r && median.g > median.b) coolVotes++;
+
+       // Method 4: Saturation check (very desaturated can indicate cool)
+       if (median.s < 0.25) coolVotes++;
+
+       // Final decision based on voting
+       console.log('Undertone votes - Warm:', warmVotes, 'Cool:', coolVotes);
+       
+       if (warmVotes > coolVotes + 1) return 'Warm';
+       else if (coolVotes > warmVotes + 1) return 'Cool';
        else return 'Neutral';
+
      } catch (error) {
        console.error('Skin tone analysis error:', error);
        return 'Neutral';
@@ -187,16 +262,86 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     }
   };
 
-  // FACE SHAPE ANALYSIS (Improved)
-  const analyzeFaceShape = async (imgElement) => {
+  // IMPROVED FACE SHAPE ANALYSIS using Facial Landmarks
+  const analyzeFaceShape = async (imgElement, faceLandmarks) => {
     try {
+      // If we have landmarks, use them for accurate measurements
+      if (faceLandmarks) {
+        const landmarks = faceLandmarks.positions;
+        
+        // Key landmark points:
+        // 0-16: Jawline (0=left jaw, 8=chin, 16=right jaw)
+        // 17-21: Left eyebrow, 22-26: Right eyebrow
+        // 27-35: Nose bridge and tip
+        
+        // Measure face widths at different points
+        const jawWidth = Math.abs(landmarks[0].x - landmarks[16].x); // Full jaw width
+        const cheekWidth = Math.abs(landmarks[2].x - landmarks[14].x); // Cheekbone width
+        const foreheadWidth = Math.abs(landmarks[17].x - landmarks[26].x) * 1.2; // Eyebrow span (estimate forehead)
+        const chinWidth = Math.abs(landmarks[6].x - landmarks[10].x); // Chin width
+        
+        // Measure face height
+        const faceHeight = Math.abs(landmarks[8].y - ((landmarks[19].y + landmarks[24].y) / 2));
+        
+        // Calculate ratios for classification
+        const faceRatio = faceHeight / Math.max(cheekWidth, 1);
+        const jawToCheek = jawWidth / Math.max(cheekWidth, 1);
+        const foreheadToCheek = foreheadWidth / Math.max(cheekWidth, 1);
+        const chinToJaw = chinWidth / Math.max(jawWidth, 1);
+        
+        console.log('Face shape measurements:', {
+          jawWidth: jawWidth.toFixed(1),
+          cheekWidth: cheekWidth.toFixed(1),
+          foreheadWidth: foreheadWidth.toFixed(1),
+          chinWidth: chinWidth.toFixed(1),
+          faceHeight: faceHeight.toFixed(1),
+          ratios: {
+            faceRatio: faceRatio.toFixed(2),
+            jawToCheek: jawToCheek.toFixed(2),
+            foreheadToCheek: foreheadToCheek.toFixed(2),
+            chinToJaw: chinToJaw.toFixed(2)
+          }
+        });
+        
+        // Classification based on landmark ratios
+        // Oval: Balanced proportions, face longer than wide
+        if (faceRatio > 1.35 && Math.abs(foreheadToCheek - 1) < 0.15 && Math.abs(jawToCheek - 1) < 0.15) {
+          return 'Oval';
+        }
+        
+        // Heart: Wide forehead, narrow chin
+        if (foreheadToCheek > 1.08 && chinToJaw < 0.65 && jawToCheek < 0.92) {
+          return 'Heart';
+        }
+        
+        // Round: Face nearly as wide as it is long, soft curves
+        if (faceRatio < 1.2 && Math.abs(foreheadToCheek - 1) < 0.12 && Math.abs(jawToCheek - 1) < 0.12) {
+          return 'Round';
+        }
+        
+        // Square: Equal forehead, cheek, and jaw widths, strong jawline
+        if (Math.abs(foreheadToCheek - 1) < 0.1 && Math.abs(jawToCheek - 1) < 0.1 && chinToJaw > 0.7) {
+          return 'Square';
+        }
+        
+        // Diamond: Widest at cheeks, narrow forehead and jaw
+        if (cheekWidth > foreheadWidth && cheekWidth > jawWidth && 
+            (cheekWidth - foreheadWidth) > 8 && (cheekWidth - jawWidth) > 8) {
+          return 'Diamond';
+        }
+        
+        // Default to Oval (most common and versatile)
+        return 'Oval';
+      }
+      
+      // Fallback to old method if no landmarks available
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = imgElement.width;
       canvas.height = imgElement.height;
       ctx.drawImage(imgElement, 0, 0);
 
-      // More precise face region sampling
+      // More precise face region sampling (old method)
       const regions = [
         { x: 0.36, y: 0.15, w: 0.28, h: 0.06 }, // forehead
         { x: 0.32, y: 0.28, w: 0.36, h: 0.08 }, // cheekbones
@@ -310,6 +455,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     }
 
     setAnalyzing(true);
+    setAnalysisProgress('Loading image...');
     console.log('Starting image analysis...');
 
     try {
@@ -322,28 +468,30 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         img.src = image;
       });
 
+      setAnalysisProgress('Detecting face...');
       console.log('Image loaded, analyzing attributes...');
 
-      // Analyze attributes using improved algorithms
-      const [skinTone, bodyType, faceShape] = await Promise.all([
-        analyzeSkinTone(img),
-        analyzeBodyType(img),
-        analyzeFaceShape(img)
-      ]);
-
-      // Age & gender (face-api)
+      // First, get facial landmarks for improved analysis
+      let faceLandmarks = null;
       let age = null;
       let gender = null;
       let ageGroup = '';
       let sex = '';
+
       try {
+        console.log('Detecting face and landmarks...');
+        // Optimized: Reduced inputSize from 416 to 320 for faster processing (still accurate)
         const detection = await faceapi
-          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
+          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
+          .withFaceLandmarks()
           .withAgeAndGender();
 
         if (detection) {
+          faceLandmarks = detection.landmarks;
           age = Math.round(detection.age);
           gender = detection.gender; // 'male' | 'female'
+
+          console.log('✅ Face detected with', faceLandmarks.positions.length, 'landmarks');
 
           // Map to buckets required by UI
           if (age >= 6 && age <= 9) ageGroup = '6–9 Years'
@@ -354,10 +502,21 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
           else if (age >= 60) ageGroup = '60+ Years'
 
           sex = gender === 'female' ? 'Female' : gender === 'male' ? 'Male' : ''
+        } else {
+          console.warn('⚠️ No face detected, using fallback analysis methods');
         }
       } catch (e) {
-        console.warn('Age/gender detection unavailable:', e);
+        console.warn('Face detection unavailable:', e);
       }
+
+      setAnalysisProgress('Analyzing attributes...');
+      
+      // Analyze attributes using improved algorithms with facial landmarks
+      const [skinTone, bodyType, faceShape] = await Promise.all([
+        analyzeSkinTone(img, faceLandmarks),
+        analyzeBodyType(img),
+        analyzeFaceShape(img, faceLandmarks)
+      ]);
 
       console.log('Analysis results:', { skinTone, bodyType, faceShape });
 
@@ -389,6 +548,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       setResults(analysisResults);
     } finally {
       setAnalyzing(false);
+      setAnalysisProgress('');
     }
   };
 
@@ -454,14 +614,23 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
               </div>
 
               {!results ? (
-                <div className="flex gap-4">
-                  <button
-                    onClick={analyzeImage}
-                    disabled={analyzing || !modelsLoaded || !image}
-                    className="flex-1 bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50"
-                  >
-                    {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
-                  </button>
+                <div className="space-y-3">
+                  {analyzing && analysisProgress && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                        <span className="text-sm text-blue-800">{analysisProgress}</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-4">
+                    <button
+                      onClick={analyzeImage}
+                      disabled={analyzing || !modelsLoaded || !image}
+                      className="flex-1 bg-primary text-white px-6 py-3 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50"
+                    >
+                      {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
+                    </button>
                   <button
                     onClick={() => {
                       setPreview(null);
