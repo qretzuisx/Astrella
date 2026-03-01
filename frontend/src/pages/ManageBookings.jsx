@@ -639,12 +639,6 @@ const ManageBookings = () => {
                             >
                               Reschedule
                             </button>
-                            <button
-                              onClick={() => openEdit(booking, 'extend')}
-                              className='px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-900 text-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-colors font-semibold'
-                            >
-                              Extend
-                            </button>
                           </div>
                         )}
 

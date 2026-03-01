@@ -594,20 +594,7 @@ const MyBookings = ({ setShowLogin }) => {
                         >
                           Continue to Book
                         </button>
-                      ) : (
-                        <button
-                          type='button'
-                          onClick={() => openEdit(booking, 'extend')}
-                          disabled={!editable}
-                          className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                            editable
-                              ? 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
-                              : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                          }`}
-                        >
-                          Extend
-                        </button>
-                      )}
+                      ) : null}
                     </div>
 
                     <button

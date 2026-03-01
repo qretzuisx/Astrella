@@ -123,8 +123,23 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
     }
   });
 
+  // Check for date conflicts
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     if (blockedDates.has(toLocalDateString(d))) return false;
+  }
+
+  // Check for time-based conflicts on the same day
+  // Two time ranges overlap if: start1 < end2 AND end1 > start2
+  for (const Booking of Bookings) {
+    const bookingStart = new Date(Booking.pickupDate);
+    const bookingEnd = new Date(Booking.returnDate);
+    
+    // Only check same-day time conflicts if both bookings are on the same date
+    if (toLocalDateString(start) === toLocalDateString(bookingStart)) {
+      if (start < bookingEnd && end > bookingStart) {
+        return false; // Time conflict
+      }
+    }
   }
 
   return true; // No conflicts
@@ -206,9 +221,9 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid pickup or return date." });
     }
 
-    // Trial bookings are single-day in-store appointments.
+    // Trial bookings are 1-hour appointment slots (only block the time slot, not the entire day).
     if (isTrial) {
-      returnDateTime = new Date(pickupDateTime);
+      returnDateTime = new Date(pickupDateTime.getTime() + 60 * 60 * 1000); // 1 hour after pickup
     }
 
     // For trials, returnDateTime may equal pickupDateTime (single-day appointment).
@@ -388,7 +403,7 @@ export const validateBookingWindow = async (req, res) => {
     let returnDateTime = combineDateAndTime(effectiveReturnDate, effectiveReturnTime);
 
     if (isTrial) {
-      returnDateTime = new Date(pickupDateTime);
+      returnDateTime = new Date(pickupDateTime.getTime() + 60 * 60 * 1000); // 1 hour after pickup for trials
     }
 
     // For trials, return must be strictly after pickup (appointment has duration).
@@ -450,9 +465,25 @@ export const validateBookingWindow = async (req, res) => {
       if (blockedDates.has(dateString)) conflictingDates.push(dateString);
     }
 
+    // Also check for time-based conflicts on the same day
+    let hasTimeConflict = false;
+    let timeConflict = null;
+    for (const existing of Bookings) {
+      const existingStart = new Date(existing.pickupDate);
+      const existingEnd = new Date(existing.returnDate);
+      
+      // Check if there's a time overlap
+      if (pickupDateTime < existingEnd && returnDateTime > existingStart) {
+        conflictingDates.push(toLocalDateString(pickupDateTime)); // Add the conflicting date
+        hasTimeConflict = true;
+        timeConflict = existing;
+        break;
+      }
+    }
+
     if (conflictingDates.length > 0) {
       // Find which Booking caused the conflict
-      const conflict = Bookings.find((existing) => {
+      const conflict = timeConflict || Bookings.find((existing) => {
         const existingStart = new Date(existing.pickupDate);
         const existingEnd = new Date(existing.returnDate);
         // Check if dates overlap
