@@ -3,6 +3,7 @@ import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import fs from "fs";
+import { calculateActualGownStatus } from "./bookingController.js";
 
 const clampLaundryDays = (value) => {
     const parsed = Number(value);
@@ -119,6 +120,10 @@ export const getOwnersGowns = async (req, res)=>{
     try {
         const {_id} = req.user;
         const gowns = await Gown.find({owner: _id })
+        // Calculate actual status for each gown based on current date and bookings
+        for (let gown of gowns) {
+            gown.status = await calculateActualGownStatus(gown._id);
+        }
         res.json({success: true, gowns})
     } catch (error) {
             console.error(error);
@@ -133,6 +138,10 @@ export const getAllGowns = async (req, res) => {
         const gowns = await Gown.find({})
             .populate('owner', 'name')
             .sort({ createdAt: -1 })
+        // Calculate actual status for each gown based on current date and bookings
+        for (let gown of gowns) {
+            gown.status = await calculateActualGownStatus(gown._id);
+        }
         res.json({ success: true, gowns })
     } catch (error) {
         console.error('getAllGowns:', error);
@@ -148,6 +157,8 @@ export const getGownById = async (req, res) => {
         if (!gown) {
             return res.status(404).json({ success: false, message: 'Gown not found' });
         }
+        // Calculate actual status based on current date and active bookings
+        gown.status = await calculateActualGownStatus(gown._id);
         res.json({ success: true, gown });
     } catch (error) {
         console.error('getGownById:', error);

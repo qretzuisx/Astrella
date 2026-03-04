@@ -84,7 +84,7 @@ const GownDetails = () => {
   const [durationDays, setDurationDays] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
   const [bookingType, setBookingType] = useState('reservation')
-  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialHoldDates: [], laundryHoldDates: [], laundryDays: 0 })
+  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialTimeSlots: {}, laundryHoldDates: [], laundryDays: 0 })
   const [calendarLoading, setCalendarLoading] = useState(false)
   const [calendarError, setCalendarError] = useState('')
   const [blockedClick, setBlockedClick] = useState(null) // { date: 'YYYY-MM-DD', message: string }
@@ -151,7 +151,14 @@ const GownDetails = () => {
 
   const blockedReasonForDate = (isoDate) => {
     if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
-    if (calendarInfo.trialHoldDates.includes(isoDate)) return { reason: 'trial', message: 'Trial hold date.' }
+    
+    // Check if there are booked trial time slots for this date
+    const trialSlots = calendarInfo.trialTimeSlots[isoDate]
+    if (trialSlots && trialSlots.length > 0) {
+      const bookedTimes = trialSlots.map(slot => `${slot.start}-${slot.end}`).join(', ')
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time`, allowSelection: true }
+    }
+    
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
     return null
   }
@@ -179,6 +186,13 @@ const GownDetails = () => {
     const fromIso = toIsoDate(range.from)
     const reason = blockedReasonForDate(fromIso)
     if (reason) {
+      // If allowSelection is true (trial slots), allow selection but show message
+      if (reason.allowSelection) {
+        setFieldError('pickupDate', reason.message)
+        setPickupDate(fromIso)
+        return
+      }
+      // For reserved/laundry dates, show error and don't allow selection
       setFieldError('pickupDate', `${reason.message} Please choose another date.`)
       return
     }
@@ -529,7 +543,7 @@ const GownDetails = () => {
         if (response.ok && data.success) {
           setCalendarInfo({
             unavailableDates: data.calendar?.unavailableDates || [],
-            trialHoldDates: data.calendar?.trialHoldDates || [],
+            trialTimeSlots: data.calendar?.trialTimeSlots || {},
             laundryHoldDates: data.calendar?.laundryHoldDates || [],
             laundryDays: data.calendar?.laundryDays || 0
           })
@@ -892,6 +906,12 @@ const GownDetails = () => {
 
                       const reason = blockedReasonForDate(iso)
                       if (reason) {
+                        // If allowSelection is true (trial), don't show blocked message
+                        if (reason.allowSelection) {
+                          if (blockedClick) setBlockedClick(null)
+                          return
+                        }
+                        // For reserved/laundry dates, show the blocked message
                         setBlockedClick({
                           date: iso,
                           message: `${reason.message} Please choose another date.`,
@@ -920,11 +940,14 @@ const GownDetails = () => {
                       const iso = toIsoDate(date)
                       // Disable all past days (only today and future dates are clickable)
                       if (isPastIsoDate(iso)) return true
-                      return Boolean(blockedReasonForDate(iso))
+                      const blocked = blockedReasonForDate(iso)
+                      // Allow selection if it only has trial time slots (allowSelection flag)
+                      if (blocked?.allowSelection) return false
+                      return Boolean(blocked)
                     }}
                     modifiers={{
                       reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
-                      trial: (date) => calendarInfo.trialHoldDates.includes(toIsoDate(date)),
+                      trial: (date) => Boolean(calendarInfo.trialTimeSlots[toIsoDate(date)]),
                       laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
                     }}
                     modifiersClassNames={{

@@ -47,6 +47,28 @@ const isWithinBusinessHours = (timeValue) => {
   return totalMinutes >= minMinutes && totalMinutes <= maxMinutes && minutes % 15 === 0;
 };
 
+// Helper: Extract time in minutes since midnight for comparison (avoids timezone issues)
+const getMinutesSinceMidnight = (dateObj) => {
+  if (!dateObj) return 0;
+  const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
+  return d.getHours() * 60 + d.getMinutes();
+};
+
+// Helper: Check if two time slots overlap on the same calendar day
+// Returns true if they conflict, false if they don't
+const doTimeSlotsOverlap = (slot1Start, slot1End, slot2Start, slot2End) => {
+  // Get calendar dates (YYYY-MM-DD)
+  const slot1Date = toLocalDateString(slot1Start);
+  const slot2Date = toLocalDateString(slot2Start);
+  
+  // Different dates = no time conflict possible
+  if (slot1Date !== slot2Date) return false;
+  
+  // Same date - check time overlap
+  // Overlap occurs if: start1 < end2 AND end1 > start2
+  return slot1Start < slot2End && slot1End > slot2Start;
+};
+
 // Helper function to get all laundry dates for a gown (as date strings YYYY-MM-DD)
 const getLaundryDates = async (gownId, laundryDays) => {
   if (!laundryDays || laundryDays <= 0) return new Set();
@@ -91,12 +113,15 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
   const start = pickupDate instanceof Date ? pickupDate : new Date(pickupDate);
   const end = returnDate instanceof Date ? returnDate : new Date(returnDate);
   const laundryDays = Number(options.laundryDays || 0);
+  const isTrial = options.isTrial || false; // NEW: support trial bookings
   
   // Get all Bookings
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const Bookings = await Booking.find({
     gown,
     status: { $ne: "canceled" },
+    returnDate: { $gte: today }, // Only include bookings that haven't ended yet
     $or: [
       { status: { $ne: 'trial' } },
       { status: 'trial', trialExpiresAt: { $gt: now } },
@@ -108,13 +133,21 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
   const blockedDates = new Set();
 
   // Add all Booking dates (pickup through return)
+  // IMPORTANT: Trial bookings should ONLY check time-based conflicts, NOT day-based conflicts
   Bookings.forEach((Booking) => {
+    const isBookingTrial = Booking.status === 'trial' || Booking.bookingType === 'trial';
     const BookingStart = new Date(Booking.pickupDate);
     const BookingEnd = new Date(Booking.returnDate);
-    for (let d = new Date(BookingStart); d <= BookingEnd; d.setDate(d.getDate() + 1)) {
-      blockedDates.add(toLocalDateString(d));
+    
+    // CHANGED: Only add dates to blockedDates for non-trial reservations
+    if (!isBookingTrial) {
+      for (let d = new Date(BookingStart); d <= BookingEnd; d.setDate(d.getDate() + 1)) {
+        blockedDates.add(toLocalDateString(d));
+      }
     }
-    if (laundryDays > 0) {
+    
+    // Laundry days only apply to non-trial bookings
+    if (laundryDays > 0 && !isBookingTrial) {
       for (let i = 1; i <= laundryDays; i++) {
         const laundryDate = new Date(BookingEnd);
         laundryDate.setDate(laundryDate.getDate() + i);
@@ -123,22 +156,22 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
     }
   });
 
-  // Check for date conflicts
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    if (blockedDates.has(toLocalDateString(d))) return false;
+  // Check for date conflicts (only for non-trial bookings)
+  if (!isTrial) {
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      if (blockedDates.has(toLocalDateString(d))) return false;
+    }
   }
 
-  // Check for time-based conflicts on the same day
+  // Check for time-based conflicts (both trial and non-trial)
   // Two time ranges overlap if: start1 < end2 AND end1 > start2
   for (const Booking of Bookings) {
     const bookingStart = new Date(Booking.pickupDate);
     const bookingEnd = new Date(Booking.returnDate);
     
-    // Only check same-day time conflicts if both bookings are on the same date
-    if (toLocalDateString(start) === toLocalDateString(bookingStart)) {
-      if (start < bookingEnd && end > bookingStart) {
-        return false; // Time conflict
-      }
+    // Use robust time comparison that checks calendar date first
+    if (doTimeSlotsOverlap(start, end, bookingStart, bookingEnd)) {
+      return false; // Time conflict detected
     }
   }
 
@@ -246,7 +279,7 @@ export const createBooking = async (req, res) => {
       gown,
       pickupDateTime,
       returnDateTime,
-      { laundryDays: isTrial ? 0 : gownData.laundryDays }
+      { laundryDays: isTrial ? 0 : gownData.laundryDays, isTrial }
     );
     if (!isAvailable) {
       // Laundry buffer days do not apply to trials.
@@ -444,13 +477,21 @@ export const validateBookingWindow = async (req, res) => {
       .populate("gown", "name");
     
     // Add all Booking dates (pickup through return)
+    // IMPORTANT: Trial bookings should ONLY check time-based conflicts, NOT day-based conflicts
     Bookings.forEach((Booking) => {
+      const isBookingTrial = Booking.status === 'trial' || Booking.bookingType === 'trial';
       const BookingStart = new Date(Booking.pickupDate);
       const BookingEnd = new Date(Booking.returnDate);
-      for (let d = new Date(BookingStart); d <= BookingEnd; d.setDate(d.getDate() + 1)) {
-        blockedDates.add(toLocalDateString(d));
+      
+      // Only add dates to blockedDates for non-trial bookings
+      if (!isBookingTrial) {
+        for (let d = new Date(BookingStart); d <= BookingEnd; d.setDate(d.getDate() + 1)) {
+          blockedDates.add(toLocalDateString(d));
+        }
       }
-      if (laundryDays > 0) {
+      
+      // Laundry days only apply to non-trial bookings
+      if (laundryDays > 0 && !isBookingTrial) {
         for (let i = 1; i <= laundryDays; i++) {
           const laundryDate = new Date(BookingEnd);
           laundryDate.setDate(laundryDate.getDate() + i);
@@ -460,9 +501,15 @@ export const validateBookingWindow = async (req, res) => {
     });
 
     const conflictingDates = [];
-    for (let d = new Date(pickupDateTime); d <= returnDateTime; d.setDate(d.getDate() + 1)) {
-      const dateString = toLocalDateString(d);
-      if (blockedDates.has(dateString)) conflictingDates.push(dateString);
+    
+    // For trial bookings, skip day-based checking and only do time-based
+    const skipDayBasedCheck = isTrial;
+    
+    if (!skipDayBasedCheck) {
+      for (let d = new Date(pickupDateTime); d <= returnDateTime; d.setDate(d.getDate() + 1)) {
+        const dateString = toLocalDateString(d);
+        if (blockedDates.has(dateString)) conflictingDates.push(dateString);
+      }
     }
 
     // Also check for time-based conflicts on the same day
@@ -472,8 +519,8 @@ export const validateBookingWindow = async (req, res) => {
       const existingStart = new Date(existing.pickupDate);
       const existingEnd = new Date(existing.returnDate);
       
-      // Check if there's a time overlap
-      if (pickupDateTime < existingEnd && returnDateTime > existingStart) {
+      // Check if there's a time overlap using robust comparison
+      if (doTimeSlotsOverlap(pickupDateTime, returnDateTime, existingStart, existingEnd)) {
         conflictingDates.push(toLocalDateString(pickupDateTime)); // Add the conflicting date
         hasTimeConflict = true;
         timeConflict = existing;
@@ -532,10 +579,28 @@ export const validateBookingWindow = async (req, res) => {
 export const getUserBooking = async (req, res) => {
   try {
     const { _id } = req.user;
-    const Bookings = await Booking.find({ user: _id })
+    const now = new Date();
+    
+    // Fetch all bookings for the user
+    const allBookings = await Booking.find({ user: _id })
       .populate('gown')
       .populate('owner', 'name')
       .sort({ createdAt: -1 });
+
+    // Filter out expired trial bookings from the list
+    const Bookings = allBookings.filter(booking => {
+      const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+      
+      // If it's not a trial, include it
+      if (!isTrial) return true;
+      
+      // If it's a trial, only include if it hasn't expired
+      if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now) {
+        return false; // Expired trial, exclude it
+      }
+      
+      return true; // Active trial, include it
+    });
 
     res.json({ success: true, bookings: Bookings });
 
@@ -597,48 +662,9 @@ export const changeBookingStatus = async (req, res) => {
     booking.status = status;
     await booking.save();
 
-    // Automatically update gown status based on booking lifecycle
-    // NOTE: gown.available is a global flag (owner's manual toggle) and should NOT be changed by booking status.
-    // Only the gown.status field should reflect temporary booking states.
-    // Date-based availability is checked through booking conflict detection.
-    try {
-      const gown = await Gown.findById(booking.gown);
-      if (gown) {
-        // Set gown status based on booking status
-        if (status === 'confirmed') {
-          // Booking confirmed (picked up) → gown is In-Use
-          gown.status = 'In-Use';
-          // DO NOT set gown.available = false; availability is date-based, not global
-        } else if (status === 'completed') {
-          // Booking completed (returned) → gown is In-Laundry
-          gown.status = 'In-Laundry';
-          // DO NOT set gown.available = false; availability is date-based, not global
-        } else if (status === 'canceled') {
-          // Booking canceled → check if gown should go back to Available
-          const overlapping = await Booking.findOne({
-            gown: booking.gown,
-            status: { $in: ['confirmed', 'completed'] },
-            _id: { $ne: bookingId }
-          });
-          if (!overlapping) {
-            gown.status = 'Available';
-            // DO NOT modify gown.available; it's the owner's manual toggle
-          }
-        } else if (status === 'pending') {
-          // Pending bookings don't affect status yet, keep as is or set to Reserved
-          gown.status = 'Reserved';
-          // DO NOT set gown.available = false; availability is date-based, not global
-        } else if (status === 'trial') {
-          // Trial hold → gown status becomes Reserved
-          gown.status = 'Reserved';
-          // DO NOT set gown.available = false; availability is date-based, not global
-        }
-        
-        await gown.save();
-      }
-    } catch (err) {
-      console.error('Failed to update gown status on booking status change:', err.message);
-    }
+    // NOTE: Gown status is now calculated dynamically by calculateActualGownStatus()
+    // based on current date and active bookings. No need to update DB.
+    // This keeps status always accurate without manual updates.
 
     res.json({ success: true, message: "Status Updated" });
 
@@ -1006,9 +1032,11 @@ export const getGownCalendar = async (req, res) => {
     }
 
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const Bookings = await Booking.find({
       gown: gownId,
       status: { $ne: "canceled" },
+      returnDate: { $gte: today }, // Only include bookings that haven't ended yet
       $or: [
         { status: { $ne: 'trial' } },
         { status: 'trial', trialExpiresAt: { $gt: now } },
@@ -1017,10 +1045,8 @@ export const getGownCalendar = async (req, res) => {
     }).sort({ pickupDate: 1 });
 
     const unavailableDates = new Set();
-    const trialHoldDates = new Set();
+    const trialTimeSlots = {}; // Maps dates to booked time slots
     const laundryHoldDates = new Set();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const horizon = new Date(today.getTime() + 180 * DAY_IN_MS);
 
     const captureDate = (dateObj, targetSet) => {
@@ -1033,22 +1059,36 @@ export const getGownCalendar = async (req, res) => {
       const bookingEnd = new Date(booking.returnDate);
       const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
 
-      for (
-        let cursor = new Date(bookingStart);
-        cursor <= bookingEnd;
-        cursor.setDate(cursor.getDate() + 1)
-      ) {
-        if (isTrial) {
-          captureDate(new Date(cursor), trialHoldDates);
-        } else {
+      if (!isTrial) {
+        // Non-trial bookings block entire days
+        for (
+          let cursor = new Date(bookingStart);
+          cursor <= bookingEnd;
+          cursor.setDate(cursor.getDate() + 1)
+        ) {
           // unavailableDates = reserved (pending or confirmed) for calendar highlight
           if (booking.status === 'confirmed' || booking.status === 'pending') {
             captureDate(new Date(cursor), unavailableDates);
           }
         }
+      } else {
+        // Trial bookings: record specific time slots
+        const dateStr = toLocalDateString(bookingStart);
+        const pickupTime = booking.pickupTime || '09:00';
+        const returnTime = booking.returnTime || '10:00';
+        
+        if (!trialTimeSlots[dateStr]) {
+          trialTimeSlots[dateStr] = [];
+        }
+        
+        trialTimeSlots[dateStr].push({
+          start: pickupTime,
+          end: returnTime,
+          bookingId: booking._id.toString()
+        });
       }
 
-      // Laundry days are fully blocked - add to both sets
+      // Laundry days are only after non-trial bookings
       const bufferDays = isTrial ? 0 : Math.max(gown.laundryDays || 0, 0);
       for (let i = 1; i <= bufferDays; i += 1) {
         const laundryDate = new Date(booking.returnDate);
@@ -1064,7 +1104,7 @@ export const getGownCalendar = async (req, res) => {
       calendar: {
         laundryDays: gown.laundryDays || 0,
         unavailableDates: Array.from(unavailableDates).sort(),
-        trialHoldDates: Array.from(trialHoldDates).sort(),
+        trialTimeSlots: trialTimeSlots, // NEW: Show booked time slots for each date
         laundryHoldDates: Array.from(laundryHoldDates).sort(),
       },
     });
@@ -1163,5 +1203,101 @@ export const verifyPayment = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// API to clean up expired trial bookings (can be called periodically or by maintainer)
+export const cleanupExpiredTrials = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    // Find expired trial bookings
+    const expiredTrials = await Booking.find({
+      status: 'trial',
+      trialExpiresAt: { $lt: now }
+    });
+
+    if (expiredTrials.length === 0) {
+      return res.json({ success: true, message: "No expired trials to clean up", cleanedCount: 0 });
+    }
+
+    // Mark them as expired
+    const result = await Booking.updateMany(
+      {
+        status: 'trial',
+        trialExpiresAt: { $lt: now }
+      },
+      {
+        $set: { status: 'expired' }
+      }
+    );
+
+    res.json({
+      success: true,
+      message: `Cleaned up ${result.modifiedCount} expired trial bookings`,
+      cleanedCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Helper: Calculate actual gown status based on current date and active bookings
+// Status rules:
+// - Trial-only bookings: "Available" (trials don't block)
+// - Pending/Confirmed booking: "Reserved"
+// - Completed booking in laundry period: "In-Laundry"
+// - Otherwise: "Available"
+export const calculateActualGownStatus = async (gownId) => {
+  try {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const gown = await Gown.findById(gownId).select('laundryDays');
+    if (!gown) return 'Available';
+
+    // Get all non-canceled bookings, sorted by most recent first
+    const bookings = await Booking.find({
+      gown: gownId,
+      status: { $ne: 'canceled' }
+    }).sort({ returnDate: -1 });
+
+    // Check for non-trial bookings first (these determine Reserved/In-Laundry status)
+    for (const booking of bookings) {
+      const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+      
+      // Skip trial bookings - they don't affect gown status
+      if (isTrial) continue;
+
+      const returnDate = new Date(booking.returnDate);
+      returnDate.setHours(23, 59, 59, 999); // End of day
+
+      // Check if non-trial booking period is still active (hasn't ended yet)
+      if (returnDate >= today) {
+        // Booking hasn't ended → show as Reserved
+        if (booking.status === 'pending' || booking.status === 'confirmed') {
+          return 'Reserved';
+        }
+      }
+
+      // Check if completed booking is still in laundry period
+      if (booking.status === 'completed') {
+        const laundryEndDate = new Date(booking.returnDate);
+        laundryEndDate.setDate(laundryEndDate.getDate() + (gown.laundryDays || 0));
+        laundryEndDate.setHours(23, 59, 59, 999);
+
+        if (laundryEndDate >= today) {
+          return 'In-Laundry';
+        }
+      }
+    }
+
+    // No active non-trial bookings found
+    return 'Available';
+  } catch (error) {
+    console.error('Error calculating gown status:', error);
+    return 'Available'; // Default to Available if error
   }
 };

@@ -40,7 +40,7 @@ const MyBookings = ({ setShowLogin }) => {
 
   // Availability checking state for reschedule/extend
   const [availabilityStatus, setAvailabilityStatus] = useState({ loading: false, message: '', valid: false })
-  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialHoldDates: [], laundryHoldDates: [] })
+  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialTimeSlots: {}, laundryHoldDates: [] })
 
   const currency = CURRENCY
 
@@ -61,7 +61,14 @@ const MyBookings = ({ setShowLogin }) => {
 
   const blockedReasonForDate = (isoDate) => {
     if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
-    if (calendarInfo.trialHoldDates.includes(isoDate)) return { reason: 'trial', message: 'Trial hold date.' }
+    
+    // Check if there are booked trial time slots for this date
+    const trialSlots = calendarInfo.trialTimeSlots[isoDate]
+    if (trialSlots && trialSlots.length > 0) {
+      const bookedTimes = trialSlots.map(slot => `${slot.start}-${slot.end}`).join(', ')
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time`, allowSelection: true }
+    }
+    
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
     return null
   }
@@ -185,9 +192,9 @@ const MyBookings = ({ setShowLogin }) => {
       const data = await response.json()
       if (data.success) {
         setCalendarInfo({
-          unavailableDates: data.unavailableDates || [],
-          trialHoldDates: data.trialHoldDates || [],
-          laundryHoldDates: data.laundryHoldDates || []
+          unavailableDates: data.calendar?.unavailableDates || [],
+          trialTimeSlots: data.calendar?.trialTimeSlots || {},
+          laundryHoldDates: data.calendar?.laundryHoldDates || []
         })
       }
     } catch (e) {
@@ -349,12 +356,8 @@ const MyBookings = ({ setShowLogin }) => {
         return
       }
 
-      const updated = data.booking || data.Booking
-      if (updated) {
-        setBookings((prev) => prev.map((b) => ((b._id || b.id) === id ? updated : b)))
-      } else {
-        await fetchBookings()
-      }
+      // Remove canceled booking from the list immediately
+      setBookings((prev) => prev.filter((b) => (b._id || b.id) !== id))
 
       setSuccess('Booking canceled')
       setTimeout(() => setSuccess(''), 3000)
@@ -663,9 +666,9 @@ const MyBookings = ({ setShowLogin }) => {
               )}
 
               {/* Show Reserved/Blocked Dates Info */}
-              {(calendarInfo.unavailableDates.length > 0 || calendarInfo.trialHoldDates.length > 0 || calendarInfo.laundryHoldDates.length > 0) && (
+              {(calendarInfo.unavailableDates.length > 0 || Object.keys(calendarInfo.trialTimeSlots).length > 0 || calendarInfo.laundryHoldDates.length > 0) && (
                 <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
-                  <p className='text-xs font-semibold text-gray-700 mb-2'>Blocked Dates:</p>
+                  <p className='text-xs font-semibold text-gray-700 mb-2'>Date Status:</p>
                   <div className='flex flex-wrap gap-2 text-xs'>
                     {calendarInfo.unavailableDates.length > 0 && (
                       <span className='flex items-center gap-1'>
@@ -673,10 +676,10 @@ const MyBookings = ({ setShowLogin }) => {
                         Reserved ({calendarInfo.unavailableDates.length})
                       </span>
                     )}
-                    {calendarInfo.trialHoldDates.length > 0 && (
+                    {Object.keys(calendarInfo.trialTimeSlots).length > 0 && (
                       <span className='flex items-center gap-1'>
-                        <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
-                        Trial Hold ({calendarInfo.trialHoldDates.length})
+                        <span className='w-3 h-3 rounded-full bg-yellow-500 inline-block'></span>
+                        Partial Booking ({Object.keys(calendarInfo.trialTimeSlots).length})
                       </span>
                     )}
                     {calendarInfo.laundryHoldDates.length > 0 && (
@@ -817,11 +820,14 @@ const MyBookings = ({ setShowLogin }) => {
                           disabled={(date) => {
                             const iso = toIsoDate(date)
                             if (isPastIsoDate(iso)) return true
-                            return Boolean(blockedReasonForDate(iso))
+                            const blocked = blockedReasonForDate(iso)
+                            // Allow selection if it only has trial time slots (allowSelection flag)
+                            if (blocked?.allowSelection) return false
+                            return Boolean(blocked)
                           }}
                           modifiers={{
                             reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
-                            trial: (date) => calendarInfo.trialHoldDates.includes(toIsoDate(date)),
+                            trial: (date) => Boolean(calendarInfo.trialTimeSlots[toIsoDate(date)]),
                             laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
                           }}
                           modifiersClassNames={{
