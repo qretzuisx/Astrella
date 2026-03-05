@@ -16,6 +16,14 @@ const ManageGowns = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const currency = CURRENCY
 
+  // Derive a display status that combines dynamic booking status with the owner's
+  // availability toggle. If the gown is toggled off (available === false), we
+  // always show it as "Unavailable" on the owner page, regardless of booking status.
+  const getDisplayStatus = (gown) => {
+    if (gown && gown.available === false) return 'Unavailable'
+    return gown?.status || 'Available'
+  }
+
   // Edit modal state
   const [editOpen, setEditOpen] = useState(false)
   const [selectedGown, setSelectedGown] = useState(null)
@@ -304,10 +312,10 @@ const ManageGowns = () => {
       setEditSaving(false)
     }
   }
-  // Filter gowns by status
+  // Filter gowns by status (using derived display status)
   const filteredGowns = filterStatus === 'all'
     ? gowns
-    : gowns.filter(gown => gown.status === filterStatus)
+    : gowns.filter(gown => getDisplayStatus(gown) === filterStatus)
   if (loading) {
     return (
       <div className='flex min-h-screen'>
@@ -345,10 +353,10 @@ const ManageGowns = () => {
 
           {/* Status Filter Tabs */}
           <div className='mb-6 sm:mb-8 flex flex-wrap items-center gap-2 border-b border-gray-200'>
-            {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
+          {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
               const count = status === 'all' 
                 ? gowns.length 
-                : gowns.filter(g => g.status === status).length
+                : gowns.filter(g => getDisplayStatus(g) === status).length
               
               return (
                 <button
@@ -413,16 +421,16 @@ const ManageGowns = () => {
                       alt={gown.name}
                       className='w-full h-full object-cover'
                     />
-                    {/* Status Badge */}
+                    {/* Status Badge (uses derived display status that respects availability toggle) */}
                     <div className={`absolute top-1.5 left-1.5 sm:top-3 sm:left-3 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-base font-bold text-white shadow-lg ${
-                      gown.status === 'Available' ? 'bg-green-500' :
-                      gown.status === 'Unavailable' ? 'bg-orange-500' :
-                      gown.status === 'Reserved' ? 'bg-red-500' :
-                      gown.status === 'In-Use' ? 'bg-gray-500' :
-                      gown.status === 'In-Laundry' ? 'bg-blue-500' :
+                      getDisplayStatus(gown) === 'Available' ? 'bg-green-500' :
+                      getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500' :
+                      getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500' :
+                      getDisplayStatus(gown) === 'In-Use' ? 'bg-gray-500' :
+                      getDisplayStatus(gown) === 'In-Laundry' ? 'bg-blue-500' :
                       'bg-gray-400'
                     }`}>
-                      {gown.status || 'Available'}
+                      {getDisplayStatus(gown)}
                     </div>
                     {/* Price Badge */}
                     <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-black/80 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-2 rounded-lg'>

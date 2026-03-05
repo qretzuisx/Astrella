@@ -495,7 +495,7 @@ export const validateBookingWindow = async (req, res) => {
     
     // Build a set of all blocked dates (Booking dates + laundry days)
     const blockedDates = new Set();
-    const now = new Date();
+    // Reuse the existing `now` declared above for past-time checks
     
     // Build query to exclude the current booking when rescheduling/extending
     const query = {
@@ -1292,57 +1292,210 @@ export const cleanupExpiredTrials = async (req, res) => {
   }
 };
 
-// Helper: Calculate actual gown status based on current date and active bookings
-// Status rules:
-// - Trial-only bookings: "Available" (trials don't block)
-// - Pending/Confirmed booking: "Reserved"
-// - Completed booking in laundry period: "In-Laundry"
-// - Otherwise: "Available"
+// Helper: Calculate actual gown status based on current time and bookings
+// Status rules (non-trial bookings only):
+// - Before pickupDateTime: "Reserved"
+// - Between pickupDateTime and returnDateTime: "In-Use"
+// - After returnDateTime but booking not completed: "In-Use" (overdue)
+// - Completed booking and now within laundryDays after returnDateTime: "In-Laundry"
+// - Otherwise (no active bookings in window): "Available"
 export const calculateActualGownStatus = async (gownId) => {
   try {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const gown = await Gown.findById(gownId).select('laundryDays');
+
+    // #region agent log
+    fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': '2803a3'
+      },
+      body: JSON.stringify({
+        sessionId: '2803a3',
+        runId: 'status-debug',
+        hypothesisId: 'H1',
+        location: 'bookingController.js:1301',
+        message: 'calculateActualGownStatus entry',
+        data: { gownId, now: now.toISOString(), laundryDays: gown?.laundryDays ?? null },
+        timestamp: Date.now()
+      })
+    }).catch(() => {});
+    // #endregion
+
     if (!gown) return 'Available';
 
-    // Get all non-canceled bookings, sorted by most recent first
+    // Get all non-canceled bookings, sorted by pickup date (oldest first)
     const bookings = await Booking.find({
       gown: gownId,
       status: { $ne: 'canceled' }
-    }).sort({ returnDate: -1 });
+    }).sort({ pickupDate: 1 });
 
-    // Check for non-trial bookings first (these determine Reserved/In-Laundry status)
     for (const booking of bookings) {
       const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
-      
-      // Skip trial bookings - they don't affect gown status
-      if (isTrial) continue;
+      if (isTrial) continue; // Trials don't block gown status
 
-      const returnDate = new Date(booking.returnDate);
-      returnDate.setHours(23, 59, 59, 999); // End of day
+      const pickupDateTime = combineDateAndTime(booking.pickupDate, booking.pickupTime || '09:00');
+      const returnDateTime = combineDateAndTime(
+        booking.returnDate,
+        booking.returnTime || booking.pickupTime || '09:00'
+      );
 
-      // Check if non-trial booking period is still active (hasn't ended yet)
-      if (returnDate >= today) {
-        // Booking hasn't ended → show as Reserved
-        if (booking.status === 'pending' || booking.status === 'confirmed') {
-          return 'Reserved';
-        }
+      if (!pickupDateTime || !returnDateTime) continue;
+
+      // #region agent log
+      fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': '2803a3'
+        },
+        body: JSON.stringify({
+          sessionId: '2803a3',
+          runId: 'status-debug',
+          hypothesisId: 'H2',
+          location: 'bookingController.js:1314',
+          message: 'Status evaluation for booking',
+          data: {
+            gownId,
+            bookingId: booking._id,
+            bookingStatus: booking.status,
+            bookingType: booking.bookingType,
+            pickupDate: booking.pickupDate,
+            pickupTime: booking.pickupTime,
+            returnDate: booking.returnDate,
+            returnTime: booking.returnTime,
+            pickupDateTime: pickupDateTime.toISOString(),
+            returnDateTime: returnDateTime.toISOString(),
+            now: now.toISOString()
+          },
+          timestamp: Date.now()
+        })
+      }).catch(() => {});
+      // #endregion
+
+      // Upcoming booking: block as Reserved
+      if (now < pickupDateTime) {
+        // #region agent log
+        fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': '2803a3'
+          },
+          body: JSON.stringify({
+            sessionId: '2803a3',
+            runId: 'status-debug',
+            hypothesisId: 'H3',
+            location: 'bookingController.js:1327',
+            message: 'Status decision: Reserved (upcoming booking)',
+            data: { gownId, bookingId: booking._id },
+            timestamp: Date.now()
+          })
+        }).catch(() => {});
+        // #endregion
+        return 'Reserved';
       }
 
-      // Check if completed booking is still in laundry period
-      if (booking.status === 'completed') {
-        const laundryEndDate = new Date(booking.returnDate);
-        laundryEndDate.setDate(laundryEndDate.getDate() + (gown.laundryDays || 0));
-        laundryEndDate.setHours(23, 59, 59, 999);
+      // During booking window
+      if (now >= pickupDateTime && now <= returnDateTime) {
+        // #region agent log
+        fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': '2803a3'
+          },
+          body: JSON.stringify({
+            sessionId: '2803a3',
+            runId: 'status-debug',
+            hypothesisId: 'H4',
+            location: 'bookingController.js:1339',
+            message: 'Status decision: In-Use (within booking window)',
+            data: { gownId, bookingId: booking._id },
+            timestamp: Date.now()
+          })
+        }).catch(() => {});
+        // #endregion
+        return 'In-Use';
+      }
 
-        if (laundryEndDate >= today) {
-          return 'In-Laundry';
+      // After return time
+      if (now > returnDateTime) {
+        // If booking isn't completed yet, gown is still out (overdue)
+        if (booking.status !== 'completed') {
+          // #region agent log
+          fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Debug-Session-Id': '2803a3'
+            },
+            body: JSON.stringify({
+              sessionId: '2803a3',
+              runId: 'status-debug',
+              hypothesisId: 'H5',
+              location: 'bookingController.js:1354',
+              message: 'Status decision: In-Use (overdue booking)',
+              data: { gownId, bookingId: booking._id, bookingStatus: booking.status },
+              timestamp: Date.now()
+            })
+          }).catch(() => {});
+          // #endregion
+          return 'In-Use';
         }
+
+        // Completed booking – check laundry window
+        const laundryDays = gown.laundryDays || 0;
+        if (laundryDays > 0) {
+          const laundryEndDate = new Date(returnDateTime);
+          laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
+          if (now <= laundryEndDate) {
+            // #region agent log
+            fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Debug-Session-Id': '2803a3'
+              },
+              body: JSON.stringify({
+                sessionId: '2803a3',
+                runId: 'status-debug',
+                hypothesisId: 'H6',
+                location: 'bookingController.js:1368',
+                message: 'Status decision: In-Laundry (within laundry window)',
+                data: { gownId, bookingId: booking._id, laundryDays },
+                timestamp: Date.now()
+              })
+            }).catch(() => {});
+            // #endregion
+            return 'In-Laundry';
+          }
+        }
+        // Past laundry window: continue checking other bookings
       }
     }
 
-    // No active non-trial bookings found
+    // No active non-trial bookings affecting current time
+    // #region agent log
+    fetch('http://127.0.0.1:7798/ingest/53039f8e-670b-44cc-8aa7-f2136aaacd2c', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': '2803a3'
+      },
+      body: JSON.stringify({
+        sessionId: '2803a3',
+        runId: 'status-debug',
+        hypothesisId: 'H7',
+        location: 'bookingController.js:1388',
+        message: 'Status decision: Available (no active bookings)',
+        data: { gownId },
+        timestamp: Date.now()
+      })
+    }).catch(() => {});
+    // #endregion
     return 'Available';
   } catch (error) {
     console.error('Error calculating gown status:', error);

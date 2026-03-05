@@ -1,5 +1,6 @@
 import User from "../models/User.js"
 import Gown from "../models/Gown.js"
+import { calculateActualGownStatus } from "./bookingController.js"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
@@ -481,10 +482,17 @@ export const getRecommendations = async (req, res) => {
     try {
         const { bodyType, skinTone, height, eventType, faceShape } = req.query;
 
-        // Get gowns that are available and currently in Available status (exclude Unavailable, In-Laundry, Reserved, In-Use from AI recommendations)
-        let allGowns = await Gown.find({ available: true, status: 'Available' })
+        // Only exclude globally unavailable gowns (owner toggled off).
+        // Reservation / In-Use / In-Laundry gowns are still shown so users can see them for future bookings.
+        let allGowns = await Gown.find({ available: true })
             .populate('owner', 'name')
             .sort({ createdAt: -1 });
+
+        // Recalculate dynamic status for each gown so Recommendations uses the same
+        // availability logic as the Available Apparel grid.
+        for (const gown of allGowns) {
+            gown.status = await calculateActualGownStatus(gown._id);
+        }
 
         if (allGowns.length === 0) {
             return res.json({ 

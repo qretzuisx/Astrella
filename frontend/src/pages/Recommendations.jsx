@@ -175,6 +175,9 @@ const Recommendations = () => {
           <p className="text-gray-600">
             We found {recommendations.length} gown{recommendations.length !== 1 ? 's' : ''} that match your preferences
           </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Status badges (Reserved, In-Laundry, In-Use) reflect current bookings. You can still use these gowns for future dates when they become available.
+          </p>
         </div>
 
         {/* Empty state when no recommendations */}
