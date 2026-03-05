@@ -177,6 +177,20 @@ const Recommendations = () => {
           </p>
         </div>
 
+        {/* Empty state when no recommendations */}
+        {!loading && recommendations.length === 0 && (
+          <div className="text-center py-12 px-4 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-lg font-semibold text-gray-800 mb-2">No recommendations match your preferences</p>
+            <p className="text-gray-600 mb-4">Try adjusting your body type, skin tone, face shape, or event type to see more options.</p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dull transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
+        )}
+
         {/* Recommendations Display */}
         {recommendations.length > 0 ? (
           <div className="space-y-12">

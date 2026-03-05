@@ -17,6 +17,7 @@ const Gown = () => {
   const [selectedGender, setSelectedGender] = useState('')
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
+  const [error, setError] = useState('')
   
   // Extract unique values for filters
   const [availableFabrics, setAvailableFabrics] = useState([])
@@ -46,6 +47,7 @@ const Gown = () => {
         const data = await response.json()
         
         if (data.success && data.gowns) {
+          setError('')
           // Only show gowns that have an owner (deleted gowns won't have owner)
           const validGowns = data.gowns.filter(gown => gown.owner && gown.owner._id)
           setGowns(validGowns)
@@ -59,9 +61,9 @@ const Gown = () => {
           setGowns([])
           setFilteredGowns([])
         }
-      } catch (error) {
-        console.error('Error fetching gowns:', error)
-        // Don't use dummy data, show empty state
+      } catch (err) {
+        console.error('Error fetching gowns:', err)
+        setError('Failed to load apparel. Please try again.')
         setGowns([])
         setFilteredGowns([])
       } finally {
@@ -199,6 +201,11 @@ const Gown = () => {
 
   return (
     <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16'>
+      {error && (
+        <div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-lg'>
+          <p className='text-red-800 font-medium'>{error}</p>
+        </div>
+      )}
       {/* Header Section */}
       <div className='text-center mb-8 sm:mb-12'>
         <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4'>

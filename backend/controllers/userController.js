@@ -30,6 +30,17 @@ export const registerUser = async (req, res)=>{
             return res.json({ success: false, message: 'Role must be user or owner.' });
         }
 
+        if (normalizedRole === 'owner') {
+            const shopName = (shopProfile?.shopName || '').toString().trim();
+            const address = (shopProfile?.address || '').toString().trim();
+            const city = (shopProfile?.city || '').toString().trim();
+            const operatingHours = (shopProfile?.operatingHours || '').toString().trim();
+            if (!shopName) return res.status(400).json({ success: false, message: 'Shop name is required for owner sign-up.' });
+            if (!address) return res.status(400).json({ success: false, message: 'Shop address is required for owner sign-up.' });
+            if (!city) return res.status(400).json({ success: false, message: 'Shop city is required for owner sign-up.' });
+            if (!operatingHours) return res.status(400).json({ success: false, message: 'Operating hours are required for owner sign-up.' });
+        }
+
         const userExists = await User.findOne({email})
         if(userExists){
             return res.json({success: false, message: 'User already exists'})
@@ -470,8 +481,8 @@ export const getRecommendations = async (req, res) => {
     try {
         const { bodyType, skinTone, height, eventType, faceShape } = req.query;
 
-        // Get all available gowns
-        let allGowns = await Gown.find({ available: true })
+        // Get gowns that are available and currently in Available status (exclude Unavailable, In-Laundry, Reserved, In-Use from AI recommendations)
+        let allGowns = await Gown.find({ available: true, status: 'Available' })
             .populate('owner', 'name')
             .sort({ createdAt: -1 });
 

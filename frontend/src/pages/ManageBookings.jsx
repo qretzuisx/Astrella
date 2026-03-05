@@ -29,7 +29,7 @@ const ManageBookings = () => {
 
   // Availability checking state for reschedule/extend
   const [availabilityStatus, setAvailabilityStatus] = useState({ loading: false, message: '', valid: false })
-  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialHoldDates: [], laundryHoldDates: [] })
+  const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialTimeSlots: {}, laundryHoldDates: [] })
 
   useEffect(() => {
     fetchBookings()
@@ -171,10 +171,11 @@ const ManageBookings = () => {
       const response = await fetch(`${API_URL}/bookings/calendar/${gownId}`)
       const data = await response.json()
       if (data.success) {
+        const cal = data.calendar || {}
         setCalendarInfo({
-          unavailableDates: data.unavailableDates || [],
-          trialHoldDates: data.trialHoldDates || [],
-          laundryHoldDates: data.laundryHoldDates || []
+          unavailableDates: cal.unavailableDates || [],
+          trialTimeSlots: cal.trialTimeSlots || {},
+          laundryHoldDates: cal.laundryHoldDates || []
         })
       }
     } catch (e) {
@@ -610,53 +611,13 @@ const ManageBookings = () => {
                           </div>
                         )}
 
-                        {/* Gown Status */}
-                        {booking.gown && (
-                          <div className='mt-3 sm:mt-4 text-xs sm:text-sm text-left'>
-                            <p className='font-semibold text-gray-700 mb-2'>Apparel Status:</p>
-                            <div className={`w-full rounded-lg p-3 sm:p-4 border font-semibold text-center ${
-                              booking.gown.status === 'Available' ? 'bg-green-50 border-green-300 text-green-800' :
-                              booking.gown.status === 'Unavailable' ? 'bg-orange-50 border-orange-300 text-orange-800' :
-                              booking.gown.status === 'In-Laundry' ? 'bg-blue-50 border-blue-300 text-blue-800' :
-                              booking.gown.status === 'Reserved' ? 'bg-red-50 border-red-300 text-red-800' :
-                              booking.gown.status === 'In-Use' ? 'bg-gray-50 border-gray-300 text-gray-800' :
-                              'bg-gray-100 border-gray-400 text-gray-900'
-                            }`}>
-                              {booking.gown.status || 'Available'}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                        </div>
 
                       {/* Action Buttons: Manage Booking (pickup/return) */}
                       <div className='flex flex-col gap-2'>
-                        {/* Owner Edit Actions (pending/trial only) */}
-                        {isEditableStatus(booking) && (
-                          <div className='grid grid-cols-2 gap-2'>
-                            <button
-                              onClick={() => openEdit(booking, 'reschedule')}
-                              className='px-3 sm:px-4 py-2 text-sm sm:text-base border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold'
-                            >
-                              Reschedule
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Trial Actions */}
+                        {/* Trial Actions - Cancel only */}
                         {booking.status === 'trial' && (
                           <div className='space-y-2'>
-                            {booking.trialExpiresAt && (
-                              <div className='p-3 bg-orange-50 border border-orange-200 rounded-lg text-xs sm:text-sm text-orange-900'>
-                                <p className='font-semibold'>Trial Hold</p>
-                                <p>Expires: <strong>{formatDate(booking.trialExpiresAt)}</strong> (no payment required)</p>
-                              </div>
-                            )}
-                            <button
-                              onClick={() => handleFinalizeTrial(booking._id || booking.id)}
-                              className='w-full py-2 px-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors'
-                            >
-                              Finalize Trial (Convert to Reservation)
-                            </button>
                             <button
                               onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
                               className='w-full py-2 px-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors'
@@ -781,30 +742,6 @@ const ManageBookings = () => {
             </div>
 
             <div className='space-y-4'>
-              {/* Gown Status Display */}
-              {selectedBooking.gown?.status && (
-                <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm font-semibold text-gray-700'>Current Gown Status:</span>
-                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      selectedBooking.gown.status === 'Available' ? 'bg-green-100 text-green-800' :
-                      selectedBooking.gown.status === 'In-Use' ? 'bg-gray-100 text-gray-800' :
-                      selectedBooking.gown.status === 'In-Laundry' ? 'bg-blue-100 text-blue-800' :
-                      selectedBooking.gown.status === 'Reserved' ? 'bg-red-100 text-red-800' :
-                      selectedBooking.gown.status === 'Unavailable' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {selectedBooking.gown.status}
-                    </div>
-                  </div>
-                  {selectedBooking.gown.status !== 'Available' && (
-                    <p className='text-xs text-gray-600 mt-1'>
-                      Note: Status may change after current bookings are completed.
-                    </p>
-                  )}
-                </div>
-              )}
-
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>Pickup Date</label>

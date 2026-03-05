@@ -155,8 +155,22 @@ const GownDetails = () => {
     // Check if there are booked trial time slots for this date
     const trialSlots = calendarInfo.trialTimeSlots[isoDate]
     if (trialSlots && trialSlots.length > 0) {
-      const bookedTimes = trialSlots.map(slot => `${slot.start}-${slot.end}`).join(', ')
-      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time`, allowSelection: true }
+      const formatTimeAmPm = (t) => {
+        if (!t) return ''
+        const m = String(t).match(/^(\d{1,2}):(\d{2})$/)
+        if (!m) return t
+        let h = parseInt(m[1], 10)
+        const ampm = h >= 12 ? 'pm' : 'am'
+        if (h > 12) h -= 12
+        if (h === 0) h = 12
+        return `${h}:${m[2]} ${ampm}`
+      }
+      const bookedTimes = trialSlots.map(slot => {
+        const start = formatTimeAmPm(slot.start)
+        const end = formatTimeAmPm(slot.end)
+        return (slot.start === slot.end) ? start : `${start} - ${end}`
+      }).join(', ')
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time. Apparel Expires 1 hour after trying on!`, allowSelection: true }
     }
     
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
@@ -817,50 +831,6 @@ const GownDetails = () => {
               </div>
             </div>
 
-            {/* Gown Status Information */}
-            {gown?.status && (
-              <div className='mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg'>
-                <div className='flex items-center justify-between mb-2'>
-                  <span className='text-sm font-semibold text-gray-700'>Current Gown Status:</span>
-                  <div className={`px-3 py-1.5 rounded-full text-sm font-bold ${
-                    gown.status === 'Available' ? 'bg-green-100 text-green-800' :
-                    gown.status === 'In-Use' ? 'bg-gray-100 text-gray-800' :
-                    gown.status === 'In-Laundry' ? 'bg-blue-100 text-blue-800' :
-                    gown.status === 'Reserved' ? 'bg-red-100 text-red-800' :
-                    gown.status === 'Unavailable' ? 'bg-orange-100 text-orange-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {gown.status}
-                  </div>
-                </div>
-                {gown.status === 'Available' && (
-                  <p className='text-xs text-gray-600'>
-                    ✓ This gown is currently available for booking.
-                  </p>
-                )}
-                {gown.status === 'In-Use' && (
-                  <p className='text-xs text-gray-600'>
-                    This gown is currently in use. You can still book for future dates once it becomes available.
-                  </p>
-                )}
-                {gown.status === 'In-Laundry' && (
-                  <p className='text-xs text-gray-600'>
-                    This gown is currently being cleaned. You can book for future dates after the laundry period.
-                  </p>
-                )}
-                {gown.status === 'Reserved' && (
-                  <p className='text-xs text-gray-600'>
-                    This gown is currently reserved. You can book for future dates when it becomes available.
-                  </p>
-                )}
-                {gown.status === 'Unavailable' && (
-                  <p className='text-xs text-red-600'>
-                    ⚠ This gown has been marked as unavailable by the owner and cannot be booked at this time.
-                  </p>
-                )}
-              </div>
-            )}
-
             {/* Date Selection */}
             <div className='mb-4 sm:mb-6'>
               <div className='flex items-center gap-2 mb-3 sm:mb-4'>
@@ -876,7 +846,7 @@ const GownDetails = () => {
                   </span>
                   <span className='flex items-center gap-1'>
                     <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
-                    Trial Hold
+                    Trial
                   </span>
                   <span className='flex items-center gap-1'>
                     <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>

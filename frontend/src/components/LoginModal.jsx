@@ -6,7 +6,6 @@ import { API_URL } from '../config'
 const LoginModal = ({ showLogin, setShowLogin }) => {
   const navigate = useNavigate()
   const [isLogin, setIsLogin] = useState(true)
-  const [showOwnerOptional, setShowOwnerOptional] = useState(false)
   const [formData, setFormData] = useState({
     role: 'user', // user | owner
     name: '',
@@ -15,12 +14,12 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
     password: '',
     confirmPassword: '',
 
-    // Owner signup optional fields
+    // Owner signup required fields
     shopName: '',
     address: '',
     city: '',
-    facebook: '',
-    instagram: ''
+    operatingHoursOpen: '09:00',
+    operatingHoursClose: '19:00'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -158,6 +157,19 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
           return
         }
 
+        if (formData.role === 'owner') {
+          if (!formData.shopName?.trim() || !formData.address?.trim() || !formData.city?.trim()) {
+            setError('Owner details are required: please fill in Shop Name, Address, and City.')
+            setLoading(false)
+            return
+          }
+          if (!formData.operatingHoursOpen || !formData.operatingHoursClose) {
+            setError('Please set your shop operating hours (open and close time).')
+            setLoading(false)
+            return
+          }
+        }
+
         const response = await fetch(`${API_URL}/user/register`, {
           method: 'POST',
           headers: {
@@ -170,13 +182,11 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
             contactNumber: digitsOnly,
             role: formData.role,
             shopProfile: formData.role === 'owner' ? {
-              shopName: formData.shopName,
-              address: formData.address,
-              city: formData.city,
-              socialMedia: {
-                facebook: formData.facebook,
-                instagram: formData.instagram
-              }
+              shopName: formData.shopName.trim(),
+              address: formData.address.trim(),
+              city: formData.city.trim(),
+              operatingHours: `${formData.operatingHoursOpen}-${formData.operatingHoursClose}`,
+              socialMedia: { facebook: '', instagram: '' }
             } : undefined
           })
         })
@@ -318,8 +328,8 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
       shopName: '',
       address: '',
       city: '',
-      facebook: '',
-      instagram: ''
+      operatingHoursOpen: '09:00',
+      operatingHoursClose: '19:00'
     })
   }
 
@@ -421,75 +431,65 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
                 {formData.role === 'owner' && (
                   <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-3'>
-                    <button
-                      type='button'
-                      onClick={() => setShowOwnerOptional((v) => !v)}
-                      className='w-full flex items-center justify-between text-left'
-                    >
-                      <span className='text-sm font-semibold text-gray-900'>Owner Details (optional)</span>
-                      <span className='text-sm text-primary font-semibold'>{showOwnerOptional ? 'Hide' : 'Show'}</span>
-                    </button>
-                    {showOwnerOptional && (
-                    <>
+                    <span className='text-sm font-semibold text-gray-900'>Owner Details <span className='text-red-500'>*</span></span>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>Shop Name</label>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>Shop Name <span className='text-red-500'>*</span></label>
                       <input
                         type='text'
                         name='shopName'
                         value={formData.shopName}
                         onChange={handleInputChange}
                         placeholder='Your shop name'
+                        required
                         className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
                       />
                     </div>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>Address</label>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>Address <span className='text-red-500'>*</span></label>
                       <input
                         type='text'
                         name='address'
                         value={formData.address}
                         onChange={handleInputChange}
                         placeholder='Shop address'
+                        required
                         className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
                       />
                     </div>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>City</label>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>City <span className='text-red-500'>*</span></label>
                       <input
                         type='text'
                         name='city'
                         value={formData.city}
                         onChange={handleInputChange}
                         placeholder='City'
+                        required
                         className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
                       />
                     </div>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                    <div className='grid grid-cols-2 gap-3'>
                       <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-2'>Facebook</label>
+                        <label className='block text-sm font-medium text-gray-700 mb-2'>Opening Time <span className='text-red-500'>*</span></label>
                         <input
-                          type='text'
-                          name='facebook'
-                          value={formData.facebook}
+                          type='time'
+                          name='operatingHoursOpen'
+                          value={formData.operatingHoursOpen}
                           onChange={handleInputChange}
-                          placeholder='Facebook link'
                           className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
                         />
                       </div>
                       <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-2'>Instagram</label>
+                        <label className='block text-sm font-medium text-gray-700 mb-2'>Closing Time <span className='text-red-500'>*</span></label>
                         <input
-                          type='text'
-                          name='instagram'
-                          value={formData.instagram}
+                          type='time'
+                          name='operatingHoursClose'
+                          value={formData.operatingHoursClose}
                           onChange={handleInputChange}
-                          placeholder='Instagram link'
                           className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white'
                         />
                       </div>
                     </div>
-                    </>
-                    )}
                   </div>
                 )}
               </>

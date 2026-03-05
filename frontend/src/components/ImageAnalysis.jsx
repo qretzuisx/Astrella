@@ -9,6 +9,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
    const [results, setResults] = useState(null);
    const [preview, setPreview] = useState(null);
    const [modelsLoaded, setModelsLoaded] = useState(false);
+   const [analysisError, setAnalysisError] = useState('');
    const fileInputRef = useRef(null);
    const canvasRef = useRef(null);
 
@@ -438,6 +439,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     reader.onload = (e) => {
       setPreview(e.target.result);
       setImage(e.target.result);
+      setAnalysisError('');
     };
     reader.readAsDataURL(file);
   };
@@ -537,7 +539,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       onAnalysisComplete(analysisResults);
     } catch (error) {
       console.error('Analysis error:', error);
-  
+      setAnalysisError('Analysis failed. Please try again or use a different image.');
       const analysisResults = {
         skinTone: 'Neutral',
         bodyType: 'Rectangle',
@@ -547,8 +549,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         age: '',
         confidence: 'Low'
       };
-      
-      // Even on error, send results back
       onAnalysisComplete(analysisResults);
     } finally {
       setAnalyzing(false);
@@ -586,6 +586,12 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
           <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
             Upload a full-body or face photo. We'll analyze it to detect your body type, skin tone, and face shape.
           </p>
+
+          {analysisError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800">{analysisError}</p>
+            </div>
+          )}
 
           {!preview ? (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center">

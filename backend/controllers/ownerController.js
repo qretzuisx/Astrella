@@ -49,7 +49,12 @@ const uploadAndOptimizeGownImage = async (imageFile) => {
 export const addGown = async (req, res) =>{
     try {
         const {_id} = req.user;
-        let gown = JSON.parse(req.body.gownData);
+        let gown;
+        try {
+            gown = JSON.parse(req.body.gownData);
+        } catch (parseErr) {
+            return res.status(400).json({ success: false, message: "Invalid gown data" });
+        }
         const imageFile = req.file;
         const laundryDays = clampLaundryDays(gown.laundryDays ?? 1);
 

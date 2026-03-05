@@ -23,6 +23,8 @@ const ShopProfile = () => {
   const [permitPreview, setPermitPreview] = useState('')
   const [dtiPreview, setDtiPreview] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [operatingHoursOpen, setOperatingHoursOpen] = useState('09:00')
+  const [operatingHoursClose, setOperatingHoursClose] = useState('19:00')
 
   useEffect(() => {
     fetchShopProfile()
@@ -71,6 +73,13 @@ const ShopProfile = () => {
         }
         if (dtiRegistration) {
           setDtiPreview(dtiRegistration)
+        }
+        // Parse operating hours "HH:MM-HH:MM" into open/close for time inputs
+        const oh = isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || '')
+        const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
+        if (match) {
+          setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
+          setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
         }
       }
     } catch (error) {
@@ -142,7 +151,7 @@ const ShopProfile = () => {
       formData.append('address', shopProfile.address)
       formData.append('city', shopProfile.city)
       formData.append('contactNumber', shopProfile.contactNumber)
-      formData.append('operatingHours', shopProfile.operatingHours)
+      formData.append('operatingHours', `${operatingHoursOpen}-${operatingHoursClose}`)
       formData.append('facebook', shopProfile.facebook)
       
       // Append files if selected
@@ -166,6 +175,13 @@ const ShopProfile = () => {
       if (data.success) {
         setSuccess('Shop profile updated successfully!')
         setTimeout(() => setSuccess(''), 3000)
+        // Update operating hours from response so they don't revert before refetch
+        const oh = data.shopProfile?.operatingHours || ''
+        const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
+        if (match) {
+          setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
+          setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
+        }
         // Refresh to show uploaded documents
         fetchShopProfile()
       } else {
@@ -286,19 +302,31 @@ const ShopProfile = () => {
               </div>
             </div>
 
-            {/* Operating Hours */}
+            {/* Operating Hours - time selection */}
             <div className='mb-6'>
               <label className='block text-sm font-semibold text-gray-700 mb-2'>
                 Operating Hours
               </label>
-              <input
-                type='text'
-                name='operatingHours'
-                value={shopProfile.operatingHours}
-                onChange={handleInputChange}
-                placeholder='e.g., Mon-Sat: 9:00 AM - 7:00 PM'
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-              />
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-xs text-gray-600 mb-1'>Opening</label>
+                  <input
+                    type='time'
+                    value={operatingHoursOpen}
+                    onChange={(e) => setOperatingHoursOpen(e.target.value)}
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  />
+                </div>
+                <div>
+                  <label className='block text-xs text-gray-600 mb-1'>Closing</label>
+                  <input
+                    type='time'
+                    value={operatingHoursClose}
+                    onChange={(e) => setOperatingHoursClose(e.target.value)}
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Contact Information */}

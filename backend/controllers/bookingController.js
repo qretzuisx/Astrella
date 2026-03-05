@@ -1,5 +1,6 @@
 import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
+import User from "../models/User.js";
 import imageKit from "../configs/imagekit.js";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -37,13 +38,28 @@ const combineDateAndTime = (dateValue, timeValue) => {
   return new Date(dateTimeString);
 };
 
-const isWithinBusinessHours = (timeValue) => {
+/** Parse shop operating hours string "HH:MM-HH:MM" to minutes since midnight. Returns null for invalid; use defaults 9*60, 19*60 when null. */
+const parseOperatingHours = (ohString) => {
+  if (!ohString || typeof ohString !== "string") return null;
+  const trimmed = ohString.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  const openMinutes = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+  const closeMinutes = parseInt(match[3], 10) * 60 + parseInt(match[4], 10);
+  if (openMinutes < 0 || closeMinutes > 24 * 60) return null;
+  return { openMinutes, closeMinutes };
+};
+
+const DEFAULT_OPEN = 9 * 60;
+const DEFAULT_CLOSE = 19 * 60;
+
+const isWithinBusinessHours = (timeValue, shopHours = null) => {
   if (!timeValue) return false;
   const [hours, minutes] = timeValue.split(":").map(Number);
   if (Number.isNaN(hours) || Number.isNaN(minutes)) return false;
   const totalMinutes = hours * 60 + minutes;
-  const minMinutes = 9 * 60; // 09:00
-  const maxMinutes = 19 * 60; // 19:00 (7 PM)
+  const minMinutes = shopHours ? shopHours.openMinutes : DEFAULT_OPEN;
+  const maxMinutes = shopHours ? shopHours.closeMinutes : DEFAULT_CLOSE;
   return totalMinutes >= minMinutes && totalMinutes <= maxMinutes && minutes % 15 === 0;
 };
 
@@ -242,8 +258,15 @@ export const createBooking = async (req, res) => {
 
     const effectiveReturnTime = normalizedReturnTime;
 
-    if (!isWithinBusinessHours(pickupTime) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime))) {
-      return res.status(400).json({ success: false, message: "Selected times must be between 09:00 and 19:00 in 15-minute intervals." });
+    const gownData = await Gown.findById(gown).populate("owner", "shopProfile");
+    if (!gownData) {
+      return res.status(404).json({ success: false, message: "Gown not found" });
+    }
+    const ownerDoc = gownData.owner && gownData.owner.shopProfile ? gownData.owner : await User.findById(gownData.owner).select("shopProfile");
+    const shopHours = parseOperatingHours(ownerDoc?.shopProfile?.operatingHours) || { openMinutes: DEFAULT_OPEN, closeMinutes: DEFAULT_CLOSE };
+
+    if (!isWithinBusinessHours(pickupTime, shopHours) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
+      return res.status(400).json({ success: false, message: "Selected times must be within the shop's operating hours and in 15-minute intervals." });
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
@@ -252,6 +275,14 @@ export const createBooking = async (req, res) => {
 
     if (!pickupDateTime || !returnDateTime) {
       return res.status(400).json({ success: false, message: "Invalid pickup or return date." });
+    }
+
+    const now = new Date();
+    if (pickupDateTime < now) {
+      return res.status(400).json({ success: false, message: "Pickup date and time cannot be in the past." });
+    }
+    if (returnDateTime < now) {
+      return res.status(400).json({ success: false, message: "Return date and time cannot be in the past." });
     }
 
     // Trial bookings are 1-hour appointment slots (only block the time slot, not the entire day).
@@ -268,11 +299,6 @@ export const createBooking = async (req, res) => {
     const cleanContactNumber = (req.user?.contactNumber || "").toString().replace(/\D/g, "");
     if (!cleanContactNumber || cleanContactNumber.length < 10 || cleanContactNumber.length > 13) {
       return res.status(400).json({ success: false, message: "Your profile contact number is missing or invalid. Please update your profile." });
-    }
-
-    const gownData = await Gown.findById(gown);
-    if (!gownData) {
-      return res.status(404).json({ success: false, message: "Gown not found" });
     }
 
     const isAvailable = await checkAvailability(
@@ -428,8 +454,15 @@ export const validateBookingWindow = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please select a return date for your reservation." });
     }
 
-    if (!isWithinBusinessHours(pickupTime) || !isWithinBusinessHours(effectiveReturnTime)) {
-      return res.status(400).json({ success: false, message: "Times must be between 09:00 and 19:00 in 15-minute increments." });
+    const gownDoc = await Gown.findById(gownId).populate("owner", "shopProfile");
+    if (!gownDoc) {
+      return res.status(404).json({ success: false, message: "Gown not found" });
+    }
+    const ownerDoc = gownDoc.owner?.shopProfile ? gownDoc.owner : await User.findById(gownDoc.owner).select("shopProfile");
+    const shopHours = parseOperatingHours(ownerDoc?.shopProfile?.operatingHours) || { openMinutes: DEFAULT_OPEN, closeMinutes: DEFAULT_CLOSE };
+
+    if (!isWithinBusinessHours(pickupTime, shopHours) || !isWithinBusinessHours(effectiveReturnTime, shopHours)) {
+      return res.status(400).json({ success: false, message: "Times must be within the shop's operating hours and in 15-minute increments." });
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
@@ -443,6 +476,14 @@ export const validateBookingWindow = async (req, res) => {
     // For reservations, return can equal pickup (same-day bookings allowed).
     if (returnDateTime < pickupDateTime) {
       return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
+    }
+
+    const now = new Date();
+    if (pickupDateTime < now) {
+      return res.status(400).json({ success: false, message: "Pickup date and time cannot be in the past." });
+    }
+    if (returnDateTime < now) {
+      return res.status(400).json({ success: false, message: "Return date and time cannot be in the past." });
     }
 
     const gown = await Gown.findById(gownId).select('laundryDays name');
@@ -911,8 +952,11 @@ export const updateBooking = async (req, res) => {
     const effectiveReturnTime = isTrial ? pickupTime : returnTime;
     const effectiveReturnDate = isTrial ? pickupDate : returnDate;
 
-    if (!isWithinBusinessHours(pickupTime) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime))) {
-      return res.status(400).json({ success: false, message: 'Times must be between 09:00 and 19:00 in 15-minute increments.' });
+    const ownerDoc = await User.findById(booking.owner).select('shopProfile');
+    const shopHours = parseOperatingHours(ownerDoc?.shopProfile?.operatingHours) || { openMinutes: DEFAULT_OPEN, closeMinutes: DEFAULT_CLOSE };
+
+    if (!isWithinBusinessHours(pickupTime, shopHours) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
+      return res.status(400).json({ success: false, message: 'Times must be within the shop\'s operating hours and in 15-minute increments.' });
     }
 
     const newPickupDateTime = combineDateAndTime(pickupDate, pickupTime);
@@ -1159,8 +1203,12 @@ export const verifyPayment = async (req, res) => {
         booking.payment.verifiedAt = new Date();
         booking.payment.verifiedBy = _id;
       } else {
+        const reason = (rejectionReason || '').toString().trim();
+        if (!reason) {
+          return res.status(400).json({ success: false, message: 'Rejection reason is required when rejecting payment.' });
+        }
         booking.payment.status = 'rejected';
-        booking.payment.rejectionReason = rejectionReason || 'Payment verification failed';
+        booking.payment.rejectionReason = reason;
         booking.status = 'canceled'; // Cancel booking if payment rejected
       }
     }

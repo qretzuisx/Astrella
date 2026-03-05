@@ -65,8 +65,22 @@ const MyBookings = ({ setShowLogin }) => {
     // Check if there are booked trial time slots for this date
     const trialSlots = calendarInfo.trialTimeSlots[isoDate]
     if (trialSlots && trialSlots.length > 0) {
-      const bookedTimes = trialSlots.map(slot => `${slot.start}-${slot.end}`).join(', ')
-      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time`, allowSelection: true }
+      const formatTimeAmPm = (t) => {
+        if (!t) return ''
+        const m = String(t).match(/^(\d{1,2}):(\d{2})$/)
+        if (!m) return t
+        let h = parseInt(m[1], 10)
+        const ampm = h >= 12 ? 'pm' : 'am'
+        if (h > 12) h -= 12
+        if (h === 0) h = 12
+        return `${h}:${m[2]} ${ampm}`
+      }
+      const bookedTimes = trialSlots.map(slot => {
+        const start = formatTimeAmPm(slot.start)
+        const end = formatTimeAmPm(slot.end)
+        return (slot.start === slot.end) ? start : `${start} - ${end}`
+      }).join(', ')
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time. Apparel Expires 1 hour after trying on!`, allowSelection: true }
     }
     
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
@@ -138,6 +152,7 @@ const MyBookings = ({ setShowLogin }) => {
       }
     } catch (e) {
       console.error('Error fetching bookings:', e)
+      setError('Failed to load your bookings. Please try again.')
       setBookings([])
     } finally {
       setLoading(false)
@@ -199,6 +214,7 @@ const MyBookings = ({ setShowLogin }) => {
       }
     } catch (e) {
       console.error('Error fetching calendar:', e)
+      setError('Failed to load calendar availability. Please try again.')
     }
   }
 
@@ -555,13 +571,27 @@ const MyBookings = ({ setShowLogin }) => {
                       </div>
                     )}
 
-                    {isTrial && booking.trialExpiresAt && (
-                      <div className='mt-2 p-2.5 bg-orange-50 border border-orange-200 rounded-lg text-xs sm:text-sm text-orange-900'>
-                        <p className='font-semibold'>Trial Hold</p>
-                        <p>Expires: <strong>{formatDate(booking.trialExpiresAt)}</strong> (no payment required)</p>
-                      </div>
-                    )}
-                  </div>
+                    {/* Return reminder: when return date is today and return time reached, show 2-hour window message */}
+                    {!isTrial && (booking.status || '').toLowerCase() === 'confirmed' && booking.returnDate && (() => {
+                      const today = toIsoDate(new Date())
+                      const retDate = toIsoDate(new Date(booking.returnDate))
+                      if (retDate !== today) return null
+                      const retTime = booking.returnTime || booking.pickupTime || '09:00'
+                      const [h, m] = retTime.split(':').map(Number)
+                      const returnMinutes = (h || 0) * 60 + (m || 0)
+                      const now = new Date()
+                      const nowMinutes = now.getHours() * 60 + now.getMinutes()
+                      if (nowMinutes >= returnMinutes) {
+                        return (
+                          <div className='mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
+                            <p className='text-sm font-semibold text-amber-900'>You are given allocated 2 hours to return the apparel.</p>
+                          </div>
+                        )
+                      }
+                      return null
+                    })()}
+
+                    </div>
 
                   {/* Price */}
                   <div className='pt-3 sm:pt-4 border-t border-gray-200'>
@@ -573,7 +603,7 @@ const MyBookings = ({ setShowLogin }) => {
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions - Reschedule and Cancel aligned in one row */}
                   <div className='mt-4 flex flex-col gap-2'>
                     <div className='grid grid-cols-2 gap-2'>
                       <button
@@ -588,28 +618,26 @@ const MyBookings = ({ setShowLogin }) => {
                       >
                         Reschedule
                       </button>
-
-                      {isTrial ? (
-                        <button
-                          type='button'
-                          onClick={() => continueToBook(booking)}
-                          className='px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-dull transition-colors'
-                        >
-                          Continue to Book
-                        </button>
-                      ) : null}
+                      <button
+                        type='button'
+                        onClick={() => cancelBooking(booking)}
+                        disabled={!cancelable}
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                          cancelable ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {isTrial ? 'Cancel Booking' : 'Cancel Reservation'}
+                      </button>
                     </div>
-
-                    <button
-                      type='button'
-                      onClick={() => cancelBooking(booking)}
-                      disabled={!cancelable}
-                      className={`w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                        cancelable ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {isTrial ? 'Cancel Booking' : 'Cancel Reservation'}
-                    </button>
+                    {isTrial && (
+                      <button
+                        type='button'
+                        onClick={() => continueToBook(booking)}
+                        className='w-full px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-dull transition-colors'
+                      >
+                        Continue to Book
+                      </button>
+                    )}
 
                     {!editable && (
                       <p className='text-xs text-gray-500'>Editing is available only for Pending/Trial bookings.</p>
@@ -641,30 +669,6 @@ const MyBookings = ({ setShowLogin }) => {
             </div>
 
             <div className='space-y-4'>
-              {/* Gown Status Display */}
-              {selectedBooking.gown?.status && (
-                <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm font-semibold text-gray-700'>Current Gown Status:</span>
-                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      selectedBooking.gown.status === 'Available' ? 'bg-green-100 text-green-800' :
-                      selectedBooking.gown.status === 'In-Use' ? 'bg-gray-100 text-gray-800' :
-                      selectedBooking.gown.status === 'In-Laundry' ? 'bg-blue-100 text-blue-800' :
-                      selectedBooking.gown.status === 'Reserved' ? 'bg-red-100 text-red-800' :
-                      selectedBooking.gown.status === 'Unavailable' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {selectedBooking.gown.status}
-                    </div>
-                  </div>
-                  {selectedBooking.gown.status !== 'Available' && (
-                    <p className='text-xs text-gray-600 mt-1'>
-                      Note: Status may change after current bookings are completed.
-                    </p>
-                  )}
-                </div>
-              )}
-
               {/* Show Reserved/Blocked Dates Info */}
               {(calendarInfo.unavailableDates.length > 0 || Object.keys(calendarInfo.trialTimeSlots).length > 0 || calendarInfo.laundryHoldDates.length > 0) && (
                 <div className='p-3 bg-gray-50 border border-gray-200 rounded-lg'>
@@ -789,7 +793,7 @@ const MyBookings = ({ setShowLogin }) => {
                         </span>
                         <span className='flex items-center gap-1'>
                           <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
-                          Trial Hold
+                          Trial
                         </span>
                         <span className='flex items-center gap-1'>
                           <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
