@@ -153,7 +153,9 @@ const GownDetails = () => {
       times.push(minutesToTimeString(minutes))
     }
     return times
-  }, [shopHours.openingTime, shopHours.closingTime])\n\n  const businessHours = useMemo(() => {\n    const openParts = shopHours.openingTime.split(\":\")\n    const closeParts = shopHours.closingTime.split(\":\")\n    const openMinutes = parseInt(openParts[0]) * 60 + parseInt(openParts[1])\n    const closeMinutes = parseInt(closeParts[0]) * 60 + parseInt(closeParts[1])\n    return { openMinutes, closeMinutes }\n  }, [shopHours.openingTime, shopHours.closingTime])\n\n  const formatTimeLabel = (timeValue) => {
+  }, [shopHours.openingTime, shopHours.closingTime])
+
+  const formatTimeLabel = (timeValue) => {
     if (!timeValue) return ''
     const [hourString, minuteString] = timeValue.split(':')
     let hour = parseInt(hourString, 10)
@@ -686,6 +688,10 @@ const GownDetails = () => {
                 {gown.status}
               </div>
             )}
+            {/* Price Badge - Top Right */}
+            <div className='absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm text-gray-900 px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-base sm:text-lg font-bold shadow-lg'>
+              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
+            </div>
           </div>
 
           {/* Title and Owner */}
@@ -705,13 +711,6 @@ const GownDetails = () => {
             </p>
           </div>
 
-          {/* Price */}
-          <div className='mb-2 sm:mb-3'>
-            <p className='text-xl sm:text-2xl font-bold text-primary'>
-              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
-            </p>
-          </div>
-
           {/* Location & Contact Number - side by side */}
           <div className='mb-3 sm:mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
             <div>
@@ -723,6 +722,132 @@ const GownDetails = () => {
               <p className='text-sm text-gray-600'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
             </div>
           </div>
+
+          {/* Shop Information Section */}
+          {shopProfile && (
+            <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50 mb-6 sm:mb-8'>
+              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Shop Information</h2>
+              
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6'>
+                <div>
+                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Shop Name</h3>
+                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.shopName || shopProfile.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Phone Number</h3>
+                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.phoneNumber || shopProfile.contactNumber || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className='mb-4 sm:mb-6'>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Address</h3>
+                <p className='text-sm sm:text-base text-gray-900'>{shopProfile.address || shopProfile.location || 'N/A'}</p>
+              </div>
+
+              <div className='mb-4 sm:mb-6'>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Operating Hours</h3>
+                <p className='text-sm sm:text-base text-gray-900'>{shopHours.openingTime || '09:00'} - {shopHours.closingTime || '18:00'}</p>
+              </div>
+
+              <div>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 sm:mb-4'>Weekly Schedule</h3>
+                <div className='flex flex-wrap gap-2 sm:gap-3'>
+                  {(() => {
+                    const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                    let days = []
+                    
+                    if (shopHours.availableDays) {
+                      const content = String(shopHours.availableDays)
+                      const dayMatches = content.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/g)
+                      if (dayMatches && dayMatches.length > 0) {
+                        days = [...new Set(dayMatches)]
+                      } else {
+                        days = allDays
+                      }
+                    } else {
+                      days = allDays
+                    }
+                    
+                    return days && days.length > 0 ? (
+                      days.map(day => (
+                        <button
+                          key={day}
+                          className='px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors'
+                        >
+                          {day}
+                        </button>
+                      ))
+                    ) : (
+                      <p className='text-sm text-gray-600'>Operating hours not available</p>
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Shop Information Section */}
+          {shopProfile && (
+            <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50 mb-6 sm:mb-8'>
+              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Shop Information</h2>
+              
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6'>
+                <div>
+                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Shop Name</h3>
+                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.shopName || shopProfile.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Phone Number</h3>
+                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.phoneNumber || shopProfile.contactNumber || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className='mb-4 sm:mb-6'>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Address</h3>
+                <p className='text-sm sm:text-base text-gray-900'>{shopProfile.address || shopProfile.location || 'N/A'}</p>
+              </div>
+
+              <div className='mb-4 sm:mb-6'>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Operating Hours</h3>
+                <p className='text-sm sm:text-base text-gray-900'>{shopHours.openingTime || '09:00'} - {shopHours.closingTime || '18:00'}</p>
+              </div>
+
+              <div>
+                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 sm:mb-4'>Weekly Schedule</h3>
+                <div className='flex flex-wrap gap-2 sm:gap-3'>
+                  {(() => {
+                    const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                    let days = []
+                    
+                    if (shopHours.availableDays) {
+                      const content = String(shopHours.availableDays)
+                      const dayMatches = content.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/g)
+                      if (dayMatches && dayMatches.length > 0) {
+                        days = [...new Set(dayMatches)]
+                      } else {
+                        days = allDays
+                      }
+                    } else {
+                      days = allDays
+                    }
+                    
+                    return days && days.length > 0 ? (
+                      days.map(day => (
+                        <button
+                          key={day}
+                          className='px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors'
+                        >
+                          {day}
+                        </button>
+                      ))
+                    ) : (
+                      <p className='text-sm text-gray-600'>Operating hours not available</p>
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Gown Details Grid - Moved here */}
           <div>
