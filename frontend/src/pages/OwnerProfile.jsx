@@ -72,6 +72,25 @@ const OwnerProfile = () => {
     })
   }
 
+  const formatOperatingHours = (hoursString) => {
+    if (!hoursString) return 'N/A'
+    
+    // Handle format like "09:00-17:00" or "09:00 - 17:00"
+    const parts = hoursString.split('-').map(t => t.trim())
+    if (parts.length !== 2) return hoursString
+    
+    const convertTo12Hour = (timeStr) => {
+      const [hours, minutes] = timeStr.split(':').map(Number)
+      if (isNaN(hours) || isNaN(minutes)) return timeStr
+      
+      const period = hours >= 12 ? 'PM' : 'AM'
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`
+    }
+    
+    return `${convertTo12Hour(parts[0])} - ${convertTo12Hour(parts[1])}`
+  }
+
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center px-4'>
@@ -172,7 +191,7 @@ const OwnerProfile = () => {
                   </svg>
                   <div>
                     <p className='text-sm text-gray-500'>Operating Hours</p>
-                    <p className='text-gray-900 font-medium'>{owner.shopProfile.operatingHours}</p>
+                    <p className='text-gray-900 font-medium'>{formatOperatingHours(owner.shopProfile.operatingHours)}</p>
                   </div>
                 </div>
               )}

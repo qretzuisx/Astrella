@@ -1123,7 +1123,7 @@ const GownDetails = () => {
               </div>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Try-on Time</label>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>{bookingType === 'trial' ? 'Try-on Time' : 'Pick-up Time'}</label>
                   <select
                     value={pickupTime}
                     onChange={(e) => {

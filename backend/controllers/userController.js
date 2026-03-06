@@ -591,9 +591,9 @@ export const getRecommendations = async (req, res) => {
 export const updateShopProfile = async (req, res) => {
     try {
         const { _id } = req.user
-        const { shopName, description, address, city, operatingHours, availableDays, facebook, instagram } = req.body
+        const { shopName, description, address, city, operatingHours, openingTime, closingTime, availableDays, facebook, instagram } = req.body
 
-        console.log('Shop profile update request:', { shopName, address, city })
+        console.log('Shop profile update request:', { shopName, address, city, openingTime, closingTime })
         console.log('Files received:', req.files ? Object.keys(req.files) : 'none')
 
         const user = await User.findById(_id)
@@ -667,6 +667,27 @@ export const updateShopProfile = async (req, res) => {
         // Get contact number from request body
         const contactNumber = req.body.contactNumber || user.shopProfile?.contactNumber || user.contactNumber || ''
 
+        // Build operatingHours string if separate time fields are provided
+        let finalOperatingHours = operatingHours
+        let finalOpeningTime = openingTime
+        let finalClosingTime = closingTime
+        
+        if (openingTime && closingTime) {
+            finalOperatingHours = `${openingTime}-${closingTime}`
+            finalOpeningTime = openingTime
+            finalClosingTime = closingTime
+        }
+
+        // Parse availableDays if it's a JSON string
+        let parsedAvailableDays = availableDays
+        if (typeof availableDays === 'string') {
+            try {
+                parsedAvailableDays = JSON.parse(availableDays)
+            } catch (e) {
+                parsedAvailableDays = user.shopProfile?.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            }
+        }
+
         // Update shop profile
         user.shopProfile = {
             ...user.shopProfile,
@@ -675,8 +696,10 @@ export const updateShopProfile = async (req, res) => {
             address: address || user.shopProfile?.address || '',
             city: city || user.shopProfile?.city || '',
             contactNumber: contactNumber,
-            operatingHours: operatingHours || user.shopProfile?.operatingHours || '',
-            availableDays: availableDays || user.shopProfile?.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            operatingHours: finalOperatingHours || user.shopProfile?.operatingHours || '',
+            openingTime: finalOpeningTime || user.shopProfile?.openingTime || '09:00',
+            closingTime: finalClosingTime || user.shopProfile?.closingTime || '19:00',
+            availableDays: parsedAvailableDays || user.shopProfile?.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             socialMedia: {
                 facebook: facebook || user.shopProfile?.socialMedia?.facebook || '',
                 instagram: instagram || user.shopProfile?.socialMedia?.instagram || ''
