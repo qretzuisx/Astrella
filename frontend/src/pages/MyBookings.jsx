@@ -868,7 +868,7 @@ const MyBookings = ({ setShowLogin }) => {
                     
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                       <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>Pick-up Time</label>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>{(selectedBooking.status || '').toLowerCase() === 'trial' ? 'Try-on Time' : 'Pick-up Time'}</label>
                         <select
                           name='pickupTime'
                           value={form.pickupTime}

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
@@ -15,7 +15,7 @@ const minutesToTimeString = (totalMinutes) => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
-const normalizeTimeInput = (rawValue, openMinutes = 540, closeMinutes = 1140) => {
+const normalizeTimeInput = (rawValue, openMinutes, closeMinutes) => {
   if (!rawValue) {
     return { valid: false, message: 'Time is required.' }
   }
@@ -279,7 +279,7 @@ const GownDetails = () => {
   }
 
   const handleTimeChange = (value, fieldSetter, fieldName) => {
-    const result = normalizeTimeInput(value, businessHours.openMinutes, businessHours.closeMinutes)
+    const result = normalizeTimeInput(value)
     if (!result.valid) {
       fieldSetter('')
       setFieldError(fieldName, result.message)

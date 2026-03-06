@@ -25,6 +25,21 @@ const ShopProfile = () => {
   const [uploading, setUploading] = useState(false)
   const [operatingHoursOpen, setOperatingHoursOpen] = useState('09:00')
   const [operatingHoursClose, setOperatingHoursClose] = useState('19:00')
+  const [availableDays, setAvailableDays] = useState([
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ])
+
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+  const toggleDay = (day) => {
+    setAvailableDays(prev => {
+      if (prev.includes(day)) {
+        return prev.filter(d => d !== day)
+      } else {
+        return [...prev, day]
+      }
+    })
+  }
 
   useEffect(() => {
     fetchShopProfile()
@@ -45,15 +60,15 @@ const ShopProfile = () => {
       })
 
       const data = await response.json()
-      
+
       if (data.success && data.user) {
         // SQL Backend: data is flat (shopName, shopDescription, etc.)
         // MongoDB Backend: data is nested in shopProfile object
         // Support both structures for compatibility
-        
+
         const user = data.user
         const isFlat = user.shopName !== undefined // SQL backend structure
-        
+
         setShopProfile({
           shopName: isFlat ? (user.shopName || '') : (user.shopProfile?.shopName || ''),
           description: isFlat ? (user.shopDescription || '') : (user.shopProfile?.description || ''),
@@ -63,23 +78,45 @@ const ShopProfile = () => {
           operatingHours: isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || ''),
           facebook: isFlat ? (user.facebookUrl || '') : (user.shopProfile?.socialMedia?.facebook || '')
         })
-        
+
         // Set existing documents (check both structures)
         const businessPermit = isFlat ? user.businessPermit : user.shopProfile?.businessPermit
         const dtiRegistration = isFlat ? user.dtiRegistration : user.shopProfile?.dtiRegistration
-        
+
         if (businessPermit) {
           setPermitPreview(businessPermit)
         }
         if (dtiRegistration) {
           setDtiPreview(dtiRegistration)
         }
+
         // Parse operating hours "HH:MM-HH:MM" into open/close for time inputs
-        const oh = isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || '')
-        const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
-        if (match) {
-          setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
-          setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
+        // Try to get openingTime/closingTime from separate fields first (MongoDB)
+        const shopProfileData = isFlat ? {} : (user.shopProfile || {})
+        if (shopProfileData.openingTime) {
+          setOperatingHoursOpen(shopProfileData.openingTime)
+        } else {
+          const oh = isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || '')
+          const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
+          if (match) {
+            setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
+          }
+        }
+
+        if (shopProfileData.closingTime) {
+          setOperatingHoursClose(shopProfileData.closingTime)
+        } else {
+          const oh = isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || '')
+          const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
+          if (match) {
+            setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
+          }
+        }
+
+        // Load available days
+        const available = isFlat ? (user.availableDays || []) : (user.shopProfile?.availableDays || [])
+        if (available.length > 0) {
+          setAvailableDays(available)
         }
       }
     } catch (error) {
@@ -142,6 +179,13 @@ const ShopProfile = () => {
     setError('')
     setSuccess('')
 
+    // Validate at least one day is selected
+    if (availableDays.length === 0) {
+      setError('Please select at least one available day')
+      setSaving(false)
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       // Create FormData for file uploads
@@ -152,8 +196,11 @@ const ShopProfile = () => {
       formData.append('city', shopProfile.city)
       formData.append('contactNumber', shopProfile.contactNumber)
       formData.append('operatingHours', `${operatingHoursOpen}-${operatingHoursClose}`)
+      formData.append('openingTime', operatingHoursOpen)
+      formData.append('closingTime', operatingHoursClose)
+      formData.append('availableDays', JSON.stringify(availableDays))
       formData.append('facebook', shopProfile.facebook)
-      
+
       // Append files if selected
       if (businessPermit) {
         formData.append('businessPermit', businessPermit)
@@ -171,7 +218,7 @@ const ShopProfile = () => {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         setSuccess('Shop profile updated successfully!')
         setTimeout(() => setSuccess(''), 3000)
@@ -212,7 +259,7 @@ const ShopProfile = () => {
   return (
     <div className='flex min-h-screen bg-gray-50'>
       <OwnerSidebar />
-      
+
       <div className='flex-1 p-8'>
         <div className='max-w-4xl mx-auto'>
           {/* Header */}
@@ -327,6 +374,38 @@ const ShopProfile = () => {
                   />
                 </div>
               </div>
+              <p className='text-xs text-gray-500 mt-2'>
+                These hours will be used to determine available reservation and try-on time slots.
+              </p>
+            </div>
+
+            {/* Available Days Selection */}
+            <div className='mb-6'>
+              <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                Available Days <span className='text-red-500'>*</span>
+              </label>
+              <p className='text-xs text-gray-500 mb-3'>
+                Select the days when customers can make reservations or try-on appointments.
+              </p>
+              <div className='flex flex-wrap gap-2'>
+                {daysOfWeek.map(day => (
+                  <button
+                    key={day}
+                    type='button'
+                    onClick={() => toggleDay(day)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      availableDays.includes(day)
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+              {availableDays.length === 0 && (
+                <p className='text-red-500 text-sm mt-2'>Please select at least one available day</p>
+              )}
             </div>
 
             {/* Contact Information */}
@@ -398,9 +477,9 @@ const ShopProfile = () => {
                   ) : (
                     <div className='relative border border-gray-300 rounded-lg p-4'>
                       {permitPreview.startsWith('http') || permitPreview.startsWith('data:image') ? (
-                        <img 
-                          src={permitPreview} 
-                          alt='Business Permit' 
+                        <img
+                          src={permitPreview}
+                          alt='Business Permit'
                           className='w-full h-32 object-contain'
                         />
                       ) : (
@@ -451,9 +530,9 @@ const ShopProfile = () => {
                   ) : (
                     <div className='relative border border-gray-300 rounded-lg p-4'>
                       {dtiPreview.startsWith('http') || dtiPreview.startsWith('data:image') ? (
-                        <img 
-                          src={dtiPreview} 
-                          alt='DTI Registration' 
+                        <img
+                          src={dtiPreview}
+                          alt='DTI Registration'
                           className='w-full h-32 object-contain'
                         />
                       ) : (

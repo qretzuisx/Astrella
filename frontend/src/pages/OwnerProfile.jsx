@@ -24,9 +24,17 @@ const OwnerProfile = () => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/user/shop-profile/${ownerId}`)
       const data = await response.json()
+      console.log('[DEBUG OwnerProfile] API response:', data)
       
       if (data.success) {
-        setOwner(data.owner)
+        // API returns shopProfile and ownerName, not 'owner' - construct the owner object
+        setOwner({
+          shopProfile: data.shopProfile,
+          name: data.ownerName,
+          email: data.ownerEmail,
+          contactNumber: data.ownerContactNumber,
+          createdAt: data.memberSince
+        })
       } else {
         setError(data.message || 'Owner not found')
       }

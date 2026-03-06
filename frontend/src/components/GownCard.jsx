@@ -84,14 +84,6 @@ const GownCard = ({ gown }) => {
           {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
         </button>
 
-        {/* Location Info */}
-        {gown.location && (
-          <div className="flex items-start gap-1 sm:gap-1.5 mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-gray-100">
-            <img src={assets.location_icon_colored} alt="location" className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 flex-shrink-0" />
-            <span className="text-xs sm:text-sm text-gray-700 line-clamp-1 font-medium">{gown.location}</span>
-          </div>
-        )}
-
         {/* Details - Clean list without grid lines */}
         <div className="mt-auto space-y-1.5 sm:space-y-2">
           <div className="flex items-center gap-1.5 sm:gap-2">

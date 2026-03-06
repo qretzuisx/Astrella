@@ -673,14 +673,20 @@ const ManageGowns = () => {
               {/* Age Group */}
               <div>
                 <label className='block text-sm font-semibold text-gray-700 mb-1'>Age Group</label>
-                <input
-                  type='text'
+                <select
                   name='ageGroup'
                   value={editForm.ageGroup}
                   onChange={handleEditFormChange}
-                  placeholder='e.g., Kids, Teens, Adults'
                   className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                />
+                >
+                  <option value=''>Optional</option>
+                  <option value='6–9 Years'>6–9 Years</option>
+                  <option value='10–12 Years'>10–12 Years</option>
+                  <option value='13–17 Years'>13–17 Years</option>
+                  <option value='18–29 Years'>18–29 Years</option>
+                  <option value='30–59 Years'>30–59 Years</option>
+                  <option value='60+ Years'>60+ Years</option>
+                </select>
               </div>
 
               {/* Gender */}

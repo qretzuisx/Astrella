@@ -341,6 +341,7 @@ const Recommendations = () => {
                       <option value="">Select</option>
                       <option value="Female">Female</option>
                       <option value="Male">Male</option>
+                      <option value="Unisex">Unisex</option>
                     </select>
                   </div>
                 </div>

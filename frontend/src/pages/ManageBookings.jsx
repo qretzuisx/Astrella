@@ -2,18 +2,32 @@ import React, { useEffect, useState } from 'react'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
+import { useSearchParams } from 'react-router-dom'
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([])
+  const [filteredBookings, setFilteredBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all') 
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterGown, setFilterGown] = useState('all') // Filter by gown
   const currency = CURRENCY
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectingPayment, setRejectingPayment] = useState(false)
+
+  // Get URL search params for gown filtering
+  const [searchParams] = useSearchParams()
+  const initialGownFilter = searchParams.get('gownId') || 'all'
+
+  // Set initial gown filter from URL
+  useEffect(() => {
+    if (initialGownFilter !== 'all') {
+      setFilterGown(initialGownFilter)
+    }
+  }, [initialGownFilter])
 
   // Reschedule / Extend modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -34,6 +48,27 @@ const ManageBookings = () => {
   useEffect(() => {
     fetchBookings()
   }, [])
+
+  // Filter bookings when filterStatus or filterGown changes
+  useEffect(() => {
+    let filtered = [...bookings]
+
+    // Filter by status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(booking => booking.status === filterStatus)
+    }
+
+    // Filter by gown
+    if (filterGown !== 'all') {
+      const gownId = filterGown
+      filtered = filtered.filter(booking => {
+        const bookingGownId = booking.gown?._id || booking.gown?.id || booking.gown
+        return bookingGownId === gownId
+      })
+    }
+
+    setFilteredBookings(filtered)
+  }, [bookings, filterStatus, filterGown])
 
   const fetchBookings = async () => {
     try {
@@ -400,11 +435,6 @@ const ManageBookings = () => {
     setRejectionReason('')
     setShowPaymentModal(true)
   }
-
-  // Filter bookings by status
-  const filteredBookings = filterStatus === 'all' 
-    ? bookings 
-    : bookings.filter(booking => booking.status === filterStatus)
 
   if (loading) {
     return (

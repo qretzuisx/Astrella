@@ -224,9 +224,13 @@ const OwnerDashboard = () => {
               {dashboardData?.recentBookings && dashboardData.recentBookings.length > 0 ? (
                 <div className='space-y-4'>
                   {dashboardData.recentBookings.map((booking) => (
-                    <div 
-                      key={booking._id || booking.id} 
-                      className='flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors'
+                    <div
+                      key={booking._id || booking.id}
+                      className='flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer'
+                      onClick={() => {
+                        const gownId = booking.gown?._id || booking.gown?.id || booking.gown
+                        navigate(`/owner/manage-bookings?gownId=${gownId}`)
+                      }}
                     >
                       <div className='flex items-center gap-4'>
                         <img 

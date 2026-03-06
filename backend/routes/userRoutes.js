@@ -1,9 +1,9 @@
 import express from "express";
-import { 
-    getUserData, 
-    loginUser, 
-    registerUser, 
-    requestOwnerRole, 
+import {
+    getUserData,
+    loginUser,
+    registerUser,
+    requestOwnerRole,
     getRecommendations,
     updateProfile,
     changePassword,
@@ -12,7 +12,8 @@ import {
     requestPasswordReset,
     resetPassword,
     updateShopProfile,
-    getShopProfile
+    getShopProfile,
+    getShopOperatingHours
 } from "../controllers/userController.js";
 import { protect} from "../middleware/auth.js"
 import upload from "../middleware/multer.js"
@@ -35,5 +36,6 @@ userRouter.put('/shop-profile', protect, upload.fields([
     { name: 'dtiRegistration', maxCount: 1 }
 ]), updateShopProfile)
 userRouter.get('/shop-profile/:ownerId', getShopProfile)
+userRouter.get('/operating-hours/:ownerId', getShopOperatingHours)
 
 export default userRouter

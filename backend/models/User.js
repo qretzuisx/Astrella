@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
     contactNumber: {type: String, required: true},
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
-    
+
     // Shop Profile (for owners)
     shopProfile: {
         shopName: {type: String, default: ''},
@@ -17,7 +17,11 @@ const userSchema = new mongoose.Schema({
         address: {type: String, default: ''},
         city: {type: String, default: ''},
         contactNumber: {type: String, default: ''}, // Synced with root contactNumber
-        operatingHours: {type: String, default: ''},
+        // Operating hours - stored as separate opening and closing times for booking validation
+        openingTime: {type: String, default: '09:00'}, // Format: HH:MM (24-hour)
+        closingTime: {type: String, default: '18:00'}, // Format: HH:MM (24-hour)
+        operatingHours: {type: String, default: ''}, // Human-readable format for display
+        availableDays: {type: [String], default: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']},
         businessPermit: {type: String, default: ''}, // URL to uploaded document
         dtiRegistration: {type: String, default: ''}, // URL to uploaded document
         verified: {type: Boolean, default: false},

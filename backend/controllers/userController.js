@@ -480,7 +480,7 @@ export const deleteAccount = async (req, res) => {
 // Get AI Recommendations
 export const getRecommendations = async (req, res) => {
     try {
-        const { bodyType, skinTone, height, eventType, faceShape } = req.query;
+        const { bodyType, skinTone, height, eventType, faceShape, age, sex } = req.query;
 
         // Only exclude globally unavailable gowns (owner toggled off).
         // Reservation / In-Use / In-Laundry gowns are still shown so users can see them for future bookings.
@@ -521,14 +521,33 @@ export const getRecommendations = async (req, res) => {
                 return res.json({ 
                     success: true, 
                     recommendations: [],
-                    preferences: { bodyType, skinTone, height, eventType, faceShape },
+                    preferences: { bodyType, skinTone, height, eventType, faceShape, age, sex },
                     message: `No gowns available for ${eventType} events` 
                 });
             }
         }
 
-        // If no preferences provided, return all gowns
-        if (!bodyType && !skinTone && !height && !eventType && !faceShape) {
+        // Filter by age group if provided
+        if (age) {
+            const userAge = age.toLowerCase().trim();
+            allGowns = allGowns.filter(gown => {
+                const gownAge = (gown.ageGroup || '').toLowerCase().trim();
+                return gownAge === userAge;
+            });
+        }
+
+        // Filter by sex if provided
+        if (sex) {
+            const userSex = sex.toLowerCase().trim();
+            allGowns = allGowns.filter(gown => {
+                const gownSex = (gown.sex || '').toLowerCase().trim();
+                // Also match Unisex gowns when user selects Male or Female
+                return gownSex === userSex || gownSex === 'unisex';
+            });
+        }
+
+        // If no preferences provided, return all filtered gowns
+        if (!bodyType && !skinTone && !height && !eventType && !faceShape && !age && !sex) {
             return res.json({ 
                 success: true, 
                 recommendations: allGowns.map(gown => ({
@@ -540,7 +559,7 @@ export const getRecommendations = async (req, res) => {
         }
 
         // Calculate scores for each gown (now only scoring the filtered gowns)
-        const preferences = { bodyType, skinTone, height, eventType, faceShape };
+        const preferences = { bodyType, skinTone, height, eventType, faceShape, age, sex };
         const scoredGowns = allGowns.map(gown => {
             const score = calculateRecommendationScore(gown, preferences);
             return {
@@ -572,7 +591,7 @@ export const getRecommendations = async (req, res) => {
 export const updateShopProfile = async (req, res) => {
     try {
         const { _id } = req.user
-        const { shopName, description, address, city, operatingHours, facebook, instagram } = req.body
+        const { shopName, description, address, city, operatingHours, availableDays, facebook, instagram } = req.body
 
         console.log('Shop profile update request:', { shopName, address, city })
         console.log('Files received:', req.files ? Object.keys(req.files) : 'none')
@@ -657,6 +676,7 @@ export const updateShopProfile = async (req, res) => {
             city: city || user.shopProfile?.city || '',
             contactNumber: contactNumber,
             operatingHours: operatingHours || user.shopProfile?.operatingHours || '',
+            availableDays: availableDays || user.shopProfile?.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             socialMedia: {
                 facebook: facebook || user.shopProfile?.socialMedia?.facebook || '',
                 instagram: instagram || user.shopProfile?.socialMedia?.instagram || ''
@@ -688,26 +708,60 @@ export const updateShopProfile = async (req, res) => {
 export const getShopProfile = async (req, res) => {
     try {
         const { ownerId } = req.params
-        
+        console.log('[DEBUG getShopProfile] Fetching profile for ownerId:', ownerId)
+
         const owner = await User.findById(ownerId).select('name email contactNumber shopProfile createdAt role')
-        
+
         if (!owner) {
+            console.log('[DEBUG getShopProfile] Owner not found for id:', ownerId)
             return res.status(404).json({ success: false, message: "Owner not found" })
         }
 
-        if (owner.role !== 'owner') {
-            return res.status(404).json({ success: false, message: "User is not an owner" })
+        console.log('[DEBUG getShopProfile] Owner found:', owner.name, 'role:', owner.role)
+
+        // Skip role check - allow viewing profiles for users with any role or no role set
+        // This fixes issues with older owner accounts that may not have role properly set
+        // if (owner.role !== 'owner') {
+        //     console.log('[DEBUG getShopProfile] User is not an owner, role:', owner.role)
+        //     return res.status(404).json({ success: false, message: "User is not an owner" })
+        // }
+
+        res.json({
+            success: true,
+            shopProfile: owner.shopProfile,
+            ownerName: owner.name,
+            ownerEmail: owner.email,
+            ownerContactNumber: owner.contactNumber,
+            memberSince: owner.createdAt
+        })
+
+    } catch (error) {
+        console.log('[DEBUG getShopProfile] Error:', error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// API to get shop operating hours for booking (openingTime, closingTime, availableDays)
+export const getShopOperatingHours = async (req, res) => {
+    try {
+        const { ownerId } = req.params
+
+        const owner = await User.findById(ownerId).select('shopProfile role')
+
+        if (!owner || owner.role !== 'owner') {
+            return res.status(404).json({ success: false, message: "Shop not found" })
         }
 
-        res.json({ 
-            success: true, 
-            owner: {
-                _id: owner._id,
-                name: owner.name,
-                email: owner.email,
-                contactNumber: owner.contactNumber,
-                shopProfile: owner.shopProfile,
-                joinedDate: owner.createdAt
+        const shopProfile = owner.shopProfile || {}
+
+        // Return operating hours in a format useful for booking
+        res.json({
+            success: true,
+            operatingHours: {
+                openingTime: shopProfile.openingTime || '09:00',
+                closingTime: shopProfile.closingTime || '19:00',
+                availableDays: shopProfile.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                operatingHours: shopProfile.operatingHours || '09:00-19:00'
             }
         })
 
