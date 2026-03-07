@@ -285,9 +285,9 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: "Return date and time cannot be in the past." });
     }
 
-    // Trial bookings are 1-hour appointment slots (only block the time slot, not the entire day).
+    // Trial bookings are 30-minute appointment slots (only block the time slot, not the entire day).
     if (isTrial) {
-      returnDateTime = new Date(pickupDateTime.getTime() + 60 * 60 * 1000); // 1 hour after pickup
+      returnDateTime = new Date(pickupDateTime.getTime() + 30 * 60 * 1000); // 30 minutes after pickup
     }
 
     // For trials, returnDateTime may equal pickupDateTime (single-day appointment).
@@ -469,7 +469,7 @@ export const validateBookingWindow = async (req, res) => {
     let returnDateTime = combineDateAndTime(effectiveReturnDate, effectiveReturnTime);
 
     if (isTrial) {
-      returnDateTime = new Date(pickupDateTime.getTime() + 60 * 60 * 1000); // 1 hour after pickup for trials
+      returnDateTime = new Date(pickupDateTime.getTime() + 30 * 60 * 1000); // 30 minutes after pickup for trials
     }
 
     // For trials, return must be strictly after pickup (appointment has duration).

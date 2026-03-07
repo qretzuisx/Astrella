@@ -205,7 +205,7 @@ const GownDetails = () => {
         const end = formatTimeAmPm(slot.end)
         return (slot.start === slot.end) ? start : `${start} - ${end}`
       }).join(', ')
-      return { reason: 'trial', message: `Currently trying at ${bookedTimes} - select other time. Apparel Expires 1 hour after trying on!`, allowSelection: true }
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
     }
     
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
@@ -270,7 +270,7 @@ const GownDetails = () => {
       const iso = toIsoDate(cursor)
       const r = blockedReasonForDate(iso)
       if (r) {
-        setFieldError('returnDate', `${r.message} Range contains blocked dates.`)
+        setFieldError('returnDate', r.message)
         return
       }
       cursor.setDate(cursor.getDate() + 1)
