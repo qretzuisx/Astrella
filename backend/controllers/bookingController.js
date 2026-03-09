@@ -88,7 +88,7 @@ const doTimeSlotsOverlap = (slot1Start, slot1End, slot2Start, slot2End) => {
 // Helper function to get all laundry dates for a gown (as date strings YYYY-MM-DD)
 const getLaundryDates = async (gownId, laundryDays) => {
   if (!laundryDays || laundryDays <= 0) return new Set();
-  
+
   const laundryDateSet = new Set();
   const now = new Date();
   const Bookings = await Booking.find({
@@ -102,6 +102,10 @@ const getLaundryDates = async (gownId, laundryDays) => {
   });
 
   Bookings.forEach((booking) => {
+    // Skip trial bookings - they don't have laundry days
+    const isBookingTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+    if (isBookingTrial) return;
+
     const returnDate = new Date(booking.returnDate);
     for (let i = 1; i <= laundryDays; i++) {
       const laundryDate = new Date(returnDate);
@@ -351,7 +355,7 @@ export const createBooking = async (req, res) => {
     // Determine booking type
     const finalBookingType = isTrial ? 'trial' : 'reservation';
 
-    // For trial bookings, we hold only for the appointment date/time.
+    // For trial bookings, the hold expires at the end of the 30-minute try-on slot.
     const finalReturnDateTime = returnDateTime;
     const trialExpiresAt = isTrial ? new Date(finalReturnDateTime) : undefined;
 
@@ -790,12 +794,18 @@ export const updateBooking = async (req, res) => {
 
       const blockedDates = new Set();
       otherBookings.forEach((b) => {
+        const isOtherTrial = b.status === 'trial' || b.bookingType === 'trial';
         const s = new Date(b.pickupDate);
         const e = new Date(b.returnDate);
-        for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-          blockedDates.add(d.toISOString().split('T')[0]);
+
+        // Only block dates for non-trial bookings
+        if (!isOtherTrial) {
+          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            blockedDates.add(d.toISOString().split('T')[0]);
+          }
         }
-        const laundryDays = (b.status === 'trial' || b.bookingType === 'trial') ? 0 : Math.max(gown.laundryDays || 0, 0);
+
+        const laundryDays = isOtherTrial ? 0 : Math.max(gown.laundryDays || 0, 0);
         for (let i = 1; i <= laundryDays; i++) {
           const ld = new Date(e);
           ld.setDate(ld.getDate() + i);
@@ -967,7 +977,7 @@ export const updateBooking = async (req, res) => {
     }
 
     if (isTrial) {
-      newReturnDateTime = new Date(newPickupDateTime);
+      newReturnDateTime = new Date(newPickupDateTime.getTime() + 30 * 60 * 1000); // 30-minute trial slot
     }
 
     // For trials, return may equal pickup (single-day appointment).
@@ -993,24 +1003,42 @@ export const updateBooking = async (req, res) => {
       ]
     });
 
-    const blockedDates = new Set();
-    otherBookings.forEach((b) => {
-      const s = new Date(b.pickupDate);
-      const e = new Date(b.returnDate);
-      for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-        blockedDates.add(toLocalDateString(d));
+    // Trial bookings: check time-slot overlap only (don't block entire days)
+    // Reservation bookings: check day-level blocking + laundry days
+    if (isTrial) {
+      for (const b of otherBookings) {
+        const existingStart = new Date(b.pickupDate);
+        const existingEnd = new Date(b.returnDate);
+        if (doTimeSlotsOverlap(newPickupDateTime, newReturnDateTime, existingStart, existingEnd)) {
+          return res.status(409).json({ success: false, message: 'Selected time slot overlaps an existing booking. Please choose a different time.' });
+        }
       }
-      const laundryDays = (b.status === 'trial' || b.bookingType === 'trial') ? 0 : Math.max(gown.laundryDays || 0, 0);
-      for (let i = 1; i <= laundryDays; i++) {
-        const ld = new Date(e);
-        ld.setDate(ld.getDate() + i);
-        blockedDates.add(toLocalDateString(ld));
-      }
-    });
+    } else {
+      const blockedDates = new Set();
+      otherBookings.forEach((b) => {
+        const isOtherTrial = b.status === 'trial' || b.bookingType === 'trial';
+        const s = new Date(b.pickupDate);
+        const e = new Date(b.returnDate);
 
-    const overlaps = dateRangeOverlapsBlocked(newPickupDateTime, newReturnDateTime, blockedDates);
-    if (overlaps) {
-      return res.status(409).json({ success: false, message: 'Selected schedule overlaps an existing booking/trial/laundry hold.' });
+        // Only block dates for non-trial bookings
+        if (!isOtherTrial) {
+          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            blockedDates.add(toLocalDateString(d));
+          }
+        }
+
+        const laundryDays = isOtherTrial ? 0 : Math.max(gown.laundryDays || 0, 0);
+        for (let i = 1; i <= laundryDays; i++) {
+          const ld = new Date(e);
+          ld.setDate(ld.getDate() + i);
+          blockedDates.add(toLocalDateString(ld));
+        }
+      });
+
+      const overlaps = dateRangeOverlapsBlocked(newPickupDateTime, newReturnDateTime, blockedDates);
+      if (overlaps) {
+        return res.status(409).json({ success: false, message: 'Selected schedule overlaps an existing booking/trial/laundry hold.' });
+      }
     }
 
     booking.pickupDate = newPickupDateTime;
@@ -1019,7 +1047,7 @@ export const updateBooking = async (req, res) => {
     booking.returnTime = isTrial ? pickupTime : effectiveReturnTime;
 
     if (isTrial) {
-      booking.trialExpiresAt = newReturnDateTime;
+      booking.trialExpiresAt = newReturnDateTime; // 30 minutes after the appointment start
     }
 
     // Recalculate price based on new rental period (for non-trial bookings)

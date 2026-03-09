@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
@@ -235,15 +235,17 @@ const GownDetails = () => {
     const fromIso = toIsoDate(range.from)
     const reason = blockedReasonForDate(fromIso)
     if (reason) {
-      // If allowSelection is true (trial slots), allow selection but show message
       if (reason.allowSelection) {
-        setFieldError('pickupDate', reason.message)
-        setPickupDate(fromIso)
+        // Trial time slots exist on this date, but the user can still book a different time.
+        // Show the info via blockedClick (informational only), NOT via formErrors
+        // (formErrors would block the availability validation from running).
+        setBlockedClick({ date: fromIso, message: reason.message })
+        // Fall through to normal selection logic below — the backend will check time-slot overlap.
+      } else {
+        // For reserved/laundry dates, show error and don't allow selection
+        setFieldError('pickupDate', `${reason.message} Please choose another date.`)
         return
       }
-      // For reserved/laundry dates, show error and don't allow selection
-      setFieldError('pickupDate', `${reason.message} Please choose another date.`)
-      return
     }
 
     setPickupDate(fromIso)
@@ -269,7 +271,8 @@ const GownDetails = () => {
     while (cursor <= end) {
       const iso = toIsoDate(cursor)
       const r = blockedReasonForDate(iso)
-      if (r) {
+      // Skip dates that only have trial time slots (allowSelection) — backend handles time overlap
+      if (r && !r.allowSelection) {
         setFieldError('returnDate', r.message)
         return
       }
@@ -504,7 +507,17 @@ const GownDetails = () => {
         const data = await response.json()
         if (!ignore) {
           if (response.ok && data.success) {
-            setScheduleStatus({ loading: false, message: 'Schedule is available.', valid: true })
+            // Backend returns { success: true, available: true/false }
+            // success = API call worked; available = time slot is actually free
+            if (data.available === false) {
+              setScheduleStatus({
+                loading: false,
+                message: data.message || 'This time slot conflicts with an existing booking.',
+                valid: false
+              })
+            } else {
+              setScheduleStatus({ loading: false, message: 'Schedule is available.', valid: true })
+            }
           } else {
             setScheduleStatus({
               loading: false,
@@ -1088,8 +1101,12 @@ const GownDetails = () => {
                 )}
 
                 {blockedClick && (
-                  <div className='mt-3 mb-2 inline-flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm'>
-                    <span className='font-semibold'>Blocked:</span>
+                  <div className={`mt-3 mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                    blockedClick.message?.includes('trying') 
+                      ? 'bg-amber-50 border border-amber-200 text-amber-800' 
+                      : 'bg-red-50 border border-red-200 text-red-800'
+                  }`}>
+                    <span className='font-semibold'>{blockedClick.message?.includes('trying') ? 'ℹ️ Note:' : 'Blocked:'}</span>
                     <span>{blockedClick.message}</span>
                   </div>
                 )}
