@@ -22,8 +22,16 @@ const gownSchema = new mongoose.Schema({
         enum: ['Available', 'Unavailable', 'In-Laundry', 'Reserved', 'In-Use'],
         default: 'Available'
     },
+    // Owner-set status override. When non-empty, takes priority over dynamic calculation.
+    // This allows owners to manually mark a gown as In-Laundry or Unavailable
+    // without it being overwritten on the next read.
+    statusOverride: {
+        type: String,
+        enum: ['', 'In-Laundry', 'Unavailable'],
+        default: ''
+    },
     // Optional demographic tags to improve browsing/recommendations
-    ageGroup: {type: String, default: ''},
+    ageGroup: {type: [String], default: []},
     sex: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},
 }, {timestamps: true})
 

@@ -1,11 +1,9 @@
-
-
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Outfit:wght@100..900&display=swap');
-                                         
+
 
 @import "tailwindcss";
 
-*{
+* {
   font-family: "Geist", sans-serif;
 }
 
@@ -49,6 +47,3 @@
   --color-light: #F5F5F5;
   --color-borderColor: #1A2350;
 }
-
-
-

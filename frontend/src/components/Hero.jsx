@@ -5,7 +5,7 @@ import ImageAnalysis from './ImageAnalysis';
 
 const Hero = () => {
   const navigate = useNavigate();
-  const [bodyType, setBodyType] = useState(''); 
+  const [bodyType, setBodyType] = useState('');
   const [skinTone, setSkinTone] = useState('');
   const [eventType, seteventType] = useState('');
   const [faceShape, setfaceShape] = useState('');
@@ -16,12 +16,12 @@ const Hero = () => {
 
   const handleImageAnalysisComplete = (results) => {
     console.log('📥 Received analysis results:', results);
-    
+
     // Set detected attributes
     setSkinTone(results.skinTone || 'Neutral');
     setBodyType(results.bodyType || 'Rectangle');
     setfaceShape(results.faceShape || 'Oval');
-    
+
     // Set age group
     if (results.ageGroup) {
       console.log('✅ Setting age group from results.ageGroup:', results.ageGroup);
@@ -39,7 +39,7 @@ const Hero = () => {
     } else {
       console.warn('⚠️ No age data available in results');
     }
-    
+
     // Set sex
     if (results.sex) {
       console.log('✅ Setting sex from results.sex:', results.sex);
@@ -64,7 +64,7 @@ const Hero = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setValidationError('');
-    
+
     // Validate: ALL fields must be filled (except eventType which is user's choice)
     const missingFields = [];
     if (!bodyType) missingFields.push('Body Type');
@@ -73,12 +73,12 @@ const Hero = () => {
     if (!faceShape) missingFields.push('Face Shape');
     if (!ageGroup) missingFields.push('Age Group');
     if (!sex) missingFields.push('Sex');
-    
+
     if (missingFields.length > 0) {
       setValidationError(`Please select: ${missingFields.join(', ')}`);
       return;
     }
-    
+
     // Build query params
     const params = new URLSearchParams();
     params.append('bodyType', bodyType);
@@ -93,7 +93,7 @@ const Hero = () => {
   };
 
   return (
-    <div 
+    <div
       className='min-h-screen flex flex-col items-center pt-20 sm:pt-32 gap-8 sm:gap-14 text-center py-8 px-4 relative'
     >
       {/* Background Image with Light Overlay */}
@@ -108,7 +108,7 @@ const Hero = () => {
       />
       {/* Light overlay for better content visibility */}
       <div className='absolute inset-0 bg-gradient-to-b from-white/8 via-white/5 to-white/12 backdrop-blur-[0.5px] -z-10' />
-      
+
       {/* Clean, Simple Heading */}
       <h1 className='text-3xl sm:text-4xl md:text-6xl font-bold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)] px-4 leading-tight'>
         Astrella helps you wear the Best You.
@@ -117,10 +117,10 @@ const Hero = () => {
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full max-w-[1000px]">
         {/* Glassmorphism Selection Fields in Single Line */}
         <div className="flex flex-wrap items-center justify-center gap-3 bg-white/40 backdrop-blur-md p-3 sm:p-4 rounded-3xl sm:rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/50 w-full">
-          
-          <select 
-            value={bodyType} 
-            onChange={(e) => setBodyType(e.target.value)} 
+
+          <select
+            value={bodyType}
+            onChange={(e) => setBodyType(e.target.value)}
             className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full text-sm sm:text-base text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
           >
             <option value="">Body Type</option>
@@ -129,9 +129,9 @@ const Hero = () => {
             ))}
           </select>
 
-          <select 
-            value={skinTone} 
-            onChange={(e) => setSkinTone(e.target.value)} 
+          <select
+            value={skinTone}
+            onChange={(e) => setSkinTone(e.target.value)}
             className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full text-sm sm:text-base text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
           >
             <option value="">Skin Tone</option>
@@ -140,9 +140,9 @@ const Hero = () => {
             ))}
           </select>
 
-          <select 
-            value={eventType} 
-            onChange={(e) => seteventType(e.target.value)} 
+          <select
+            value={eventType}
+            onChange={(e) => seteventType(e.target.value)}
             className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full text-sm sm:text-base text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
           >
             <option value="">Event Type</option>
@@ -151,9 +151,9 @@ const Hero = () => {
             ))}
           </select>
 
-          <select 
-            value={faceShape} 
-            onChange={(e) => setfaceShape(e.target.value)} 
+          <select
+            value={faceShape}
+            onChange={(e) => setfaceShape(e.target.value)}
             className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-white/60 rounded-full text-sm sm:text-base text-gray-800 font-semibold hover:border-primary focus:border-primary focus:outline-none transition-all bg-white/60 backdrop-blur-sm shadow-md"
           >
             <option value="">Face Shape</option>

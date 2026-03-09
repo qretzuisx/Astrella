@@ -9,7 +9,7 @@ const AddGown = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  
+
   const [formData, setFormData] = useState({
     name: '',
     eventType: [],
@@ -17,11 +17,11 @@ const AddGown = () => {
     price: '',
     color: '',
     size: ['Free Size'],
-    ageGroup: '',
+    ageGroup: [],
     sex: '',
     available: true
   })
-  
+
   const [selectedImage, setSelectedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
 
@@ -117,6 +117,18 @@ const AddGown = () => {
       return
     }
 
+    if (formData.ageGroup.length === 0) {
+      setError('Please select at least one age group')
+      setLoading(false)
+      return
+    }
+
+    if (!formData.sex) {
+      setError('Please select a gender')
+      setLoading(false)
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -167,7 +179,7 @@ const AddGown = () => {
         })
         setSelectedImage(null)
         setImagePreview(null)
-        
+
         // Redirect to manage gowns and trigger refresh
         setTimeout(() => {
           navigate('/owner/manage-gown', { state: { refresh: true } })
@@ -186,7 +198,7 @@ const AddGown = () => {
   return (
     <div className='flex min-h-screen bg-gray-50'>
       <OwnerSidebar />
-      
+
       <div className='flex-1 p-4 sm:p-6 lg:p-8'>
         <div className='max-w-3xl mx-auto'>
           {/* Header */}
@@ -250,19 +262,7 @@ const AddGown = () => {
                 />
               </div>
 
-              {/* Info Box - Location from Shop Profile */}
-              <div className='col-span-1 md:col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
-                <p className='text-sm text-blue-800'>
-                  <strong>Note:</strong> Location and contact information will be automatically taken from your Shop Profile. 
-                  <button
-                    type='button'
-                    onClick={() => navigate('/owner/shop-profile')}
-                    className='ml-1 text-primary font-semibold hover:underline'
-                  >
-                    Update Shop Profile
-                  </button>
-                </p>
-              </div>
+
 
               {/* Event Type */}
               <div>
@@ -275,11 +275,10 @@ const AddGown = () => {
                       key={eventType}
                       type='button'
                       onClick={() => handleEventTypeChange(eventType.toLowerCase())}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all capitalize ${
-                        formData.eventType.includes(eventType.toLowerCase())
+                      className={`px-4 py-2 rounded-lg border-2 transition-all capitalize ${formData.eventType.includes(eventType.toLowerCase())
                           ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                      }`}
+                        }`}
                     >
                       {eventType}
                     </button>
@@ -344,35 +343,45 @@ const AddGown = () => {
               {/* Demographic Tags */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Age Group</label>
-                  <select
-                    name='ageGroup'
-                    value={formData.ageGroup}
-                    onChange={handleInputChange}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  >
-                    <option value=''>Optional</option>
-                    <option value='6–9 Years'>6–9 Years</option>
-                    <option value='10–12 Years'>10–12 Years</option>
-                    <option value='13–17 Years'>13–17 Years</option>
-                    <option value='18–29 Years'>18–29 Years</option>
-                    <option value='30–59 Years'>30–59 Years</option>
-                    <option value='60+ Years'>60+ Years</option>
-                  </select>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Age Group <span className='text-red-500'>*</span></label>
+                  <div className='grid grid-cols-2 gap-2'>
+                    {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map((age) => (
+                      <button
+                        key={age}
+                        type='button'
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          ageGroup: prev.ageGroup.includes(age)
+                            ? prev.ageGroup.filter(a => a !== age)
+                            : [...prev.ageGroup, age]
+                        }))}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${formData.ageGroup.includes(age)
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                          }`}
+                      >
+                        {age}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Sex</label>
-                  <select
-                    name='sex'
-                    value={formData.sex}
-                    onChange={handleInputChange}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  >
-                    <option value=''>Optional</option>
-                    <option value='Female'>Female</option>
-                    <option value='Male'>Male</option>
-                    <option value='Unisex'>Unisex</option>
-                  </select>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Sex <span className='text-red-500'>*</span></label>
+                  <div className='grid grid-cols-3 gap-2'>
+                    {['Female', 'Male', 'Unisex'].map((sex) => (
+                      <button
+                        key={sex}
+                        type='button'
+                        onClick={() => setFormData({ ...formData, sex })}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${formData.sex === sex
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                          }`}
+                      >
+                        {sex}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -387,11 +396,10 @@ const AddGown = () => {
                       key={size}
                       type='button'
                       onClick={() => handleSizeChange(size)}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                        formData.size.includes(size)
+                      className={`px-4 py-2 rounded-lg border-2 transition-all ${formData.size.includes(size)
                           ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -408,7 +416,7 @@ const AddGown = () => {
                   type='checkbox'
                   id='available'
                   checked={formData.available}
-                  onChange={(e) => setFormData({...formData, available: e.target.checked})}
+                  onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
                   className='w-5 h-5 text-primary rounded focus:ring-primary'
                 />
                 <label htmlFor='available' className='text-sm font-medium text-gray-700'>
@@ -421,11 +429,10 @@ const AddGown = () => {
                 <button
                   type='submit'
                   disabled={loading}
-                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
-                    loading
+                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all duration-300 ${loading
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
-                  }`}
+                    }`}
                 >
                   {loading ? 'Adding Apparel...' : 'Add Apparel'}
                 </button>

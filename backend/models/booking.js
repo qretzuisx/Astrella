@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-const {ObjectId} = mongoose.Schema.Types
+const { ObjectId } = mongoose.Schema.Types
 
 const bookingSchema = new mongoose.Schema({
-    gown: {type: ObjectId, ref: "Gown", required: true},
-    user: {type: ObjectId, ref: "User", required: true},
-    owner: {type: ObjectId, ref: "User", required: true},
+    gown: { type: ObjectId, ref: "Gown", required: true },
+    user: { type: ObjectId, ref: "User", required: true },
+    owner: { type: ObjectId, ref: "User", required: true },
     // Booking lifecycle:
     // reservation: pending -> confirmed -> completed OR canceled
     // trial: trial -> canceled/expired OR converted to pending
@@ -21,19 +21,19 @@ const bookingSchema = new mongoose.Schema({
     // Used only for trial bookings. If now > trialExpiresAt, the hold should be treated as expired.
     trialExpiresAt: { type: Date },
 
-    pickupDate: {type: Date, required: true},
-    returnDate: {type: Date, required: true},
-    pickupTime: {type: String},
-    returnTime: {type: String},
+    pickupDate: { type: Date, required: true },
+    returnDate: { type: Date, required: true },
+    pickupTime: { type: String },
+    returnTime: { type: String },
     // Timestamps for owner confirmations, used by Manage Booking UI
     pickupConfirmedAt: { type: Date },
     returnConfirmedAt: { type: Date },
-    price: {type: Number, required: true},
-    contactNumber: {type: String, default: ''},
+    price: { type: Number, required: true },
+    contactNumber: { type: String, default: '' },
     measurements: {
-        waist: {type: Number},
-        hips: {type: Number},
-        unit: {type: String, default: 'inches'}
+        waist: { type: Number },
+        hips: { type: Number },
+        unit: { type: String, default: 'inches' }
     },
     // Payment information
     payment: {
@@ -56,7 +56,7 @@ const bookingSchema = new mongoose.Schema({
     rejectionReason: { type: String, default: '' },
     balancePaidAt: { type: Date },
     balancePaidAmount: { type: Number }
-}, {timestamps: true})
+}, { timestamps: true })
 
 const Booking = mongoose.model('Booking', bookingSchema)
 export default Booking;

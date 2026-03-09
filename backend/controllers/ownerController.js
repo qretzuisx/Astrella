@@ -15,7 +15,13 @@ const clampLaundryDays = (value) => {
 
 // API to list gowns
 const normalizeOptionalTags = (gown) => {
-    const normalizedAgeGroup = typeof gown.ageGroup === 'string' ? gown.ageGroup.trim() : ''
+    let normalizedAgeGroup = []
+    if (Array.isArray(gown.ageGroup)) {
+        normalizedAgeGroup = gown.ageGroup.filter(a => typeof a === 'string' && a.trim() !== '').map(a => a.trim())
+    } else if (typeof gown.ageGroup === 'string' && gown.ageGroup.trim() !== '') {
+        normalizedAgeGroup = [gown.ageGroup.trim()]
+    }
+
     let normalizedSex = typeof gown.sex === 'string' ? gown.sex.trim() : ''
     if (normalizedSex) {
         const s = normalizedSex.toLowerCase()
@@ -46,9 +52,9 @@ const uploadAndOptimizeGownImage = async (imageFile) => {
     return optimizedImageUrl
 }
 
-export const addGown = async (req, res) =>{
+export const addGown = async (req, res) => {
     try {
-        const {_id} = req.user;
+        const { _id } = req.user;
         let gown;
         try {
             gown = JSON.parse(req.body.gownData);
@@ -58,16 +64,16 @@ export const addGown = async (req, res) =>{
         const imageFile = req.file;
         const laundryDays = clampLaundryDays(gown.laundryDays ?? 1);
 
-        if(!imageFile) {
+        if (!imageFile) {
             return res
-            .status(400)
-            .json({success: false, message: "No image uploaded"});
+                .status(400)
+                .json({ success: false, message: "No image uploaded" });
         }
 
         // Fetch user's shop profile
         const user = await User.findById(_id);
         if (!user) {
-            return res.status(404).json({success: false, message: "User not found"});
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         // Validate that shop profile has required information
@@ -98,6 +104,14 @@ export const addGown = async (req, res) =>{
         // Normalize ageGroup/sex (optional)
         const { normalizedAgeGroup, normalizedSex } = normalizeOptionalTags(gown)
 
+        if (normalizedAgeGroup.length === 0) {
+            return res.status(400).json({ success: false, message: "Age group is required" });
+        }
+
+        if (!normalizedSex) {
+            return res.status(400).json({ success: false, message: "Sex/Gender is required" });
+        }
+
         await Gown.create({
             ...gown,
             description: typeof gown.description === 'string' ? gown.description : '',
@@ -111,29 +125,34 @@ export const addGown = async (req, res) =>{
             contactNumber: gownContactNumber
         });
 
-        res.json({success: true, message: "Gown Added"})
+        res.json({ success: true, message: "Gown Added" })
 
 
     } catch (error) {
-            console.error(error);
-            res.json({success: false, message: error.message})
+        console.error(error);
+        res.json({ success: false, message: error.message })
     }
 }
 
 // API to list owner gowns
-export const getOwnersGowns = async (req, res)=>{
+export const getOwnersGowns = async (req, res) => {
     try {
-        const {_id} = req.user;
-        const gowns = await Gown.find({owner: _id })
+        const { _id } = req.user;
+        const gowns = await Gown.find({ owner: _id })
         // Calculate actual status for each gown based on current date and bookings
         for (let gown of gowns) {
-            gown.status = await calculateActualGownStatus(gown._id);
+            // Respect owner's manual status override (In-Laundry, Unavailable)
+            if (gown.statusOverride) {
+                gown.status = gown.statusOverride;
+            } else {
+                gown.status = await calculateActualGownStatus(gown._id);
+            }
         }
-        res.json({success: true, gowns})
+        res.json({ success: true, gowns })
     } catch (error) {
-            console.error(error);
-            res.json({success: false, message: error.message})
-        
+        console.error(error);
+        res.json({ success: false, message: error.message })
+
     }
 }
 
@@ -145,7 +164,12 @@ export const getAllGowns = async (req, res) => {
             .sort({ createdAt: -1 })
         // Calculate actual status for each gown based on current date and bookings
         for (let gown of gowns) {
-            gown.status = await calculateActualGownStatus(gown._id);
+            // Respect owner's manual status override (In-Laundry, Unavailable)
+            if (gown.statusOverride) {
+                gown.status = gown.statusOverride;
+            } else {
+                gown.status = await calculateActualGownStatus(gown._id);
+            }
         }
         res.json({ success: true, gowns })
     } catch (error) {
@@ -162,8 +186,12 @@ export const getGownById = async (req, res) => {
         if (!gown) {
             return res.status(404).json({ success: false, message: 'Gown not found' });
         }
-        // Calculate actual status based on current date and active bookings
-        gown.status = await calculateActualGownStatus(gown._id);
+        // Respect owner's manual status override, otherwise calculate dynamically
+        if (gown.statusOverride) {
+            gown.status = gown.statusOverride;
+        } else {
+            gown.status = await calculateActualGownStatus(gown._id);
+        }
         res.json({ success: true, gown });
     } catch (error) {
         console.error('getGownById:', error);
@@ -172,42 +200,42 @@ export const getGownById = async (req, res) => {
 };
 
 // API to toggle Gown Availability
-export const ToggleGownAvailability = async (req, res)=>{
+export const ToggleGownAvailability = async (req, res) => {
     try {
-         const {_id} = req.user;
-         const {gownID} = req.body
+        const { _id } = req.user;
+        const { gownID } = req.body
         const gown = await Gown.findById(gownID)
 
         if (!gown) {
             return res.status(404).json({ success: false, message: 'Gown not found' })
         }
 
-        if(gown.owner.toString() !== _id.toString()){
+        if (gown.owner.toString() !== _id.toString()) {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
         gown.available = !gown.available;
         await gown.save();
-        res.json({success: true, message: "Availability Toggled", available: gown.available})
+        res.json({ success: true, message: "Availability Toggled", available: gown.available })
     } catch (error) {
         console.error(error);
-        res.json({success: false, message: error.message})
-        
+        res.json({ success: false, message: error.message })
+
     }
 }
 
 // API to delete a gown
-export const DeleteGown = async (req, res)=>{
+export const DeleteGown = async (req, res) => {
     try {
-         const {_id} = req.user;
-         const {gownID} = req.body
+        const { _id } = req.user;
+        const { gownID } = req.body
         const gown = await Gown.findById(gownID)
 
         if (!gown) {
             return res.status(404).json({ success: false, message: 'Gown not found' })
         }
 
-        if(gown.owner.toString() !== _id.toString()){
+        if (gown.owner.toString() !== _id.toString()) {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
@@ -218,9 +246,9 @@ export const DeleteGown = async (req, res)=>{
         })
 
         if (activeBookings) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Cannot delete gown with active bookings. Please cancel or complete all bookings first.' 
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete gown with active bookings. Please cancel or complete all bookings first.'
             })
         }
 
@@ -229,17 +257,17 @@ export const DeleteGown = async (req, res)=>{
 
         // Delete the gown from the database
         await Gown.findByIdAndDelete(gownID)
-        res.json({success: true, message: "Gown and all associated booking records deleted successfully"})
+        res.json({ success: true, message: "Gown and all associated booking records deleted successfully" })
     } catch (error) {
         console.error(error);
-        res.json({success: false, message: error.message})
-        
+        res.json({ success: false, message: error.message })
+
     }
 }
 
 export const updateLaundryDays = async (req, res) => {
     try {
-        const {_id} = req.user;
+        const { _id } = req.user;
         const { gownID, laundryDays } = req.body;
 
         if (!gownID) {
@@ -284,9 +312,9 @@ export const updateGown = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
-        // Fields that can be updated
-        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'sex', 'status'];
-        
+        // Fields that can be updated (excluding 'status' — handled separately below)
+        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'sex'];
+
         // Update each provided field
         updatableFields.forEach(field => {
             if (req.body.hasOwnProperty(field) && req.body[field] !== undefined) {
@@ -296,15 +324,24 @@ export const updateGown = async (req, res) => {
 
         // Normalize ageGroup/sex (optional)
         const { normalizedAgeGroup, normalizedSex } = normalizeOptionalTags(gown);
+
+        if (normalizedAgeGroup.length === 0) {
+            return res.status(400).json({ success: false, message: "Age group is required" });
+        }
+
+        if (!normalizedSex) {
+            return res.status(400).json({ success: false, message: "Sex/Gender is required" });
+        }
+
         gown.ageGroup = normalizedAgeGroup;
         gown.sex = normalizedSex;
 
         await gown.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "Gown updated successfully",
-            gown 
+            gown
         });
     } catch (error) {
         console.error(error);
@@ -313,25 +350,25 @@ export const updateGown = async (req, res) => {
 };
 
 // API Dashboard data
-export const getDashboardData = async (req, res)=>{
+export const getDashboardData = async (req, res) => {
     try {
-        const {_id, role } = req.user;
+        const { _id, role } = req.user;
 
-        if(role !== 'owner'){
+        if (role !== 'owner') {
             return res.json({ success: false, message: "Unauthorized" });
         }
 
-        const gowns = await Gown.find({owner: _id})
-        const bookings = await Booking.find({owner: _id})
+        const gowns = await Gown.find({ owner: _id })
+        const bookings = await Booking.find({ owner: _id })
             .populate('gown')
             .populate('user', 'name email')
             .sort({ createdAt: -1 });
 
-        const pendingBookings = await Booking.find({owner: _id, status: 'pending'})
-        const completedBookings = await Booking.find({owner: _id, status: 'completed'})
+        const pendingBookings = await Booking.find({ owner: _id, status: 'pending' })
+        const completedBookings = await Booking.find({ owner: _id, status: 'completed' })
 
         // Monthly revenue: count confirmed AND completed bookings (completed were previously confirmed)
-        const monthlyRevenue = bookings.filter(booking => 
+        const monthlyRevenue = bookings.filter(booking =>
             booking.status === 'confirmed' || booking.status === 'completed'
         ).reduce((acc, booking) => acc + (booking.price || 0), 0)
 
@@ -344,26 +381,26 @@ export const getDashboardData = async (req, res)=>{
             monthlyRevenue
         }
 
-    res.json({success: true, dashboardData});
+        res.json({ success: true, dashboardData });
 
     } catch (error) {
-         console.error(error);
-        res.json({success: false, message: error.message})
+        console.error(error);
+        res.json({ success: false, message: error.message })
     }
 }
 
 //API to update profile img
 
-export const updateUserImage = async (req, res)=>{
+export const updateUserImage = async (req, res) => {
     try {
-        const {_id} = req.user;
+        const { _id } = req.user;
 
         const imageFile = req.file;
 
-        if(!imageFile) {
+        if (!imageFile) {
             return res
-            .status(400)
-            .json({success: false, message: "No image uploaded"});
+                .status(400)
+                .json({ success: false, message: "No image uploaded" });
         }
 
         const fileBuffer = fs.readFileSync(imageFile.path)
@@ -374,22 +411,22 @@ export const updateUserImage = async (req, res)=>{
         })
 
         const optimizedImageUrl = imageKit.url({
-            path : response.filePath,
-            transformation : [
-                {width: '400'},
-                {quality: 'auto'},
-                {format: 'webp'}
+            path: response.filePath,
+            transformation: [
+                { width: '400' },
+                { quality: 'auto' },
+                { format: 'webp' }
             ]
         });
 
         const image = optimizedImageUrl;
-        await User.findByIdAndUpdate(_id, {image});
+        await User.findByIdAndUpdate(_id, { image });
 
-        res.json({success: true, message: "Image Update"})
-      
+        res.json({ success: true, message: "Image Update" })
+
     } catch (error) {
         console.error(error)
-        res.json({success: false, message: error.message}) 
+        res.json({ success: false, message: error.message })
     }
 }
 

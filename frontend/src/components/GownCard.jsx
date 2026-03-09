@@ -65,9 +65,9 @@ const GownCard = ({ gown }) => {
           </div>
         )}
 
-        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm text-gray-900 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 border-gray-300 shadow-lg">
+        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm text-primary px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 border-primary/30 shadow-lg">
           <span className="font-extrabold text-sm sm:text-base">{currency}{gown.pricePerDay || gown.price || 0}</span>
-          <span className="text-xs text-gray-600 ml-0.5 sm:ml-1">/day</span>
+          <span className="text-xs text-primary/70 ml-0.5 sm:ml-1">/day</span>
         </div>
       </div>
 

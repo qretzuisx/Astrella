@@ -13,7 +13,7 @@ const UserProfile = () => {
   const [success, setSuccess] = useState('')
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -53,7 +53,7 @@ const UserProfile = () => {
         }
       })
       const userData = await userResponse.json()
-      
+
       if (userData.success || userData.sucess) {
         setUser(userData.user)
         setFormData({
@@ -288,14 +288,14 @@ const UserProfile = () => {
         <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6'>
           {/* Profile Header */}
           <div className='bg-gradient-to-r from-primary to-primary-dull h-32'></div>
-          
+
           <div className='px-8 pb-8'>
             {/* Profile Picture */}
             <div className='flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 mb-6'>
               <div className='relative'>
                 {user.image ? (
-                  <img 
-                    src={user.image} 
+                  <img
+                    src={user.image}
                     alt={user.name}
                     className='w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg'
                   />
@@ -304,7 +304,7 @@ const UserProfile = () => {
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                 )}
-                
+
                 {/* Upload Button */}
                 <label className='absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-all border-2 border-gray-200'>
                   <input
@@ -324,10 +324,9 @@ const UserProfile = () => {
 
               <div className='flex-1 text-center sm:text-left'>
                 <p className='text-gray-600'>{user.email}</p>
-                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold capitalize ${
-                  roleLabel === 'owner' ? 'bg-blue-100 text-blue-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold capitalize ${roleLabel === 'owner' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
                   {roleLabel || 'user'}
                 </span>
               </div>
@@ -611,11 +610,10 @@ const UserProfile = () => {
                   type='button'
                   onClick={handleDeleteAccount}
                   disabled={deleteConfirmation !== 'DELETE'}
-                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all ${
-                    deleteConfirmation === 'DELETE'
+                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all ${deleteConfirmation === 'DELETE'
                       ? 'bg-red-600 hover:bg-red-700'
                       : 'bg-gray-400 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   Delete My Account
                 </button>

@@ -66,7 +66,7 @@ const ManageGowns = () => {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         const gownsList = data.gowns || []
         setGowns(gownsList)
@@ -99,7 +99,7 @@ const ManageGowns = () => {
       })
 
       const data = await response.json()
-      
+
       if (data.success || data.sucess) {
         setSuccess('Availability updated successfully')
         // Refresh gowns list
@@ -124,7 +124,7 @@ const ManageGowns = () => {
     try {
       const token = localStorage.getItem('token')
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-      
+
       const response = await fetch(`${API_URL}/owner/delete-gown`, {
         method: 'DELETE',
         headers: {
@@ -135,7 +135,7 @@ const ManageGowns = () => {
       })
 
       const data = await response.json()
-      
+
       if (data.success || data.sucess) {
         setSuccess('Gown deleted successfully')
         // Refresh gowns list
@@ -207,9 +207,8 @@ const ManageGowns = () => {
       eventType: Array.isArray(gown.eventType) ? gown.eventType : [gown.eventType || ''],
       fabric: gown.fabric || '',
       color: gown.color || '',
-      ageGroup: gown.ageGroup || '',
+      ageGroup: Array.isArray(gown.ageGroup) ? gown.ageGroup : (gown.ageGroup ? [gown.ageGroup] : []),
       sex: gown.sex || '',
-      status: gown.status || 'Available'
     })
     setError('')
     setSuccess('')
@@ -266,6 +265,16 @@ const ManageGowns = () => {
       return
     }
 
+    if (editForm.ageGroup.length === 0) {
+      setError('Please select at least one age group')
+      return
+    }
+
+    if (!editForm.sex) {
+      setError('Please select a gender')
+      return
+    }
+
     try {
       setEditSaving(true)
       setError('')
@@ -289,7 +298,6 @@ const ManageGowns = () => {
           color: editForm.color,
           ageGroup: editForm.ageGroup,
           sex: editForm.sex,
-          status: editForm.status
         })
       })
 
@@ -333,7 +341,7 @@ const ManageGowns = () => {
   return (
     <div className='flex min-h-screen bg-gray-50'>
       <OwnerSidebar />
-      
+
       <div className='flex-1 p-4 sm:p-6 lg:p-8'>
         <div className='max-w-7xl mx-auto'>
           {/* Header */}
@@ -353,20 +361,19 @@ const ManageGowns = () => {
 
           {/* Status Filter Tabs */}
           <div className='mb-6 sm:mb-8 flex flex-wrap items-center gap-2 border-b border-gray-200'>
-          {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
-              const count = status === 'all' 
-                ? gowns.length 
+            {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
+              const count = status === 'all'
+                ? gowns.length
                 : gowns.filter(g => getDisplayStatus(g) === status).length
-              
+
               return (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-3 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm transition-colors ${
-                    filterStatus === status
+                  className={`px-3 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm transition-colors ${filterStatus === status
                       ? 'text-primary border-b-2 border-primary -mb-px'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   {status === 'all' ? 'All' : status}
                   {<span className='ml-1 text-gray-500'>({count})</span>}
@@ -410,31 +417,30 @@ const ManageGowns = () => {
           ) : (
             <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5'>
               {filteredGowns.map((gown) => (
-                <div 
-                  key={gown._id || gown.id} 
+                <div
+                  key={gown._id || gown.id}
                   className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow'
                 >
                   {/* Gown Image */}
                   <div className='relative h-36 sm:h-48 md:h-56 overflow-hidden'>
-                    <img 
-                      src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1} 
+                    <img
+                      src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1}
                       alt={gown.name}
                       className='w-full h-full object-cover'
                     />
                     {/* Status Badge (uses derived display status that respects availability toggle) */}
-                    <div className={`absolute top-1.5 left-1.5 sm:top-3 sm:left-3 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-base font-bold text-white shadow-lg ${
-                      getDisplayStatus(gown) === 'Available' ? 'bg-green-500' :
-                      getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500' :
-                      getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500' :
-                      getDisplayStatus(gown) === 'In-Use' ? 'bg-gray-500' :
-                      getDisplayStatus(gown) === 'In-Laundry' ? 'bg-blue-500' :
-                      'bg-gray-400'
-                    }`}>
+                    <div className={`absolute top-1.5 left-1.5 sm:top-3 sm:left-3 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-base font-bold text-white shadow-lg ${getDisplayStatus(gown) === 'Available' ? 'bg-green-500' :
+                        getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500' :
+                          getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500' :
+                            getDisplayStatus(gown) === 'In-Use' ? 'bg-gray-500' :
+                              getDisplayStatus(gown) === 'In-Laundry' ? 'bg-blue-500' :
+                                'bg-gray-400'
+                      }`}>
                       {getDisplayStatus(gown)}
                     </div>
                     {/* Price Badge */}
-                    <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-black/80 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-2 rounded-lg'>
-                      <span className='text-xs sm:text-base font-semibold'>{currency}{gown.price?.toLocaleString() || 0}</span>
+                    <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm text-primary px-2 py-1 sm:px-3 sm:py-2 rounded-lg border border-primary/20 shadow-md'>
+                      <span className='text-xs sm:text-base font-bold'>{currency}{gown.price?.toLocaleString() || 0}</span>
                     </div>
                   </div>
 
@@ -444,7 +450,7 @@ const ManageGowns = () => {
                     {typeof gown.description === 'string' && gown.description.trim() !== '' && (
                       <p className='text-gray-600 text-xs mb-2 line-clamp-2'>{gown.description}</p>
                     )}
-                    
+
                     {/* Details Grid */}
                     <div className='grid grid-cols-2 gap-1 text-xs sm:text-sm'>
                       <div className='flex items-center gap-1.5 sm:gap-2 text-gray-600'>
@@ -489,11 +495,10 @@ const ManageGowns = () => {
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                            laundrySaving === (gown._id || gown.id)
+                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors ${laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                               : 'bg-primary text-white hover:bg-primary-dull'
-                          }`}
+                            }`}
                         >
                           {laundrySaving === (gown._id || gown.id) ? '...' : 'Save'}
                         </button>
@@ -510,19 +515,18 @@ const ManageGowns = () => {
                       </button>
                       <button
                         onClick={() => handleToggleAvailability(gown._id || gown.id)}
-                        className={`flex-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
-                          gown.available
+                        className={`flex-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${gown.available
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                             : 'bg-green-100 text-green-800 hover:bg-green-200'
-                        }`}
+                          }`}
                       >
                         {gown.available ? 'Hide' : 'Show'}
                       </button>
                       <button
                         onClick={() => handleDeleteGown(gown._id || gown.id)}
-                        className='px-3 sm:px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors text-xs sm:text-sm font-semibold'
+                        className='p-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors text-xs sm:text-sm font-semibold'
                       >
-                        <img src={assets.delete_icon} alt="delete" className='w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto' />
+                        <img src={assets.delete_icon} alt="delete" className='w-9 h-9 sm:w-10 sm:h-10 mx-auto' />
                       </button>
                     </div>
                   </div>
@@ -637,11 +641,10 @@ const ManageGowns = () => {
                       key={event}
                       type='button'
                       onClick={() => handleEventTypeToggle(event)}
-                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${
-                        editForm.eventType.includes(event)
+                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${editForm.eventType.includes(event)
                           ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                      }`}
+                        }`}
                     >
                       {event.charAt(0).toUpperCase() + event.slice(1)}
                     </button>
@@ -658,11 +661,10 @@ const ManageGowns = () => {
                       key={size}
                       type='button'
                       onClick={() => handleSizeToggle(size)}
-                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors border ${
-                        editForm.size.includes(size)
+                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors border ${editForm.size.includes(size)
                           ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -672,60 +674,47 @@ const ManageGowns = () => {
 
               {/* Age Group */}
               <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Age Group</label>
-                <select
-                  name='ageGroup'
-                  value={editForm.ageGroup}
-                  onChange={handleEditFormChange}
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                >
-                  <option value=''>Optional</option>
-                  <option value='6–9 Years'>6–9 Years</option>
-                  <option value='10–12 Years'>10–12 Years</option>
-                  <option value='13–17 Years'>13–17 Years</option>
-                  <option value='18–29 Years'>18–29 Years</option>
-                  <option value='30–59 Years'>30–59 Years</option>
-                  <option value='60+ Years'>60+ Years</option>
-                </select>
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>Sex</label>
-                <div className='grid grid-cols-3 gap-2'>
-                  {['Male', 'Female', 'Unisex'].map((sex) => (
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>Age Group <span className='text-red-500'>*</span></label>
+                <div className='grid grid-cols-2 gap-2'>
+                  {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map((age) => (
                     <button
-                      key={sex}
+                      key={age}
                       type='button'
-                      onClick={() => setEditForm(prev => ({ ...prev, sex: prev.sex === sex ? '' : sex }))}
-                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${
-                        editForm.sex === sex
+                      onClick={() => setEditForm(prev => ({
+                        ...prev,
+                        ageGroup: prev.ageGroup.includes(age)
+                          ? prev.ageGroup.filter(a => a !== age)
+                          : [...prev.ageGroup, age]
+                      }))}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${editForm.ageGroup.includes(age)
                           ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                      }`}
+                        }`}
                     >
-                      {sex}
+                      {age}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Status */}
+              {/* Gender */}
               <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>Status</label>
-                <p className='text-xs text-gray-500 mb-2'>Note: Status is automatically managed by the booking system. Only change if needed.</p>
-                <select
-                  name='status'
-                  value={editForm.status}
-                  onChange={handleEditFormChange}
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                >
-                  <option value='Available'>Available</option>
-                  <option value='Unavailable'>Unavailable</option>
-                  <option value='In-Laundry'>In-Laundry</option>
-                  <option value='Reserved'>Reserved</option>
-                  <option value='In-Use'>In-Use</option>
-                </select>
+                <label className='block text-sm font-semibold text-gray-700 mb-2'>Sex <span className='text-red-500'>*</span></label>
+                <div className='grid grid-cols-3 gap-2'>
+                  {['Male', 'Female', 'Unisex'].map((sex) => (
+                    <button
+                      key={sex}
+                      type='button'
+                      onClick={() => setEditForm(prev => ({ ...prev, sex }))}
+                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${editForm.sex === sex
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                        }`}
+                    >
+                      {sex}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Action Buttons */}

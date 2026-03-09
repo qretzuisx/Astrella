@@ -42,9 +42,9 @@ const Recommendations = () => {
           const filtered = (data.recommendations || [])
             .filter(item => item.score >= 50)
             .sort((a, b) => b.score - a.score);
-          
+
           setRecommendations(filtered);
-          
+
           // Merge backend preferences with URL params to ensure all fields are populated
           const prefs = {
             ...data.preferences,
@@ -55,7 +55,7 @@ const Recommendations = () => {
             age: age || data.preferences?.age,
             sex: sex || data.preferences?.sex
           };
-          
+
           setPreferences(prefs);
           setEditedPrefs(prefs); // Initialize edited prefs with current values
         } else {
@@ -86,7 +86,7 @@ const Recommendations = () => {
     if (editedPrefs.faceShape) params.append('faceShape', editedPrefs.faceShape);
     if (editedPrefs.age) params.append('age', editedPrefs.age);
     if (editedPrefs.sex) params.append('sex', editedPrefs.sex);
-    
+
     navigate(`/recommendations?${params.toString()}`);
     setEditMode(false);
   };
@@ -128,7 +128,7 @@ const Recommendations = () => {
         return null;
     }
   };
-  
+
   // Split recommendations into top 3 and others
   const topThree = recommendations.slice(0, 3);
   const others = recommendations.slice(3);
@@ -223,12 +223,12 @@ const Recommendations = () => {
                             <span className="text-xl font-extrabold">{item.score}%</span>
                           </div>
                         </div>
-                        
+
                         {/* Gown Card - Fixed height for consistency */}
                         <div className="flex-1 flex flex-col">
                           <GownCard gown={item.gown} />
                         </div>
-                        
+
                       </div>
                     );
                   })}
@@ -251,7 +251,7 @@ const Recommendations = () => {
 
                 {/* Grid with labels */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  
+
                   {/* Body Type */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Body Type</label>

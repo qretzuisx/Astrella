@@ -179,12 +179,7 @@ const ShopProfile = () => {
     setError('')
     setSuccess('')
 
-    // Validate at least one day is selected
-    if (availableDays.length === 0) {
-      setError('Please select at least one available day')
-      setSaving(false)
-      return
-    }
+
 
     try {
       const token = localStorage.getItem('token')
@@ -379,34 +374,7 @@ const ShopProfile = () => {
               </p>
             </div>
 
-            {/* Available Days Selection */}
-            <div className='mb-6'>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Available Days <span className='text-red-500'>*</span>
-              </label>
-              <p className='text-xs text-gray-500 mb-3'>
-                Select the days when customers can make reservations or try-on appointments.
-              </p>
-              <div className='flex flex-wrap gap-2'>
-                {daysOfWeek.map(day => (
-                  <button
-                    key={day}
-                    type='button'
-                    onClick={() => toggleDay(day)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      availableDays.includes(day)
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-              {availableDays.length === 0 && (
-                <p className='text-red-500 text-sm mt-2'>Please select at least one available day</p>
-              )}
-            </div>
+
 
             {/* Contact Information */}
             <div className='mb-6'>

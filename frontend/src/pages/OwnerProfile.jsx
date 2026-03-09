@@ -25,7 +25,7 @@ const OwnerProfile = () => {
       const response = await fetch(`${API_URL}/user/shop-profile/${ownerId}`)
       const data = await response.json()
       console.log('[DEBUG OwnerProfile] API response:', data)
-      
+
       if (data.success) {
         // API returns shopProfile and ownerName, not 'owner' - construct the owner object
         setOwner({
@@ -50,10 +50,10 @@ const OwnerProfile = () => {
     try {
       const response = await fetch(`${API_URL}/owner/all-gowns`)
       const data = await response.json()
-      
+
       if (data.success && data.gowns) {
         // Filter gowns by this owner (support both MongoDB and SQL)
-        const ownerGowns = data.gowns.filter(gown => 
+        const ownerGowns = data.gowns.filter(gown =>
           gown.owner === ownerId || gown.owner?._id === ownerId || gown.owner?.id == ownerId
         )
         setGowns(ownerGowns)
@@ -66,28 +66,28 @@ const OwnerProfile = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric'
     })
   }
 
   const formatOperatingHours = (hoursString) => {
     if (!hoursString) return 'N/A'
-    
+
     // Handle format like "09:00-17:00" or "09:00 - 17:00"
     const parts = hoursString.split('-').map(t => t.trim())
     if (parts.length !== 2) return hoursString
-    
+
     const convertTo12Hour = (timeStr) => {
       const [hours, minutes] = timeStr.split(':').map(Number)
       if (isNaN(hours) || isNaN(minutes)) return timeStr
-      
+
       const period = hours >= 12 ? 'PM' : 'AM'
       const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
       return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`
     }
-    
+
     return `${convertTo12Hour(parts[0])} - ${convertTo12Hour(parts[1])}`
   }
 
@@ -121,11 +121,11 @@ const OwnerProfile = () => {
   return (
     <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
       {/* Back Button */}
-      <button 
-        onClick={() => navigate(-1)} 
+      <button
+        onClick={() => navigate(-1)}
         className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'
       >
-        <img src={assets.arrow_icon} alt="back" className='rotate-180 opacity-65'/>
+        <img src={assets.arrow_icon} alt="back" className='rotate-180 opacity-65' />
         <span>Back</span>
       </button>
 
@@ -227,32 +227,29 @@ const OwnerProfile = () => {
         <div className='flex gap-8'>
           <button
             onClick={() => setActiveTab('about')}
-            className={`pb-4 font-semibold transition-colors ${
-              activeTab === 'about'
+            className={`pb-4 font-semibold transition-colors ${activeTab === 'about'
                 ? 'text-primary border-b-2 border-primary'
                 : 'text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             About
           </button>
           <button
             onClick={() => setActiveTab('gowns')}
-            className={`pb-4 font-semibold transition-colors ${
-              activeTab === 'gowns'
+            className={`pb-4 font-semibold transition-colors ${activeTab === 'gowns'
                 ? 'text-primary border-b-2 border-primary'
                 : 'text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             Apparel ({gowns.length})
           </button>
           {(owner.shopProfile?.businessPermit || owner.shopProfile?.dtiRegistration) && (
             <button
               onClick={() => setActiveTab('documents')}
-              className={`pb-4 font-semibold transition-colors ${
-                activeTab === 'documents'
+              className={`pb-4 font-semibold transition-colors ${activeTab === 'documents'
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               Business Documents
             </button>
@@ -264,7 +261,7 @@ const OwnerProfile = () => {
       {activeTab === 'about' && (
         <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
           <h2 className='text-2xl font-bold text-gray-900 mb-6'>About This Shop</h2>
-          
+
           {owner.shopProfile?.description ? (
             <p className='text-gray-700 mb-6 leading-relaxed'>{owner.shopProfile.description}</p>
           ) : (
@@ -341,9 +338,9 @@ const OwnerProfile = () => {
                       target='_blank'
                       rel='noopener noreferrer'
                     >
-                      <img 
-                        src={owner.shopProfile.businessPermit} 
-                        alt='Business Permit' 
+                      <img
+                        src={owner.shopProfile.businessPermit}
+                        alt='Business Permit'
                         className='w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity'
                       />
                     </a>
@@ -380,9 +377,9 @@ const OwnerProfile = () => {
                       target='_blank'
                       rel='noopener noreferrer'
                     >
-                      <img 
-                        src={owner.shopProfile.dtiRegistration} 
-                        alt='DTI Registration' 
+                      <img
+                        src={owner.shopProfile.dtiRegistration}
+                        alt='DTI Registration'
                         className='w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity'
                       />
                     </a>

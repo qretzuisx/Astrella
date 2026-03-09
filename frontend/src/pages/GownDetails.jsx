@@ -56,7 +56,7 @@ const normalizeTimeInput = (rawValue, openMinutes = 540, closeMinutes = 1140) =>
 
 const GownDetails = () => {
 
-  const {id} = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
   const [gown, setGown] = useState(null)
   const [loadingGown, setLoadingGown] = useState(true)
@@ -186,7 +186,7 @@ const GownDetails = () => {
 
   const blockedReasonForDate = (isoDate) => {
     if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
-    
+
     // Check if there are booked trial time slots for this date
     const trialSlots = calendarInfo.trialTimeSlots[isoDate]
     if (trialSlots && trialSlots.length > 0) {
@@ -207,7 +207,7 @@ const GownDetails = () => {
       }).join(', ')
       return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
     }
-    
+
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
     return null
   }
@@ -377,7 +377,7 @@ const GownDetails = () => {
         hips: measurements.hips || null,
         unit: measurements.unit || 'inches'
       }))
-      
+
       formData.append('bookingType', bookingType)
 
       // Reservation only: include payment information
@@ -459,7 +459,7 @@ const GownDetails = () => {
       setFieldError('returnDate', 'Return time cannot be earlier than pickup time on same-day bookings.')
       return
     }
-    
+
     // Clear any return date errors if validation passes
     setFieldError('returnDate', '')
     const diffMs = returnDateTime - pickupDateTime
@@ -660,10 +660,10 @@ const GownDetails = () => {
   return (
     <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
       {/* Back Button */}
-      <button onClick={()=> navigate(-1)} className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
-        <img src={assets.arrow_icon} alt="arrow" className='rotate-180 opacity-65 w-4 h-4 sm:w-5 sm:h-5'/>
+      <button onClick={() => navigate(-1)} className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
+        <img src={assets.arrow_icon} alt="arrow" className='rotate-180 opacity-65 w-4 h-4 sm:w-5 sm:h-5' />
         <span>Back to all apparel</span>
-        </button> 
+      </button>
 
       {/* Main Content */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8'>
@@ -671,8 +671,8 @@ const GownDetails = () => {
         <div className='w-full flex flex-col gap-3 sm:gap-4'>
           {/* Image Section */}
           <div className='relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl bg-gray-100'>
-            <img 
-              src={Array.isArray(gown.image) ? gown.image[0] : gown.image} 
+            <img
+              src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
               className='w-full h-auto max-h-[450px] sm:max-h-[500px] object-contain'
             />
@@ -701,166 +701,41 @@ const GownDetails = () => {
                 {gown.status}
               </div>
             )}
-            {/* Price Badge - Top Right */}
-            <div className='absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-sm text-gray-900 px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-base sm:text-lg font-bold shadow-lg'>
-              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
-            </div>
           </div>
 
           {/* Title and Owner */}
-          <div className='mb-2 sm:mb-3'>
-            <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1'>{gown.name}</h1>
-            <p className='text-sm sm:text-base text-gray-600'>
+          <div className='mb-4 sm:mb-6'>
+            <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2'>{gown.name}</h1>
+            <p className='text-sm sm:text-base text-gray-600 mb-4 sm:mb-6'>
               by{' '}
               <button
                 onClick={() => {
                   const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
                   navigate(`/owner-profile/${ownerId}`)
                 }}
-                className='text-primary hover:text-primary-dull font-semibold hover:underline transition-colors'
+                className='text-primary hover:text-primary-dull font-semibold transition-colors'
               >
                 {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
               </button>
             </p>
-          </div>
-
-          {/* Location & Contact Number - side by side */}
-          <div className='mb-3 sm:mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-            <div>
-              <h2 className='text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-1.5'>Location</h2>
-              <p className='text-sm text-gray-600'>{gown.location || 'Location not specified'}</p>
-            </div>
-            <div>
-              <h2 className='text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-1.5'>Contact Number</h2>
-              <p className='text-sm text-gray-600'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+            <div className='text-2xl sm:text-3xl font-bold text-primary'>
+              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
             </div>
           </div>
 
-          {/* Shop Information Section */}
-          {shopProfile && (
-            <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50 mb-6 sm:mb-8'>
-              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Shop Information</h2>
-              
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6'>
-                <div>
-                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Shop Name</h3>
-                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.shopName || shopProfile.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Phone Number</h3>
-                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.phoneNumber || shopProfile.contactNumber || 'N/A'}</p>
-                </div>
-              </div>
-
-              <div className='mb-4 sm:mb-6'>
-                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Address</h3>
-                <p className='text-sm sm:text-base text-gray-900'>{shopProfile.address || shopProfile.location || 'N/A'}</p>
-              </div>
-
-              <div className='mb-4 sm:mb-6'>
-                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Operating Hours</h3>
-                <p className='text-sm sm:text-base text-gray-900'>{shopHours.openingTime || '09:00'} - {shopHours.closingTime || '18:00'}</p>
-              </div>
-
-              <div>
-                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 sm:mb-4'>Weekly Schedule</h3>
-                <div className='flex flex-wrap gap-2 sm:gap-3'>
-                  {(() => {
-                    const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                    let days = []
-                    
-                    if (shopHours.availableDays) {
-                      const content = String(shopHours.availableDays)
-                      const dayMatches = content.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/g)
-                      if (dayMatches && dayMatches.length > 0) {
-                        days = [...new Set(dayMatches)]
-                      } else {
-                        days = allDays
-                      }
-                    } else {
-                      days = allDays
-                    }
-                    
-                    return days && days.length > 0 ? (
-                      days.map(day => (
-                        <button
-                          key={day}
-                          className='px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors'
-                        >
-                          {day}
-                        </button>
-                      ))
-                    ) : (
-                      <p className='text-sm text-gray-600'>Operating hours not available</p>
-                    )
-                  })()}
-                </div>
-              </div>
+          {/* Location & Contact Number side by side */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100'>
+            <div>
+              <h2 className='text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2'>Location</h2>
+              <p className='text-sm sm:text-base text-gray-600'>{gown.location || 'Location not specified'}</p>
             </div>
-          )}
-
-          {/* Shop Information Section */}
-          {shopProfile && (
-            <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50 mb-6 sm:mb-8'>
-              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Shop Information</h2>
-              
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6'>
-                <div>
-                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Shop Name</h3>
-                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.shopName || shopProfile.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Phone Number</h3>
-                  <p className='text-sm sm:text-base text-gray-900 font-medium'>{shopProfile.phoneNumber || shopProfile.contactNumber || 'N/A'}</p>
-                </div>
-              </div>
-
-              <div className='mb-4 sm:mb-6'>
-                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Address</h3>
-                <p className='text-sm sm:text-base text-gray-900'>{shopProfile.address || shopProfile.location || 'N/A'}</p>
-              </div>
-
-              <div className='mb-4 sm:mb-6'>
-                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 sm:mb-2'>Operating Hours</h3>
-                <p className='text-sm sm:text-base text-gray-900'>{shopHours.openingTime || '09:00'} - {shopHours.closingTime || '18:00'}</p>
-              </div>
-
-              <div>
-                <h3 className='text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 sm:mb-4'>Weekly Schedule</h3>
-                <div className='flex flex-wrap gap-2 sm:gap-3'>
-                  {(() => {
-                    const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                    let days = []
-                    
-                    if (shopHours.availableDays) {
-                      const content = String(shopHours.availableDays)
-                      const dayMatches = content.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/g)
-                      if (dayMatches && dayMatches.length > 0) {
-                        days = [...new Set(dayMatches)]
-                      } else {
-                        days = allDays
-                      }
-                    } else {
-                      days = allDays
-                    }
-                    
-                    return days && days.length > 0 ? (
-                      days.map(day => (
-                        <button
-                          key={day}
-                          className='px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors'
-                        >
-                          {day}
-                        </button>
-                      ))
-                    ) : (
-                      <p className='text-sm text-gray-600'>Operating hours not available</p>
-                    )
-                  })()}
-                </div>
-              </div>
+            <div>
+              <h2 className='text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2'>Contact Number</h2>
+              <p className='text-sm sm:text-base text-gray-600'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
             </div>
-          )}
+          </div>
+
+
 
           {/* Gown Details Grid - Moved here */}
           <div>
@@ -915,21 +790,6 @@ const GownDetails = () => {
                   </p>
                 </div>
               </div>
-
-              {/* Sex */}
-              {gown.sex && (
-                <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
-                  <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
-                    <svg className='w-5 h-5 sm:w-6 sm:h-6 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' />
-                    </svg>
-                  </div>
-                  <div className='min-w-0'>
-                    <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Type</p>
-                    <p className='text-sm sm:text-base font-medium text-gray-900 capitalize truncate'>{gown.sex}</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -965,7 +825,7 @@ const GownDetails = () => {
           {/* Booking Section */}
           <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50'>
             <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Booking Details</h2>
-            
+
             {/* Booking Type */}
             <div className='mb-4 sm:mb-6'>
               <div className='flex items-center gap-2 mb-3 sm:mb-4'>
@@ -1031,81 +891,80 @@ const GownDetails = () => {
                   <p className='text-sm text-red-600'>{calendarError}</p>
                 ) : (
                   <div className='flex justify-center w-full'>
-                  <DayPicker
-                    mode={bookingType === 'trial' ? 'single' : 'range'}
-                    numberOfMonths={1}
-                    onDayClick={(day, modifiers) => {
-                      // If a blocked day is clicked, show a badge message instead of changing selection
-                      const iso = toIsoDate(day)
-                      if (isPastIsoDate(iso)) {
-                        setBlockedClick({
-                          date: iso,
-                          message: 'Past dates cannot be selected.',
-                        })
-                        return
-                      }
-
-                      const reason = blockedReasonForDate(iso)
-                      if (reason) {
-                        // If allowSelection is true (trial), don't show blocked message
-                        if (reason.allowSelection) {
-                          if (blockedClick) setBlockedClick(null)
+                    <DayPicker
+                      mode={bookingType === 'trial' ? 'single' : 'range'}
+                      numberOfMonths={1}
+                      onDayClick={(day, modifiers) => {
+                        // If a blocked day is clicked, show a badge message instead of changing selection
+                        const iso = toIsoDate(day)
+                        if (isPastIsoDate(iso)) {
+                          setBlockedClick({
+                            date: iso,
+                            message: 'Past dates cannot be selected.',
+                          })
                           return
                         }
-                        // For reserved/laundry dates, show the blocked message
-                        setBlockedClick({
-                          date: iso,
-                          message: `${reason.message} Please choose another date.`,
-                        })
-                      } else {
-                        // clear badge when clicking a non-blocked day
-                        if (blockedClick) setBlockedClick(null)
-                      }
-                    }}
-                    selected={bookingType === 'trial'
-                      ? (pickupDate ? new Date(`${pickupDate}T00:00:00`) : undefined)
-                      : {
+
+                        const reason = blockedReasonForDate(iso)
+                        if (reason) {
+                          // If allowSelection is true (trial), don't show blocked message
+                          if (reason.allowSelection) {
+                            if (blockedClick) setBlockedClick(null)
+                            return
+                          }
+                          // For reserved/laundry dates, show the blocked message
+                          setBlockedClick({
+                            date: iso,
+                            message: `${reason.message} Please choose another date.`,
+                          })
+                        } else {
+                          // clear badge when clicking a non-blocked day
+                          if (blockedClick) setBlockedClick(null)
+                        }
+                      }}
+                      selected={bookingType === 'trial'
+                        ? (pickupDate ? new Date(`${pickupDate}T00:00:00`) : undefined)
+                        : {
                           from: pickupDate ? new Date(`${pickupDate}T00:00:00`) : undefined,
                           to: returnDate ? new Date(`${returnDate}T00:00:00`) : undefined,
                         }
-                    }
-                    onSelect={(sel) => {
-                      if (bookingType === 'trial') {
-                        if (!sel) return
-                        handleCalendarSelect({ from: sel, to: sel })
-                      } else {
-                        handleCalendarSelect(sel)
                       }
-                    }}
-                    disabled={(date) => {
-                      const iso = toIsoDate(date)
-                      // Disable all past days (only today and future dates are clickable)
-                      if (isPastIsoDate(iso)) return true
-                      const blocked = blockedReasonForDate(iso)
-                      // Allow selection if it only has trial time slots (allowSelection flag)
-                      if (blocked?.allowSelection) return false
-                      return Boolean(blocked)
-                    }}
-                    modifiers={{
-                      reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
-                      trial: (date) => Boolean(calendarInfo.trialTimeSlots[toIsoDate(date)]),
-                      laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
-                    }}
-                    modifiersClassNames={{
-                      reserved: 'rdp-day_reserved',
-                      trial: 'rdp-day_trial',
-                      laundry: 'rdp-day_laundry',
-                    }}
-                  />
+                      onSelect={(sel) => {
+                        if (bookingType === 'trial') {
+                          if (!sel) return
+                          handleCalendarSelect({ from: sel, to: sel })
+                        } else {
+                          handleCalendarSelect(sel)
+                        }
+                      }}
+                      disabled={(date) => {
+                        const iso = toIsoDate(date)
+                        // Disable all past days (only today and future dates are clickable)
+                        if (isPastIsoDate(iso)) return true
+                        const blocked = blockedReasonForDate(iso)
+                        // Allow selection if it only has trial time slots (allowSelection flag)
+                        if (blocked?.allowSelection) return false
+                        return Boolean(blocked)
+                      }}
+                      modifiers={{
+                        reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
+                        trial: (date) => Boolean(calendarInfo.trialTimeSlots[toIsoDate(date)]),
+                        laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
+                      }}
+                      modifiersClassNames={{
+                        reserved: 'rdp-day_reserved',
+                        trial: 'rdp-day_trial',
+                        laundry: 'rdp-day_laundry',
+                      }}
+                    />
                   </div>
                 )}
 
                 {blockedClick && (
-                  <div className={`mt-3 mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
-                    blockedClick.message?.includes('trying') 
-                      ? 'bg-amber-50 border border-amber-200 text-amber-800' 
+                  <div className={`mt-3 mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${blockedClick.message?.includes('trying')
+                      ? 'bg-amber-50 border border-amber-200 text-amber-800'
                       : 'bg-red-50 border border-red-200 text-red-800'
-                  }`}>
+                    }`}>
                     <span className='font-semibold'>{blockedClick.message?.includes('trying') ? 'ℹ️ Note:' : 'Blocked:'}</span>
                     <span>{blockedClick.message}</span>
                   </div>
@@ -1195,11 +1054,10 @@ const GownDetails = () => {
                 )}
               </div>
               {(scheduleStatus.loading || scheduleStatus.message) && (
-                <div className={`mt-3 p-3 rounded-lg text-sm font-semibold ${
-                  scheduleStatus.loading ? 'bg-blue-50 text-blue-800' :
-                  scheduleStatus.valid ? 'bg-green-50 text-green-800' :
-                  'bg-red-50 text-red-800'
-                }`}>
+                <div className={`mt-3 p-3 rounded-lg text-sm font-semibold ${scheduleStatus.loading ? 'bg-blue-50 text-blue-800' :
+                    scheduleStatus.valid ? 'bg-green-50 text-green-800' :
+                      'bg-red-50 text-red-800'
+                  }`}>
                   {scheduleStatus.loading ? 'Checking availability…' : scheduleStatus.message}
                 </div>
               )}
@@ -1231,13 +1089,12 @@ const GownDetails = () => {
                 {gown?.status === 'Unavailable' ? 'This gown is not available to book.' : !isFormComplete ? 'Select dates and time to enable booking.' : hasFieldErrors ? 'Fix the errors above to continue.' : !scheduleStatus.valid ? (scheduleStatus.message || 'Check availability first.') : 'Checking availability…'}
               </p>
             )}
-            <button 
+            <button
               onClick={handleConfirmBooking}
-              className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
-                !confirmDisabled
+              className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${!confirmDisabled
                   ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
                   : 'bg-gray-400 cursor-not-allowed'
-              }`}
+                }`}
               disabled={confirmDisabled}
               aria-describedby={confirmDisabled && !loading && !success ? 'confirm-booking-hint' : undefined}
             >

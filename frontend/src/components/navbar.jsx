@@ -3,7 +3,7 @@ import { assets, menuLinks } from "../assets/assets";
 import { API_URL } from "../config";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const Navbar = ({setShowLogin}) => {
+const Navbar = ({ setShowLogin }) => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate()
@@ -27,7 +27,7 @@ const Navbar = ({setShowLogin}) => {
           }
         })
         const data = await response.json()
-        
+
         if (data.success || data.sucess) {
           setUser(data.user)
         }
@@ -67,99 +67,99 @@ const Navbar = ({setShowLogin}) => {
       className={`flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 text-gray-600 border-b border-borderColor relative transition-all 
       ${location.pathname === "/" ? "bg-white" : "bg-white"}`}>
 
-        <Link to="/">
-          <img src={assets.logo} alt="logo" className="h-12" />
-        </Link>
-        <div
-            className={`max-sm:fixed max-sm:h-screen max-sm:w-full max-sm:top-16 max-sm:border-t border-borderColor right-0 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 max-sm:p-4 transition-all duration-300 z-50 
+      <Link to="/">
+        <img src={assets.logo} alt="logo" className="h-12" />
+      </Link>
+      <div
+        className={`max-sm:fixed max-sm:h-screen max-sm:w-full max-sm:top-16 max-sm:border-t border-borderColor right-0 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 max-sm:p-4 transition-all duration-300 z-50 
             ${location.pathname === "/" ? "bg-white" : "bg-white"} 
             ${open ? "max-sm:translate-x-0" : "max-sm:translate-x-full"}`}>
-            {menuLinks.map((link, index) => (
-            <Link key={index} to={link.path}>
-                {link.name}
-            </Link>
-            ))}
-          <form onSubmit={handleNavbarSearch} className= "hidden lg:flex items-center text-sm gap-2 border border-borderColor px-3 rounded-full max-w-56">
-          <input 
-            type="text" 
+        {menuLinks.map((link, index) => (
+          <Link key={index} to={link.path}>
+            {link.name}
+          </Link>
+        ))}
+        <form onSubmit={handleNavbarSearch} className="hidden lg:flex items-center text-sm gap-2 border border-borderColor px-3 rounded-full max-w-56">
+          <input
+            type="text"
             value={navbarSearch}
             onChange={(e) => setNavbarSearch(e.target.value)}
-            className="py-1.5 w-full bg-transparent outline-none placeholder-500" 
-            placeholder="Search Gown" 
+            className="py-1.5 w-full bg-transparent outline-none placeholder-500"
+            placeholder="Search Gown"
           />
           <button type="submit" className="cursor-pointer">
             <img src={assets.search_icon} alt="search" />
           </button>
         </form>
 
-            <div className="flex max-sm:flex-col items-start sm:items-center gap-6">
-              {!loading && (
+        <div className="flex max-sm:flex-col items-start sm:items-center gap-6">
+          {!loading && (
+            <>
+              {user ? (
                 <>
-                  {user ? (
-                    <>
-                      {/* Show Dashboard button only for owners */}
-                      {role === 'owner' && (
-                        <button 
-                          onClick={() => navigate('/owner')} 
-                          className="cursor-pointer px-4 py-2 text-primary hover:text-primary-dull transition-all"
-                        >
-                          Dashboard
-                        </button>
-                      )}
-                      
-                      {/* User Info - Click to go to profile */}
-                      <div 
-                        onClick={() => navigate('/profile')}
-                        className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-all"
-                      >
-                        <div className="text-right max-sm:text-left">
-                          <p className="text-sm font-medium text-gray-700">
-                            {role === 'owner' && user.shopProfile?.shopName 
-                              ? user.shopProfile.shopName 
-                              : user.name}
-                          </p>
-                          <p className="text-xs text-gray-500 capitalize">{role}</p>
-                        </div>
-                        {user.image ? (
-                          <img 
-                            src={user.image} 
-                            alt={role === 'owner' && user.shopProfile?.shopName ? user.shopProfile.shopName : user.name}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
-                            {(role === 'owner' && user.shopProfile?.shopName 
-                              ? user.shopProfile.shopName 
-                              : user.name)?.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <button 
-                        onClick={handleLogout}
-                        className="cursor-pointer px-4 py-2 text-gray-600 hover:text-red-600 transition-all text-sm"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  ) : (
-                    <button 
-                      onClick={() => setShowLogin(true)} 
-                      className="cursor-pointer px-8 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-full"
+                  {/* Show Dashboard button only for owners */}
+                  {role === 'owner' && (
+                    <button
+                      onClick={() => navigate('/owner')}
+                      className="cursor-pointer px-4 py-2 text-primary hover:text-primary-dull transition-all"
                     >
-                      Login
+                      Dashboard
                     </button>
                   )}
+
+                  {/* User Info - Click to go to profile */}
+                  <div
+                    onClick={() => navigate('/profile')}
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-all"
+                  >
+                    <div className="text-right max-sm:text-left">
+                      <p className="text-sm font-medium text-gray-700">
+                        {role === 'owner' && user.shopProfile?.shopName
+                          ? user.shopProfile.shopName
+                          : user.name}
+                      </p>
+                      <p className="text-xs text-gray-500 capitalize">{role}</p>
+                    </div>
+                    {user.image ? (
+                      <img
+                        src={user.image}
+                        alt={role === 'owner' && user.shopProfile?.shopName ? user.shopProfile.shopName : user.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
+                        {(role === 'owner' && user.shopProfile?.shopName
+                          ? user.shopProfile.shopName
+                          : user.name)?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleLogout}
+                    className="cursor-pointer px-4 py-2 text-gray-600 hover:text-red-600 transition-all text-sm"
+                  >
+                    Logout
+                  </button>
                 </>
+              ) : (
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="cursor-pointer px-8 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-full"
+                >
+                  Login
+                </button>
               )}
-            </div>
+            </>
+          )}
+        </div>
       </div>
       <button
-          onClick={() => setOpen(!open)}
-          className="sm:hidden text-xl focus:outline-none">
-          {open ? "✕" : "☰"}
-        </button>
-</div>
+        onClick={() => setOpen(!open)}
+        className="sm:hidden text-xl focus:outline-none">
+        {open ? "✕" : "☰"}
+      </button>
+    </div>
   );
 };
 

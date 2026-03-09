@@ -491,7 +491,12 @@ export const getRecommendations = async (req, res) => {
         // Recalculate dynamic status for each gown so Recommendations uses the same
         // availability logic as the Available Apparel grid.
         for (const gown of allGowns) {
-            gown.status = await calculateActualGownStatus(gown._id);
+            // Respect owner's manual status override (In-Laundry, Unavailable)
+            if (gown.statusOverride) {
+                gown.status = gown.statusOverride;
+            } else {
+                gown.status = await calculateActualGownStatus(gown._id);
+            }
         }
 
         if (allGowns.length === 0) {
@@ -531,6 +536,9 @@ export const getRecommendations = async (req, res) => {
         if (age) {
             const userAge = age.toLowerCase().trim();
             allGowns = allGowns.filter(gown => {
+                if (Array.isArray(gown.ageGroup)) {
+                    return gown.ageGroup.some(a => a.toLowerCase().trim() === userAge);
+                }
                 const gownAge = (gown.ageGroup || '').toLowerCase().trim();
                 return gownAge === userAge;
             });

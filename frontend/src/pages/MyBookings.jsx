@@ -66,9 +66,8 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
     const isUrgent = remaining <= 300 // 5 minutes
 
     return (
-      <div className={`mb-3 p-3 rounded-lg border flex items-center gap-2 ${
-        isUrgent ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
-      }`}>
+      <div className={`mb-3 p-3 rounded-lg border flex items-center gap-2 ${isUrgent ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+        }`}>
         <svg className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isUrgent ? 'text-red-600' : 'text-green-600'}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
         </svg>
@@ -162,7 +161,7 @@ const MyBookings = ({ setShowLogin }) => {
 
   const blockedReasonForDate = (isoDate) => {
     if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
-    
+
     // Check if there are booked trial time slots for this date
     const trialSlots = calendarInfo.trialTimeSlots[isoDate]
     if (trialSlots && trialSlots.length > 0) {
@@ -183,7 +182,7 @@ const MyBookings = ({ setShowLogin }) => {
       }).join(', ')
       return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
     }
-    
+
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
     return null
   }
@@ -191,7 +190,7 @@ const MyBookings = ({ setShowLogin }) => {
   const handleCalendarSelect = (range) => {
     if (!range) return
     const isTrial = (selectedBooking?.status || '').toLowerCase() === 'trial'
-    
+
     if (isTrial || !range.from) {
       const singleDate = range.from || range
       setForm(prev => ({
@@ -245,7 +244,7 @@ const MyBookings = ({ setShowLogin }) => {
           if (!exists) initial.unshift(nb)
           try {
             window.history.replaceState({}, document.title)
-          } catch (e) {}
+          } catch (e) { }
         }
         setBookings(initial)
       } else {
@@ -294,7 +293,7 @@ const MyBookings = ({ setShowLogin }) => {
     setError('')
     setSuccess('')
     setEditOpen(true)
-    
+
     // Fetch calendar availability for the gown
     const gownId = booking.gown?._id || booking.gown?.id || booking.gown
     if (gownId) {
@@ -328,7 +327,7 @@ const MyBookings = ({ setShowLogin }) => {
   const handleFormChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
-    
+
     // Trigger availability check when dates/times change
     if (['pickupDate', 'returnDate', 'pickupTime', 'returnTime'].includes(name)) {
       // Use setTimeout to wait for state to update
@@ -364,16 +363,16 @@ const MyBookings = ({ setShowLogin }) => {
 
       const data = await response.json()
       if (data.success) {
-        setAvailabilityStatus({ 
-          loading: false, 
-          message: data.available ? '✓ Available' : data.message || 'Not available', 
-          valid: data.available 
+        setAvailabilityStatus({
+          loading: false,
+          message: data.available ? '✓ Available' : data.message || 'Not available',
+          valid: data.available
         })
       } else {
-        setAvailabilityStatus({ 
-          loading: false, 
-          message: data.message || 'Unable to check availability', 
-          valid: false 
+        setAvailabilityStatus({
+          loading: false,
+          message: data.message || 'Unable to check availability',
+          valid: false
         })
       }
     } catch (e) {
@@ -494,10 +493,10 @@ const MyBookings = ({ setShowLogin }) => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     })
   }
 
@@ -692,7 +691,7 @@ const MyBookings = ({ setShowLogin }) => {
                       return null
                     })()}
 
-                    </div>
+                  </div>
 
                   {/* Trial Expiration Countdown */}
                   {isTrial && booking.trialExpiresAt && (
@@ -723,11 +722,10 @@ const MyBookings = ({ setShowLogin }) => {
                         type='button'
                         onClick={() => openEdit(booking, 'reschedule')}
                         disabled={!editable}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                          editable
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${editable
                             ? 'border-primary text-primary hover:bg-primary hover:text-white'
                             : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
+                          }`}
                       >
                         Reschedule
                       </button>
@@ -735,9 +733,8 @@ const MyBookings = ({ setShowLogin }) => {
                         type='button'
                         onClick={() => cancelBooking(booking)}
                         disabled={!cancelable}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                          cancelable ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        }`}
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${cancelable ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          }`}
                       >
                         {isTrial ? 'Cancel Booking' : 'Cancel Reservation'}
                       </button>
@@ -767,302 +764,301 @@ const MyBookings = ({ setShowLogin }) => {
       {editOpen && selectedBooking && (() => {
         const isTrial = (selectedBooking.status || '').toLowerCase() === 'trial'
         return (
-        <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50' onClick={closeEdit}>
-          <div
-            className='bg-white w-full sm:max-w-lg sm:rounded-xl shadow-2xl flex flex-col rounded-t-2xl sm:rounded-b-xl max-h-[95vh] sm:max-h-[90vh]'
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Sticky Header */}
-            <div className='flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0'>
-              <div className='min-w-0'>
-                <h2 className='text-base sm:text-lg font-bold text-gray-900 truncate'>
-                  {editMode === 'extend' ? 'Extend Reservation' : isTrial ? 'Reschedule Try-On' : 'Reschedule Reservation'}
-                </h2>
-                <p className='text-xs text-gray-500 truncate'>
-                  {selectedBooking.gown?.name || 'Booking'}
-                </p>
+          <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50' onClick={closeEdit}>
+            <div
+              className='bg-white w-full sm:max-w-lg sm:rounded-xl shadow-2xl flex flex-col rounded-t-2xl sm:rounded-b-xl max-h-[95vh] sm:max-h-[90vh]'
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Sticky Header */}
+              <div className='flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0'>
+                <div className='min-w-0'>
+                  <h2 className='text-base sm:text-lg font-bold text-gray-900 truncate'>
+                    {editMode === 'extend' ? 'Extend Reservation' : isTrial ? 'Reschedule Try-On' : 'Reschedule Reservation'}
+                  </h2>
+                  <p className='text-xs text-gray-500 truncate'>
+                    {selectedBooking.gown?.name || 'Booking'}
+                  </p>
+                </div>
+                <button
+                  className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0'
+                  onClick={closeEdit}
+                >
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
               </div>
-              <button
-                className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0'
-                onClick={closeEdit}
-              >
-                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-                </svg>
-              </button>
-            </div>
 
-            {/* Scrollable Body */}
-            <div className='overflow-y-auto flex-1 px-4 sm:px-6 py-4 space-y-4'>
+              {/* Scrollable Body */}
+              <div className='overflow-y-auto flex-1 px-4 sm:px-6 py-4 space-y-4'>
 
-              {/* EXTEND MODE */}
-              {editMode === 'extend' && (
-                <>
-                  <div className='p-3 bg-blue-50 border border-blue-100 rounded-lg'>
-                    <p className='text-sm font-semibold text-blue-900'>Extending Reservation</p>
-                    <p className='text-xs text-blue-700 mt-1'>Pickup stays the same. Only update return date/time.</p>
-                    <p className='text-xs text-blue-600 mt-1'>
-                      <strong>Rules:</strong> Same-day max 1 hour later. Next-day allows earlier times, max 1 hour after pickup.
-                    </p>
-                  </div>
-
-                  {/* Current Pickup Info */}
-                  <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg'>
-                    <div className='w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <svg className='w-4 h-4 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-                      </svg>
-                    </div>
-                    <div className='min-w-0'>
-                      <p className='text-xs text-gray-500'>Current Pickup</p>
-                      <p className='text-sm font-semibold text-gray-900'>{form.pickupDate} · {formatTime(form.pickupTime)}</p>
-                    </div>
-                  </div>
-
-                  {/* Return date/time fields */}
-                  {!isTrial && (
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                      <div>
-                        <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>New Return Date</label>
-                        <input
-                          type='date'
-                          name='returnDate'
-                          value={form.returnDate}
-                          onChange={handleFormChange}
-                          min={form.pickupDate || new Date().toISOString().split('T')[0]}
-                          className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>New Return Time</label>
-                        <select
-                          name='returnTime'
-                          value={form.returnTime}
-                          onChange={handleFormChange}
-                          className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors'
-                        >
-                          {allowedTimes.map((t) => {
-                            const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
-                            const originalReturnTime = selectedBooking.returnTime || selectedBooking.pickupTime || '09:00'
-                            const originalReturnMinutes = parseInt(originalReturnTime.split(':')[0]) * 60 + parseInt(originalReturnTime.split(':')[1])
-                            const originalReturnDate = toDateInputValue(selectedBooking.returnDate)
-                            const originalPickupTime = selectedBooking.pickupTime || '09:00'
-                            const originalPickupMinutes = parseInt(originalPickupTime.split(':')[0]) * 60 + parseInt(originalPickupTime.split(':')[1])
-
-                            if (form.returnDate === originalReturnDate) {
-                              if (timeMinutes < originalReturnMinutes) return null
-                              if (timeMinutes > originalReturnMinutes + 60) return null
-                            } else if (form.returnDate > originalReturnDate) {
-                              if (timeMinutes > originalPickupMinutes + 60) return null
-                            }
-
-                            return <option key={t} value={t}>{formatTime(t)}</option>
-                          })}
-                        </select>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* RESCHEDULE MODE */}
-              {editMode === 'reschedule' && (
-                <>
-                  {/* Calendar */}
-                  <div>
-                    <div className='flex items-center gap-2 mb-2'>
-                      <svg className='w-4 h-4 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-                      </svg>
-                      <h3 className='text-sm font-semibold text-gray-900'>{isTrial ? 'Select Date' : 'Select Dates'}</h3>
+                {/* EXTEND MODE */}
+                {editMode === 'extend' && (
+                  <>
+                    <div className='p-3 bg-blue-50 border border-blue-100 rounded-lg'>
+                      <p className='text-sm font-semibold text-blue-900'>Extending Reservation</p>
+                      <p className='text-xs text-blue-700 mt-1'>Pickup stays the same. Only update return date/time.</p>
+                      <p className='text-xs text-blue-600 mt-1'>
+                        <strong>Rules:</strong> Same-day max 1 hour later. Next-day allows earlier times, max 1 hour after pickup.
+                      </p>
                     </div>
 
-                    <div className='bg-gray-50 rounded-lg p-2 sm:p-3'>
-                      {/* Legend */}
-                      <div className='flex items-center justify-center gap-3 text-[10px] sm:text-xs text-gray-500 mb-2'>
-                        <span className='flex items-center gap-1'>
-                          <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-400 inline-block'></span>
-                          Reserved
-                        </span>
-                        <span className='flex items-center gap-1'>
-                          <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-400 inline-block'></span>
-                          Trial
-                        </span>
-                        <span className='flex items-center gap-1'>
-                          <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-400 inline-block'></span>
-                          Laundry
-                        </span>
+                    {/* Current Pickup Info */}
+                    <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg'>
+                      <div className='w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0'>
+                        <svg className='w-4 h-4 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                        </svg>
                       </div>
-
-                      <div className='flex justify-center w-full [&_.rdp]:text-sm [&_.rdp-day]:w-9 [&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-10'>
-                        <DayPicker
-                          mode={isTrial ? 'single' : 'range'}
-                          numberOfMonths={1}
-                          selected={isTrial
-                            ? (form.pickupDate ? new Date(`${form.pickupDate}T00:00:00`) : undefined)
-                            : {
-                                from: form.pickupDate ? new Date(`${form.pickupDate}T00:00:00`) : undefined,
-                                to: form.returnDate ? new Date(`${form.returnDate}T00:00:00`) : undefined,
-                              }
-                          }
-                          onSelect={(sel) => {
-                            if (isTrial) {
-                              if (!sel) return
-                              handleCalendarSelect({ from: sel, to: sel })
-                            } else {
-                              handleCalendarSelect(sel)
-                            }
-                            setTimeout(() => checkAvailability(), 100)
-                          }}
-                          disabled={(date) => {
-                            const iso = toIsoDate(date)
-                            if (isPastIsoDate(iso)) return true
-                            const blocked = blockedReasonForDate(iso)
-                            if (blocked?.allowSelection) return false
-                            return Boolean(blocked)
-                          }}
-                          modifiers={{
-                            reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
-                            trial: (date) => Boolean(calendarInfo.trialTimeSlots[toIsoDate(date)]),
-                            laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
-                          }}
-                          modifiersClassNames={{
-                            reserved: 'rdp-day_reserved',
-                            trial: 'rdp-day_trial',
-                            laundry: 'rdp-day_laundry',
-                          }}
-                        />
-                      </div>
-
-                      {/* Selected dates summary */}
-                      <div className={`mt-2 grid gap-2 text-center ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                        <div className='bg-white rounded-md py-2 px-3 border border-gray-200'>
-                          <p className='text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider'>{isTrial ? 'Trial Date' : 'Pick-up'}</p>
-                          <p className='text-xs sm:text-sm font-bold text-gray-800 mt-0.5'>{form.pickupDate || '—'}</p>
-                        </div>
-                        {!isTrial && (
-                          <div className='bg-white rounded-md py-2 px-3 border border-gray-200'>
-                            <p className='text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider'>Return</p>
-                            <p className='text-xs sm:text-sm font-bold text-gray-800 mt-0.5'>{form.returnDate || '—'}</p>
-                          </div>
-                        )}
+                      <div className='min-w-0'>
+                        <p className='text-xs text-gray-500'>Current Pickup</p>
+                        <p className='text-sm font-semibold text-gray-900'>{form.pickupDate} · {formatTime(form.pickupTime)}</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Time Selection */}
-                  <div>
-                    <div className='flex items-center gap-2 mb-2'>
-                      <svg className='w-4 h-4 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                      </svg>
-                      <h3 className='text-sm font-semibold text-gray-900'>Time</h3>
-                    </div>
-
-                    <div className={`grid gap-3 ${isTrial ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
-                      <div>
-                        <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>
-                          {isTrial ? 'Try-on Time' : 'Pick-up Time'}
-                        </label>
-                        <select
-                          name='pickupTime'
-                          value={form.pickupTime}
-                          onChange={handleFormChange}
-                          className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors bg-white'
-                        >
-                          {allowedTimes.map((t) => (
-                            <option key={t} value={t}>{formatTime(t)}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {!isTrial && (
+                    {/* Return date/time fields */}
+                    {!isTrial && (
+                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                         <div>
-                          <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>Return Time</label>
+                          <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>New Return Date</label>
+                          <input
+                            type='date'
+                            name='returnDate'
+                            value={form.returnDate}
+                            onChange={handleFormChange}
+                            min={form.pickupDate || new Date().toISOString().split('T')[0]}
+                            className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors'
+                          />
+                        </div>
+                        <div>
+                          <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>New Return Time</label>
                           <select
                             name='returnTime'
                             value={form.returnTime}
                             onChange={handleFormChange}
-                            className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors bg-white'
+                            className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors'
                           >
                             {allowedTimes.map((t) => {
-                              if (form.pickupDate === form.returnDate && form.pickupTime) {
-                                const pickupMinutes = parseInt(form.pickupTime.split(':')[0]) * 60 + parseInt(form.pickupTime.split(':')[1])
-                                const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
-                                if (timeMinutes < pickupMinutes + 60) return null
+                              const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
+                              const originalReturnTime = selectedBooking.returnTime || selectedBooking.pickupTime || '09:00'
+                              const originalReturnMinutes = parseInt(originalReturnTime.split(':')[0]) * 60 + parseInt(originalReturnTime.split(':')[1])
+                              const originalReturnDate = toDateInputValue(selectedBooking.returnDate)
+                              const originalPickupTime = selectedBooking.pickupTime || '09:00'
+                              const originalPickupMinutes = parseInt(originalPickupTime.split(':')[0]) * 60 + parseInt(originalPickupTime.split(':')[1])
+
+                              if (form.returnDate === originalReturnDate) {
+                                if (timeMinutes < originalReturnMinutes) return null
+                                if (timeMinutes > originalReturnMinutes + 60) return null
+                              } else if (form.returnDate > originalReturnDate) {
+                                if (timeMinutes > originalPickupMinutes + 60) return null
                               }
+
                               return <option key={t} value={t}>{formatTime(t)}</option>
                             })}
                           </select>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    )}
+                  </>
+                )}
 
-                  {/* Trial info */}
-                  {isTrial && (
-                    <div className='flex items-start gap-2 p-3 bg-amber-50/80 border border-amber-100 rounded-lg'>
-                      <svg className='w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                {/* RESCHEDULE MODE */}
+                {editMode === 'reschedule' && (
+                  <>
+                    {/* Calendar */}
+                    <div>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <svg className='w-4 h-4 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                        </svg>
+                        <h3 className='text-sm font-semibold text-gray-900'>{isTrial ? 'Select Date' : 'Select Dates'}</h3>
+                      </div>
+
+                      <div className='bg-gray-50 rounded-lg p-2 sm:p-3'>
+                        {/* Legend */}
+                        <div className='flex items-center justify-center gap-3 text-[10px] sm:text-xs text-gray-500 mb-2'>
+                          <span className='flex items-center gap-1'>
+                            <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-400 inline-block'></span>
+                            Reserved
+                          </span>
+                          <span className='flex items-center gap-1'>
+                            <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-400 inline-block'></span>
+                            Trial
+                          </span>
+                          <span className='flex items-center gap-1'>
+                            <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-400 inline-block'></span>
+                            Laundry
+                          </span>
+                        </div>
+
+                        <div className='flex justify-center w-full [&_.rdp]:text-sm [&_.rdp-day]:w-9 [&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-10'>
+                          <DayPicker
+                            mode={isTrial ? 'single' : 'range'}
+                            numberOfMonths={1}
+                            selected={isTrial
+                              ? (form.pickupDate ? new Date(`${form.pickupDate}T00:00:00`) : undefined)
+                              : {
+                                from: form.pickupDate ? new Date(`${form.pickupDate}T00:00:00`) : undefined,
+                                to: form.returnDate ? new Date(`${form.returnDate}T00:00:00`) : undefined,
+                              }
+                            }
+                            onSelect={(sel) => {
+                              if (isTrial) {
+                                if (!sel) return
+                                handleCalendarSelect({ from: sel, to: sel })
+                              } else {
+                                handleCalendarSelect(sel)
+                              }
+                              setTimeout(() => checkAvailability(), 100)
+                            }}
+                            disabled={(date) => {
+                              const iso = toIsoDate(date)
+                              if (isPastIsoDate(iso)) return true
+                              const blocked = blockedReasonForDate(iso)
+                              if (blocked?.allowSelection) return false
+                              return Boolean(blocked)
+                            }}
+                            modifiers={{
+                              reserved: (date) => calendarInfo.unavailableDates.includes(toIsoDate(date)),
+                              trial: (date) => Boolean(calendarInfo.trialTimeSlots[toIsoDate(date)]),
+                              laundry: (date) => calendarInfo.laundryHoldDates.includes(toIsoDate(date)),
+                            }}
+                            modifiersClassNames={{
+                              reserved: 'rdp-day_reserved',
+                              trial: 'rdp-day_trial',
+                              laundry: 'rdp-day_laundry',
+                            }}
+                          />
+                        </div>
+
+                        {/* Selected dates summary */}
+                        <div className={`mt-2 grid gap-2 text-center ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                          <div className='bg-white rounded-md py-2 px-3 border border-gray-200'>
+                            <p className='text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider'>{isTrial ? 'Trial Date' : 'Pick-up'}</p>
+                            <p className='text-xs sm:text-sm font-bold text-gray-800 mt-0.5'>{form.pickupDate || '—'}</p>
+                          </div>
+                          {!isTrial && (
+                            <div className='bg-white rounded-md py-2 px-3 border border-gray-200'>
+                              <p className='text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider'>Return</p>
+                              <p className='text-xs sm:text-sm font-bold text-gray-800 mt-0.5'>{form.returnDate || '—'}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Time Selection */}
+                    <div>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <svg className='w-4 h-4 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        </svg>
+                        <h3 className='text-sm font-semibold text-gray-900'>Time</h3>
+                      </div>
+
+                      <div className={`grid gap-3 ${isTrial ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                        <div>
+                          <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>
+                            {isTrial ? 'Try-on Time' : 'Pick-up Time'}
+                          </label>
+                          <select
+                            name='pickupTime'
+                            value={form.pickupTime}
+                            onChange={handleFormChange}
+                            className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors bg-white'
+                          >
+                            {allowedTimes.map((t) => (
+                              <option key={t} value={t}>{formatTime(t)}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {!isTrial && (
+                          <div>
+                            <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>Return Time</label>
+                            <select
+                              name='returnTime'
+                              value={form.returnTime}
+                              onChange={handleFormChange}
+                              className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors bg-white'
+                            >
+                              {allowedTimes.map((t) => {
+                                if (form.pickupDate === form.returnDate && form.pickupTime) {
+                                  const pickupMinutes = parseInt(form.pickupTime.split(':')[0]) * 60 + parseInt(form.pickupTime.split(':')[1])
+                                  const timeMinutes = parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1])
+                                  if (timeMinutes < pickupMinutes + 60) return null
+                                }
+                                return <option key={t} value={t}>{formatTime(t)}</option>
+                              })}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Trial info */}
+                    {isTrial && (
+                      <div className='flex items-start gap-2 p-3 bg-amber-50/80 border border-amber-100 rounded-lg'>
+                        <svg className='w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        </svg>
+                        <p className='text-xs text-amber-800'>
+                          Trial bookings are single-day appointments. The try-on slot is 30 minutes long.
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Availability Status */}
+                {(availabilityStatus.loading || availabilityStatus.message) && (
+                  <div className={`flex items-center gap-2 p-3 rounded-lg text-sm font-medium ${availabilityStatus.loading ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                      availabilityStatus.valid ? 'bg-green-50 text-green-700 border border-green-100' :
+                        'bg-red-50 text-red-700 border border-red-100'
+                    }`}>
+                    {availabilityStatus.loading && (
+                      <div className='w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0'></div>
+                    )}
+                    {!availabilityStatus.loading && availabilityStatus.valid && (
+                      <svg className='w-4 h-4 text-green-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
                       </svg>
-                      <p className='text-xs text-amber-800'>
-                        Trial bookings are single-day appointments. The try-on slot is 30 minutes long.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
+                    )}
+                    {!availabilityStatus.loading && !availabilityStatus.valid && (
+                      <svg className='w-4 h-4 text-red-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
+                      </svg>
+                    )}
+                    <span>{availabilityStatus.message}</span>
+                  </div>
+                )}
+              </div>
 
-              {/* Availability Status */}
-              {(availabilityStatus.loading || availabilityStatus.message) && (
-                <div className={`flex items-center gap-2 p-3 rounded-lg text-sm font-medium ${
-                  availabilityStatus.loading ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                  availabilityStatus.valid ? 'bg-green-50 text-green-700 border border-green-100' :
-                  'bg-red-50 text-red-700 border border-red-100'
-                }`}>
-                  {availabilityStatus.loading && (
-                    <div className='w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0'></div>
-                  )}
-                  {!availabilityStatus.loading && availabilityStatus.valid && (
-                    <svg className='w-4 h-4 text-green-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
-                    </svg>
-                  )}
-                  {!availabilityStatus.loading && !availabilityStatus.valid && (
-                    <svg className='w-4 h-4 text-red-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
-                    </svg>
-                  )}
-                  <span>{availabilityStatus.message}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Sticky Footer */}
-            <div className='flex gap-2 px-4 sm:px-6 py-4 border-t border-gray-100 flex-shrink-0 bg-white rounded-b-xl'>
-              <button
-                type='button'
-                onClick={submitReschedule}
-                disabled={saving || (availabilityStatus.message && !availabilityStatus.valid)}
-                className='flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors text-sm'
-              >
-                {saving ? (
-                  <span className='flex items-center justify-center gap-2'>
-                    <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
-                    Saving…
-                  </span>
-                ) : 'Save Changes'}
-              </button>
-              <button
-                type='button'
-                onClick={closeEdit}
-                className='px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm'
-              >
-                Cancel
-              </button>
+              {/* Sticky Footer */}
+              <div className='flex gap-2 px-4 sm:px-6 py-4 border-t border-gray-100 flex-shrink-0 bg-white rounded-b-xl'>
+                <button
+                  type='button'
+                  onClick={submitReschedule}
+                  disabled={saving || (availabilityStatus.message && !availabilityStatus.valid)}
+                  className='flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors text-sm'
+                >
+                  {saving ? (
+                    <span className='flex items-center justify-center gap-2'>
+                      <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
+                      Saving…
+                    </span>
+                  ) : 'Save Changes'}
+                </button>
+                <button
+                  type='button'
+                  onClick={closeEdit}
+                  className='px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm'
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         )
       })()}
     </div>
