@@ -141,12 +141,7 @@ export const getOwnersGowns = async (req, res) => {
         const gowns = await Gown.find({ owner: _id })
         // Calculate actual status for each gown based on current date and bookings
         for (let gown of gowns) {
-            // Respect owner's manual status override (In-Laundry, Unavailable)
-            if (gown.statusOverride) {
-                gown.status = gown.statusOverride;
-            } else {
-                gown.status = await calculateActualGownStatus(gown._id);
-            }
+            gown.status = await calculateActualGownStatus(gown._id);
         }
         res.json({ success: true, gowns })
     } catch (error) {
@@ -164,12 +159,7 @@ export const getAllGowns = async (req, res) => {
             .sort({ createdAt: -1 })
         // Calculate actual status for each gown based on current date and bookings
         for (let gown of gowns) {
-            // Respect owner's manual status override (In-Laundry, Unavailable)
-            if (gown.statusOverride) {
-                gown.status = gown.statusOverride;
-            } else {
-                gown.status = await calculateActualGownStatus(gown._id);
-            }
+            gown.status = await calculateActualGownStatus(gown._id);
         }
         res.json({ success: true, gowns })
     } catch (error) {
@@ -187,11 +177,7 @@ export const getGownById = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Gown not found' });
         }
         // Respect owner's manual status override, otherwise calculate dynamically
-        if (gown.statusOverride) {
-            gown.status = gown.statusOverride;
-        } else {
-            gown.status = await calculateActualGownStatus(gown._id);
-        }
+        gown.status = await calculateActualGownStatus(gown._id);
         res.json({ success: true, gown });
     } catch (error) {
         console.error('getGownById:', error);
@@ -283,8 +269,11 @@ export const updateLaundryDays = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
+        const oldDays = gown.laundryDays;
         gown.laundryDays = clampLaundryDays(laundryDays);
         await gown.save();
+
+        console.log(`[LaundryUpdate] Gown ${gownID}: ${oldDays} -> ${gown.laundryDays} days`);
 
         res.json({ success: true, message: "Laundry day updated", laundryDays: gown.laundryDays });
     } catch (error) {
@@ -312,8 +301,8 @@ export const updateGown = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
-        // Fields that can be updated (excluding 'status' — handled separately below)
-        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'sex'];
+        // Fields that can be updated
+        const updatableFields = ['name', 'price', 'description', 'size', 'eventType', 'fabric', 'color', 'ageGroup', 'sex', 'statusOverride', 'available'];
 
         // Update each provided field
         updatableFields.forEach(field => {

@@ -27,7 +27,7 @@ const gownSchema = new mongoose.Schema({
     // without it being overwritten on the next read.
     statusOverride: {
         type: String,
-        enum: ['', 'In-Laundry', 'Unavailable'],
+        enum: ['', 'Available', 'In-Laundry', 'Unavailable'],
         default: ''
     },
     // Optional demographic tags to improve browsing/recommendations

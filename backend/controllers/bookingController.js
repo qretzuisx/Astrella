@@ -1340,19 +1340,26 @@ export const cleanupExpiredTrials = async (req, res) => {
 export const calculateActualGownStatus = async (gownId) => {
   try {
     const now = new Date();
+    const currentTime = now.getTime();
 
-    const gown = await Gown.findById(gownId).select('laundryDays');
+    // Fetch gown to check for manual status override (highest priority)
+    const gown = await Gown.findById(gownId).select('laundryDays statusOverride');
     if (!gown) return 'Available';
+
+    // If owner has set a manual override, use it immediately
+    if (gown.statusOverride) {
+      return gown.statusOverride;
+    }
 
     const laundryDays = gown.laundryDays || 0;
     const laundryWindowMs = laundryDays * 24 * 60 * 60 * 1000;
 
-    // Query pending (with verified payment), confirmed, and completed bookings.
-    // Include completed bookings within the laundry window.
+    // Query active bookings that could influence today's status
     const bookings = await Booking.find({
       gown: gownId,
       status: { $in: ['pending', 'confirmed', 'completed'] },
-      returnDate: { $gte: new Date(Date.now() - laundryWindowMs - DAY_IN_MS) }
+      pickupDate: { $lte: new Date(currentTime + laundryWindowMs + DAY_IN_MS) },
+      returnDate: { $gte: new Date(currentTime - laundryWindowMs - DAY_IN_MS) }
     }).sort({ pickupDate: 1 });
 
     for (const booking of bookings) {
@@ -1364,39 +1371,47 @@ export const calculateActualGownStatus = async (gownId) => {
 
       if (!pickupDateTime || !returnDateTime) continue;
 
-      // ── CONFIRMED booking = owner confirmed pickup = gown is In-Use ──
+      const pickupTimeMs = pickupDateTime.getTime();
+      const returnTimeMs = returnDateTime.getTime();
+
+      // ── CONFIRMED booking = owner confirmed pickup ──
       if (booking.status === 'confirmed') {
-        return 'In-Use';
+        // Gown is "In-Use" if the pickup time has passed AND return time hasn't passed
+        if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
+          return 'In-Use';
+        }
+        // If pickup is today (even if in future), show as Reserved
+        if (pickupDateTime.toDateString() === now.toDateString()) {
+          return 'Reserved';
+        }
       }
 
-      // ── PENDING booking = gown is Reserved (someone has booked it) ──
-      // This matches the calendar which blocks dates for ALL pending bookings.
+      // ── PENDING booking = reservation awaiting confirmation ──
       if (booking.status === 'pending') {
-        return 'Reserved';
+        // Only mark as Reserved if it starts TODAY or is active right now
+        // Future reservations (e.g. tomorrow) shouldn't block today's status badge
+        if (pickupDateTime.toDateString() === now.toDateString() || (currentTime >= pickupTimeMs && currentTime <= returnTimeMs)) {
+          return 'Reserved';
+        }
       }
 
       // ── COMPLETED booking — check laundry window ──
       if (booking.status === 'completed') {
         if (laundryDays > 0) {
-          // Use end-of-day on the last laundry day so laundry covers full calendar days.
-          // Without this, laundry would expire at the return TIME, creating a gap.
           const laundryEndDate = new Date(returnDateTime);
           laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
           laundryEndDate.setHours(23, 59, 59, 999);
 
-          if (now <= laundryEndDate) {
+          if (now >= returnDateTime && now <= laundryEndDate) {
             return 'In-Laundry';
           }
         }
-        // Past laundry window: continue checking other bookings
-        continue;
       }
     }
 
-    // No active bookings affecting current status
     return 'Available';
   } catch (error) {
     console.error('Error calculating gown status:', error);
-    return 'Available'; // Default to Available if error
+    return 'Available';
   }
 };

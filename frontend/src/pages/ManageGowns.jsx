@@ -14,15 +14,18 @@ const ManageGowns = () => {
   const [laundryForm, setLaundryForm] = useState({})
   const [laundrySaving, setLaundrySaving] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
   const currency = CURRENCY
 
   // Derive a display status that combines dynamic booking status with the owner's
   // availability toggle. If the gown is toggled off (available === false), we
   // always show it as "Unavailable" on the owner page, regardless of booking status.
   const getDisplayStatus = (gown) => {
-    if (gown && gown.available === false) return 'Unavailable'
-    return gown?.status || 'Available'
-  }
+    // Priority 1: Manual availability toggle (Hide)
+    if (gown && gown.available === false) return 'Unavailable';
+    // Priority 2: Backend calculated status (respects statusOverride and dynamic booking logic)
+    return gown?.status || 'Available';
+  };
 
   // Edit modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -36,9 +39,10 @@ const ManageGowns = () => {
     eventType: [],
     fabric: '',
     color: '',
-    ageGroup: '',
+    ageGroup: [],
     sex: '',
-    status: 'Available'
+    statusOverride: '',
+    available: true
   })
 
   useEffect(() => {
@@ -157,6 +161,9 @@ const ManageGowns = () => {
   }
 
   const handleSaveLaundryDays = async (gownId) => {
+    // Prevent double-saving or concurrent saves for the same gown
+    if (laundrySaving === gownId) return;
+
     const rawValue = laundryForm[gownId]
     const parsedValue = Number(rawValue)
 
@@ -209,6 +216,8 @@ const ManageGowns = () => {
       color: gown.color || '',
       ageGroup: Array.isArray(gown.ageGroup) ? gown.ageGroup : (gown.ageGroup ? [gown.ageGroup] : []),
       sex: gown.sex || '',
+      statusOverride: gown.statusOverride || '',
+      available: gown.available !== false,
     })
     setError('')
     setSuccess('')
@@ -298,6 +307,8 @@ const ManageGowns = () => {
           color: editForm.color,
           ageGroup: editForm.ageGroup,
           sex: editForm.sex,
+          statusOverride: editForm.statusOverride,
+          available: editForm.available,
         })
       })
 
@@ -320,10 +331,13 @@ const ManageGowns = () => {
       setEditSaving(false)
     }
   }
-  // Filter gowns by status (using derived display status)
-  const filteredGowns = filterStatus === 'all'
-    ? gowns
-    : gowns.filter(gown => getDisplayStatus(gown) === filterStatus)
+  // Filter gowns by status and search term
+  const filteredGowns = gowns.filter(gown => {
+    const matchesStatus = filterStatus === 'all' || getDisplayStatus(gown) === filterStatus
+    const matchesSearch = (gown.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (gown.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesStatus && matchesSearch
+  })
   if (loading) {
     return (
       <div className='flex min-h-screen'>
@@ -350,13 +364,27 @@ const ManageGowns = () => {
               <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>Manage Apparel</h1>
               <p className='text-sm sm:text-base text-gray-600'>View and manage all your apparel.</p>
             </div>
-            <button
-              onClick={() => navigate('/owner/add-gown')}
-              className='w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold flex items-center justify-center gap-2 text-sm sm:text-base'
-            >
-              <img src={assets.addIconColored} alt="add" className='w-4 h-4 sm:w-5 sm:h-5 filter brightness-0 invert' />
-              Add New Gown
-            </button>
+            <div className='flex flex-col gap-3 w-full sm:w-auto'>
+              <button
+                onClick={() => navigate('/owner/add-gown')}
+                className='w-full px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold flex items-center justify-center gap-2 text-sm sm:text-base'
+              >
+                <img src={assets.addIconColored} alt="add" className='w-4 h-4 sm:w-5 sm:h-5 filter brightness-0 invert' />
+                Add New Gown
+              </button>
+              <div className='relative'>
+                <input
+                  type='text'
+                  placeholder='Search apparel...'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
+                />
+                <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
+                  <img src={assets.search_icon} alt="search" className='w-4 h-4 opacity-40' />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Status Filter Tabs */}
@@ -714,6 +742,52 @@ const ManageGowns = () => {
                       {sex}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Appraisal Status & Visibility - Simplified */}
+              <div className='pt-6 border-t border-gray-200 mt-6'>
+                <div className='flex items-center gap-2 mb-4'>
+                  <div className='w-1 h-5 bg-primary rounded-full'></div>
+                  <h3 className='text-sm font-bold text-gray-900 uppercase tracking-wider'>Apparel Status & Visibility</h3>
+                </div>
+                
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+                  {/* Status Selection */}
+                  <div className='bg-gray-50 p-4 rounded-xl border border-gray-100'>
+                    <label className='block text-xs font-bold text-gray-500 uppercase mb-2'>Current Status</label>
+                    <select
+                      name='statusOverride'
+                      value={editForm.statusOverride}
+                      onChange={handleEditFormChange}
+                      className='w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm font-medium shadow-sm'
+                    >
+                      <option value=''>Auto (Based on Bookings)</option>
+                      <option value='Available'>Force Available</option>
+                      <option value='In-Laundry'>Mark as In-Laundry</option>
+                      <option value='Unavailable'>Mark as Unavailable</option>
+                    </select>
+                    <p className='text-[10px] text-gray-400 mt-2 leading-relaxed'>
+                      "Auto" uses your bookings to set status. Use others to manually override.
+                    </p>
+                  </div>
+
+                  {/* Visibility Toggle */}
+                  <div className='bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-center justify-between'>
+                    <div>
+                      <label className='block text-xs font-bold text-gray-500 uppercase mb-1'>Catalog Visibility</label>
+                      <span className='text-[11px] text-gray-400 font-medium'>
+                        {editForm.available ? 'Visible to customers' : 'Hidden from customers'}
+                      </span>
+                    </div>
+                    <button
+                      type='button'
+                      onClick={() => setEditForm(prev => ({ ...prev, available: !prev.available }))}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none shadow-inner ${editForm.available ? 'bg-primary' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-md ${editForm.available ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
