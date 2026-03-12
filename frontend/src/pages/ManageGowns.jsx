@@ -404,7 +404,7 @@ const ManageGowns = () => {
                     }`}
                 >
                   {status === 'all' ? 'All' : status}
-                  {<span className='ml-1 text-gray-500'>({count})</span>}
+                  {<span className='ml-1 font-bold text-primary-dull'>({count})</span>}
                 </button>
               )
             })}
@@ -467,8 +467,8 @@ const ManageGowns = () => {
                       {getDisplayStatus(gown)}
                     </div>
                     {/* Price Badge */}
-                    <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm text-primary px-2 py-1 sm:px-3 sm:py-2 rounded-lg border border-primary/20 shadow-md'>
-                      <span className='text-xs sm:text-base font-bold'>{currency}{gown.price?.toLocaleString() || 0}</span>
+                    <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-2 rounded-lg border border-primary/20 shadow-md'>
+                      <span className='text-xs sm:text-base font-bold'><span className="text-primary-dull">{currency}</span><span className="text-primary-dull">{gown.price?.toLocaleString() || 0}</span></span>
                     </div>
                   </div>
 

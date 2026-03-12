@@ -489,7 +489,7 @@ const ManageBookings = () => {
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
                 {status !== 'all' && (
-                  <span className='ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 text-xs bg-gray-100 rounded-full'>
+                  <span className='ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 text-xs bg-primary/10 text-primary-dull font-bold rounded-full'>
                     {bookings.filter(b => b.status === status).length}
                   </span>
                 )}
@@ -599,8 +599,8 @@ const ManageBookings = () => {
                         <div className={`inline-block px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-base sm:text-lg font-bold border-2 ${getStatusColor(booking.status)}`}>
                           {booking.status?.toUpperCase() || 'PENDING'}
                         </div>
-                        <p className='text-xl sm:text-2xl font-bold text-primary mt-2 sm:mt-3'>
-                          {currency}{booking.price?.toLocaleString() || 0}
+                        <p className='text-xl sm:text-2xl font-bold mt-2 sm:mt-3'>
+                          <span className="text-primary-dull">{currency}</span><span className="font-bold text-primary-dull">{booking.price?.toLocaleString() || 0}</span>
                         </p>
                         
                         {/* Payment Info */}
@@ -613,16 +613,16 @@ const ManageBookings = () => {
                             {booking.payment.method === 'in_store' ? (
                               <>
                                 <p className='font-semibold text-gray-700 mb-1.5 sm:mb-2'>Cash Payment:</p>
-                                <p className='text-xl sm:text-2xl font-bold text-blue-600 mb-1.5 sm:mb-2'>
-                                  {currency}{booking.price?.toLocaleString()}
+                                <p className='text-xl sm:text-2xl font-bold text-primary-dull mb-1.5 sm:mb-2'>
+                                  <span className="text-primary-dull">{currency}</span><span className="font-bold">{booking.price?.toLocaleString()}</span>
                                 </p>
                                 <p className='text-gray-600 text-xs mb-1.5 sm:mb-2'>To be paid at pickup</p>
                               </>
                             ) : (
                               <>
                                 <p className='font-semibold text-gray-700 mb-1.5 sm:mb-2'>Deposit Paid:</p>
-                                <p className='text-xl sm:text-2xl font-bold text-green-600 mb-1.5 sm:mb-2'>
-                                  {currency}{booking.payment.depositAmount?.toLocaleString()}
+                                <p className='text-xl sm:text-2xl font-bold text-primary-dull mb-1.5 sm:mb-2'>
+                                  <span className="text-primary-dull">{currency}</span><span className="font-bold">{booking.payment.depositAmount?.toLocaleString()}</span>
                                 </p>
                                 <p className='text-gray-600 text-xs mb-1.5 sm:mb-2 break-all'>
                                   Ref: <span className='font-mono'>{booking.payment.transactionRef}</span>

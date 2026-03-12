@@ -161,7 +161,7 @@ const OwnerDashboard = () => {
                 </div>
               </div>
               <h3 className='text-xs sm:text-sm text-gray-600 mb-1'>Total Apparel</h3>
-              <p className='text-2xl sm:text-3xl font-bold text-gray-900'>
+              <p className='text-2xl sm:text-3xl font-bold text-primary-dull'>
                 {dashboardData?.totalGowns || 0}
               </p>
             </button>
@@ -173,12 +173,12 @@ const OwnerDashboard = () => {
               className='bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
             >
               <div className='flex items-center justify-between mb-3 sm:mb-4'>
-                <div className='p-2 sm:p-3 bg-blue-100 rounded-lg'>
+                <div className='p-2 sm:p-3 bg-primary/10 rounded-lg'>
                   <img src={assets.listIconColored} alt="bookings" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
               </div>
               <h3 className='text-xs sm:text-sm text-gray-600 mb-1'>Total Bookings</h3>
-              <p className='text-2xl sm:text-3xl font-bold text-gray-900'>
+              <p className='text-2xl sm:text-3xl font-bold text-primary-dull'>
                 {dashboardData?.totalBookings || 0}
               </p>
             </button>
@@ -190,12 +190,12 @@ const OwnerDashboard = () => {
               className='bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 text-left hover:shadow-md transition-shadow'
             >
               <div className='flex items-center justify-between mb-3 sm:mb-4'>
-                <div className='p-2 sm:p-3 bg-yellow-100 rounded-lg'>
+                <div className='p-2 sm:p-3 bg-primary/10 rounded-lg'>
                   <img src={assets.cautionIconColored} alt="pending" className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
               </div>
               <h3 className='text-xs sm:text-sm text-gray-600 mb-1'>Pending Bookings</h3>
-              <p className='text-2xl sm:text-3xl font-bold text-gray-900'>
+              <p className='text-2xl sm:text-3xl font-bold text-primary-dull'>
                 {dashboardData?.pendingBookings || 0}
               </p>
             </button>
@@ -203,13 +203,13 @@ const OwnerDashboard = () => {
             {/* Monthly Revenue */}
             <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-200'>
               <div className='flex items-center justify-between mb-4'>
-                <div className='p-3 bg-green-100 rounded-lg'>
-                  <span className='text-2xl'>₱</span>
+                <div className='p-3 bg-primary/10 rounded-lg'>
+                  <span className='text-2xl text-primary font-bold'>₱</span>
                 </div>
               </div>
               <h3 className='text-sm text-gray-600 mb-1'>Monthly Revenue</h3>
               <p className='text-3xl font-bold text-gray-900'>
-                {currency}{dashboardData?.monthlyRevenue?.toLocaleString() || 0}
+                <span className="text-primary-dull">{currency}</span><span className="font-bold text-primary-dull">{dashboardData?.monthlyRevenue?.toLocaleString() || 0}</span>
               </p>
             </div>
           </div>
@@ -255,8 +255,8 @@ const OwnerDashboard = () => {
                         }`}>
                           {booking.status?.toUpperCase() || 'PENDING'}
                         </div>
-                        <p className='text-lg font-bold text-primary mt-2'>
-                          {currency}{booking.price?.toLocaleString() || 0}
+                        <p className='text-lg font-bold mt-2'>
+                          <span className="text-primary-dull">{currency}</span><span className="font-bold text-primary-dull">{booking.price?.toLocaleString() || 0}</span>
                         </p>
                       </div>
                     </div>

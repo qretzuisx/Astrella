@@ -117,24 +117,24 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
             <div className='space-y-1.5 sm:space-y-2'>
               <div className='flex justify-between items-center gap-2'>
                 <span className='text-xs sm:text-sm text-gray-600 font-medium'>Total Amount:</span>
-                <span className='text-lg sm:text-xl md:text-2xl font-bold text-gray-900'>₱{total?.toLocaleString() || '0'}</span>
+                <span className='text-lg sm:text-xl md:text-2xl font-bold text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{total?.toLocaleString() || '0'}</span></span>
               </div>
               {paymentData.method === 'gcash' && (
                 <>
                   <div className='flex justify-between items-center gap-2 text-green-700'>
                     <span className='text-xs sm:text-sm font-medium'>Deposit Required (50%):</span>
-                    <span className='text-base sm:text-lg md:text-xl font-bold'>₱{depositAmount?.toLocaleString() || '0'}</span>
+                    <span className='text-base sm:text-lg md:text-xl font-bold text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{depositAmount?.toLocaleString() || '0'}</span></span>
                   </div>
                   <div className='flex justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 pt-2 border-t border-blue-200'>
                     <span>Balance (pay on pickup):</span>
-                    <span className='font-semibold'>₱{remainingBalance?.toLocaleString() || '0'}</span>
+                    <span className='font-semibold text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{remainingBalance?.toLocaleString() || '0'}</span></span>
                   </div>
                 </>
               )}
               {paymentData.method === 'in_store' && (
                 <div className='flex justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 pt-2 border-t border-blue-200'>
                   <span>Full amount to be paid in-store:</span>
-                  <span className='font-semibold text-base sm:text-lg text-green-600'>₱{total?.toLocaleString() || '0'}</span>
+                  <span className='font-semibold text-base sm:text-lg text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{total?.toLocaleString() || '0'}</span></span>
                 </div>
               )}
             </div>
@@ -186,7 +186,7 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
                 className='w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain'
               />
               <p className='text-center text-xs sm:text-sm text-gray-600 mt-2 font-medium'>
-                Pay ₱{depositAmount?.toLocaleString()}
+                Pay <span className="text-primary-dull">₱</span><span className="font-bold text-primary-dull">{depositAmount?.toLocaleString()}</span>
               </p>
             </div>
           </div>
@@ -263,7 +263,7 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
         <div className='mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
           <p className='text-sm text-yellow-800'>
             <strong>Note:</strong> Your booking will be pending until the owner verifies your payment. 
-            You'll receive a confirmation once verified. The remaining balance of ₱{remainingBalance?.toLocaleString()} 
+            You'll receive a confirmation once verified. The remaining balance of <span className="text-primary-dull">₱</span><span className="font-bold text-primary-dull">{remainingBalance?.toLocaleString()}</span> 
             will be paid during pickup.
           </p>
         </div>
