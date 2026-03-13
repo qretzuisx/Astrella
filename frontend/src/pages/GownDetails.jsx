@@ -208,7 +208,7 @@ const GownDetails = () => {
       return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
     }
 
-    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
+    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Apparel not yet returned.' }
     return null
   }
 
