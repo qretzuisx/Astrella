@@ -9,6 +9,7 @@ const ShopProfile = () => {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [shopProfile, setShopProfile] = useState({
     shopName: '',
     description: '',
@@ -131,6 +132,19 @@ const ShopProfile = () => {
     const { name, value } = e.target
     setShopProfile(prev => ({ ...prev, [name]: value }))
     setError('')
+    
+    // Clear field error when user corrects it
+    if (name === 'contactNumber') {
+      if (value === '') {
+        setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
+      } else if (/^\d{11}$/.test(value)) {
+        setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
+      }
+    }
+  }
+
+  const validatePhoneNumber = (phone) => {
+    return /^\d{11}$/.test(phone)
   }
 
   const handleFileChange = (e, type) => {
@@ -178,6 +192,14 @@ const ShopProfile = () => {
     setSaving(true)
     setError('')
     setSuccess('')
+    setFieldErrors({})
+
+    // Validate phone number before submission
+    if (shopProfile.contactNumber && !validatePhoneNumber(shopProfile.contactNumber)) {
+      setFieldErrors({ contactNumber: 'Phone number must be exactly 11 digits' })
+      setSaving(false)
+      return
+    }
 
 
 
@@ -216,6 +238,7 @@ const ShopProfile = () => {
 
       if (data.success) {
         setSuccess('Shop profile updated successfully!')
+        setFieldErrors({})
         setTimeout(() => setSuccess(''), 3000)
         // Update operating hours from response so they don't revert before refetch
         const oh = data.shopProfile?.operatingHours || ''
@@ -227,7 +250,13 @@ const ShopProfile = () => {
         // Refresh to show uploaded documents
         fetchShopProfile()
       } else {
-        setError(data.message || 'Failed to update shop profile')
+        // Parse error message to extract field-specific errors
+        if (data.message && data.message.includes('contactNumber')) {
+          setFieldErrors({ contactNumber: 'Phone number must be exactly 11 digits' })
+          setError('Please fix the phone number error below')
+        } else {
+          setError(data.message || 'Failed to update shop profile')
+        }
       }
     } catch (error) {
       console.error('Error updating shop profile:', error)
@@ -391,8 +420,15 @@ const ShopProfile = () => {
                     onChange={handleInputChange}
                     placeholder='e.g., 09123456789'
                     required
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-primary outline-none transition-all ${
+                      fieldErrors.contactNumber
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-primary'
+                    }`}
                   />
+                  {fieldErrors.contactNumber && (
+                    <p className='mt-2 text-sm text-red-600'>{fieldErrors.contactNumber}</p>
+                  )}
                 </div>
 
                 <div>

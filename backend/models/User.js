@@ -6,7 +6,16 @@ const userSchema = new mongoose.Schema({
     password: {type: String, required: true},
     role: {type: String, enum: ["owner", "user"], default: 'user'},
     image: {type: String, default: ''},
-    contactNumber: {type: String, required: true},
+    contactNumber: {
+        type: String, 
+        required: true,
+        validate: {
+            validator: function(v) {
+                return /^\d{11}$/.test(v);
+            },
+            message: 'Phone number must be exactly 11 digits'
+        }
+    },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
 
@@ -16,7 +25,18 @@ const userSchema = new mongoose.Schema({
         description: {type: String, default: ''},
         address: {type: String, default: ''},
         city: {type: String, default: ''},
-        contactNumber: {type: String, default: ''}, // Synced with root contactNumber
+        contactNumber: {
+            type: String, 
+            default: '',
+            validate: {
+                validator: function(v) {
+                    // Allow empty string (since default is ''), but validate if provided
+                    if (v === '') return true;
+                    return /^\d{11}$/.test(v);
+                },
+                message: 'Phone number must be exactly 11 digits'
+            }
+        }, // Synced with root contactNumber
         // Operating hours - stored as separate opening and closing times for booking validation
         openingTime: {type: String, default: '09:00'}, // Format: HH:MM (24-hour)
         closingTime: {type: String, default: '18:00'}, // Format: HH:MM (24-hour)

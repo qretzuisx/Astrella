@@ -13,6 +13,7 @@ const UserProfile = () => {
   const [success, setSuccess] = useState('')
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
 
   // Form state
   const [formData, setFormData] = useState({
@@ -33,6 +34,10 @@ const UserProfile = () => {
 
   const role = user ? (typeof user.role === 'object' ? user.role.name : user.role) : null
   const roleLabel = role // Display actual role
+
+  const validatePhoneNumber = (phone) => {
+    return /^\d{11}$/.test(phone)
+  }
 
   useEffect(() => {
     fetchUserData()
@@ -78,6 +83,13 @@ const UserProfile = () => {
     e.preventDefault()
     setError('')
     setSuccess('')
+    setFieldErrors({})
+
+    // Validate phone number before submission
+    if (formData.contactNumber && !validatePhoneNumber(formData.contactNumber)) {
+      setFieldErrors({ contactNumber: 'Phone number must be exactly 11 digits' })
+      return
+    }
 
     try {
       const token = localStorage.getItem('token')
@@ -97,11 +109,18 @@ const UserProfile = () => {
 
       if (data.success) {
         setSuccess('Profile updated successfully!')
+        setFieldErrors({})
         setEditing(false)
         await fetchUserData()
         setTimeout(() => setSuccess(''), 3000)
       } else {
-        setError(data.message || 'Failed to update profile')
+        // Parse error message to extract field-specific errors
+        if (data.message && data.message.includes('contactNumber')) {
+          setFieldErrors({ contactNumber: 'Phone number must be exactly 11 digits' })
+          setError('Please fix the phone number error below')
+        } else {
+          setError(data.message || 'Failed to update profile')
+        }
       }
     } catch (err) {
       console.error('Error updating profile:', err)
@@ -456,10 +475,25 @@ const UserProfile = () => {
                       <input
                         type='text'
                         value={formData.contactNumber}
-                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, contactNumber: e.target.value })
+                          // Clear field error when user corrects it
+                          if (e.target.value === '') {
+                            setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
+                          } else if (validatePhoneNumber(e.target.value)) {
+                            setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
+                          }
+                        }}
                         placeholder='e.g., 09123456789'
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-primary outline-none transition-all ${
+                          fieldErrors.contactNumber
+                            ? 'border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-primary'
+                        }`}
                       />
+                      {fieldErrors.contactNumber && (
+                        <p className='mt-2 text-sm text-red-600'>{fieldErrors.contactNumber}</p>
+                      )}
                     </div>
 
                     <div>
