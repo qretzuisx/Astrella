@@ -183,7 +183,7 @@ const MyBookings = ({ setShowLogin }) => {
       return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
     }
 
-    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Laundry/cleaning day.' }
+    if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Apparel not yet returned.' }
     return null
   }
 
@@ -617,11 +617,14 @@ const MyBookings = ({ setShowLogin }) => {
                 className='bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'
               >
                 {/* Gown Image */}
-                <div className='relative overflow-hidden bg-gray-100'>
+                <div
+                  className='relative overflow-hidden bg-gray-100 cursor-pointer group'
+                  onClick={() => continueToBook(booking)}
+                >
                   <img
                     src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1}
                     alt={booking.gown?.name || 'Gown'}
-                    className='w-full h-auto max-h-64 sm:max-h-80 md:max-h-96 object-contain'
+                    className='w-full h-auto max-h-64 sm:max-h-80 md:max-h-96 object-contain transition-transform duration-500 group-hover:scale-105'
                   />
                   <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-base sm:text-lg font-bold border-2 ${getStatusColor(booking.status)}`}>
                     {booking.status?.toUpperCase() || 'PENDING'}
@@ -630,7 +633,10 @@ const MyBookings = ({ setShowLogin }) => {
 
                 {/* Booking Details */}
                 <div className='p-4 sm:p-6'>
-                  <h3 className='text-lg sm:text-xl font-bold text-gray-900 mb-2'>
+                  <h3
+                    className='text-lg sm:text-xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-primary transition-colors'
+                    onClick={() => continueToBook(booking)}
+                  >
                     {booking.gown?.name || 'Gown Name'}
                   </h3>
                   <p className='text-sm sm:text-base text-gray-600 mb-3 sm:mb-4'>
