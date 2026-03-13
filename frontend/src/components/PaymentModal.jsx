@@ -95,11 +95,11 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
 
   return (
     <div 
-      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto'
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4'
       onClick={handleClose}
     >
       <div 
-        className='bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full p-4 sm:p-6 md:p-8 relative my-4 sm:my-8'
+        className='bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-8 relative'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}

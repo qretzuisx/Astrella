@@ -8,7 +8,6 @@ const UserProfile = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showPasswordChange, setShowPasswordChange] = useState(false)
@@ -210,56 +209,6 @@ const UserProfile = () => {
     }
   }
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file')
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size should be less than 5MB')
-      return
-    }
-
-    setUploading(true)
-    setError('')
-
-    try {
-      const token = localStorage.getItem('token')
-      const formData = new FormData()
-      formData.append('image', file)
-
-      const response = await fetch(`${API_URL}/owner/update-image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setSuccess('Profile picture updated successfully!')
-        // Refresh user data
-        await fetchUserData()
-        setTimeout(() => setSuccess(''), 3000)
-      } else {
-        setError(data.message || 'Failed to upload image')
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      setError('Failed to upload image. Please try again.')
-    } finally {
-      setUploading(false)
-    }
-  }
-
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-light'>
@@ -311,7 +260,7 @@ const UserProfile = () => {
           <div className='px-8 pb-8'>
             {/* Profile Picture */}
             <div className='flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 mb-6'>
-              <div className='relative'>
+              <div>
                 {user.image ? (
                   <img
                     src={user.image}
@@ -323,22 +272,6 @@ const UserProfile = () => {
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                 )}
-
-                {/* Upload Button */}
-                <label className='absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-all border-2 border-gray-200'>
-                  <input
-                    type='file'
-                    accept='image/*'
-                    onChange={handleImageUpload}
-                    className='hidden'
-                    disabled={uploading}
-                  />
-                  {uploading ? (
-                    <div className='w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin'></div>
-                  ) : (
-                    <img src={assets.camera_icon} alt='upload' className='w-5 h-5' />
-                  )}
-                </label>
               </div>
 
               <div className='flex-1 text-center sm:text-left'>
