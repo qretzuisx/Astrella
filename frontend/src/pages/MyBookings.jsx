@@ -47,13 +47,18 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
   if (isExpired) {
     if (onExpired) setTimeout(onExpired, 0)
     return (
-      <div className='mb-3 p-3 rounded-lg border bg-red-100 border-red-300 flex items-center gap-2'>
-        <svg className='w-4 h-4 text-red-700 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-        </svg>
-        <p className='text-xs sm:text-sm font-semibold text-red-800'>
-          Trial expired — slot released
-        </p>
+      <div className='mb-4 p-4 rounded-2xl border border-red-100 bg-red-50/50 flex items-start gap-3 backdrop-blur-sm shadow-[0_5px_15px_rgba(239,68,68,0.05)] text-center sm:text-left'>
+        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0 shadow-sm mt-0.5">
+          <svg className='w-4 h-4 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+          </svg>
+        </div>
+        <div className='flex-1'>
+          <p className='text-[10px] font-black uppercase tracking-widest text-red-600/70 mb-1'>Try-on Status</p>
+          <p className='text-sm font-bold text-red-800'>
+            Trial expired — slot released
+          </p>
+        </div>
       </div>
     )
   }
@@ -66,20 +71,23 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
     const isUrgent = remaining <= 300 // 5 minutes
 
     return (
-      <div className={`mb-3 p-3 rounded-lg border flex items-center gap-2 ${isUrgent ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+      <div className={`mb-4 p-4 rounded-2xl border flex items-center gap-4 backdrop-blur-sm transition-all duration-300 ${isUrgent ? 'bg-red-50/80 border-red-200 shadow-[0_10px_30px_rgba(239,68,68,0.15)] animate-pulse' : 'bg-primary/5 border-primary/20 shadow-[0_10px_30px_rgba(1,62,141,0.08)]'
         }`}>
-        <svg className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isUrgent ? 'text-red-600' : 'text-green-600'}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-        </svg>
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isUrgent ? 'bg-red-600 text-white' : 'bg-primary text-white'}`}>
+           <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isUrgent ? 'animate-bounce' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+          </svg>
+        </div>
+        
         <div className='flex-1 min-w-0'>
-          <p className={`text-[10px] sm:text-xs ${isUrgent ? 'text-red-600' : 'text-green-600'}`}>Try-on expires in</p>
-          <p className={`text-base sm:text-lg font-bold tabular-nums ${isUrgent ? 'text-red-800' : 'text-green-800'}`}>
+          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isUrgent ? 'text-red-600/80' : 'text-primary/70'}`}>Try-on expires in</p>
+          <p className={`text-2xl sm:text-3xl font-black tabular-nums tracking-tight ${isUrgent ? 'text-red-600' : 'text-primary'}`}>
             {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
           </p>
         </div>
         {isUrgent && (
-          <span className='text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-red-200 text-red-800'>
-            Expiring soon!
+          <span className='text-[10px] font-black px-3 py-1.5 rounded-full bg-red-600 text-white uppercase tracking-widest shadow-md animate-pulse'>
+            Expiring!
           </span>
         )}
       </div>
@@ -88,13 +96,15 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
 
   // SCHEDULED — appointment is today but hasn't started yet, or on a future day
   return (
-    <div className='mb-3 p-3 rounded-lg border bg-blue-50 border-blue-200 flex items-center gap-2'>
-      <svg className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-      </svg>
+    <div className='mb-4 p-4 rounded-2xl border bg-blue-50/50 border-blue-100 flex items-start gap-4 backdrop-blur-sm shadow-[0_5px_15px_rgba(1,62,141,0.03)]'>
+      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+        <svg className='w-4 h-4 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+        </svg>
+      </div>
       <div className='flex-1 min-w-0'>
-        <p className='text-[10px] sm:text-xs text-blue-600'>Try-on scheduled</p>
-        <p className='text-sm font-semibold text-blue-800'>
+        <p className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-600/70 mb-1'>Try-on scheduled</p>
+        <p className='text-sm font-bold text-blue-900'>
           {isToday ? `Today at ${formatTimeDisplay(pickupTime)}` : `${apptStr} at ${formatTimeDisplay(pickupTime)}`}
         </p>
       </div>
@@ -587,8 +597,26 @@ const MyBookings = ({ setShowLogin }) => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
-      <h1 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6'>My Bookings</h1>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 bg-[#FDFDFF] min-h-screen'>
+      <div className='mb-10 lg:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-1 bg-primary rounded-full"></div>
+            <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Customer Space</span>
+          </div>
+          <h1 className='text-3xl sm:text-4xl md:text-5xl font-black text-primary-dull tracking-tight mb-2'>My Bookings</h1>
+          <p className='text-sm sm:text-base text-gray-500 font-medium'>Track and manage your upcoming try-ons and reservations.</p>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(1,62,141,0.05)]">
+          <div className="p-2 bg-primary/5 rounded-xl">
+             <img src={assets.calendar_icon_colored} alt="calendar" className="w-5 h-5" />
+          </div>
+          <div className="pr-4">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Current Date</p>
+            <p className="text-xs font-bold text-primary-dull">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Success/Error */}
       {success && (
@@ -603,7 +631,7 @@ const MyBookings = ({ setShowLogin }) => {
       )}
 
       {/* Filter Tabs */}
-      <div className='flex items-center gap-4 sm:gap-8 border-b border-gray-100 mb-6 overflow-x-auto no-scrollbar pb-1'>
+      <div className='flex items-center gap-2 sm:gap-4 bg-white p-2 rounded-full border border-gray-100 shadow-[0_5px_15px_rgba(0,0,0,0.02)] mb-8 overflow-x-auto no-scrollbar'>
         {['All', 'Trial', 'Pending', 'Confirmed', 'Completed', 'Canceled'].map((filter) => {
           const count = filter === 'All'
             ? bookings.length
@@ -620,22 +648,19 @@ const MyBookings = ({ setShowLogin }) => {
             <button
               key={filter}
               onClick={() => setCurrentFilter(filter)}
-              className={`flex items-center gap-2 pb-3 px-1 transition-all relative whitespace-nowrap ${isActive
-                ? 'text-primary font-bold'
-                : 'text-gray-500 hover:text-gray-700'
+              className={`flex items-center gap-2 py-2.5 px-6 rounded-full transition-all duration-300 relative whitespace-nowrap font-black text-[10px] uppercase tracking-widest ${isActive
+                ? 'bg-primary text-white shadow-md hover:-translate-y-0.5'
+                : 'text-gray-400 hover:text-primary hover:bg-gray-50'
                 }`}
             >
-              <span className='text-sm sm:text-base'>{filter}</span>
+              <span>{filter}</span>
               {count > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${isActive
-                  ? 'bg-blue-100 text-primary'
-                  : 'bg-gray-100 text-gray-600'
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isActive
+                  ? 'bg-white/20 text-white'
+                  : 'bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary'
                   }`}>
                   {count}
-                </span>
-              )}
-              {isActive && (
-                <div className='absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full' />
+                </span> 
               )}
             </button>
           )
@@ -658,162 +683,181 @@ const MyBookings = ({ setShowLogin }) => {
               return status === currentFilter.toLowerCase()
             })
             .map((booking) => {
-            const editable = isEditableStatus(booking)
-            const cancelable = canCancelStatus(booking)
-            const isTrial = (booking.status || '').toLowerCase() === 'trial' || (booking.bookingType || '').toLowerCase() === 'trial'
+              const editable = isEditableStatus(booking)
+              const cancelable = canCancelStatus(booking)
+              const isTrial = (booking.status || '').toLowerCase() === 'trial' || (booking.bookingType || '').toLowerCase() === 'trial'
 
-            return (
-              <div
-                key={booking._id || booking.id}
-                className='bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300'
-              >
-                {/* Gown Image */}
+              return (
                 <div
-                  className='relative overflow-hidden bg-gray-100 cursor-pointer group'
-                  onClick={() => continueToBook(booking)}
+                  key={booking._id || booking.id}
+                  className='bg-white rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-[0_20px_60px_rgba(1,62,141,0.12)] transition-all duration-500 group border border-blue-50/50 flex flex-col h-full'
                 >
-                  <img
-                    src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1}
-                    alt={booking.gown?.name || 'Gown'}
-                    className='w-full h-auto max-h-64 sm:max-h-80 md:max-h-96 object-contain transition-transform duration-500 group-hover:scale-105'
-                  />
-                  <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-base sm:text-lg font-bold border-2 ${getStatusColor(booking.status)}`}>
-                    {booking.status?.toUpperCase() || 'PENDING'}
-                  </div>
-                </div>
-
-                {/* Booking Details */}
-                <div className='p-4 sm:p-6'>
-                  <h3
-                    className='text-lg sm:text-xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-primary transition-colors'
+                  {/* Gown Image */}
+                  <div
+                    className='relative overflow-hidden bg-gray-50 cursor-pointer group'
                     onClick={() => continueToBook(booking)}
                   >
-                    {booking.gown?.name || 'Gown Name'}
-                  </h3>
-                  <p className='text-sm sm:text-base text-gray-600 mb-3 sm:mb-4'>
-                    by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
-                  </p>
-
-                  {/* Rejection Reason Display */}
-                  {(booking.status?.toLowerCase() === 'canceled' && booking.payment?.status?.toLowerCase() === 'rejected' && booking.payment?.rejectionReason) && (
-                    <div className='mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
-                      <p className='text-xs sm:text-sm font-semibold text-red-800 mb-1'>Payment Rejected</p>
-                      <p className='text-xs sm:text-sm text-red-700'>{booking.payment.rejectionReason}</p>
+                    <img
+                      src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1}
+                      alt={booking.gown?.name || 'Gown'}
+                      className='w-full h-auto max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-96 object-cover transition-transform duration-1000 group-hover:scale-110'
+                    />
+                    <div className={`absolute top-4 left-4 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
+                      {booking.status?.toUpperCase() || 'PENDING'}
                     </div>
-                  )}
+                  </div>
 
-                  {/* Date Information */}
-                  <div className='space-y-2 sm:space-y-3 mb-3 sm:mb-4'>
-                    <div className='flex items-center gap-2 text-gray-700'>
-                      <img src={assets.calendar_icon_colored} alt='calendar' className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
-                      <div className='flex-1 min-w-0'>
-                        <p className='text-xs sm:text-sm text-gray-500'>{isTrial ? 'Trial Date' : 'Pickup'}</p>
-                        <p className='text-sm sm:text-base font-medium truncate'>
-                          {formatDate(booking.pickupDate)}
-                          {booking.pickupTime && <span className='text-gray-600 font-normal'> · {formatTime(booking.pickupTime)}</span>}
-                        </p>
+                  {/* Booking Details */}
+                  <div className='p-6 md:p-8 flex flex-col flex-grow bg-white'>
+                    <h3
+                      className='text-xl font-black text-primary mb-2 line-clamp-1 group-hover:text-secondary transition-colors duration-500 cursor-pointer'
+                      onClick={() => continueToBook(booking)}
+                    >
+                      {booking.gown?.name || 'Gown Name'}
+                    </h3>
+                    <p className='text-xs font-bold text-gray-400 mb-6'>
+                      by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
+                    </p>
+
+                    {/* Rejection Reason Display */}
+                    {(booking.status?.toLowerCase() === 'canceled' && booking.payment?.status?.toLowerCase() === 'rejected' && booking.payment?.rejectionReason) && (
+                      <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl'>
+                        <p className='text-xs font-black text-red-800 uppercase tracking-widest mb-1'>Payment Rejected</p>
+                        <p className='text-sm text-red-700 font-medium'>{booking.payment.rejectionReason}</p>
                       </div>
+                    )}
+
+                    {/* Date/Status Information */}
+                    <div className='space-y-4 mb-auto'>
+                      {isTrial ? (
+                        /* Use TrialCountdown for the primary time display on trials */
+                        booking.trialExpiresAt && (
+                          <TrialCountdown
+                            trialExpiresAt={booking.trialExpiresAt}
+                            pickupDate={booking.pickupDate}
+                            pickupTime={booking.pickupTime}
+                            onExpired={() => {
+                              setTimeout(() => fetchBookings(), 2000)
+                            }}
+                          />
+                        )
+                      ) : (
+                        /* Grid layout for Reservation pickup/return - Stylized like Trial box */
+                        <div className='bg-primary/5 rounded-2xl p-4 grid grid-cols-2 gap-x-4 mb-4 border border-primary/10'>
+                          <div className='flex flex-col'>
+                            <p className='text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5'>Pickup</p>
+                            <div className='flex items-start gap-2.5'>
+                              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                                <svg className='w-3 h-3 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                                </svg>
+                              </div>
+                              <div className='min-w-0'>
+                                <p className='text-sm font-black text-primary truncate'>{formatDate(booking.pickupDate)}</p>
+                                {booking.pickupTime && <p className='text-[10px] text-primary/60 font-bold'>{formatTime(booking.pickupTime)}</p>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className='flex flex-col border-l border-primary/10 pl-4'>
+                            <p className='text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5'>Return</p>
+                            <div className='flex items-start gap-2.5'>
+                              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                                <svg className='w-3 h-3 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                                </svg>
+                              </div>
+                              <div className='min-w-0'>
+                                <p className='text-sm font-black text-primary truncate'>{formatDate(booking.returnDate)}</p>
+                                {(booking.returnTime || booking.pickupTime) && <p className='text-[10px] text-primary/60 font-bold'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Return reminder: when return date is today and return time reached, show 2-hour window message */}
+                      {!isTrial && (booking.status || '').toLowerCase() === 'confirmed' && booking.returnDate && (() => {
+                        const today = toIsoDate(new Date())
+                        const retDate = toIsoDate(new Date(booking.returnDate))
+                        if (retDate !== today) return null
+                        const retTime = booking.returnTime || booking.pickupTime || '09:00'
+                        const [h, m] = retTime.split(':').map(Number)
+                        const returnMinutes = (h || 0) * 60 + (m || 0)
+                        const now = new Date()
+                        const nowMinutes = now.getHours() * 60 + now.getMinutes()
+                        if (nowMinutes >= returnMinutes) {
+                          return (
+                            <div className='mt-4 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3'>
+                              <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                 <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                              </div>
+                              <p className='text-xs font-bold text-orange-800 leading-relaxed'>You are allocated 2 hours to return the apparel to the boutique.</p>
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
                     </div>
 
+                    {/* Price - Only show for reservations */}
                     {!isTrial && (
-                      <div className='flex items-center gap-2 text-gray-700'>
-                        <img src={assets.calendar_icon_colored} alt='calendar' className='w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0' />
-                        <div className='flex-1 min-w-0'>
-                          <p className='text-xs sm:text-sm text-gray-500'>Return</p>
-                          <p className='text-sm sm:text-base font-medium truncate'>
-                            {formatDate(booking.returnDate)}
-                            {(booking.returnTime || booking.pickupTime) && <span className='text-gray-600 font-normal'> · {formatTime(booking.returnTime || booking.pickupTime)}</span>}
-                          </p>
+                      <div className='pt-6 border-t border-gray-100 mt-6'>
+                        <div className='flex justify-between items-end'>
+                          <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Total Price</span>
+                          <span className='text-2xl font-black text-primary flex items-baseline gap-1'>
+                            <span className="text-secondary text-sm">{currency}</span>
+                            {booking.price?.toLocaleString() || '0'}
+                          </span>
                         </div>
                       </div>
                     )}
 
-                    {/* Return reminder: when return date is today and return time reached, show 2-hour window message */}
-                    {!isTrial && (booking.status || '').toLowerCase() === 'confirmed' && booking.returnDate && (() => {
-                      const today = toIsoDate(new Date())
-                      const retDate = toIsoDate(new Date(booking.returnDate))
-                      if (retDate !== today) return null
-                      const retTime = booking.returnTime || booking.pickupTime || '09:00'
-                      const [h, m] = retTime.split(':').map(Number)
-                      const returnMinutes = (h || 0) * 60 + (m || 0)
-                      const now = new Date()
-                      const nowMinutes = now.getHours() * 60 + now.getMinutes()
-                      if (nowMinutes >= returnMinutes) {
-                        return (
-                          <div className='mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
-                            <p className='text-sm font-semibold text-amber-900'>You are given allocated 2 hours to return the apparel.</p>
-                          </div>
-                        )
-                      }
-                      return null
-                    })()}
+                    {/* Actions - Reschedule and Cancel aligned in one row */}
+                    <div className='mt-6 flex flex-col gap-3'>
+                      <div className='grid grid-cols-2 gap-3'>
+                        <button
+                          type='button'
+                          onClick={() => openEdit(booking, 'reschedule')}
+                          disabled={!editable}
+                          className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${editable
+                            ? 'border-primary/20 text-primary hover:bg-primary/5 hover:-translate-y-1 hover:border-primary/40 shadow-sm'
+                            : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
+                            }`}
+                        >
+                          Reschedule
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() => cancelBooking(booking)}
+                          disabled={!cancelable}
+                          className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${cancelable 
+                            ? 'border-red-200 text-red-600 hover:bg-red-50 hover:-translate-y-1 hover:border-red-300 shadow-sm' 
+                            : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
+                            }`}
+                        >
+                          {isTrial ? 'Cancel' : 'Cancel'}
+                        </button>
+                      </div>
+                      {isTrial && (
+                        <button
+                          type='button'
+                          onClick={() => continueToBook(booking)}
+                          className='w-full px-4 py-3 rounded-2xl text-[10px] uppercase tracking-widest font-black bg-primary text-white hover:bg-primary-dull transition-all shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_15px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1 mt-2'
+                        >
+                          Continue to Book
+                        </button>
+                      )}
 
-                  </div>
-
-                  {/* Trial Expiration Countdown */}
-                  {isTrial && booking.trialExpiresAt && (
-                    <TrialCountdown
-                      trialExpiresAt={booking.trialExpiresAt}
-                      pickupDate={booking.pickupDate}
-                      pickupTime={booking.pickupTime}
-                      onExpired={() => {
-                        setTimeout(() => fetchBookings(), 2000)
-                      }}
-                    />
-                  )}
-
-                  {/* Price */}
-                  <div className='pt-3 sm:pt-4 border-t border-gray-200'>
-                    <div className='flex justify-between items-center'>
-                      <span className='text-sm sm:text-base text-gray-600'>Total Price:</span>
-                      <span className='text-xl sm:text-2xl font-bold text-primary'>
-                        {currency}{booking.price?.toLocaleString() || '0'}
-                      </span>
+                      {!editable && (
+                        <p className='text-[10px] font-bold text-gray-400 mt-2 text-center'>Editing is only available for Pending/Trial.</p>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Actions - Reschedule and Cancel aligned in one row */}
-                  <div className='mt-4 flex flex-col gap-2'>
-                    <div className='grid grid-cols-2 gap-2'>
-                      <button
-                        type='button'
-                        onClick={() => openEdit(booking, 'reschedule')}
-                        disabled={!editable}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${editable
-                            ? 'border-primary text-primary hover:bg-primary hover:text-white'
-                            : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                          }`}
-                      >
-                        Reschedule
-                      </button>
-                      <button
-                        type='button'
-                        onClick={() => cancelBooking(booking)}
-                        disabled={!cancelable}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${cancelable ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          }`}
-                      >
-                        {isTrial ? 'Cancel Booking' : 'Cancel Reservation'}
-                      </button>
-                    </div>
-                    {isTrial && (
-                      <button
-                        type='button'
-                        onClick={() => continueToBook(booking)}
-                        className='w-full px-3 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-dull transition-colors'
-                      >
-                        Continue to Book
-                      </button>
-                    )}
-
-                    {!editable && (
-                      <p className='text-xs text-gray-500'>Editing is available only for Pending/Trial bookings.</p>
-                    )}
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
         </div>
       )}
 
@@ -821,33 +865,37 @@ const MyBookings = ({ setShowLogin }) => {
       {editOpen && selectedBooking && (() => {
         const isTrial = (selectedBooking.status || '').toLowerCase() === 'trial'
         return (
-          <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50' onClick={closeEdit}>
+          <div className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4 sm:p-0' onClick={closeEdit}>
             <div
-              className='bg-white w-full sm:max-w-lg sm:rounded-xl shadow-2xl flex flex-col rounded-t-2xl sm:rounded-b-xl max-h-[95vh] sm:max-h-[90vh]'
+              className='bg-white w-full sm:max-w-lg shadow-[0_30px_60px_rgba(1,62,141,0.15)] flex flex-col rounded-3xl max-h-[90vh] overflow-hidden border border-white/50 relative'
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+              
               {/* Sticky Header */}
-              <div className='flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0'>
+              <div className='flex items-center justify-between gap-4 px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md'>
                 <div className='min-w-0'>
-                  <h2 className='text-base sm:text-lg font-bold text-gray-900 truncate'>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-4 h-1 bg-primary rounded-full"></div>
+                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{editMode === 'extend' ? 'Time Management' : 'Booking Update'}</span>
+                  </div>
+                  <h2 className='text-xl font-black text-primary-dull truncate tracking-tight'>
                     {editMode === 'extend' ? 'Extend Reservation' : isTrial ? 'Reschedule Try-On' : 'Reschedule Reservation'}
                   </h2>
-                  <p className='text-xs text-gray-500 truncate'>
-                    {selectedBooking.gown?.name || 'Booking'}
-                  </p>
                 </div>
                 <button
-                  className='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0'
+                  className='w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-gray-50 text-gray-400 hover:text-primary transition-colors flex-shrink-0 shadow-sm border border-transparent hover:border-gray-100'
                   onClick={closeEdit}
                 >
                   <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
                   </svg>
                 </button>
               </div>
 
               {/* Scrollable Body */}
-              <div className='overflow-y-auto flex-1 px-4 sm:px-6 py-4 space-y-4'>
+              <div className='overflow-y-auto flex-1 px-6 py-6 space-y-6'>
 
                 {/* EXTEND MODE */}
                 {editMode === 'extend' && (
@@ -924,26 +972,28 @@ const MyBookings = ({ setShowLogin }) => {
                   <>
                     {/* Calendar */}
                     <div>
-                      <div className='flex items-center gap-2 mb-2'>
-                        <svg className='w-4 h-4 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-                        </svg>
-                        <h3 className='text-sm font-semibold text-gray-900'>{isTrial ? 'Select Date' : 'Select Dates'}</h3>
+                      <div className='flex items-center gap-2 mb-3'>
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <svg className='w-3 h-3 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                          </svg>
+                        </div>
+                        <h3 className='text-sm font-black text-gray-900 uppercase tracking-widest'>{isTrial ? 'Select Date' : 'Select Dates'}</h3>
                       </div>
 
-                      <div className='bg-gray-50 rounded-lg p-2 sm:p-3'>
+                      <div className='bg-white rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]'>
                         {/* Legend */}
-                        <div className='flex items-center justify-center gap-3 text-[10px] sm:text-xs text-gray-500 mb-2'>
-                          <span className='flex items-center gap-1'>
-                            <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-400 inline-block'></span>
+                        <div className='flex flex-wrap items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6'>
+                          <span className='flex items-center gap-1.5'>
+                            <span className='w-2 h-2 rounded-full bg-red-400 shadow-sm inline-block'></span>
                             Reserved
                           </span>
-                          <span className='flex items-center gap-1'>
-                            <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-400 inline-block'></span>
+                          <span className='flex items-center gap-1.5'>
+                            <span className='w-2 h-2 rounded-full bg-yellow-400 shadow-sm inline-block'></span>
                             Trial
                           </span>
-                          <span className='flex items-center gap-1'>
-                            <span className='w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-400 inline-block'></span>
+                          <span className='flex items-center gap-1.5'>
+                            <span className='w-2 h-2 rounded-full bg-blue-400 shadow-sm inline-block'></span>
                             Laundry
                           </span>
                         </div>
@@ -989,15 +1039,15 @@ const MyBookings = ({ setShowLogin }) => {
                         </div>
 
                         {/* Selected dates summary */}
-                        <div className={`mt-2 grid gap-2 text-center ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                          <div className='bg-white rounded-md py-2 px-3 border border-gray-200'>
-                            <p className='text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider'>{isTrial ? 'Trial Date' : 'Pick-up'}</p>
-                            <p className='text-xs sm:text-sm font-bold text-gray-800 mt-0.5'>{form.pickupDate || '—'}</p>
+                        <div className={`mt-6 grid gap-3 text-center ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                          <div className='bg-gray-50/80 rounded-2xl py-3 px-4 border border-gray-100 shadow-inner'>
+                            <p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1'>{isTrial ? 'Trial Date' : 'Pick-up'}</p>
+                            <p className='text-sm sm:text-base font-black text-gray-800'>{form.pickupDate || '—'}</p>
                           </div>
                           {!isTrial && (
-                            <div className='bg-white rounded-md py-2 px-3 border border-gray-200'>
-                              <p className='text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider'>Return</p>
-                              <p className='text-xs sm:text-sm font-bold text-gray-800 mt-0.5'>{form.returnDate || '—'}</p>
+                            <div className='bg-gray-50/80 rounded-2xl py-3 px-4 border border-gray-100 shadow-inner'>
+                              <p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1'>Return</p>
+                              <p className='text-sm sm:text-base font-black text-gray-800'>{form.returnDate || '—'}</p>
                             </div>
                           )}
                         </div>
@@ -1006,23 +1056,25 @@ const MyBookings = ({ setShowLogin }) => {
 
                     {/* Time Selection */}
                     <div>
-                      <div className='flex items-center gap-2 mb-2'>
-                        <svg className='w-4 h-4 text-gray-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                        </svg>
-                        <h3 className='text-sm font-semibold text-gray-900'>Time</h3>
+                      <div className='flex items-center gap-2 mb-3'>
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <svg className='w-3 h-3 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                          </svg>
+                        </div>
+                        <h3 className='text-sm font-black text-gray-900 uppercase tracking-widest'>Time</h3>
                       </div>
 
-                      <div className={`grid gap-3 ${isTrial ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                      <div className={`grid gap-4 ${isTrial ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
                         <div>
-                          <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>
+                          <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5'>
                             {isTrial ? 'Try-on Time' : 'Pick-up Time'}
                           </label>
                           <select
                             name='pickupTime'
                             value={form.pickupTime}
                             onChange={handleFormChange}
-                            className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors bg-white'
+                            className='w-full px-4 py-3 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/50 shadow-sm'
                           >
                             {allowedTimes.map((t) => (
                               <option key={t} value={t}>{formatTime(t)}</option>
@@ -1032,12 +1084,12 @@ const MyBookings = ({ setShowLogin }) => {
 
                         {!isTrial && (
                           <div>
-                            <label className='block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5'>Return Time</label>
+                            <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5'>Return Time</label>
                             <select
                               name='returnTime'
                               value={form.returnTime}
                               onChange={handleFormChange}
-                              className='w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm transition-colors bg-white'
+                              className='w-full px-4 py-3 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/50 shadow-sm'
                             >
                               {allowedTimes.map((t) => {
                                 if (form.pickupDate === form.returnDate && form.pickupTime) {
@@ -1055,13 +1107,18 @@ const MyBookings = ({ setShowLogin }) => {
 
                     {/* Trial info */}
                     {isTrial && (
-                      <div className='flex items-start gap-2 p-3 bg-amber-50/80 border border-amber-100 rounded-lg'>
-                        <svg className='w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-                        </svg>
-                        <p className='text-xs text-amber-800'>
-                          Trial bookings are single-day appointments. The try-on slot is 30 minutes long.
-                        </p>
+                      <div className='flex items-start gap-3 p-4 bg-amber-50/50 border border-amber-100 rounded-2xl backdrop-blur-sm shadow-[0_5px_15px_rgba(245,158,11,0.05)]'>
+                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                          <svg className='w-4 h-4 text-amber-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className='text-[10px] font-black text-amber-600/70 uppercase tracking-widest mb-1'>Important</p>
+                          <p className='text-sm font-bold text-amber-800 leading-relaxed'>
+                            Trial bookings are single-day appointments. The try-on slot is 30 minutes long.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </>
@@ -1069,49 +1126,55 @@ const MyBookings = ({ setShowLogin }) => {
 
                 {/* Availability Status */}
                 {(availabilityStatus.loading || availabilityStatus.message) && (
-                  <div className={`flex items-center gap-2 p-3 rounded-lg text-sm font-medium ${availabilityStatus.loading ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                      availabilityStatus.valid ? 'bg-green-50 text-green-700 border border-green-100' :
-                        'bg-red-50 text-red-700 border border-red-100'
+                  <div className={`p-4 rounded-2xl border flex items-center gap-3 shadow-sm backdrop-blur-sm transition-all duration-300 ${availabilityStatus.loading ? 'bg-blue-50/50 border-blue-100' :
+                    availabilityStatus.valid ? 'bg-green-50/50 border-green-200 shadow-[0_5px_15px_rgba(34,197,94,0.05)]' :
+                      'bg-red-50/50 border-red-200 shadow-[0_5px_15px_rgba(239,68,68,0.05)]'
                     }`}>
-                    {availabilityStatus.loading && (
-                      <div className='w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0'></div>
-                    )}
-                    {!availabilityStatus.loading && availabilityStatus.valid && (
-                      <svg className='w-4 h-4 text-green-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
-                      </svg>
-                    )}
-                    {!availabilityStatus.loading && !availabilityStatus.valid && (
-                      <svg className='w-4 h-4 text-red-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
-                      </svg>
-                    )}
-                    <span>{availabilityStatus.message}</span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5 ${availabilityStatus.loading ? 'bg-blue-100 text-blue-600' :
+                        availabilityStatus.valid ? 'bg-green-100 text-green-600' :
+                          'bg-red-100 text-red-600'
+                      }`}>
+                      {availabilityStatus.loading && (
+                        <div className='w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin'></div>
+                      )}
+                      {!availabilityStatus.loading && availabilityStatus.valid && (
+                        <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
+                        </svg>
+                      )}
+                      {!availabilityStatus.loading && !availabilityStatus.valid && (
+                        <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      )}
+                    </div>
+                    <div className='flex-1'>
+                       <p className={`text-sm font-bold ${availabilityStatus.loading ? 'text-blue-800' :
+                          availabilityStatus.valid ? 'text-green-800' : 'text-red-800'
+                        }`}>
+                        {availabilityStatus.message}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Sticky Footer */}
-              <div className='flex gap-2 px-4 sm:px-6 py-4 border-t border-gray-100 flex-shrink-0 bg-white rounded-b-xl'>
+              <div className='flex gap-3 px-6 py-5 border-t border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md rounded-b-3xl'>
+                <button
+                  type='button'
+                  onClick={closeEdit}
+                  className='flex-1 px-4 py-3 border border-gray-200 text-gray-500 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all font-black hover:-translate-y-1 shadow-sm'
+                >
+                  Cancel
+                </button>
                 <button
                   type='button'
                   onClick={submitReschedule}
                   disabled={saving || (availabilityStatus.message && !availabilityStatus.valid)}
-                  className='flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors text-sm'
+                  className='flex-[2] px-4 py-3 bg-primary text-white rounded-2xl text-[10px] uppercase tracking-widest font-black shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_15px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1 hover:bg-primary-dull disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed transition-all'
                 >
-                  {saving ? (
-                    <span className='flex items-center justify-center gap-2'>
-                      <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
-                      Saving…
-                    </span>
-                  ) : 'Save Changes'}
-                </button>
-                <button
-                  type='button'
-                  onClick={closeEdit}
-                  className='px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm'
-                >
-                  Cancel
+                  {saving ? 'Saving...' : 'Confirm Changes'}
                 </button>
               </div>
             </div>

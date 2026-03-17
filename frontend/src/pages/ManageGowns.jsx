@@ -387,8 +387,8 @@ const ManageGowns = () => {
             </div>
           </div>
 
-          {/* Status Filter Tabs */}
-          <div className='mb-6 sm:mb-8 flex flex-wrap items-center gap-2 border-b border-gray-200'>
+          {/* Status Filter Tabs - Modern Segmented Control Style */}
+          <div className='mb-10 flex flex-wrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit'>
             {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
               const count = status === 'all'
                 ? gowns.length
@@ -398,13 +398,17 @@ const ManageGowns = () => {
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-3 sm:px-4 py-2 sm:py-3 font-semibold text-xs sm:text-sm transition-colors ${filterStatus === status
-                      ? 'text-primary border-b-2 border-primary -mb-px'
-                      : 'text-gray-600 hover:text-gray-900'
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 relative ${filterStatus === status
+                      ? 'bg-white text-primary shadow-sm scale-105'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                     }`}
                 >
-                  {status === 'all' ? 'All' : status}
-                  {<span className='ml-1 font-bold text-primary-dull'>({count})</span>}
+                  <span className="flex items-center gap-2">
+                    {status === 'all' ? 'All Gowns' : status}
+                    <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${filterStatus === status ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}>
+                        {count}
+                    </span>
+                  </span>
                 </button>
               )
             })}
@@ -443,72 +447,95 @@ const ManageGowns = () => {
               )}
             </div>
           ) : (
-            <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
               {filteredGowns.map((gown) => (
                 <div
                   key={gown._id || gown.id}
-                  className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow'
+                  className='group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500'
                 >
-                  {/* Gown Image */}
-                  <div className='relative h-36 sm:h-48 md:h-56 overflow-hidden'>
+                  {/* Gown Image - Premium Presentation */}
+                  <div className='relative h-56 sm:h-64 overflow-hidden'>
                     <img
                       src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1}
                       alt={gown.name}
-                      className='w-full h-full object-cover'
+                      className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700'
                     />
-                    {/* Status Badge (uses derived display status that respects availability toggle) */}
-                    <div className={`absolute top-1.5 left-1.5 sm:top-3 sm:left-3 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-base font-bold text-white shadow-lg ${getDisplayStatus(gown) === 'Available' ? 'bg-green-500' :
-                        getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500' :
-                          getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500' :
-                            getDisplayStatus(gown) === 'In-Use' ? 'bg-gray-500' :
-                              getDisplayStatus(gown) === 'In-Laundry' ? 'bg-blue-500' :
-                                'bg-gray-400'
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Status Badge - Refined */}
+                    <div className={`absolute top-4 left-4 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md border border-white/20 ${
+                        getDisplayStatus(gown) === 'Available' ? 'bg-green-500/80' :
+                        getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500/80' :
+                        getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500/80' :
+                        getDisplayStatus(gown) === 'In-Use' ? 'bg-gray-500/80' :
+                        getDisplayStatus(gown) === 'In-Laundry' ? 'bg-blue-500/80' :
+                        'bg-gray-400/80'
                       }`}>
                       {getDisplayStatus(gown)}
                     </div>
-                    {/* Price Badge */}
-                    <div className='absolute bottom-1.5 right-1.5 sm:bottom-3 sm:right-3 bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-2 rounded-lg border border-primary/20 shadow-md'>
-                      <span className='text-xs sm:text-base font-bold'><span className="text-primary-dull">{currency}</span><span className="text-primary-dull">{gown.price?.toLocaleString() || 0}</span></span>
+
+                    {/* Price Tag - Premium */}
+                    <div className='absolute bottom-4 right-4 bg-white rounded-2xl px-4 py-2.5 shadow-xl border border-gray-100 group-hover:-translate-y-1 transition-transform'>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
+                        <span className='text-lg font-black text-primary-dull'>
+                            <span className="text-sm mr-0.5">₱</span>{gown.price?.toLocaleString() || 0}
+                        </span>
                     </div>
                   </div>
 
                   {/* Gown Details */}
-                  <div className='p-3 sm:p-4'>
-                    <h3 className='text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2 truncate'>{gown.name}</h3>
-                    {typeof gown.description === 'string' && gown.description.trim() !== '' && (
-                      <p className='text-gray-600 text-xs mb-2 line-clamp-2'>{gown.description}</p>
-                    )}
-
-                    {/* Details Grid */}
-                    <div className='grid grid-cols-2 gap-1 text-xs sm:text-sm'>
-                      <div className='flex items-center gap-1.5 sm:gap-2 text-gray-600'>
-                        <img src={assets.fabric_icon} alt="fabric" className='w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0' />
+                  <div className='p-6'>
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                        <h3 className='text-xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
+                        {!gown.available && (
+                            <div className="p-1 px-2 bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-lg">Hidden</div>
+                        )}
+                    </div>
+                    
+                    {/* Details Grid - Consistent with GownCard */}
+                    <div className='grid grid-cols-2 gap-y-3 gap-x-4 text-xs font-semibold mb-6'>
+                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                        <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.fabric_icon} alt="fabric" className='w-3 h-3' />
+                        </div>
                         <span className='truncate'>{gown.fabric}</span>
                       </div>
-                      <div className='flex items-center gap-1.5 sm:gap-2 text-gray-600'>
-                        <img src={assets.color_icon} alt="color" className='w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0' />
+                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                         <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.color_icon} alt="color" className='w-3 h-3' />
+                        </div>
                         <span className='truncate'>{gown.color}</span>
                       </div>
-                      <div className='flex items-center gap-1.5 sm:gap-2 text-gray-600'>
-                        <img src={assets.event_icon} alt="event" className='w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0' />
+                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                        <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.event_icon} alt="event" className='w-3 h-3' />
+                        </div>
                         <span className='capitalize truncate'>
                           {Array.isArray(gown.eventType) && gown.eventType.length > 0
-                            ? gown.eventType.join(', ')
+                            ? gown.eventType[0]
                             : gown.eventType || 'N/A'}
                         </span>
                       </div>
-                      <div className='flex items-center gap-1.5 sm:gap-2 text-gray-600'>
-                        <img src={assets.size_icon} alt="size" className='w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0' />
+                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                        <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.size_icon} alt="size" className='w-3 h-3' />
+                        </div>
                         <span className='truncate'>
-                          {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size || 'N/A'}
+                          {Array.isArray(gown.size) ? gown.size[0] : gown.size || 'N/A'}
                         </span>
                       </div>
                     </div>
 
-                    {/* Laundry Days */}
-                    <div className='mt-2 sm:mt-3 p-2 sm:p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300'>
-                      <div className='flex items-center justify-between mb-1 sm:mb-2'>
-                        <p className='text-xs font-semibold text-gray-700'>Laundry</p>
+                    {/* Laundry Management - Refined */}
+                    <div className='mb-6 p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex items-center justify-between'>
+                      <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                            <img src={assets.laundry_icon} className="w-4 h-4" />
+                         </div>
+                         <div>
+                            <p className='text-[10px] font-black text-primary-dull/40 uppercase tracking-widest'>Maintenance</p>
+                            <p className="text-xs font-bold text-primary-dull">Laundry Hold</p>
+                         </div>
                       </div>
                       <div className='flex items-center gap-2'>
                         <input
@@ -517,15 +544,14 @@ const ManageGowns = () => {
                           max='14'
                           value={laundryForm[gown._id || gown.id] ?? String(gown.laundryDays ?? 0)}
                           onChange={(e) => handleLaundryInputChange(gown._id || gown.id, e.target.value)}
-                          className='w-16 sm:w-20 px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-xs'
+                          className='w-12 px-2 py-1.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-xs font-bold text-center shadow-sm'
                         />
-                        <span className='text-xs text-gray-600'>day(s)</span>
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-2 sm:px-3 py-1 rounded-lg text-xs font-medium transition-colors ${laundrySaving === (gown._id || gown.id)
-                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                              : 'bg-primary text-white hover:bg-primary-dull'
+                          className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
+                              ? 'bg-gray-100 text-gray-400'
+                              : 'bg-primary text-white hover:shadow-lg hover:shadow-primary/20 active:scale-95'
                             }`}
                         >
                           {laundrySaving === (gown._id || gown.id) ? '...' : 'Save'}
@@ -533,28 +559,43 @@ const ManageGowns = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className='flex gap-1.5 pt-2 sm:pt-3 border-t border-gray-200 mt-2 sm:mt-3'>
+                    {/* Action Buttons - Premium Control Bar */}
+                    <div className='flex gap-2.5'>
                       <button
                         onClick={() => openEditModal(gown)}
-                        className='flex-1 px-3 sm:px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors text-xs sm:text-sm font-semibold'
+                        className='flex-1 h-11 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2'
                       >
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                         </svg>
                         Edit
                       </button>
                       <button
                         onClick={() => handleToggleAvailability(gown._id || gown.id)}
-                        className={`flex-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${gown.available
-                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                        className={`flex-1 h-11 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${gown.available
+                            ? 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'
+                            : 'bg-green-50 text-green-700 hover:bg-green-600 hover:text-white'
                           }`}
                       >
+                        {gown.available ? (
+                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                             </svg>
+                        ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                             </svg>
+                        )}
                         {gown.available ? 'Hide' : 'Show'}
                       </button>
                       <button
                         onClick={() => handleDeleteGown(gown._id || gown.id)}
-                        className='p-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors text-xs sm:text-sm font-semibold'
+                        className='w-11 h-11 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center'
                       >
-                        <img src={assets.delete_icon} alt="delete" className='w-9 h-9 sm:w-10 sm:h-10 mx-auto' />
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                         </svg>
                       </button>
                     </div>
                   </div>
@@ -568,23 +609,31 @@ const ManageGowns = () => {
       {/* Edit Gown Modal */}
       {editOpen && selectedGown && (
         <div
-          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
+          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
           onClick={closeEditModal}
         >
           <div
-            className='bg-white rounded-xl shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto'
+            className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-2xl w-full p-8 sm:p-10 max-h-[90vh] overflow-y-auto border border-blue-50 relative'
             onClick={(e) => e.stopPropagation()}
           >
-            <div className='flex items-start justify-between gap-4 mb-6'>
+            <div className='flex items-start justify-between gap-6 mb-10'>
               <div>
-                <h2 className='text-lg sm:text-xl font-bold text-gray-900'>Edit Apparel</h2>
-                <p className='text-xs sm:text-sm text-gray-600'>{selectedGown.name}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-1 bg-primary rounded-full"></div>
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">Editor</span>
+                </div>
+                <h2 className='text-3xl font-black text-primary tracking-tight leading-tight'>
+                  Edit Apparel
+                </h2>
+                <p className='text-sm text-gray-500 font-bold mt-1'>{selectedGown.name}</p>
               </div>
               <button
                 onClick={closeEditModal}
-                className='text-gray-400 hover:text-gray-600 text-2xl leading-none'
+                className='w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-primary/40 hover:text-primary hover:bg-primary/5 transition-all group'
               >
-                ×
+                <svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -595,103 +644,97 @@ const ManageGowns = () => {
               </div>
             )}
 
-            <div className='space-y-4'>
-              {/* Name */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Name *</label>
-                <input
-                  type='text'
-                  name='name'
-                  value={editForm.name}
-                  onChange={handleEditFormChange}
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                />
+            <div className='space-y-8'>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Name *</label>
+                  <input
+                    type='text'
+                    name='name'
+                    value={editForm.name}
+                    onChange={handleEditFormChange}
+                    className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none'
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Price (₱) *</label>
+                  <input
+                    type='number'
+                    name='price'
+                    min='0'
+                    step='100'
+                    value={editForm.price}
+                    onChange={handleEditFormChange}
+                    className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none'
+                  />
+                </div>
               </div>
 
-              {/* Price */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Price (₱) *</label>
-                <input
-                  type='number'
-                  name='price'
-                  min='0'
-                  step='100'
-                  value={editForm.price}
-                  onChange={handleEditFormChange}
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Description</label>
+              <div className="space-y-2">
+                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Description</label>
                 <textarea
                   name='description'
                   value={editForm.description}
                   onChange={handleEditFormChange}
                   rows='3'
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none text-sm'
+                  className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none resize-none'
                 />
               </div>
 
-              {/* Fabric */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Fabric *</label>
-                <input
-                  type='text'
-                  name='fabric'
-                  value={editForm.fabric}
-                  onChange={handleEditFormChange}
-                  placeholder='e.g., Silk, Chiffon, Cotton'
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Fabric *</label>
+                  <input
+                    type='text'
+                    name='fabric'
+                    value={editForm.fabric}
+                    onChange={handleEditFormChange}
+                    className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none'
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Color *</label>
+                  <input
+                    type='text'
+                    name='color'
+                    value={editForm.color}
+                    onChange={handleEditFormChange}
+                    className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none'
+                  />
+                </div>
               </div>
 
-              {/* Color */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Color *</label>
-                <input
-                  type='text'
-                  name='color'
-                  value={editForm.color}
-                  onChange={handleEditFormChange}
-                  placeholder='e.g., Red, Blue, Gold'
-                  className='w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                />
-              </div>
-
-              {/* Event Types */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>Event Type *</label>
-                <div className='grid grid-cols-2 gap-2'>
+              <div className="space-y-4">
+                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Event Types *</label>
+                <div className='flex flex-wrap gap-2'>
                   {['wedding', 'traditional', 'prom', 'formal', 'themed'].map((event) => (
                     <button
                       key={event}
                       type='button'
                       onClick={() => handleEventTypeToggle(event)}
-                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${editForm.eventType.includes(event)
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.eventType.includes(event)
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                         }`}
                     >
-                      {event.charAt(0).toUpperCase() + event.slice(1)}
+                      {event}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Sizes */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>Size *</label>
-                <div className='grid grid-cols-4 gap-2'>
+              <div className="space-y-4">
+                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Sizes *</label>
+                <div className='flex flex-wrap gap-2'>
                   {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'].map((size) => (
                     <button
                       key={size}
                       type='button'
                       onClick={() => handleSizeToggle(size)}
-                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors border ${editForm.size.includes(size)
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.size.includes(size)
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                         }`}
                     >
                       {size}
@@ -700,43 +743,17 @@ const ManageGowns = () => {
                 </div>
               </div>
 
-              {/* Age Group */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Age Group <span className='text-red-500'>*</span></label>
-                <div className='grid grid-cols-2 gap-2'>
-                  {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map((age) => (
-                    <button
-                      key={age}
-                      type='button'
-                      onClick={() => setEditForm(prev => ({
-                        ...prev,
-                        ageGroup: prev.ageGroup.includes(age)
-                          ? prev.ageGroup.filter(a => a !== age)
-                          : [...prev.ageGroup, age]
-                      }))}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${editForm.ageGroup.includes(age)
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                        }`}
-                    >
-                      {age}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>Sex <span className='text-red-500'>*</span></label>
-                <div className='grid grid-cols-3 gap-2'>
+              <div className="space-y-4">
+                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Sex *</label>
+                <div className='flex flex-wrap gap-2'>
                   {['Male', 'Female', 'Unisex'].map((sex) => (
                     <button
                       key={sex}
                       type='button'
                       onClick={() => setEditForm(prev => ({ ...prev, sex }))}
-                      className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors border ${editForm.sex === sex
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                      className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.sex === sex
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                         }`}
                     >
                       {sex}
@@ -745,68 +762,67 @@ const ManageGowns = () => {
                 </div>
               </div>
 
-              {/* Appraisal Status & Visibility - Simplified */}
-              <div className='pt-6 border-t border-gray-200 mt-6'>
-                <div className='flex items-center gap-2 mb-4'>
+              {/* Apparel Status & Visibility - Simplified */}
+              <div className='pt-8 border-t border-gray-100'>
+                <div className='flex items-center gap-2 mb-6'>
                   <div className='w-1 h-5 bg-primary rounded-full'></div>
-                  <h3 className='text-sm font-bold text-gray-900 uppercase tracking-wider'>Apparel Status & Visibility</h3>
+                  <h3 className='text-[10px] font-black text-primary uppercase tracking-wider'>Status Control</h3>
                 </div>
                 
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                   {/* Status Selection */}
-                  <div className='bg-gray-50 p-4 rounded-xl border border-gray-100'>
-                    <label className='block text-xs font-bold text-gray-500 uppercase mb-2'>Current Status</label>
+                  <div className='bg-gray-50/50 p-6 rounded-2xl border border-gray-100'>
+                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3'>Manual Override</label>
                     <select
                       name='statusOverride'
                       value={editForm.statusOverride}
                       onChange={handleEditFormChange}
-                      className='w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm font-medium shadow-sm'
+                      className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none text-xs font-black text-primary appearance-none shadow-sm'
                     >
-                      <option value=''>Auto (Based on Bookings)</option>
+                      <option value=''>Auto (Dynamic)</option>
                       <option value='Available'>Force Available</option>
-                      <option value='In-Laundry'>Mark as In-Laundry</option>
-                      <option value='Unavailable'>Mark as Unavailable</option>
+                      <option value='Reserved'>Force Reserved</option>
+                      <option value='In-Use'>Force In-Use</option>
+                      <option value='In-Laundry'>Force In-Laundry</option>
+                      <option value='Unavailable'>Force Unavailable</option>
                     </select>
-                    <p className='text-[10px] text-gray-400 mt-2 leading-relaxed'>
-                      "Auto" uses your bookings to set status. Use others to manually override.
-                    </p>
                   </div>
 
                   {/* Visibility Toggle */}
-                  <div className='bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-center justify-between'>
-                    <div>
-                      <label className='block text-xs font-bold text-gray-500 uppercase mb-1'>Catalog Visibility</label>
-                      <span className='text-[11px] text-gray-400 font-medium'>
-                        {editForm.available ? 'Visible to customers' : 'Hidden from customers'}
-                      </span>
-                    </div>
-                    <button
-                      type='button'
-                      onClick={() => setEditForm(prev => ({ ...prev, available: !prev.available }))}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none shadow-inner ${editForm.available ? 'bg-primary' : 'bg-gray-300'}`}
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-md ${editForm.available ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+                  <div className='bg-gray-50/50 p-6 rounded-2xl border border-gray-100 flex flex-col justify-center'>
+                    <label className='flex items-center justify-between cursor-pointer group'>
+                       <span className='text-[10px] font-black text-gray-700 uppercase tracking-widest group-hover:text-primary transition-colors'>Catalog Visibility</span>
+                      <div className='relative'>
+                        <input
+                          type='checkbox'
+                          name='available'
+                          checked={editForm.available}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, available: e.target.checked }))}
+                          className='sr-only'
+                        />
+                        <div className={`w-12 h-6 rounded-full transition-colors ${editForm.available ? 'bg-primary' : 'bg-gray-300'}`}></div>
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${editForm.available ? 'translate-x-6' : ''}`}></div>
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className='flex gap-2 pt-4 border-t border-gray-200'>
+              <div className='flex gap-4 pt-6'>
+                <button
+                  type='button'
+                  onClick={closeEditModal}
+                  className='flex-1 py-5 border-2 border-primary/10 text-primary rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95'
+                >
+                  Discard
+                </button>
                 <button
                   type='button'
                   onClick={submitEditGown}
                   disabled={editSaving}
-                  className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                  className='flex-[2] py-5 bg-primary text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] hover:-translate-y-1 transition-all disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none disabled:translate-y-0 active:scale-95'
                 >
-                  {editSaving ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button
-                  type='button'
-                  onClick={closeEditModal}
-                  className='px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors'
-                >
-                  Cancel
+                  {editSaving ? 'Updating...' : 'Save Changes'}
                 </button>
               </div>
             </div>

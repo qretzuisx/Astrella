@@ -11,35 +11,44 @@ import AddGown from './pages/AddGown'
 import ManageGowns from './pages/ManageGowns'
 import ManageBookings from './pages/ManageBookings'
 import Recommendations from './pages/Recommendations'
-import OwnerRequest from './pages/OwnerRequest'
 import UserProfile from './pages/UserProfile'
 import ShopProfile from './pages/ShopProfile'
 import OwnerProfile from './pages/OwnerProfile'
 
+import BottomNav from './components/BottomNav'
+
 const App = () => {
   const [ShowLogin, setShowLogin] = useState(false)
-  const isOwnerPath = useLocation().pathname.startsWith('/owner')
+  const location = useLocation()
+  const isOwnerPath = location.pathname.startsWith('/owner')
+  
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       {!isOwnerPath && <Navbar setShowLogin={setShowLogin} />}
       <LoginModal showLogin={ShowLogin} setShowLogin={setShowLogin} />
 
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/gown-details/:id' element={<GownDetails />} />
-        <Route path='/owner-profile/:ownerId' element={<OwnerProfile />} />
-        <Route path='/gowns' element={<Gown />} />
-        <Route path='/recommendations' element={<Recommendations />} />
-        <Route path='/my-bookings' element={<MyBookings setShowLogin={setShowLogin} />} />
-        <Route path='/profile' element={<UserProfile />} />
-        <Route path='/request-owner' element={<OwnerRequest />} />
-        <Route path='/owner' element={<OwnerDashboard />} />
-        <Route path='/owner/shop-profile' element={<ShopProfile />} />
-        <Route path='/owner/add-gown' element={<AddGown />} />
-        <Route path='/owner/manage-gown' element={<ManageGowns />} />
-        <Route path='/owner/manage-bookings' element={<ManageBookings />} />
-      </Routes>
-    </>
+      <main className="flex-1">
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/gown-details/:id' element={<GownDetails />} />
+          <Route path='/owner-profile/:ownerId' element={<OwnerProfile />} />
+          <Route path='/gowns' element={<Gown />} />
+          <Route path='/recommendations' element={<Recommendations />} />
+          <Route path='/my-bookings' element={<MyBookings setShowLogin={setShowLogin} />} />
+          <Route path='/profile' element={<UserProfile />} />
+          <Route path='/owner' element={<OwnerDashboard />} />
+          <Route path='/owner/shop-profile' element={<ShopProfile />} />
+          <Route path='/owner/add-gown' element={<AddGown />} />
+          <Route path='/owner/manage-gown' element={<ManageGowns />} />
+          <Route path='/owner/manage-bookings' element={<ManageBookings />} />
+        </Routes>
+      </main>
+
+      {!isOwnerPath && <BottomNav />}
+      
+      {/* Mobile spacing for BottomNav */}
+      {!isOwnerPath && <div className="h-16 sm:hidden" />}
+    </div>
   )
 }
 

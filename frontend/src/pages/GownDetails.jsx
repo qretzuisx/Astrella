@@ -652,135 +652,222 @@ const GownDetails = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 bg-[#FDFDFF] min-h-screen text-gray-800'>
       {/* Back Button */}
-      <button onClick={() => navigate(-1)} className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'>
-        <img src={assets.arrow_icon} alt="arrow" className='rotate-180 opacity-65 w-4 h-4 sm:w-5 sm:h-5' />
-        <span>Back to all apparel</span>
+      <button 
+        onClick={() => navigate(-1)} 
+        className='flex items-center gap-2 mb-10 text-primary hover:text-secondary font-black transition-all hover:-translate-x-1 group'
+      >
+        <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span className="uppercase tracking-widest text-xs">Back to Catalog</span>
       </button>
 
       {/* Main Content */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8'>
-        {/* Left Column - Image and Measurements */}
-        <div className='w-full flex flex-col gap-3 sm:gap-4'>
+        {/* Left Column - Image and Descriptions */}
+        <div className='w-full flex flex-col gap-10'>
           {/* Image Section */}
-          <div className='relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl bg-gray-100'>
+          <div className='relative rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group'>
             <img
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
-              className='w-full h-auto max-h-[450px] sm:max-h-[500px] object-contain'
+              className='w-full h-auto max-h-[700px] object-cover transition-transform duration-1000 group-hover:scale-105'
             />
-            {gown?.status === 'Available' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
-                {gown.status}
-              </div>
-            )}
-            {gown?.status === 'Unavailable' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-orange-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
-                {gown.status}
-              </div>
-            )}
-            {gown?.status === 'In-Laundry' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-blue-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
-                {gown.status}
-              </div>
-            )}
-            {gown?.status === 'Reserved' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
-                {gown.status}
-              </div>
-            )}
-            {gown?.status === 'In-Use' && (
-              <div className='absolute top-3 left-3 sm:top-4 sm:left-4 bg-gray-500/90 backdrop-blur-sm text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-base sm:text-lg font-bold shadow-lg'>
-                {gown.status}
-              </div>
-            )}
-          </div>
-
-          {/* Title and Owner */}
-          <div className='mb-4 sm:mb-6'>
-            <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2'>{gown.name}</h1>
-            <p className='text-sm sm:text-base text-gray-600 mb-4 sm:mb-6'>
-              by{' '}
-              <button
-                onClick={() => {
-                  const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
-                  navigate(`/owner-profile/${ownerId}`)
-                }}
-                className='text-primary hover:text-primary-dull font-semibold transition-colors'
-              >
-                {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Unknown'}
-              </button>
-            </p>
-            <div className='text-2xl sm:text-3xl font-bold text-primary'>
-              {currency}{gown.pricePerDay?.toLocaleString() || gown.price?.toLocaleString()}
+            
+            {/* Status Badge */}
+            <div className={`absolute top-8 left-8 px-8 py-3.5 rounded-2xl text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/20 ${
+              gown?.status === 'Available' ? 'bg-primary/80' :
+              gown?.status === 'Unavailable' ? 'bg-orange-500/80' :
+              gown?.status === 'In-Laundry' ? 'bg-secondary/80' :
+              gown?.status === 'Reserved' ? 'bg-pink-500/80' :
+              'bg-gray-600/80'
+            }`}>
+              {gown.status}
             </div>
           </div>
 
-          {/* Location & Contact Number side by side */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-100'>
+          {/* Title and Owner Information */}
+          <div className='space-y-6'>
             <div>
-              <h2 className='text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2'>Location</h2>
-              <p className='text-sm sm:text-base text-gray-600'>{gown.location || 'Location not specified'}</p>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-3 py-1 bg-[#FF3B30]/5 text-[#FF3B30] text-[10px] font-black uppercase tracking-widest rounded-full">{gown.category || 'Apparel'}</span>
+                <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+                <span className="text-gray-400 text-xs font-bold">ID: {gown._id?.slice(-6).toUpperCase()}</span>
+              </div>
+              <h1 className='text-4xl sm:text-5xl font-black text-primary tracking-tight leading-tight mb-4'>{gown.name}</h1>
+              <div className='flex items-center gap-4 py-6 border-y border-primary/5'>
+                <div className='w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-[0_10px_20px_rgba(1,62,141,0.2)]'>
+                  {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Handpicked by</p>
+                  <button
+                    onClick={() => {
+                      const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+                      navigate(`/owner-profile/${ownerId}`)
+                    }}
+                    className='text-primary hover:text-[#FFD700] font-black text-lg transition-colors'
+                  >
+                    {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
+                  </button>
+                </div>
+              </div>
             </div>
-            <div>
-              <h2 className='text-sm sm:text-base font-bold text-gray-900 mb-1 sm:mb-2'>Contact Number</h2>
-              <p className='text-sm sm:text-base text-gray-600'>{gown.contactNumber || gown.contact || 'Contact not available'}</p>
+
+            {/* Price section */}
+            <div className='p-8 bg-white border border-primary/5 rounded-[32px] text-primary flex items-center justify-between shadow-[0_20px_60px_rgba(1,62,141,0.08)] overflow-hidden relative group backdrop-blur-xl'>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-50"></div>
+              <div className="relative z-10">
+                <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2'>Daily Rental rate</p>
+                <div className='text-4xl font-black flex items-baseline gap-2'>
+                  <span className="text-[#FF3B30]">{currency}</span>
+                  <span className='text-primary'>{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+            </div>
+          </div>
+
+          {/* Info Grid */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+            <div className='p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_40px_rgba(1,62,141,0.05)] group hover:shadow-[0_15px_60px_rgba(1,62,141,0.08)] transition-all duration-500 backdrop-blur-md hover:border-primary/10'>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-1 bg-gradient-to-r from-[#FFD700] to-yellow-500 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.2)]"></div>
+                <h2 className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Boutique Location</h2>
+              </div>
+              <p className='text-primary font-black text-lg'>{gown.location || 'Visit our physical store'}</p>
+            </div>
+            <div className='p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_40px_rgba(1,62,141,0.05)] group hover:shadow-[0_15px_60px_rgba(1,62,141,0.08)] transition-all duration-500 backdrop-blur-md hover:border-primary/10'>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-1 bg-gradient-to-r from-[#FFD700] to-yellow-500 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.2)]"></div>
+                <h2 className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Direct Contact</h2>
+              </div>
+              <p className='text-primary font-black text-lg'>{gown.contactNumber || gown.contact || 'Inquire via Boutique'}</p>
             </div>
           </div>
 
 
 
-          {/* Gown Details Grid - Moved here */}
-          <div>
-            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4'>Gown Details</h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-              {/* Fabric */}
-              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
-                  <img src={assets.fabric_icon} alt="fabric" className='w-5 h-5 sm:w-6 sm:h-6' />
+          {/* Gown Specifications */}
+          <div className='bg-white rounded-[32px] border border-primary/5 p-8 shadow-[0_20px_60px_rgba(1,62,141,0.06)] backdrop-blur-xl relative overflow-hidden'>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <h2 className='text-xl font-black text-primary mb-8 flex items-center gap-3 relative z-10'>
+              <div className="w-8 h-8 bg-gradient-to-tr from-[#FFD700] to-yellow-500 rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(255,215,0,0.2)]">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              Specifications
+            </h2>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10'>
+              {/* Material */}
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+                  <img src={assets.fabric_icon} alt="fabric" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Fabric</p>
-                  <p className='text-sm sm:text-base font-medium text-gray-900 truncate'>{gown.fabric}</p>
+                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Material</p>
+                  <p className='text-primary font-black text-xl truncate'>{gown.fabric || 'Premium Blends'}</p>
                 </div>
               </div>
 
               {/* Size */}
-              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
-                  <img src={assets.size_icon} alt="size" className='w-5 h-5 sm:w-6 sm:h-6' />
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+                  <img src={assets.size_icon} alt="size" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Size</p>
-                  <p className='text-sm sm:text-base font-medium text-gray-900 truncate'>
+                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Available Size</p>
+                  <p className='text-primary font-black text-xl truncate'>
                     {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size}
                   </p>
                 </div>
               </div>
 
               {/* Color */}
-              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
-                  <img src={assets.color_icon} alt="color" className='w-5 h-5 sm:w-6 sm:h-6' />
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+                  <img src={assets.color_icon} alt="color" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Color</p>
-                  <p className='text-sm sm:text-base font-medium text-gray-900 truncate'>{gown.color}</p>
+                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const colorMap = {
+                        'off-white': '#FAF9F6',
+                        'ivory': '#FFFFF0',
+                        'champagne': '#F7E7CE',
+                        'cream': '#FFFDD0',
+                        'nude': '#E3BC9A',
+                        'peach': '#FFDAB9',
+                        'blush': '#FE828C',
+                        'sky blue': '#87CEEB',
+                        'royal blue': '#4169E1',
+                        'wine red': '#722F37',
+                        'maroon': '#800000',
+                        'gold': '#FFD700',
+                        'silver': '#C0C0C0',
+                        'white': '#FFFFFF',
+                        'black': '#000000',
+                        'navy': '#000080',
+                        'emerald': '#50C878',
+                        'sage': '#BCB88A',
+                        'sage green': '#BCB88A',
+                        'dusty rose': '#DCAE96',
+                        'rose gold': '#B76E79',
+                        'burgundy': '#800020',
+                        'mocha': '#967969',
+                        'lavender': '#E6E6FA',
+                        'lilac': '#C8A2C8',
+                        'mint': '#98FF98',
+                        'teal': '#008080',
+                        'rust': '#B7410E',
+                        'terracotta': '#E2725B',
+                        'mustard': '#FFDB58',
+                        'olive': '#808000'
+                      };
+                      
+                      const colorValue = gown.color;
+                      let colors = [];
+                      if (Array.isArray(colorValue)) colors = colorValue;
+                      else if (typeof colorValue === 'string') colors = colorValue.split(',').map(c => c.trim());
+                      else colors = [colorValue || '#eee'];
+                      
+                      return (
+                        <div className="flex -space-x-2">
+                          {colors.map((c, i) => {
+                            const normalized = c.toLowerCase();
+                            const hex = colorMap[normalized] || normalized;
+                            return (
+                              <div 
+                                key={i} 
+                                className={`w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
+                                style={{ backgroundColor: hex }} 
+                                title={c} 
+                              />
+                            );
+                          })}
+                        </div>
+                      )
+                    })()}
+                    <p className='text-primary font-black text-xl truncate capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
+                  </div>
                 </div>
               </div>
 
               {/* Event Types */}
-              <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg'>
-                <div className='bg-white p-2 sm:p-3 rounded-lg shadow-sm flex-shrink-0'>
-                  <img src={assets.event_icon} alt="event" className='w-5 h-5 sm:w-6 sm:h-6' />
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+                  <img src={assets.event_icon} alt="event" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1'>Event Type</p>
-                  <p className='text-sm sm:text-base font-medium text-gray-900 capitalize truncate'>
+                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Best for</p>
+                  <p className='text-primary font-black text-xl capitalize truncate'>
                     {Array.isArray(gown.eventType) && gown.eventType.length > 0
                       ? gown.eventType.join(', ')
-                      : gown.eventtype || gown.eventType || 'N/A'}
+                      : gown.eventtype || gown.eventType || 'All Occasions'}
                   </p>
                 </div>
               </div>
@@ -788,133 +875,131 @@ const GownDetails = () => {
           </div>
         </div>
 
-        {/* Details Section */}
-        <div className='flex flex-col'>
-          {/* Category (if available) */}
-          {gown.category && (
-            <div className='mb-6 sm:mb-8'>
-              <div className='inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 text-primary rounded-full text-xs sm:text-sm font-medium'>
-                {gown.category}
-              </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {success && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <div className='flex items-center gap-2'>
-                <img src={assets.check_icon} alt="check" className='w-5 h-5 text-green-600' />
-                <p className='text-green-800 font-medium'>Booking confirmed! Redirecting to My Bookings...</p>
-              </div>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
-              <p className='text-red-800'>{error}</p>
-            </div>
-          )}
-
-          {/* Booking Section */}
-          <div className='border border-gray-200 rounded-xl p-4 sm:p-6 bg-gray-50'>
-            <h2 className='text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6'>Booking Details</h2>
-
-            {/* Booking Type */}
-            <div className='mb-4 sm:mb-6'>
-              <div className='flex items-center gap-2 mb-3 sm:mb-4'>
-                <span className='inline-block w-2.5 h-2.5 rounded-full bg-primary'></span>
-                <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Booking Type</h3>
-              </div>
-              <div className='flex flex-col sm:flex-row gap-3'>
-                <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${bookingType === 'reservation' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
-                  <input
-                    type='radio'
-                    name='bookingType'
-                    value='reservation'
-                    checked={bookingType === 'reservation'}
-                    onChange={() => setBookingType('reservation')}
-                  />
-                  <div>
-                    <p className='font-semibold text-gray-900'>Reservation</p>
-                    <p className='text-xs text-gray-500'>Standard rental booking</p>
+        {/* Details Section (Right Column) */}
+        <div className='flex flex-col gap-8'>
+          {/* Success/Error Notifications */}
+          <div className="space-y-4">
+            {success && (
+              <div className='p-6 bg-green-50 border border-green-200 rounded-[24px] animate-fade-in backdrop-blur-md'>
+                <div className='flex items-center gap-3'>
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-[0_5px_15px_rgba(34,197,94,0.3)]">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
-                </label>
-                <label className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer bg-white ${bookingType === 'trial' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
-                  <input
-                    type='radio'
-                    name='bookingType'
-                    value='trial'
-                    checked={bookingType === 'trial'}
-                    onChange={() => setBookingType('trial')}
-                  />
-                  <div>
-                    <p className='font-semibold text-gray-900'>Visit & Try-On</p>
-                    <p className='text-xs text-gray-500'>See and try the gown in person</p>
+                  <p className='text-green-700 font-black'>Success! Redirecting to your dashboard...</p>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className='p-6 bg-red-50 border border-red-100 rounded-[24px] animate-shake backdrop-blur-md'>
+                <div className='flex items-center gap-3'>
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white shadow-[0_5px_15px_rgba(239,68,68,0.3)]">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </div>
-                </label>
+                  <p className='text-red-700 font-black'>{error}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Booking Card */}
+          <div className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.1)] border border-primary/5 p-8 sm:p-10 relative overflow-hidden backdrop-blur-xl'>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+            
+            <h2 className='text-2xl font-black text-primary mb-8'>Reserve this Gown</h2>
+
+            {/* Booking Type Selection */}
+            <div className='mb-10'>
+              <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-4'>Select Experience</label>
+              <div className='grid grid-cols-2 gap-4'>
+                <button 
+                  onClick={() => setBookingType('reservation')}
+                  className={`flex flex-col gap-3 p-5 rounded-3xl border-2 transition-all text-left ${
+                    bookingType === 'reservation' 
+                    ? 'border-primary bg-primary/5 shadow-[inner_0_0_20px_rgba(1,62,141,0.05)]' 
+                    : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${bookingType === 'reservation' ? 'bg-primary text-white shadow-[0_5px_15px_rgba(1,62,141,0.3)]' : 'bg-white text-gray-400 border border-primary/5'}`}>
+                    <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className={`font-black text-sm ${bookingType === 'reservation' ? 'text-primary' : 'text-gray-400'}`}>Reservation</p>
+                    <p className='text-[10px] text-gray-400 font-bold'>Standard Rental</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => setBookingType('trial')}
+                  className={`flex flex-col gap-3 p-5 rounded-3xl border-2 transition-all text-left group/trial ${
+                    bookingType === 'trial' 
+                    ? 'border-secondary bg-secondary/5 shadow-[inner_0_0_20px_rgba(67,97,238,0.05)]' 
+                    : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${bookingType === 'trial' ? 'bg-secondary text-white shadow-[0_5px_15px_rgba(67,97,238,0.3)]' : 'bg-gray-200 text-gray-600 border border-gray-300 group-hover/trial:border-secondary/20'}`}>
+                    <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className={`font-black text-sm ${bookingType === 'trial' ? 'text-secondary' : 'text-gray-600'}`}>Visit & Try-on</p>
+                    <p className='text-[10px] text-gray-500 font-bold'>View in Person</p>
+                  </div>
+                </button>
               </div>
             </div>
 
-            {/* Date Selection */}
-            <div className='mb-4 sm:mb-6'>
-              <div className='flex items-center gap-2 mb-3 sm:mb-4'>
-                <img src={assets.calendar_icon_colored} alt="calendar" className='w-4 h-4 sm:w-5 sm:h-5' />
-                <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Select Dates</h3>
-              </div>
-
-              <div className='bg-white border border-gray-200 rounded-lg p-3 sm:p-4 flex flex-col items-center'>
-                <div className='flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs text-gray-600 mb-3'>
-                  <span className='flex items-center gap-1'>
-                    <span className='w-3 h-3 rounded-full bg-red-500 inline-block'></span>
+            {/* Date Selection Section */}
+            <div className='mb-10'>
+              <div className="flex items-center justify-between mb-4">
+                <label className='block text-xs font-black text-gray-500 uppercase tracking-widest'>Select Schedule</label>
+                <div className='flex items-center gap-4 text-[10px] font-black uppercase tracking-widest'>
+                  <span className='flex items-center gap-1.5 text-[#EF4444]'>
+                    <span className='w-2 h-2 rounded-full bg-[#EF4444] shadow-[0_0_5px_rgba(239,68,68,0.5)]'></span>
                     Reserved
                   </span>
-                  <span className='flex items-center gap-1'>
-                    <span className='w-3 h-3 rounded-full bg-gray-500 inline-block'></span>
+                  <span className='flex items-center gap-1.5 text-[#6B7280]'>
+                    <span className='w-2 h-2 rounded-full bg-[#6B7280] shadow-[0_0_5px_rgba(107,114,128,0.5)]'></span>
                     Trial
                   </span>
-                  <span className='flex items-center gap-1'>
-                    <span className='w-3 h-3 rounded-full bg-blue-500 inline-block'></span>
+                  <span className='flex items-center gap-1.5 text-[#3B82F6]'>
+                    <span className='w-2 h-2 rounded-full bg-[#3B82F6] shadow-[0_0_5px_rgba(59,130,246,0.5)]'></span>
                     Laundry
                   </span>
                 </div>
+              </div>
 
+              <div className='bg-[#FDFDFF] border border-primary/5 shadow-inner rounded-[32px] p-6 relative'>
                 {calendarLoading ? (
-                  <p className='text-sm text-gray-500'>Loading calendar…</p>
+                  <div className="py-12 flex flex-col items-center justify-center opacity-50">
+                    <div className="w-8 h-8 border-2 border-primary border-b-transparent rounded-full animate-spin mb-3"></div>
+                    <p className='text-[10px] font-black text-primary uppercase tracking-widest'>Syncing Calendar...</p>
+                  </div>
                 ) : calendarError ? (
-                  <p className='text-sm text-red-600'>{calendarError}</p>
+                  <p className='text-sm text-red-500 font-bold p-4 text-center'>{calendarError}</p>
                 ) : (
-                  <div className='flex justify-center w-full'>
+                  <div className='flex justify-center w-full scale-90 sm:scale-100 origin-top [&_.rdp]:text-primary [&_.rdp-day]:w-9 [&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-10 [&_.rdp-day_button]:text-primary [&_.rdp-day_button:disabled]:text-gray-300 [&_.rdp-nav_button]:text-primary [&_.rdp-nav_button:hover]:bg-primary/5 [&_.rdp-head_cell]:text-gray-400'>
                     <DayPicker
                       mode={bookingType === 'trial' ? 'single' : 'range'}
                       numberOfMonths={1}
                       onDayClick={(day, modifiers) => {
-                        // If a blocked day is clicked, show a badge message instead of changing selection
                         const iso = toIsoDate(day)
                         if (isPastIsoDate(iso)) {
-                          setBlockedClick({
-                            date: iso,
-                            message: 'Past dates cannot be selected.',
-                          })
+                          setBlockedClick({ date: iso, message: 'Select a future date.' })
                           return
                         }
-
                         const reason = blockedReasonForDate(iso)
-                        if (reason) {
-                          // If allowSelection is true (trial), don't show blocked message
-                          if (reason.allowSelection) {
-                            if (blockedClick) setBlockedClick(null)
-                            return
-                          }
-                          // For reserved/laundry dates, show the blocked message
-                          setBlockedClick({
-                            date: iso,
-                            message: `${reason.message} Please choose another date.`,
-                          })
-                        } else {
-                          // clear badge when clicking a non-blocked day
-                          if (blockedClick) setBlockedClick(null)
-                        }
+                        if (reason && !reason.allowSelection) {
+                          setBlockedClick({ date: iso, message: reason.message })
+                        } else if (blockedClick) setBlockedClick(null)
                       }}
                       selected={bookingType === 'trial'
                         ? (pickupDate ? new Date(`${pickupDate}T00:00:00`) : undefined)
@@ -933,10 +1018,8 @@ const GownDetails = () => {
                       }}
                       disabled={(date) => {
                         const iso = toIsoDate(date)
-                        // Disable all past days (only today and future dates are clickable)
                         if (isPastIsoDate(iso)) return true
                         const blocked = blockedReasonForDate(iso)
-                        // Allow selection if it only has trial time slots (allowSelection flag)
                         if (blocked?.allowSelection) return false
                         return Boolean(blocked)
                       }}
@@ -955,161 +1038,176 @@ const GownDetails = () => {
                 )}
 
                 {blockedClick && (
-                  <div className={`mt-3 mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${blockedClick.message?.includes('trying')
-                      ? 'bg-amber-50 border border-amber-200 text-amber-800'
-                      : 'bg-red-50 border border-red-200 text-red-800'
-                    }`}>
-                    <span className='font-semibold'>{blockedClick.message?.includes('trying') ? 'ℹ️ Note:' : 'Blocked:'}</span>
-                    <span>{blockedClick.message}</span>
+                  <div className='mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl animate-fade-in backdrop-blur-md'>
+                    <p className='text-[10px] font-black text-red-500 uppercase tracking-widest mb-1'>Date Unavailable</p>
+                    <p className="text-orange-600 text-xs font-bold">{blockedClick.message}</p>
                   </div>
                 )}
+              </div>
 
-                <div className={`mt-3 grid gap-3 text-center ${bookingType === 'trial' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                  <div>
-                    <p className='text-sm font-bold text-gray-900'>{bookingType === 'trial' ? 'Trial Date' : 'Pick-up'}</p>
-                    <p className='text-sm font-bold text-gray-700 mt-0.5'>{pickupDate ? formatDateWithDay(pickupDate) : '—'}</p>
+              {/* Selected Dates Display */}
+              {pickupDate && (
+                <div className='mt-6 grid grid-cols-2 gap-4 animate-fade-in'>
+                  <div className='p-6 bg-primary rounded-[32px] text-white shadow-[0_20px_50px_rgba(1,62,141,0.15)] relative overflow-hidden'>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
+                    <p className='text-[10px] font-black text-white/60 uppercase tracking-widest mb-2 relative z-10'>{bookingType === 'trial' ? 'Visit Date' : 'Pickup Date'}</p>
+                    <p className='text-base font-black text-white drop-shadow-sm relative z-10'>
+                      {formatDateWithDay(pickupDate).split(',')[0]}
+                    </p>
+                    <p className='text-[10px] font-black text-white/80 uppercase tracking-widest mt-1 relative z-10'>
+                      {formatDateWithDay(pickupDate).split(',')[1]}
+                    </p>
                   </div>
                   {bookingType !== 'trial' && (
-                    <div>
-                      <p className='text-sm font-bold text-gray-900'>Return</p>
-                      <p className='text-sm font-bold text-gray-700 mt-0.5'>{returnDate ? formatDateWithDay(returnDate) : '—'}</p>
+                    <div className='p-6 bg-white border border-primary/5 rounded-[32px] shadow-sm relative overflow-hidden'>
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-12 -mt-12"></div>
+                      <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 relative z-10'>Return Date</p>
+                      <p className='text-base font-black text-primary relative z-10'>
+                        {returnDate ? formatDateWithDay(returnDate).split(',')[0] : '—'}
+                      </p>
+                      <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 relative z-10'>
+                        {returnDate ? formatDateWithDay(returnDate).split(',')[1] : '—'}
+                      </p>
                     </div>
                   )}
                 </div>
-                <div className='mt-2'>
-                  {formErrors.pickupDate && <p className='text-sm text-red-600'>{formErrors.pickupDate}</p>}
-                  {formErrors.returnDate && <p className='text-sm text-red-600'>{formErrors.returnDate}</p>}
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Time Section */}
-            <div className='mb-6'>
-              <div className='flex items-center gap-2 mb-4'>
-                <svg className='w-5 h-5 text-gray-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                </svg>
-                <h3 className='text-lg font-semibold text-gray-900'>Time</h3>
-              </div>
+            {/* Time Slot Selection */}
+            <div className='mb-10'>
+              <label className='block text-xs font-black text-gray-500 uppercase tracking-widest mb-4'>Select Preferred Time</label>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>{bookingType === 'trial' ? 'Try-on Time' : 'Pick-up Time'}</label>
+                <div className="space-y-2">
+                  <p className='text-[10px] font-black text-gray-500 uppercase tracking-widest pl-2'>{bookingType === 'trial' ? 'Trial' : 'Pickup'}</p>
                   <select
                     value={pickupTime}
                     onChange={(e) => {
                       setPickupTime(e.target.value)
                       setFieldError('pickupTime', '')
                     }}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.pickupTime ? 'border-red-400' : 'border-gray-300'}`}
+                    className={`w-full px-5 py-4 bg-[#FDFDFF] border rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
+                      formErrors.pickupTime ? 'border-red-500' : 'border-primary/10 focus:border-primary'
+                    } appearance-none relative`}
+                    style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23013E8D%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
                   >
-                    <option value=''>{bookingType === 'trial' ? 'Select try-on time' : 'Select pickup time'}</option>
+                    <option value='' className='bg-white'>Slot</option>
                     {allowedTimes.map(time => {
-                      // If booking for today, filter out past times
                       if (pickupDate === toIsoDate(new Date())) {
                         const currentTime = new Date().toTimeString().slice(0, 5)
                         if (time < currentTime) return null
                       }
-                      return <option key={time} value={time}>{formatTimeLabel(time)}</option>
+                      return <option key={time} value={time} className='bg-white'>{formatTimeLabel(time)}</option>
                     })}
                   </select>
-                  {formErrors.pickupTime && (
-                    <p className='text-sm text-red-600 mt-1'>{formErrors.pickupTime}</p>
-                  )}
                 </div>
+                
                 {bookingType !== 'trial' && (
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>Return Time</label>
-                    <select
-                      value={returnTime}
-                      onChange={(e) => {
-                        setReturnTime(e.target.value)
-                        setFieldError('returnTime', '')
-                      }}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white ${formErrors.returnTime ? 'border-red-400' : 'border-gray-300'}`}
-                    >
-                      <option value=''>Select return time</option>
-                      {allowedTimes.map(time => {
-                        // If same-day booking and pickup time is selected, filter times before pickup
-                        if (pickupDate === returnDate && pickupTime && time < pickupTime) {
-                          return null
-                        }
-                        // If booking for today, filter out past times
-                        if (returnDate === toIsoDate(new Date())) {
-                          const currentTime = new Date().toTimeString().slice(0, 5)
-                          if (time < currentTime) return null
-                        }
-                        return <option key={time} value={time}>{formatTimeLabel(time)}</option>
-                      })}
-                    </select>
-                    {formErrors.returnTime && (
-                      <p className='text-sm text-red-600 mt-1'>{formErrors.returnTime}</p>
-                    )}
+                  <div className="space-y-2">
+                    <p className='text-[10px] font-black text-gray-500 uppercase tracking-widest pl-2'>Return</p>
+                      <select
+                        value={returnTime}
+                        onChange={(e) => {
+                          setReturnTime(e.target.value)
+                          setFieldError('returnTime', '')
+                        }}
+                        className={`w-full px-5 py-4 bg-[#FDFDFF] border rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
+                          formErrors.returnTime ? 'border-red-500' : 'border-primary/10 focus:border-primary'
+                        } appearance-none relative`}
+                        style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23013E8D%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
+                      >
+                        <option value='' className='bg-white'>Slot</option>
+                        {allowedTimes.map(time => {
+                          if (pickupDate === returnDate && pickupTime && time < pickupTime) return null
+                          if (returnDate === toIsoDate(new Date())) {
+                            const currentTime = new Date().toTimeString().slice(0, 5)
+                            if (time < currentTime) return null
+                          }
+                          return <option key={time} value={time} className='bg-white'>{formatTimeLabel(time)}</option>
+                        })}
+                      </select>
                   </div>
                 )}
               </div>
+              
               {(scheduleStatus.loading || scheduleStatus.message) && (
-                <div className={`mt-3 p-3 rounded-lg text-sm font-semibold ${scheduleStatus.loading ? 'bg-blue-50 text-blue-800' :
-                    scheduleStatus.valid ? 'bg-green-50 text-green-800' :
-                      'bg-red-50 text-red-800'
+                <div className={`mt-4 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${
+                    scheduleStatus.loading ? 'bg-primary/5 text-primary border border-primary/10' :
+                    scheduleStatus.valid ? 'bg-green-50 text-green-700 border border-green-100' :
+                    'bg-red-50 text-red-700 border border-red-100'
                   }`}>
-                  {scheduleStatus.loading ? 'Checking availability…' : scheduleStatus.message}
+                  <div className={`w-1.5 h-1.5 rounded-full ${
+                    scheduleStatus.loading ? 'bg-primary animate-pulse' :
+                    scheduleStatus.valid ? 'bg-green-500' :
+                    'bg-red-500'
+                  }`}></div>
+                  {scheduleStatus.loading ? 'Verifying Availability...' : scheduleStatus.message}
                 </div>
               )}
             </div>
 
-            {/* Summary */}
-            {durationDays > 0 && (
-              <div className='pt-4 border-t border-gray-300 space-y-2'>
-                <div className='flex justify-between items-center'>
-                  <span className='text-gray-600'>Duration:</span>
-                  <span className='font-semibold text-gray-900'>
-                    {durationDays} {durationDays === 1 ? 'day' : 'days'}
-                  </span>
+            {/* Price Summary */}
+            {bookingType !== 'trial' && durationDays > 0 && (
+              <div className='pt-8 border-t border-primary/10 space-y-4 animate-fade-in'>
+                <div className='flex justify-between items-center text-xs font-black text-gray-400 uppercase tracking-widest'>
+                  <span>Rental Period</span>
+                  <span className='text-secondary'>{durationDays} Days</span>
                 </div>
                 <div className='flex justify-between items-center'>
-                  <span className='text-gray-600'>Total:</span>
-                  <span className='text-xl font-bold text-primary'>
-                    {currency}{(totalAmount || 0).toLocaleString()}
-                  </span>
+                  <span className='text-lg font-black text-primary'>Total Amount</span>
+                  <div className='text-3xl font-black text-primary flex items-baseline gap-1'>
+                    <span className="text-secondary text-sm">{currency}</span>
+                    <span>{(totalAmount || 0).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             )}
+
+            {/* Final Action Button */}
+            <div className='mt-10 overflow-hidden rounded-[24px]'>
+              {confirmDisabled && !loading && !success && (
+                <div className='text-center p-3 bg-gray-50 border border-primary/5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 rounded-xl'>
+                  {gown?.status === 'Unavailable' ? 'Apparel Unavailable' : !isFormComplete ? 'Select Dates & Time' : hasFieldErrors ? 'Check Highlighted Errors' : !scheduleStatus.valid ? 'Schedule Conflict' : 'Verifying...'}
+                </div>
+              )}
+              <button
+                onClick={handleConfirmBooking}
+                className={`w-full py-6 rounded-[24px] font-black text-base uppercase tracking-widest transition-all duration-500 relative flex items-center justify-center gap-3 active:scale-95 ${!confirmDisabled
+                    ? 'bg-primary text-white shadow-[0_15px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1 hover:bg-secondary'
+                    : 'bg-gray-100 text-gray-400 border border-primary/5 cursor-not-allowed'
+                  }`}
+                disabled={confirmDisabled}
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-b-white rounded-full animate-spin"></div>
+                ) : success ? (
+                  'Confirmed'
+                ) : (
+                  <>
+                    <span>Confirm Booking</span>
+                    {!confirmDisabled && (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className='mt-6 space-y-3'>
-            {confirmDisabled && !loading && !success && (
-              <p id='confirm-booking-hint' className='text-sm text-gray-500'>
-                {gown?.status === 'Unavailable' ? 'This gown is not available to book.' : !isFormComplete ? 'Select dates and time to enable booking.' : hasFieldErrors ? 'Fix the errors above to continue.' : !scheduleStatus.valid ? (scheduleStatus.message || 'Check availability first.') : 'Checking availability…'}
-              </p>
-            )}
-            <button
-              onClick={handleConfirmBooking}
-              className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${!confirmDisabled
-                  ? 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
-                  : 'bg-gray-400 cursor-not-allowed'
-                }`}
-              disabled={confirmDisabled}
-              aria-describedby={confirmDisabled && !loading && !success ? 'confirm-booking-hint' : undefined}
-            >
-              {loading ? 'Processing...' : success ? 'Booking Confirmed!' : gown?.status === 'Unavailable' ? 'Not Available' : 'Confirm Booking'}
-            </button>
-
-            {/* Payment Modal */}
-            <PaymentModal
-              showPayment={showPayment}
-              setShowPayment={setShowPayment}
-              total={totalAmount || (gown.pricePerDay || gown.price || 0)}
-              onContinue={handlePaymentContinue}
-            />
-
-            {/* Contract Modal */}
-            <ContractModal
-              showContract={showContract}
-              setShowContract={setShowContract}
-              onSubmit={handleContractSubmit}
-            />
-          </div>
+          {/* Secondary Modals */}
+          <PaymentModal
+            showPayment={showPayment}
+            setShowPayment={setShowPayment}
+            total={totalAmount || (gown.pricePerDay || gown.price || 0)}
+            onContinue={handlePaymentContinue}
+          />
+          <ContractModal
+            showContract={showContract}
+            setShowContract={setShowContract}
+            onSubmit={handleContractSubmit}
+          />
         </div>
       </div>
     </div>

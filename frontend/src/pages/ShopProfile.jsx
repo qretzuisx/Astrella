@@ -281,304 +281,246 @@ const ShopProfile = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-gray-50'>
+    <div className='flex min-h-screen bg-[#FDFDFF]'>
       <OwnerSidebar />
 
-      <div className='flex-1 p-8'>
+      <div className='flex-1 p-4 sm:p-8 lg:p-12 overflow-y-auto'>
         <div className='max-w-4xl mx-auto'>
           {/* Header */}
-          <div className='mb-8'>
-            <h1 className='text-3xl font-bold text-gray-900 mb-2'>Shop Profile</h1>
-            <p className='text-gray-600'>
-              Set up your shop information once and it will automatically appear on your gown listings.
+          <div className='mb-12 mt-8 lg:mt-0'>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-1 bg-primary rounded-full"></div>
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
+            </div>
+            <h1 className='text-4xl font-black text-primary tracking-tight'>Shop Profile</h1>
+            <p className='text-gray-500 font-bold mt-2'>
+              Your identity at Astrella. Set up your shop details to build trust with your clients.
             </p>
           </div>
 
           {/* Success/Error Messages */}
           {success && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <p className='text-green-800'>{success}</p>
+            <div className='mb-8 p-4 bg-green-50 border border-green-100 rounded-2xl animate-fade-in'>
+              <p className='text-green-800 font-bold flex items-center gap-2'>
+                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
+                 {success}
+              </p>
             </div>
           )}
 
           {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
-              <p className='text-red-800'>{error}</p>
+            <div className='mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
+              <p className='text-red-800 font-bold flex items-center gap-2'>
+                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>
+                 {error}
+              </p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
-            {/* Shop Name */}
-            <div className='mb-6'>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Shop Name <span className='text-red-500'>*</span>
-              </label>
-              <input
-                type='text'
-                name='shopName'
-                value={shopProfile.shopName}
-                onChange={handleInputChange}
-                placeholder='e.g., Elegant Gowns Manila'
-                required
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-              />
-            </div>
-
-            {/* Description */}
-            <div className='mb-6'>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Description
-              </label>
-              <textarea
-                name='description'
-                value={shopProfile.description}
-                onChange={handleInputChange}
-                placeholder='Tell customers about your shop...'
-                rows='4'
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-              />
-            </div>
-
-            {/* Location Section */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                  Address <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='text'
-                  name='address'
-                  value={shopProfile.address}
-                  onChange={handleInputChange}
-                  placeholder='e.g., 123 Main Street, Barangay Name'
-                  required
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                />
+          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-6 sm:p-10 space-y-10'>
+            
+            {/* Basic Info */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">General Information</h3>
               </div>
+              
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Shop Name *</label>
+                  <input
+                    type='text'
+                    name='shopName'
+                    value={shopProfile.shopName}
+                    onChange={handleInputChange}
+                    placeholder='e.g., Elegant Gowns Manila'
+                    required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all placeholder:text-gray-300 shadow-sm'
+                  />
+                </div>
 
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                  City <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='text'
-                  name='city'
-                  value={shopProfile.city}
-                  onChange={handleInputChange}
-                  placeholder='e.g., Quezon City, Manila'
-                  required
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Description</label>
+                  <textarea
+                    name='description'
+                    value={shopProfile.description}
+                    onChange={handleInputChange}
+                    placeholder='Tell customers about your shop...'
+                    rows='4'
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all placeholder:text-gray-300 shadow-sm resize-none'
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Operating Hours - time selection */}
-            <div className='mb-6'>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Operating Hours
-              </label>
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                <div>
-                  <label className='block text-xs text-gray-600 mb-1'>Opening</label>
+            {/* Location */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Location & Operations</h3>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Address *</label>
+                  <input
+                    type='text'
+                    name='address'
+                    value={shopProfile.address}
+                    onChange={handleInputChange}
+                    placeholder='123 Main Street'
+                    required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">City *</label>
+                  <input
+                    type='text'
+                    name='city'
+                    value={shopProfile.city}
+                    onChange={handleInputChange}
+                    placeholder='Quezon City'
+                    required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Opening Time</label>
                   <input
                     type='time'
                     value={operatingHoursOpen}
                     onChange={(e) => setOperatingHoursOpen(e.target.value)}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
                   />
                 </div>
-                <div>
-                  <label className='block text-xs text-gray-600 mb-1'>Closing</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Closing Time</label>
                   <input
                     type='time'
                     value={operatingHoursClose}
                     onChange={(e) => setOperatingHoursClose(e.target.value)}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
                   />
                 </div>
               </div>
-              <p className='text-xs text-gray-500 mt-2'>
-                These hours will be used to determine available reservation and try-on time slots.
-              </p>
             </div>
 
+            {/* Contact */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Connect with Clients</h3>
+              </div>
 
-
-            {/* Contact Information */}
-            <div className='mb-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Contact Information</h3>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                    Phone Number <span className='text-red-500'>*</span>
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Phone Number *</label>
                   <input
                     type='text'
                     name='contactNumber'
                     value={shopProfile.contactNumber}
                     onChange={handleInputChange}
-                    placeholder='e.g., 09123456789'
+                    placeholder='09123456789'
                     required
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-primary outline-none transition-all ${
+                    className={`w-full px-6 py-4 bg-white/60 border rounded-2xl focus:ring-4 outline-none font-bold text-primary transition-all shadow-sm ${
                       fieldErrors.contactNumber
-                        ? 'border-red-500 focus:ring-red-500'
-                        : 'border-gray-300 focus:ring-primary'
+                        ? 'border-red-500 focus:ring-red-500/10'
+                        : 'border-gray-100 focus:border-primary focus:ring-primary/5'
                     }`}
                   />
                   {fieldErrors.contactNumber && (
-                    <p className='mt-2 text-sm text-red-600'>{fieldErrors.contactNumber}</p>
+                    <p className='mt-2 text-xs text-red-600 font-bold ml-4'>{fieldErrors.contactNumber}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                    Facebook
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Facebook URL</label>
                   <input
                     type='text'
                     name='facebook'
                     value={shopProfile.facebook}
                     onChange={handleInputChange}
-                    placeholder='Facebook page URL'
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    placeholder='facebook.com/yourshop'
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
                   />
                 </div>
               </div>
             </div>
 
-            {/* Business Verification Documents */}
-            <div className='mb-6'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Business Verification</h3>
-              <p className='text-sm text-gray-600 mb-4'>
-                Upload your business documents to build trust with customers. Verified shops get a badge.
-              </p>
-
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                {/* Business Permit */}
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                    Business Permit
-                  </label>
-                  {!permitPreview ? (
-                    <label className='block'>
-                      <div className='border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all'>
-                        <div className='text-gray-400 mb-2'>
-                          <svg className='w-10 h-10 mx-auto' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
-                          </svg>
+            {/* Documents */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Business Trust</h3>
+              </div>
+              
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                {[
+                  { label: 'Business Permit', preview: permitPreview, setter: setBusinessPermit, previewSetter: setPermitPreview, type: 'permit' },
+                  { label: 'DTI Registration', preview: dtiPreview, setter: setDtiRegistration, previewSetter: setDtiPreview, type: 'dti' }
+                ].map((doc, i) => (
+                  <div key={i} className="space-y-3">
+                    <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">{doc.label}</label>
+                    {!doc.preview ? (
+                      <label className='block group cursor-pointer'>
+                        <div className='border-2 border-dashed border-gray-100 rounded-3xl p-8 text-center bg-gray-50/30 hover:border-primary hover:bg-primary/5 transition-all duration-300'>
+                          <div className='bg-primary/5 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform'>
+                            <svg className='w-6 h-6 text-primary/40' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 4v16m8-8H4' />
+                            </svg>
+                          </div>
+                          <p className='text-xs text-primary font-black uppercase tracking-wider'>Add {doc.label}</p>
+                          <p className='text-[10px] text-gray-400 font-bold mt-1'>PDF or Image (max 10MB)</p>
                         </div>
-                        <p className='text-sm text-gray-600 font-medium'>Upload Business Permit</p>
-                        <p className='text-xs text-gray-500 mt-1'>PNG, JPG, or PDF (max 10MB)</p>
+                        <input type='file' onChange={(e) => handleFileChange(e, doc.type)} className='hidden' />
+                      </label>
+                    ) : (
+                      <div className='relative group overflow-hidden rounded-3xl border border-gray-100 shadow-md aspect-video bg-white flex items-center justify-center p-4'>
+                        {doc.preview.startsWith('http') || doc.preview.startsWith('data:image') ? (
+                          <img src={doc.preview} alt='Preview' className='w-full h-full object-contain transition-transform group-hover:scale-105 duration-700' />
+                        ) : (
+                          <div className='flex flex-col items-center gap-2 text-primary/40'>
+                            <svg className='w-12 h-12' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' /></svg>
+                            <span className='text-[10px] font-black uppercase tracking-widest'>Document Ready</span>
+                          </div>
+                        )}
+                        <button
+                          type='button'
+                          onClick={() => { doc.setter(null); doc.previewSetter(''); }}
+                          className='absolute top-3 right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg active:scale-90 transition-all opacity-0 group-hover:opacity-100'
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                       </div>
-                      <input
-                        type='file'
-                        accept='image/png,image/jpeg,image/jpg,application/pdf'
-                        onChange={(e) => handleFileChange(e, 'permit')}
-                        className='hidden'
-                      />
-                    </label>
-                  ) : (
-                    <div className='relative border border-gray-300 rounded-lg p-4'>
-                      {permitPreview.startsWith('http') || permitPreview.startsWith('data:image') ? (
-                        <img
-                          src={permitPreview}
-                          alt='Business Permit'
-                          className='w-full h-32 object-contain'
-                        />
-                      ) : (
-                        <div className='flex items-center justify-center h-32 text-gray-600'>
-                          <svg className='w-12 h-12' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
-                          </svg>
-                          <span className='ml-2'>PDF Uploaded</span>
-                        </div>
-                      )}
-                      <button
-                        type='button'
-                        onClick={() => {
-                          setBusinessPermit(null)
-                          setPermitPreview('')
-                        }}
-                        className='absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600'
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* DTI Registration */}
-                <div>
-                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                    DTI Registration
-                  </label>
-                  {!dtiPreview ? (
-                    <label className='block'>
-                      <div className='border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all'>
-                        <div className='text-gray-400 mb-2'>
-                          <svg className='w-10 h-10 mx-auto' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
-                          </svg>
-                        </div>
-                        <p className='text-sm text-gray-600 font-medium'>Upload DTI Registration</p>
-                        <p className='text-xs text-gray-500 mt-1'>PNG, JPG, or PDF (max 10MB)</p>
-                      </div>
-                      <input
-                        type='file'
-                        accept='image/png,image/jpeg,image/jpg,application/pdf'
-                        onChange={(e) => handleFileChange(e, 'dti')}
-                        className='hidden'
-                      />
-                    </label>
-                  ) : (
-                    <div className='relative border border-gray-300 rounded-lg p-4'>
-                      {dtiPreview.startsWith('http') || dtiPreview.startsWith('data:image') ? (
-                        <img
-                          src={dtiPreview}
-                          alt='DTI Registration'
-                          className='w-full h-32 object-contain'
-                        />
-                      ) : (
-                        <div className='flex items-center justify-center h-32 text-gray-600'>
-                          <svg className='w-12 h-12' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
-                          </svg>
-                          <span className='ml-2'>PDF Uploaded</span>
-                        </div>
-                      )}
-                      <button
-                        type='button'
-                        onClick={() => {
-                          setDtiRegistration(null)
-                          setDtiPreview('')
-                        }}
-                        className='absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600'
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
-
-            {/* Submit Button */}
-            <div className='flex gap-4'>
+            {/* Actions */}
+            <div className='flex flex-col sm:flex-row gap-4 pt-4'>
               <button
                 type='submit'
                 disabled={saving}
-                className='flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed'
+                className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0 relative overflow-hidden group'
               >
-                {saving ? 'Saving...' : 'Save Shop Profile'}
+                 <span className="relative z-10">{saving ? 'Updating Profile...' : 'Save All Changes'}</span>
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
               </button>
               <button
                 type='button'
                 onClick={() => navigate('/owner')}
-                className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-semibold'
+                className='px-10 py-5 bg-white text-primary border border-gray-100 rounded-[24px] hover:bg-gray-50 transition-all font-black text-xs uppercase tracking-widest'
               >
-                Cancel
+                Return to Dashboard
               </button>
             </div>
           </form>

@@ -119,277 +119,225 @@ const OwnerProfile = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16'>
-      {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className='flex items-center gap-2 mb-6 sm:mb-8 text-sm sm:text-base text-gray-500 cursor-pointer hover:text-gray-700 transition-colors'
-      >
-        <img src={assets.arrow_icon} alt="back" className='rotate-180 opacity-65' />
-        <span>Back</span>
-      </button>
+    <div className='min-h-screen bg-[#FDFDFF] pb-20'>
+      {/* Hero Header Section */}
+      <div className='relative w-full h-[300px] sm:h-[400px] overflow-hidden'>
+        <div className='absolute inset-0 bg-primary/5'>
+          <div className='absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-[#FDFDFF]'></div>
+        </div>
+        
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className='absolute top-8 left-6 md:left-16 lg:left-24 xl:left-32 z-20 flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest text-primary border border-white/40 hover:bg-white hover:shadow-lg transition-all active:scale-95'
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Back</span>
+        </button>
 
-      {/* Owner Header */}
-      <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8'>
-        <div className='flex flex-col md:flex-row gap-6'>
-          {/* Shop Logo/Avatar */}
-          <div className='flex-shrink-0'>
-            <div className='w-24 h-24 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold'>
-              {owner.shopProfile?.shopName?.charAt(0) || owner.name?.charAt(0) || '?'}
-            </div>
+        <div className='absolute inset-0 flex flex-col items-center justify-center text-center px-4'>
+          <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-[40px] bg-white shadow-[0_20px_50px_rgba(1,62,141,0.15)] flex items-center justify-center text-4xl sm:text-5xl font-black text-primary border-4 border-white mb-6 animate-fade-in'>
+            {owner.shopProfile?.shopName?.charAt(0) || owner.name?.charAt(0) || '?'}
+          </div>
+          <div className="animate-fade-in-up">
+            <h1 className='text-4xl sm:text-6xl font-black text-primary tracking-tighter mb-2'>
+              {owner.shopProfile?.shopName || owner.name}
+            </h1>
+            {owner.shopProfile?.verified && (
+              <div className="flex flex-col items-center gap-3">
+                <div className='inline-flex items-center gap-2 px-4 py-1.5 bg-green-500/10 backdrop-blur-md border border-green-500/20 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest'>
+                  <img src={assets.check_icon} alt="verified" className='w-3.5 h-3.5' />
+                  Verified Partner
+                </div>
+                {/* Logo Accents */}
+                <div className="flex gap-1.5">
+                  <div className="w-6 h-1 rounded-full bg-[#FF3B30]"></div>
+                  <div className="w-6 h-1 rounded-full bg-[#007AFF]"></div>
+                  <div className="w-6 h-1 rounded-full bg-[#FFCC00]"></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className='max-w-7xl mx-auto px-6 md:px-16 lg:px-24 xl:px-32 -mt-12 relative z-10'>
+        {/* Main Content Container */}
+        <div className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.08)] border border-white/60 p-8 sm:p-12'>
+          
+          {/* Custom Navigation Tab Bar */}
+          <div className='flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-12 bg-white/50 p-2 rounded-[32px] w-fit mx-auto border border-white/80 shadow-inner'>
+            {[
+              { id: 'about', label: 'About' },
+              { id: 'gowns', label: `Apparel (${gowns.length})` },
+              { id: 'documents', label: 'Credentials', hide: !(owner.shopProfile?.businessPermit || owner.shopProfile?.dtiRegistration) }
+            ].filter(t => !t.hide).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-8 py-3.5 rounded-[24px] text-[11px] font-black uppercase tracking-widest transition-all ${
+                  activeTab === tab.id 
+                  ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-105' 
+                  : 'text-primary/40 hover:text-primary hover:bg-white/60'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Shop Info */}
-          <div className='flex-1'>
-            <div className='flex items-start justify-between'>
-              <div>
-                <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-                  {owner.shopProfile?.shopName || owner.name}
-                </h1>
-                {owner.shopProfile?.verified && (
-                  <div className='inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mb-3'>
-                    <img src={assets.check_icon} alt="verified" className='w-4 h-4' />
-                    Verified Business
-                  </div>
-                )}
-                <p className='text-gray-600 mb-4'>
-                  {owner.shopProfile?.description || 'Professional gown rental service'}
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Info */}
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
-              {owner.shopProfile?.address && (
-                <div className='flex items-start gap-2'>
-                  <img src={assets.location_icon_colored} alt="location" className='w-5 h-5 mt-1' />
+          {/* Tab Content with Fade Animation */}
+          <div className='animate-fade-in-up'>
+            {activeTab === 'about' && (
+              <div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
+                <div className='lg:col-span-2 space-y-8'>
                   <div>
-                    <p className='text-sm text-gray-500'>Location</p>
-                    <p className='text-gray-900 font-medium'>
-                      {owner.shopProfile.address}, {owner.shopProfile.city}
+                    <h2 className='text-[10px] font-black text-[#007AFF] uppercase tracking-[0.4em] mb-4'>Professional Description</h2>
+                    <p className='text-lg sm:text-xl text-primary/80 leading-relaxed font-bold'>
+                      {owner.shopProfile?.description || 'This partner hasn\'t provided a detailed description yet, but they offer high-quality apparel services.'}
                     </p>
                   </div>
-                </div>
-              )}
-
-              {owner.contactNumber && (
-                <div className='flex items-start gap-2'>
-                  <svg className='w-5 h-5 text-gray-600 mt-1' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
-                  </svg>
-                  <div>
-                    <p className='text-sm text-gray-500'>Contact</p>
-                    <p className='text-gray-900 font-medium'>{owner.contactNumber}</p>
-                  </div>
-                </div>
-              )}
-
-              {owner.shopProfile?.operatingHours && (
-                <div className='flex items-start gap-2'>
-                  <svg className='w-5 h-5 text-gray-600 mt-1' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                  </svg>
-                  <div>
-                    <p className='text-sm text-gray-500'>Operating Hours</p>
-                    <p className='text-gray-900 font-medium'>{formatOperatingHours(owner.shopProfile.operatingHours)}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className='flex items-start gap-2'>
-                <img src={assets.calendar_icon_colored} alt="joined" className='w-5 h-5 mt-1' />
-                <div>
-                  <p className='text-sm text-gray-500'>Member Since</p>
-                  <p className='text-gray-900 font-medium'>{formatDate(owner.joinedDate)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Social Media */}
-            {owner.shopProfile?.socialMedia?.facebook && (
-              <div className='flex gap-4 mt-4'>
-                <a
-                  href={owner.shopProfile.socialMedia.facebook}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-blue-600 hover:text-blue-700 font-medium text-sm'
-                >
-                  Facebook
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className='mb-8 border-b border-gray-200'>
-        <div className='flex gap-8'>
-          <button
-            onClick={() => setActiveTab('about')}
-            className={`pb-4 font-semibold transition-colors ${activeTab === 'about'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-gray-600 hover:text-gray-900'
-              }`}
-          >
-            About
-          </button>
-          <button
-            onClick={() => setActiveTab('gowns')}
-            className={`pb-4 font-semibold transition-colors ${activeTab === 'gowns'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-gray-600 hover:text-gray-900'
-              }`}
-          >
-            Apparel ({gowns.length})
-          </button>
-          {(owner.shopProfile?.businessPermit || owner.shopProfile?.dtiRegistration) && (
-            <button
-              onClick={() => setActiveTab('documents')}
-              className={`pb-4 font-semibold transition-colors ${activeTab === 'documents'
-                  ? 'text-primary border-b-2 border-primary'
-                  : 'text-gray-600 hover:text-gray-900'
-                }`}
-            >
-              Business Documents
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'about' && (
-        <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
-          <h2 className='text-2xl font-bold text-gray-900 mb-6'>About This Shop</h2>
-
-          {owner.shopProfile?.description ? (
-            <p className='text-gray-700 mb-6 leading-relaxed'>{owner.shopProfile.description}</p>
-          ) : (
-            <p className='text-gray-500 mb-6'>No description provided.</p>
-          )}
-
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200'>
-            <div>
-              <h3 className='font-semibold text-gray-900 mb-2'>Total Apparel</h3>
-              <p className='text-3xl font-bold text-primary'>{gowns.length}</p>
-            </div>
-            {owner.shopProfile?.verified && (
-              <div>
-                <h3 className='font-semibold text-gray-900 mb-2'>Business Status</h3>
-                <div className='flex items-center gap-2 text-green-600'>
-                  <img src={assets.check_icon} alt="verified" className='w-5 h-5' />
-                  <span className='font-semibold'>Verified Business</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'gowns' && (
-        <div>
-          {gowns.length > 0 ? (
-            <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'>
-              {gowns.map((gown) => (
-                <GownCard key={gown._id || gown.id} gown={gown} />
-              ))}
-            </div>
-          ) : (
-            <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center'>
-              <p className='text-gray-500 text-lg'>No apparel available at this time.</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'documents' && (
-        <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8'>
-          <h2 className='text-2xl font-bold text-gray-900 mb-4'>Business Verification Documents</h2>
-          <p className='text-gray-600 mb-6'>
-            These documents verify the legitimacy of this business.
-          </p>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {/* Business Permit */}
-            {owner.shopProfile?.businessPermit && (
-              <div className='border border-gray-300 rounded-lg p-4'>
-                <h3 className='font-semibold text-gray-900 mb-3'>Business Permit</h3>
-                <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                  {owner.shopProfile.businessPermit.toLowerCase().endsWith('.pdf') ? (
-                    <div className='flex items-center justify-center h-64 bg-gray-50'>
-                      <div className='text-center'>
-                        <svg className='w-16 h-16 mx-auto text-gray-400 mb-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
-                        </svg>
-                        <p className='text-gray-600 font-medium mb-3'>PDF Document</p>
-                        <a
-                          href={owner.shopProfile.businessPermit}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors text-sm'
-                        >
-                          View Document
-                        </a>
-                      </div>
+                  
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+                    <div className='p-8 rounded-[32px] bg-white/60 border border-white/80 shadow-sm'>
+                      <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-4'>Total Collection</h3>
+                      <p className='text-4xl font-black text-primary'>{gowns.length}</p>
+                      <p className='text-xs text-primary/40 font-bold mt-1'>Curated Items</p>
                     </div>
-                  ) : (
-                    <a
-                      href={owner.shopProfile.businessPermit}
+                    <div className='p-8 rounded-[32px] bg-white/60 border border-white/80 shadow-sm'>
+                      <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-4'>Member Since</h3>
+                      <p className='text-4xl font-black text-primary'>{formatDate(owner.createdAt)}</p>
+                      <p className='text-xs text-primary/40 font-bold mt-1'>Exclusive Partner</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='space-y-6'>
+                  <div className='p-8 rounded-[40px] bg-primary text-white shadow-2xl shadow-primary/20'>
+                    <h3 className='text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-6'>Contact Details</h3>
+                    <div className='space-y-6'>
+                      {owner.shopProfile?.address && (
+                        <div className='flex gap-4'>
+                          <div className='w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10'>
+                            <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className='text-[10px] font-black text-[#FFCC00] uppercase tracking-widest mb-1'>Location</p>
+                            <p className='text-sm font-bold leading-snug'>{owner.shopProfile.address}, {owner.shopProfile.city}</p>
+                          </div>
+                        </div>
+                      )}
+                      {owner.contactNumber && (
+                        <div className='flex gap-4'>
+                          <div className='w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0'>
+                            <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className='text-[10px] font-black text-[#FFCC00] uppercase tracking-widest mb-1'>Phone</p>
+                            <p className='text-sm font-bold'>{owner.contactNumber}</p>
+                          </div>
+                        </div>
+                      )}
+                      {owner.shopProfile?.operatingHours && (
+                        <div className='flex gap-4'>
+                          <div className='w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0'>
+                            <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className='text-[10px] font-black text-[#FFCC00] uppercase tracking-widest mb-1'>Available Hours</p>
+                            <p className='text-sm font-bold'>{formatOperatingHours(owner.shopProfile.operatingHours)}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {owner.shopProfile?.socialMedia?.facebook && (
+                    <a 
+                      href={owner.shopProfile.socialMedia.facebook}
                       target='_blank'
                       rel='noopener noreferrer'
+                      className='block w-full py-4 bg-white border border-blue-50 text-center rounded-2xl text-[10px] font-black uppercase tracking-widest text-primary hover:bg-gray-50 transition-all shadow-sm'
                     >
-                      <img
-                        src={owner.shopProfile.businessPermit}
-                        alt='Business Permit'
-                        className='w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity'
-                      />
+                      Follow on Facebook
                     </a>
                   )}
                 </div>
               </div>
             )}
 
-            {/* DTI Registration */}
-            {owner.shopProfile?.dtiRegistration && (
-              <div className='border border-gray-300 rounded-lg p-4'>
-                <h3 className='font-semibold text-gray-900 mb-3'>DTI Registration</h3>
-                <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                  {owner.shopProfile.dtiRegistration.toLowerCase().endsWith('.pdf') ? (
-                    <div className='flex items-center justify-center h-64 bg-gray-50'>
-                      <div className='text-center'>
-                        <svg className='w-16 h-16 mx-auto text-gray-400 mb-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
-                        </svg>
-                        <p className='text-gray-600 font-medium mb-3'>PDF Document</p>
-                        <a
-                          href={owner.shopProfile.dtiRegistration}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors text-sm'
-                        >
-                          View Document
-                        </a>
+            {activeTab === 'gowns' && (
+              <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8'>
+                {gowns.length > 0 ? (
+                  gowns.map((gown) => (
+                    <GownCard key={gown._id || gown.id} gown={gown} />
+                  ))
+                ) : (
+                  <div className='col-span-full py-20 text-center bg-white/20 rounded-[40px] border border-white/40'>
+                    <p className='text-primary/40 font-black uppercase tracking-widest'>No collection items listed yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'documents' && (
+              <div className='max-w-4xl mx-auto'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                  {[
+                    { label: 'Business Permit', file: owner.shopProfile.businessPermit },
+                    { label: 'DTI Registration', file: owner.shopProfile.dtiRegistration }
+                  ].filter(doc => doc.file).map((doc, idx) => (
+                    <div key={idx} className='group'>
+                      <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-[0.3em] mb-4 pl-2'>{doc.label}</h3>
+                      <div className='bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-xl shadow-primary/5 group-hover:shadow-2xl transition-all duration-500'>
+                        {doc.file.toLowerCase().endsWith('.pdf') ? (
+                          <div className='aspect-[4/5] flex flex-col items-center justify-center bg-gray-50/50 p-8 text-center'>
+                            <div className='w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6'>
+                              <svg className='w-8 h-8 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <p className='text-xs font-black text-primary uppercase tracking-widest mb-6'>Document Ready</p>
+                            <a 
+                              href={doc.file}
+                              target='_blank' 
+                              rel='noopener noreferrer'
+                              className='px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-lg'
+                            >
+                              Open PDF
+                            </a>
+                          </div>
+                        ) : (
+                          <div className='relative aspect-[4/5] bg-gray-100 overflow-hidden'>
+                            <img src={doc.file} alt={doc.label} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-700' />
+                            <a 
+                              href={doc.file}
+                              target='_blank' 
+                              rel='noopener noreferrer'
+                              className='absolute inset-0 bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'
+                            >
+                              <span className='px-6 py-2 bg-white text-primary rounded-full text-[10px] font-black uppercase tracking-widest'>View Original</span>
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  ) : (
-                    <a
-                      href={owner.shopProfile.dtiRegistration}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      <img
-                        src={owner.shopProfile.dtiRegistration}
-                        alt='DTI Registration'
-                        className='w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity'
-                      />
-                    </a>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

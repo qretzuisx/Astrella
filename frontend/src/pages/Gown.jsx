@@ -149,12 +149,22 @@ const Gown = () => {
 
     // Filter by age group
     if (selectedAgeGroup) {
-      filtered = filtered.filter(gown => (gown.ageGroup || '').toLowerCase() === selectedAgeGroup.toLowerCase())
+      filtered = filtered.filter(gown => {
+        if (Array.isArray(gown.ageGroup)) {
+          return gown.ageGroup.some(age => age?.toLowerCase() === selectedAgeGroup.toLowerCase())
+        }
+        return (gown.ageGroup || '').toLowerCase() === selectedAgeGroup.toLowerCase()
+      })
     }
 
     // Filter by sex
     if (selectedGender) {
-      filtered = filtered.filter(gown => (gown.sex || '').toLowerCase() === selectedGender.toLowerCase())
+      filtered = filtered.filter(gown => {
+        if (Array.isArray(gown.sex)) {
+          return gown.sex.some(s => s?.toLowerCase() === selectedGender.toLowerCase())
+        }
+        return (gown.sex || '').toLowerCase() === selectedGender.toLowerCase()
+      })
     }
 
     setFilteredGowns(filtered)
@@ -200,41 +210,55 @@ const Gown = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 bg-[#FDFDFF] min-h-screen'>
       {error && (
-        <div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-lg'>
-          <p className='text-red-800 font-medium'>{error}</p>
+        <div className='mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
+          <p className='text-red-800 font-bold flex items-center gap-2'>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </p>
         </div>
       )}
       {/* Header Section */}
-      <div className='text-center mb-8 sm:mb-12'>
-        <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4'>
-          Available Apparel
+      <div className='flex flex-col items-center text-center mb-14 mt-12 lg:mt-0'>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-1 bg-primary rounded-full"></div>
+          <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Our Collection</span>
+          <div className="w-8 h-1 bg-primary rounded-full"></div>
+        </div>
+        <h1 className='text-4xl sm:text-5xl md:text-6xl font-black text-primary tracking-tight leading-tight'>
+          Available <span className="text-[#FF3B30]">Apparel</span>
         </h1>
-        <p className='text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 px-4'>
-          Browse our selection of apparel available for your next event.
-        </p>
+        <p className='text-sm sm:text-base text-gray-500 font-bold mt-2 max-w-2xl'>Discover the perfect fit for your next extraordinary moment.</p>
+      </div>
 
-        {/* Search Bar with Filter Button */}
-        <div className='sticky top-16 sm:top-20 z-10 py-3 sm:py-4 mb-6 sm:mb-8 bg-white/80 backdrop-blur-sm -mx-4 sm:mx-0 px-4 sm:px-0'>
-          <div className='max-w-2xl mx-auto'>
-            <div className='relative flex items-center gap-2 sm:gap-3'>
+        <div 
+          className='sticky top-16 sm:top-20 z-20 py-6 mb-12 bg-white/60 backdrop-blur-xl -mx-4 sm:mx-0 px-4 sm:px-0 rounded-b-[40px]'
+          onMouseEnter={() => setShowFilters(true)}
+          onMouseLeave={() => setShowFilters(false)}
+        >
+          <div className='max-w-4xl mx-auto'>
+            <div className='relative flex items-center gap-4'>
               {/* Search Input */}
-              <div className='flex-1 flex items-center bg-white rounded-full shadow-lg border border-gray-200 px-3 sm:px-4 py-2 sm:py-3'>
-                <img src={assets.search_icon} alt="search" className='w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-gray-400 flex-shrink-0' />
+              <div className='flex-1 flex items-center bg-white rounded-[24px] shadow-[0_20px_60px_rgba(1,62,141,0.05)] border border-blue-50 px-6 py-5 group focus-within:shadow-[0_20px_60px_rgba(1,62,141,0.12)] focus-within:border-primary/20 transition-all'>
+                <img src={assets.search_icon} alt="search" className='w-5 h-5 mr-4 text-primary opacity-20 group-focus-within:opacity-100 transition-all group-focus-within:scale-110' />
                 <input
                   type='text'
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder='Search apparel...'
-                  className='flex-1 outline-none text-sm sm:text-base text-gray-700 placeholder-gray-400 min-w-0'
+                  placeholder='Search collection...'
+                  className='flex-1 outline-none text-base text-primary font-black placeholder-gray-300 min-w-0 bg-transparent'
                 />
                 {searchQuery && (
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className='ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0'
+                    onClick={() => handleClearSearch()}
+                    className='ml-3 text-gray-300 hover:text-primary flex-shrink-0 transition-colors'
                   >
-                    ✕
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 )}
               </div>
@@ -242,205 +266,132 @@ const Gown = () => {
               {/* Filter Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`relative px-3 sm:px-4 py-2 sm:py-3 rounded-full shadow-lg border transition-all flex-shrink-0 ${hasActiveFilters
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
+                className={`px-8 py-5 rounded-[24px] shadow-2xl transition-all flex items-center gap-3 font-black text-sm uppercase tracking-widest whitespace-nowrap active:scale-95 ${hasActiveFilters
+                  ? 'bg-primary text-white shadow-[0_20px_50px_rgba(1,62,141,0.3)]'
+                  : 'bg-white text-primary border border-blue-50 hover:bg-gray-50'
                   }`}
               >
-                <div className='flex items-center gap-1 sm:gap-2'>
-                  <img
-                    src={assets.filter_icon}
-                    alt="filter"
-                    className='w-4 h-4 sm:w-5 sm:h-5'
-                    style={{ filter: hasActiveFilters ? 'brightness(0) invert(1)' : 'none' }}
-                  />
-                  <span className='font-medium hidden md:inline text-sm sm:text-base'>Filter</span>
-                  {hasActiveFilters && (
-                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold'>
-                      {[selectedColor, selectedEventType, selectedFabric, selectedSize, selectedAgeGroup, selectedGender].filter(Boolean).length}
-                    </span>
-                  )}
-                </div>
+                <svg className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span>Filters</span>
+                {hasActiveFilters && (
+                  <span className='bg-secondary text-primary text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-black shadow-inner'>
+                    {[selectedColor, selectedEventType, selectedFabric, selectedSize, selectedAgeGroup, selectedGender].filter(Boolean).length}
+                  </span>
+                )}
               </button>
+
+              {/* Filter Dropdown Panel - NOW ABSOLUTE */}
+              {showFilters && (
+                <div className='absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl rounded-[40px] shadow-[0_40px_120px_rgba(1,62,141,0.2)] border border-blue-50 p-8 sm:p-10 animate-fade-in-up z-20'>
+                  <div className='flex items-center justify-between mb-10'>
+                    <div>
+                      <h3 className='text-3xl font-black text-primary tracking-tight'>Refine Selection</h3>
+                      <p className='text-sm text-gray-500 font-bold mt-1'>Filter our collection to find your perfect style.</p>
+                    </div>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={handleClearFilters}
+                        className='px-5 py-2.5 bg-secondary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-secondary/20 transition-all border border-secondary/20'
+                      >
+                        Reset Filters
+                      </button>
+                    )}
+                  </div>
+
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12'>
+                    {[
+                      { label: 'Age Group', value: selectedAgeGroup, setter: setSelectedAgeGroup, options: ['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'], default: 'All Ages' },
+                      { label: 'Sex', value: selectedGender, setter: setSelectedGender, options: ['Female', 'Male', 'Unisex'], default: 'All Sexes' },
+                      { label: 'Color', value: selectedColor, setter: setSelectedColor, options: commonColors, default: 'All Colors' },
+                      { label: 'Event Type', value: selectedEventType, setter: setSelectedEventType, options: eventTypes, default: 'All Events' },
+                      { label: 'Fabric', value: selectedFabric, setter: setSelectedFabric, options: availableFabrics, default: 'All Fabrics' },
+                      { label: 'Size', value: selectedSize, setter: setSelectedSize, options: commonSizes, default: 'All Sizes' }
+                    ].map((filter, idx) => (
+                      <div key={idx} className="space-y-4">
+                        <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>
+                          {filter.label}
+                        </label>
+                        <div className="relative group">
+                          <select
+                            value={filter.value}
+                            onChange={(e) => filter.setter(e.target.value)}
+                            className='w-full px-6 py-4.5 bg-gray-50/50 border border-gray-100 rounded-[20px] text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none appearance-none cursor-pointer'
+                          >
+                            <option value=''>{filter.default}</option>
+                            {filter.options.map(opt => (
+                              <option key={opt} value={opt} className='font-bold'>{opt}</option>
+                            ))}
+                          </select>
+                          <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-primary/30 group-focus-within:text-primary transition-colors">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Apply Button */}
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className='w-full py-6 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-[0.2em] relative overflow-hidden group shadow-xl'
+                  >
+                    <span className="relative z-10">Show {filteredGowns.length} items</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* Filter Dropdown Panel */}
-            {showFilters && (
-              <div className='mt-3 sm:mt-4 bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 p-3 sm:p-4'>
-                <div className='flex items-center justify-between mb-3'>
-                  <h3 className='text-sm sm:text-base font-semibold text-gray-900'>Filters</h3>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={handleClearFilters}
-                      className='text-xs sm:text-sm text-primary hover:underline font-medium'
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-
-                {/* Grid Layout for Filters */}
-                <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3'>
-                  {/* Age Group Filter */}
-                  <div>
-                    <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
-                      Age Group
-                    </label>
-                    <select
-                      value={selectedAgeGroup}
-                      onChange={(e) => setSelectedAgeGroup(e.target.value)}
-                      className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
-                    >
-                      <option value=''>All</option>
-                      <option value='6–9 Years'>6–9 Years</option>
-                      <option value='10–12 Years'>10–12 Years</option>
-                      <option value='13–17 Years'>13–17 Years</option>
-                      <option value='18–29 Years'>18–29 Years</option>
-                      <option value='30–59 Years'>30–59 Years</option>
-                      <option value='60+ Years'>60+ Years</option>
-                    </select>
-                  </div>
-
-                  {/* Gender Filter */}
-                  <div>
-                    <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
-                      Gender
-                    </label>
-                    <select
-                      value={selectedGender}
-                      onChange={(e) => setSelectedGender(e.target.value)}
-                      className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
-                    >
-                      <option value=''>All</option>
-                      <option value='Female'>Female</option>
-                      <option value='Male'>Male</option>
-                      <option value='Unisex'>Unisex</option>
-                    </select>
-                  </div>
-                  {/* Color Filter */}
-                  <div>
-                    <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
-                      <img src={assets.color_icon} alt="color" className='w-3 h-3' />
-                      Color
-                    </label>
-                    <select
-                      value={selectedColor}
-                      onChange={(e) => setSelectedColor(e.target.value)}
-                      className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
-                    >
-                      <option value=''>All Colors</option>
-                      {commonColors.map(color => (
-                        <option key={color} value={color}>{color}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Event Type Filter */}
-                  <div>
-                    <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
-                      <img src={assets.event_icon} alt="event" className='w-3 h-3' />
-                      Event Type
-                    </label>
-                    <select
-                      value={selectedEventType}
-                      onChange={(e) => setSelectedEventType(e.target.value)}
-                      className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
-                    >
-                      <option value=''>All Events</option>
-                      {eventTypes.map(type => (
-                        <option key={type} value={type} className='capitalize'>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Fabric Filter */}
-                  <div>
-                    <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
-                      <img src={assets.fabric_icon} alt="fabric" className='w-3 h-3' />
-                      Fabric
-                    </label>
-                    <select
-                      value={selectedFabric}
-                      onChange={(e) => setSelectedFabric(e.target.value)}
-                      className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
-                    >
-                      <option value=''>All Fabrics</option>
-                      {availableFabrics.map(fabric => (
-                        <option key={fabric} value={fabric}>{fabric}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Size Filter */}
-                  <div>
-                    <label className='flex items-center gap-1 text-xs font-medium text-gray-700 mb-1.5'>
-                      <img src={assets.size_icon} alt="size" className='w-3 h-3' />
-                      Size
-                    </label>
-                    <select
-                      value={selectedSize}
-                      onChange={(e) => setSelectedSize(e.target.value)}
-                      className='w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer'
-                    >
-                      <option value=''>All Sizes</option>
-                      {commonSizes.map(size => (
-                        <option key={size} value={size}>{size}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Apply Button */}
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className='w-full px-3 py-2.5 bg-primary text-white text-sm sm:text-base rounded-lg hover:bg-primary-dull transition-colors font-semibold'
-                >
-                  Apply Filters
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Results Count */}
-        {hasActiveFilters && (
-          <div className='text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base px-4 sm:px-0'>
-            <span className='font-medium'>{filteredGowns.length}</span> item{filteredGowns.length !== 1 ? 's' : ''} found
-            {filteredGowns.length > 0 && (
+        {/* Results Count and Gowns Grid */}
+        <div className="max-w-7xl mx-auto">
+          {hasActiveFilters && (
+            <div className='flex items-center gap-4 text-primary/60 mb-10 text-sm font-black'>
+              <span className='bg-primary/5 px-4 py-2 rounded-full'>
+                <span className='text-primary'>{filteredGowns.length}</span> items discovered
+              </span>
               <button
                 onClick={handleClearFilters}
-                className='ml-2 text-xs sm:text-sm text-primary hover:underline'
+                className='text-secondary hover:text-primary transition-colors underline decoration-2 underline-offset-4'
               >
-                Clear all filters
+                Reset All
               </button>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
 
-      {/* Gowns Grid */}
-      {filteredGowns.length === 0 ? (
-        <div className='text-center py-12 sm:py-16 px-4'>
-          <p className='text-lg sm:text-xl text-gray-500 mb-3 sm:mb-4'>No apparel found</p>
-          <p className='text-sm sm:text-base text-gray-400 mb-4 sm:mb-6'>Try adjusting your search or filters</p>
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className='px-5 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors'
-            >
-              Clear All Filters
-            </button>
+          {filteredGowns.length === 0 ? (
+            <div className='text-center py-20 px-4 bg-white rounded-[32px] border border-blue-50/50 shadow-[0_20px_60px_rgba(0,0,0,0.02)]'>
+              <div className='w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6'>
+                <svg className='w-10 h-10 text-gray-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
+                </svg>
+              </div>
+              <p className='text-2xl font-black text-primary mb-3'>No apparel found</p>
+              <p className='text-primary/50 font-bold mb-8'>Try adjusting your search or filters to find what you're looking for.</p>
+              {hasActiveFilters && (
+                <button
+                  onClick={handleClearFilters}
+                  className='px-10 py-4 bg-primary text-white rounded-2xl hover:bg-primary-dull transition-all font-black shadow-lg'
+                >
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8'>
+              {filteredGowns.map((gown) => (
+                <GownCard key={gown._id || gown.id} gown={gown} />
+              ))}
+            </div>
           )}
         </div>
-      ) : (
-        <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6'>
-          {filteredGowns.map((gown) => (
-            <GownCard key={gown._id || gown.id} gown={gown} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+      </div>
+    )
+  }
 
 export default Gown

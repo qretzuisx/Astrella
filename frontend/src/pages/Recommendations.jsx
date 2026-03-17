@@ -99,30 +99,30 @@ const Recommendations = () => {
           starIcon: assets.star_gold,
           starCount: 3,
           text: 'BEST MATCH',
-          bgColor: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
-          textColor: 'text-yellow-900',
+          bgColor: 'bg-gradient-to-br from-yellow-300 via-yellow-500 to-amber-600',
+          textColor: 'text-amber-900',
           borderColor: 'border-yellow-400',
-          glowColor: 'shadow-yellow-300'
+          glowColor: 'shadow-yellow-400'
         };
       case 1: // 2nd place
         return {
           starIcon: assets.star_blue,
           starCount: 2,
           text: 'TOP MATCH',
-          bgColor: 'bg-gradient-to-r from-blue-400 to-blue-500',
+          bgColor: 'bg-gradient-to-br from-blue-300 via-blue-500 to-indigo-700',
           textColor: 'text-blue-900',
           borderColor: 'border-blue-400',
-          glowColor: 'shadow-blue-300'
+          glowColor: 'shadow-blue-400'
         };
       case 2: // 3rd place
         return {
           starIcon: assets.star_green,
           starCount: 1,
           text: 'GREAT MATCH',
-          bgColor: 'bg-gradient-to-r from-green-400 to-green-500',
-          textColor: 'text-green-900',
-          borderColor: 'border-green-400',
-          glowColor: 'shadow-green-300'
+          bgColor: 'bg-gradient-to-br from-red-400 via-red-500 to-rose-700',
+          textColor: 'text-white',
+          borderColor: 'border-red-400',
+          glowColor: 'shadow-red-400'
         };
       default:
         return null;
@@ -135,10 +135,10 @@ const Recommendations = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-light">
+      <div className="min-h-screen flex items-center justify-center bg-[#FDFDFF]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Finding your perfect apparel...</p>
+          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-6 shadow-2xl shadow-primary/10"></div>
+          <p className="text-xl font-black text-primary tracking-tight">Curating your perfect style...</p>
         </div>
       </div>
     );
@@ -146,12 +146,17 @@ const Recommendations = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-light px-4">
-        <div className="text-center max-w-md">
-          <p className="text-red-600 mb-4">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FDFDFF] px-4">
+        <div className="text-center max-w-md p-10 bg-white rounded-[40px] shadow-2xl border border-red-50">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-6">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-red-800 font-black mb-8">{error}</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-primary text-white px-6 py-2 rounded-full hover:bg-primary-dull transition-all"
+            className="w-full bg-primary text-white px-8 py-4 rounded-full font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-xl active:scale-95"
           >
             Go Back Home
           </button>
@@ -161,38 +166,39 @@ const Recommendations = () => {
   }
 
   return (
-    <div className="min-h-screen bg-light py-12 px-4 md:px-8 lg:px-16">
+    <div className="min-h-screen bg-[#FDFDFF] py-16 px-4 md:px-8 lg:px-16 xl:px-32">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-16">
           <button
             onClick={() => navigate('/')}
-            className="text-primary hover:text-primary-dull mb-4 flex items-center gap-2"
+            className="flex items-center gap-2 mb-10 text-primary hover:text-primary-dull font-black transition-all hover:-translate-x-1 group"
           >
-            <span>←</span> Back to Home
+            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span className="uppercase tracking-widest text-xs">Back to Home</span>
           </button>
-          <h1 className="text-4xl font-bold mb-2">Your Style Recommendations</h1>
-          <p className="text-gray-600">
-            We found {recommendations.length} gown{recommendations.length !== 1 ? 's' : ''} that match your preferences
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            Status badges (Reserved, In-Laundry, In-Use) reflect current bookings. You can still use these gowns for future dates when they become available.
-          </p>
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-1 bg-primary rounded-full"></div>
+                <span className="text-xs font-black text-primary uppercase tracking-[0.3em]">AI Stylist</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-[#FF3B30]">Matches</span></h1>
+              <p className="text-lg text-gray-500 font-medium max-w-2xl">
+                We've curated {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile and preferences.
+              </p>
+            </div>
+            
+            <div className="bg-primary/5 px-6 py-4 rounded-3xl border border-primary/10">
+              <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1">Availability Note</p>
+              <p className="text-xs font-bold text-primary/70">Badges reflect current status. All items bookable for future dates.</p>
+            </div>
+          </div>
         </div>
 
-        {/* Empty state when no recommendations */}
-        {!loading && recommendations.length === 0 && (
-          <div className="text-center py-12 px-4 bg-gray-50 rounded-xl border border-gray-200">
-            <p className="text-lg font-semibold text-gray-800 mb-2">No recommendations match your preferences</p>
-            <p className="text-gray-600 mb-4">Try adjusting your body type, skin tone, face shape, or event type to see more options.</p>
-            <button
-              onClick={() => navigate('/')}
-              className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dull transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        )}
 
         {/* Recommendations Display */}
         {recommendations.length > 0 ? (
@@ -200,35 +206,49 @@ const Recommendations = () => {
             {/* Top 3 Section */}
             {topThree.length > 0 && (
               <div>
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gray-800">Your Top {topThree.length} Match{topThree.length !== 1 ? 'es' : ''}</h2>
+                <div className="flex items-center gap-4 mb-10">
+                  <h2 className="text-2xl font-black text-primary tracking-tight">Prime Selections</h2>
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {topThree.map((item, index) => {
                     const badge = getStarBadge(index);
                     return (
-                      <div key={item.gown._id || item.gown.id || index} className="relative group flex flex-col">
-                        {/* Star Badge - Big and Prominent */}
-                        <div className={`${badge.bgColor} ${badge.textColor} px-5 py-4 rounded-t-lg border-b-2 ${badge.borderColor} shadow-lg ${badge.glowColor}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              {/* SVG Stars */}
-                              <div className="flex items-center gap-1">
-                                {[...Array(badge.starCount)].map((_, i) => (
-                                  <img key={i} src={badge.starIcon} alt="star" className="w-6 h-6" />
-                                ))}
-                              </div>
-                              <span className="font-extrabold text-base">{badge.text}</span>
-                            </div>
-                            <span className="text-xl font-extrabold">{item.score}%</span>
+                      <div key={item.gown._id || item.gown.id || index} className="relative flex flex-col group h-full">
+                        {/* Premium Integrated Wrapper */}
+                        <div className="flex-1 flex flex-col rounded-[40px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
+                          {/* Rank Badge Header */}
+                          <div className={`flex items-center justify-between p-7 relative overflow-hidden ${badge.bgColor}`}>
+                             {/* Glossy overlay effect */}
+                             <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50"></div>
+                             
+                             <div className="flex items-center gap-4 relative z-10">
+                               <div className={`w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/30`}>
+                                  <img src={badge.starIcon} alt="star" className="w-6 h-6 brightness-0 invert" />
+                               </div>
+                               <div>
+                                 <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-0.5">Rank #{index + 1}</p>
+                                 <span className="font-black text-sm text-white uppercase tracking-widest">{badge.text}</span>
+                               </div>
+                             </div>
+
+                             <div className="text-right relative z-10">
+                               <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-0.5">Match Score</p>
+                               <span className="text-3xl font-black text-white tracking-tighter">{item.score}%</span>
+                             </div>
+
+                             {/* Abstract Decorative Circles */}
+                             <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+                             <div className="absolute -left-6 -top-6 w-24 h-24 bg-black/5 rounded-full blur-2xl"></div>
                           </div>
-                        </div>
 
-                        {/* Gown Card - Fixed height for consistency */}
-                        <div className="flex-1 flex flex-col">
-                          <GownCard gown={item.gown} />
+                          {/* Seamless Gown Card Body */}
+                          <GownCard 
+                            gown={item.gown} 
+                            customClassName="border-none shadow-none rounded-none !p-0 !m-0 hover:translate-y-0"
+                            useContainImage={true}
+                          />
                         </div>
-
                       </div>
                     );
                   })}
@@ -238,27 +258,34 @@ const Recommendations = () => {
 
             {/* Your Preferences - Between Top 3 and Others */}
             {(preferences.bodyType || preferences.skinTone || preferences.eventType || preferences.faceShape || preferences.age || preferences.sex) && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-800">Your Preferences</h2>
+              <div className="bg-white rounded-[40px] shadow-xl p-8 sm:p-12 mb-16 border border-blue-50/50 relative overflow-hidden group">
+                {/* Background decorative element */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-transform duration-700 group-hover:scale-110"></div>
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 relative z-10">
+                  <div>
+                    <h2 className="text-2xl font-black text-primary tracking-tight mb-2">Style Profile</h2>
+                    <p className="text-sm text-gray-500 font-medium">Refine your traits for even better accuracy.</p>
+                  </div>
                   <button
                     onClick={applyPreferences}
-                    className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary-dull transition-all font-semibold text-sm shadow-md"
+                    className="bg-primary text-white px-10 py-4 rounded-xl hover:bg-primary-dull transition-all font-black text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] active:scale-95 flex items-center justify-center gap-2"
                   >
-                    Update
+                    Update Profile
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
                   </button>
                 </div>
 
-                {/* Grid with labels */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 relative z-10">
                   {/* Body Type */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Body Type</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Body Type</label>
                     <select
                       value={editedPrefs.bodyType || ''}
                       onChange={(e) => handlePrefChange('bodyType', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full text-sm text-gray-800 hover:border-primary focus:border-primary focus:outline-none transition-all bg-white shadow-sm"
+                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {bodyTypeList.map(type => (
@@ -268,12 +295,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Skin Tone */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Skin Tone</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Skin Tone</label>
                     <select
                       value={editedPrefs.skinTone || ''}
                       onChange={(e) => handlePrefChange('skinTone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full text-sm text-gray-800 hover:border-primary focus:border-primary focus:outline-none transition-all bg-white shadow-sm"
+                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {skinToneList.map(tone => (
@@ -283,12 +310,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Event Type */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Event Type</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Events</label>
                     <select
                       value={editedPrefs.eventType || ''}
                       onChange={(e) => handlePrefChange('eventType', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full text-sm text-gray-800 hover:border-primary focus:border-primary focus:outline-none transition-all bg-white shadow-sm"
+                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {eventTypeList.map(event => (
@@ -298,12 +325,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Face Shape */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Face Shape</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Face Shape</label>
                     <select
                       value={editedPrefs.faceShape || ''}
                       onChange={(e) => handlePrefChange('faceShape', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full text-sm text-gray-800 hover:border-primary focus:border-primary focus:outline-none transition-all bg-white shadow-sm"
+                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {faceShapeList.map(shape => (
@@ -313,12 +340,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Age Group */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Age Group</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Age Group</label>
                     <select
                       value={editedPrefs.age || ''}
                       onChange={(e) => handlePrefChange('age', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full text-sm text-gray-800 hover:border-primary focus:border-primary focus:outline-none transition-all bg-white shadow-sm"
+                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       <option value="6–9 Years">6–9 Years</option>
@@ -331,12 +358,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Sex */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sex</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Category</label>
                     <select
                       value={editedPrefs.sex || ''}
                       onChange={(e) => handlePrefChange('sex', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-full text-sm text-gray-800 hover:border-primary focus:border-primary focus:outline-none transition-all bg-white shadow-sm"
+                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       <option value="Female">Female</option>
@@ -351,16 +378,19 @@ const Recommendations = () => {
             {/* Other Recommendations */}
             {others.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-700">Other Recommendations</h2>
-                  <span className="text-sm text-gray-500">{others.length} more option{others.length !== 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-4 mb-10">
+                  <h2 className="text-2xl font-black text-primary tracking-tight">Galleries</h2>
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
+                  <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">{others.length} Collection Items</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
                   {others.map((item, index) => (
-                    <div key={item.gown._id || item.gown.id || index} className="flex flex-col">
-                      <GownCard gown={item.gown} />
+                    <div key={item.gown._id || item.gown.id || index} className="flex flex-col group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                      <div className="rounded-[32px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/5 group-hover:-translate-y-1 bg-white flex-1 flex flex-col">
+                        <GownCard gown={item.gown} useContainImage={true} />
+                      </div>
                       {item.matchReason && (
-                        <p className="text-xs text-gray-400 mt-2 text-center line-clamp-2">
+                        <p className="text-[10px] font-bold text-gray-400 mt-4 text-center px-4 leading-relaxed group-hover:text-primary transition-colors">
                           {item.matchReason}
                         </p>
                       )}
@@ -371,31 +401,37 @@ const Recommendations = () => {
             )}
 
             {/* View All Gowns Button */}
-            <div className="text-center py-8 bg-white rounded-lg shadow-sm border-2 border-dashed border-gray-300">
-              <p className="text-gray-600 mb-4">Not finding what you're looking for?</p>
+            <div className="text-center py-20 bg-white rounded-[40px] shadow-sm border border-blue-50/50 mb-20 relative overflow-hidden group">
+               <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <p className="text-lg text-gray-500 font-medium mb-8 relative z-10">Still searching for your signature look?</p>
               <button
                 onClick={() => navigate('/gowns')}
-                className="bg-white text-primary border-2 border-primary px-8 py-3 rounded-full hover:bg-primary hover:text-white transition-all font-semibold"
+                className="relative z-10 bg-white text-primary border-2 border-primary/10 px-12 py-5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-all font-black uppercase tracking-widest active:scale-95 shadow-xl hover:shadow-primary/20"
               >
-                Browse All Gowns
+                Browse Entire Catalog
               </button>
             </div>
           </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-600 mb-4">No gowns found matching your preferences (50%+ match).</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <div className="text-center py-24 bg-white rounded-[40px] shadow-2xl border border-gray-100 animate-fade-in">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
+              <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-xl font-black text-primary mb-10 max-w-sm mx-auto">We couldn't find matches that meet your style criteria (50%+ match).</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={() => navigate('/')}
-                className="bg-primary text-white px-6 py-2 rounded-full hover:bg-primary-dull transition-all"
+                className="w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-xl active:scale-95"
               >
-                Try Different Preferences
+                Start Over
               </button>
               <button
                 onClick={() => navigate('/gowns')}
-                className="bg-white text-primary border-2 border-primary px-6 py-2 rounded-full hover:bg-primary hover:text-white transition-all"
+                className="w-full sm:w-auto px-10 py-5 bg-white text-primary border-2 border-primary/10 rounded-full font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95"
               >
-                Browse All Gowns
+                Browse All
               </button>
             </div>
           </div>

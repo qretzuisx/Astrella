@@ -225,18 +225,36 @@ const UserProfile = () => {
   }
 
   return (
-    <div className='min-h-screen bg-light py-12 px-4 md:px-8 lg:px-16'>
+    <div className='min-h-screen bg-[#FDFDFF] py-12 px-4 md:px-8 lg:px-16'>
       <div className='max-w-4xl mx-auto'>
         {/* Header */}
-        <div className='mb-8'>
-          <button
-            onClick={() => navigate('/')}
-            className='text-primary hover:text-primary-dull mb-4 flex items-center gap-2'
-          >
-            <span>←</span> Back to Home
-          </button>
-          <h1 className='text-4xl font-bold text-gray-900 mb-2'>My Profile</h1>
-          <p className='text-gray-600'>Manage your account information and settings</p>
+        <div className='mb-10 lg:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
+          <div>
+            <button
+              onClick={() => navigate('/')}
+              className='text-primary hover:text-primary-dull mb-6 flex items-center gap-2 font-black transition-all hover:-translate-x-1 w-fit'
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Back to Home</span>
+            </button>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-1 bg-primary rounded-full"></div>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Customer Space</span>
+            </div>
+            <h1 className='text-3xl sm:text-4xl md:text-5xl font-black text-primary-dull tracking-tight mb-2'>My Profile</h1>
+            <p className='text-sm sm:text-base text-gray-500 font-medium'>Manage your account details and preferences.</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(1,62,141,0.05)]">
+            <div className="p-2 bg-primary/5 rounded-xl">
+               <img src={assets.calendar_icon_colored} alt="calendar" className="w-5 h-5" />
+            </div>
+            <div className="pr-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Current Date</p>
+              <p className="text-xs font-bold text-primary-dull">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+            </div>
+          </div>
         </div>
 
         {/* Success/Error Messages */}
@@ -253,7 +271,7 @@ const UserProfile = () => {
         )}
 
         {/* Profile Card */}
-        <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6'>
+        <div className='bg-white rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-blue-50/50 overflow-hidden mb-8 hover:shadow-[0_20px_60px_rgba(1,62,141,0.08)] transition-all duration-500'>
           {/* Profile Header */}
           <div className='bg-gradient-to-r from-primary to-primary-dull h-32'></div>
 
@@ -286,7 +304,7 @@ const UserProfile = () => {
               {role === 'owner' && (
                 <button
                   onClick={() => navigate('/owner')}
-                  className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold shadow-md'
+                  className='px-6 py-2 bg-primary text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_15px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1'
                 >
                   Go to Dashboard
                 </button>
@@ -294,78 +312,65 @@ const UserProfile = () => {
             </div>
 
             {/* Profile Information */}
-            <div className='space-y-6'>
+            <div className='space-y-8'>
               {!editing ? (
                 // View Mode
                 <>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Full Name
                       </label>
-                      <input
-                        type='text'
-                        value={formData.name}
-                        disabled
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
-                      />
+                      <div className="px-5 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 text-primary font-bold shadow-sm">
+                        {formData.name}
+                      </div>
                     </div>
 
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Email Address
                       </label>
-                      <input
-                        type='email'
-                        value={formData.email}
-                        disabled
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
-                      />
+                      <div className="px-5 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 text-primary font-bold shadow-sm">
+                        {formData.email}
+                      </div>
                     </div>
 
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Contact Number
                       </label>
-                      <input
-                        type='text'
-                        value={formData.contactNumber || 'Not provided'}
-                        disabled
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
-                      />
-                      <p className='text-xs text-gray-500 mt-1'>e.g., 09123456789</p>
+                      <div className="px-5 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 text-primary font-bold shadow-sm">
+                        {formData.contactNumber || 'Not provided'}
+                      </div>
                     </div>
 
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Account Type
                       </label>
-                      <input
-                        type='text'
-                        value={role || 'User'}
-                        disabled
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 capitalize'
-                      />
+                      <div className="px-5 py-4 bg-gray-50/50 rounded-2xl border border-gray-100 text-primary font-bold shadow-sm capitalize">
+                        {role || 'User'}
+                      </div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className='flex flex-wrap gap-3 pt-4 border-t border-gray-200'>
+                  <div className='flex flex-wrap gap-4 pt-8 border-t border-gray-100'>
                     <button
                       onClick={() => setEditing(true)}
-                      className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
+                      className='px-8 py-3 bg-primary text-white rounded-2xl text-[10px] uppercase tracking-widest hover:bg-primary-dull transition-all font-black shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.35)] hover:-translate-y-1'
                     >
                       Edit Profile
                     </button>
                     <button
                       onClick={() => setShowPasswordChange(!showPasswordChange)}
-                      className='px-6 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-all font-semibold'
+                      className='px-8 py-3 border border-primary/20 text-primary rounded-2xl text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:border-primary/40 transition-all font-black hover:-translate-y-1 shadow-sm'
                     >
                       Change Password
                     </button>
                     <button
                       onClick={() => setShowDeleteAccount(!showDeleteAccount)}
-                      className='px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all font-semibold'
+                      className='px-8 py-3 border border-red-100 text-red-500 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-red-50 hover:border-red-200 transition-all font-black ml-auto hover:-translate-y-1 shadow-sm'
                     >
                       Delete Account
                     </button>
@@ -374,9 +379,9 @@ const UserProfile = () => {
               ) : (
                 // Edit Mode
                 <form onSubmit={handleUpdateProfile}>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Full Name *
                       </label>
                       <input
@@ -384,25 +389,25 @@ const UserProfile = () => {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                        className='w-full px-5 py-4 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/30'
                       />
                     </div>
 
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Email Address
                       </label>
                       <input
                         type='email'
                         value={formData.email}
                         disabled
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600'
+                        className='w-full px-5 py-4 border border-gray-100 rounded-2xl bg-gray-100/50 text-gray-400 font-bold'
                       />
-                      <p className='text-xs text-gray-500 mt-1'>Email cannot be changed</p>
+                      <p className='text-[10px] text-gray-400 mt-2 font-bold'>Email cannot be changed</p>
                     </div>
 
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Contact Number
                       </label>
                       <input
@@ -410,45 +415,38 @@ const UserProfile = () => {
                         value={formData.contactNumber}
                         onChange={(e) => {
                           setFormData({ ...formData, contactNumber: e.target.value })
-                          // Clear field error when user corrects it
                           if (e.target.value === '') {
                             setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
                           } else if (validatePhoneNumber(e.target.value)) {
                             setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
                           }
                         }}
-                        placeholder='e.g., 09123456789'
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-primary outline-none transition-all ${
+                        placeholder='09123456789'
+                        className={`w-full px-5 py-4 border rounded-2xl focus:ring-4 outline-none transition-all font-bold ${
                           fieldErrors.contactNumber
-                            ? 'border-red-500 focus:ring-red-500'
-                            : 'border-gray-300 focus:ring-primary'
+                            ? 'border-red-500 focus:ring-red-500/10'
+                            : 'border-gray-200 focus:ring-primary/10 focus:border-primary bg-gray-50/30'
                         }`}
                       />
                       {fieldErrors.contactNumber && (
-                        <p className='mt-2 text-sm text-red-600'>{fieldErrors.contactNumber}</p>
+                        <p className='mt-2 text-[10px] text-red-600 font-bold'>{fieldErrors.contactNumber}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                         Account Type
                       </label>
                       <input
                         type='text'
                         value={role || 'User'}
                         disabled
-                        className='w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 capitalize'
+                        className='w-full px-5 py-4 border border-gray-100 rounded-2xl bg-gray-100/50 text-gray-400 font-bold capitalize'
                       />
                     </div>
                   </div>
 
-                  <div className='flex gap-4 pt-6 border-t border-gray-200 mt-6'>
-                    <button
-                      type='submit'
-                      className='flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
-                    >
-                      Save Changes
-                    </button>
+                  <div className='flex flex-wrap gap-4 pt-8 border-t border-gray-100 mt-8'>
                     <button
                       type='button'
                       onClick={() => {
@@ -459,7 +457,7 @@ const UserProfile = () => {
                           contactNumber: user.contactNumber || '',
                         })
                       }}
-                      className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                      className='px-10 py-4 border-2 border-gray-100 text-gray-500 rounded-2xl hover:bg-gray-50 transition-all font-black'
                     >
                       Cancel
                     </button>

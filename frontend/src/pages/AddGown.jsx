@@ -196,254 +196,252 @@ const AddGown = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-gray-50'>
+    <div className='flex min-h-screen bg-[#FDFDFF]'>
       <OwnerSidebar />
 
-      <div className='flex-1 p-4 sm:p-6 lg:p-8'>
-        <div className='max-w-3xl mx-auto'>
+      <div className='flex-1 p-4 sm:p-8 lg:p-12 overflow-y-auto'>
+        <div className='max-w-4xl mx-auto'>
           {/* Header */}
-          <div className='mb-6 sm:mb-8 mt-12 lg:mt-0'>
-            <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>Add New Apparel</h1>
-            <p className='text-sm sm:text-base text-gray-600'>Fill in the details to add new apparel to your collection.</p>
+          <div className='mb-12 mt-8 lg:mt-0'>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-1 bg-primary rounded-full"></div>
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
+            </div>
+            <h1 className='text-4xl font-black text-primary tracking-tight'>Add New Apparel</h1>
+            <p className='text-gray-500 font-bold mt-2'>Introduce a new masterpiece to your collection.</p>
           </div>
 
-          {/* Success/Error Messages */}
+          {/* Messages */}
           {success && (
-            <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <p className='text-green-800 text-sm sm:text-base'>{success}</p>
+            <div className='mb-8 p-4 bg-green-50 border border-green-100 rounded-2xl animate-fade-in'>
+              <p className='text-green-800 font-bold flex items-center gap-2'>{success}</p>
             </div>
           )}
 
           {error && (
-            <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
-              <p className='text-red-800 text-sm sm:text-base'>{error}</p>
+            <div className='mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
+              <p className='text-red-800 font-bold flex items-center gap-2'>{error}</p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className='bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8'>
-            <div className='space-y-4 sm:space-y-6'>
-              {/* Image Upload */}
-              <div>
-                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
-                  Apparel Image <span className='text-red-500'>*</span>
-                </label>
-                <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4'>
-                  <div className='flex-1 w-full'>
-                    <input
-                      type='file'
-                      accept='image/*'
-                      onChange={handleImageChange}
-                      className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                      required
-                    />
-                  </div>
-                  {imagePreview && (
-                    <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0'>
-                      <img src={imagePreview} alt='Preview' className='w-full h-full object-cover' />
+          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-6 sm:p-10 space-y-10'>
+            
+            {/* Image Upload Area */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Visual Presentation</h3>
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="flex-1 w-full space-y-3">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Apparel Image *</label>
+                  <label className='block group cursor-pointer'>
+                    <div className='border-2 border-dashed border-gray-100 rounded-3xl p-10 text-center bg-gray-50/30 hover:border-primary hover:bg-primary/5 transition-all duration-300'>
+                      <div className='bg-primary/5 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform'>
+                        <svg className='w-6 h-6 text-primary/40' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 4v16m8-8H4' /></svg>
+                      </div>
+                      <p className='text-xs text-primary font-black uppercase tracking-wider'>Upload Photo</p>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Gown Name */}
-              <div>
-                <label className='block text-xs sm:text-sm font-medium text-gray-700 mb-2'>
-                  Apparel Name <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='text'
-                  name='name'
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder='Enter apparel name'
-                  className='w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  required
-                />
-              </div>
-
-
-
-              {/* Event Type */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Event Types <span className='text-red-500'>*</span>
-                </label>
-                <div className='flex flex-wrap gap-3'>
-                  {eventTypeList.map((eventType) => (
-                    <button
-                      key={eventType}
-                      type='button'
-                      onClick={() => handleEventTypeChange(eventType.toLowerCase())}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all capitalize ${formData.eventType.includes(eventType.toLowerCase())
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                        }`}
-                    >
-                      {eventType}
-                    </button>
-                  ))}
-                </div>
-                <p className='text-sm text-gray-500 mt-2'>
-                  Selected: {formData.eventType.length > 0 ? formData.eventType.map(e => e.charAt(0).toUpperCase() + e.slice(1)).join(', ') : 'None'}
-                </p>
-              </div>
-
-              {/* Fabric and Color Row */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    Fabric <span className='text-red-500'>*</span>
+                    <input type='file' accept='image/*' onChange={handleImageChange} className='hidden' required />
                   </label>
+                </div>
+
+                {imagePreview && (
+                  <div className="w-full md:w-56 aspect-[3/4] overflow-hidden rounded-[32px] border border-gray-100 shadow-2xl relative group">
+                    <img src={imagePreview} alt='Preview' className='w-full h-full object-cover transition-transform group-hover:scale-110 duration-700' />
+                    <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Basic Info */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Core Details</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Apparel Name *</label>
+                  <input
+                    type='text'
+                    name='name'
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder='e.g., Midnight Velvet Ballgown'
+                    required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Fabric *</label>
                   <input
                     type='text'
                     name='fabric'
                     value={formData.fabric}
                     onChange={handleInputChange}
-                    placeholder='e.g., Chiffon, Silk'
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    placeholder='Chiffon, Silk'
                     required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
                   />
                 </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    Color <span className='text-red-500'>*</span>
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Main Color *</label>
                   <input
                     type='text'
                     name='color'
                     value={formData.color}
                     onChange={handleInputChange}
-                    placeholder='e.g., White, Red'
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
+                    placeholder='Emerald Green'
                     required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Rental Price (₱) *</label>
+                  <input
+                    type='number'
+                    name='price'
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder='0.00'
+                    required
+                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-black text-primary transition-all shadow-sm'
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Price */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Price (₱) <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='number'
-                  name='price'
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  placeholder='Enter rental price'
-                  min='0'
-                  step='0.01'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-                  required
-                />
+            {/* Target Audience */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
+                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Aesthetics & Fit</h3>
               </div>
 
-              {/* Demographic Tags */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Age Group <span className='text-red-500'>*</span></label>
-                  <div className='grid grid-cols-2 gap-2'>
-                    {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map((age) => (
-                      <button
-                        key={age}
-                        type='button'
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          ageGroup: prev.ageGroup.includes(age)
-                            ? prev.ageGroup.filter(a => a !== age)
-                            : [...prev.ageGroup, age]
-                        }))}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${formData.ageGroup.includes(age)
-                            ? 'bg-primary text-white border-primary'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Event Types *</label>
+                   <div className="flex flex-wrap gap-2">
+                      {eventTypeList.map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => handleEventTypeChange(type.toLowerCase())}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                            formData.eventType.includes(type.toLowerCase())
+                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
-                      >
-                        {age}
-                      </button>
-                    ))}
-                  </div>
+                        >
+                          {type}
+                        </button>
+                      ))}
+                   </div>
                 </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Sex <span className='text-red-500'>*</span></label>
-                  <div className='grid grid-cols-3 gap-2'>
-                    {['Female', 'Male', 'Unisex'].map((sex) => (
-                      <button
-                        key={sex}
-                        type='button'
-                        onClick={() => setFormData({ ...formData, sex })}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${formData.sex === sex
-                            ? 'bg-primary text-white border-primary'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+
+                <div className="space-y-4">
+                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Target Sex *</label>
+                   <div className="flex flex-wrap gap-2">
+                      {['Female', 'Male', 'Unisex'].map(sex => (
+                        <button
+                          key={sex}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, sex })}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                            formData.sex === sex
+                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
-                      >
-                        {sex}
-                      </button>
-                    ))}
-                  </div>
+                        >
+                          {sex}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                <div className="space-y-4 md:col-span-2">
+                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Age Groups *</label>
+                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map(age => (
+                        <button
+                          key={age}
+                          type="button"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            ageGroup: prev.ageGroup.includes(age) ? prev.ageGroup.filter(a => a !== age) : [...prev.ageGroup, age]
+                          }))}
+                          className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                            formData.ageGroup.includes(age)
+                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
+                          }`}
+                        >
+                          {age}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                <div className="space-y-4 md:col-span-2">
+                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Available Sizes *</label>
+                   <div className="flex flex-wrap gap-2">
+                      {sizeOptions.map(size => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => handleSizeChange(size)}
+                          className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                            formData.size.includes(size)
+                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                <div className="md:col-span-2 px-2 flex items-center gap-3">
+                    <input
+                      type='checkbox'
+                      id='available'
+                      checked={formData.available}
+                      onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                      className='w-5 h-5 rounded-lg border-gray-200 text-primary focus:ring-primary/20 transition-all'
+                    />
+                    <label htmlFor='available' className='text-[10px] font-black text-primary uppercase tracking-widest cursor-pointer'>
+                      Available for immediate booking
+                    </label>
                 </div>
               </div>
+            </div>
 
-              {/* Size Selection */}
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Available Sizes <span className='text-red-500'>*</span>
-                </label>
-                <div className='flex flex-wrap gap-3'>
-                  {sizeOptions.map((size) => (
-                    <button
-                      key={size}
-                      type='button'
-                      onClick={() => handleSizeChange(size)}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all ${formData.size.includes(size)
-                          ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
-                        }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-                <p className='text-sm text-gray-500 mt-2'>
-                  Selected: {formData.size.join(', ') || 'None'}
-                </p>
-              </div>
-
-              {/* Available Toggle */}
-              <div className='flex items-center gap-3'>
-                <input
-                  type='checkbox'
-                  id='available'
-                  checked={formData.available}
-                  onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                  className='w-5 h-5 text-primary rounded focus:ring-primary'
-                />
-                <label htmlFor='available' className='text-sm font-medium text-gray-700'>
-                  Mark as available for booking
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <div className='flex gap-4 pt-4'>
-                <button
-                  type='submit'
-                  disabled={loading}
-                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all duration-300 ${loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-primary hover:bg-primary-dull shadow-lg hover:shadow-xl'
-                    }`}
-                >
-                  {loading ? 'Adding Apparel...' : 'Add Apparel'}
-                </button>
-                <button
-                  type='button'
-                  onClick={() => navigate('/owner/manage-gown')}
-                  className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
-                >
-                  Cancel
-                </button>
-              </div>
+            {/* Actions */}
+            <div className='flex flex-col sm:flex-row gap-4 pt-4'>
+              <button
+                type='submit'
+                disabled={loading}
+                className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 relative overflow-hidden group'
+              >
+                 <span className="relative z-10">{loading ? 'Adding to Collection...' : 'Add to Collection'}</span>
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+              </button>
+              <button
+                type='button'
+                onClick={() => navigate('/owner/manage-gown')}
+                className='px-10 py-5 bg-white text-primary border border-gray-100 rounded-[24px] hover:bg-gray-50 transition-all font-black text-xs uppercase tracking-widest'
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>

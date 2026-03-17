@@ -99,42 +99,58 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
       onClick={handleClose}
     >
       <div 
-        className='bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-8 relative'
+        className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 sm:p-10 relative border border-primary/5 backdrop-blur-xl'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className='absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 text-2xl sm:text-3xl'
+          className='absolute top-6 right-6 text-gray-400 hover:text-primary transition-colors'
         >
-          ×
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
         {/* Header */}
-        <div className='text-center mb-4 sm:mb-6 pr-8'>
-          <h2 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2'>Payment</h2>
-          <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mt-3 sm:mt-4'>
-            <div className='space-y-1.5 sm:space-y-2'>
-              <div className='flex justify-between items-center gap-2'>
-                <span className='text-xs sm:text-sm text-gray-600 font-medium'>Total Amount:</span>
-                <span className='text-lg sm:text-xl md:text-2xl font-bold text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{total?.toLocaleString() || '0'}</span></span>
+        <div className='text-center mb-10'>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="w-8 h-1 bg-primary rounded-full"></div>
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Checkout</span>
+          </div>
+          <h2 className='text-3xl font-black text-primary mb-6'>Payment Details</h2>
+          
+          <div className='bg-[#FDFDFF] border border-primary/5 rounded-[32px] p-6 sm:p-8 shadow-inner relative overflow-hidden'>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+            <div className='space-y-4 relative z-10'>
+              <div className='flex justify-between items-center'>
+                <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Total Amount</span>
+                <div className='text-2xl font-black text-primary flex items-baseline gap-1'>
+                  <span className="text-secondary text-sm">₱</span>
+                  <span>{total?.toLocaleString() || '0'}</span>
+                </div>
               </div>
+              
               {paymentData.method === 'gcash' && (
                 <>
-                  <div className='flex justify-between items-center gap-2 text-green-700'>
-                    <span className='text-xs sm:text-sm font-medium'>Deposit Required (50%):</span>
-                    <span className='text-base sm:text-lg md:text-xl font-bold text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{depositAmount?.toLocaleString() || '0'}</span></span>
+                  <div className='flex justify-between items-center pt-4 border-t border-primary/5'>
+                    <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Deposit Required (50%)</span>
+                    <div className='text-xl font-black text-secondary flex items-baseline gap-1'>
+                      <span className="text-xs">₱</span>
+                      <span>{depositAmount?.toLocaleString() || '0'}</span>
+                    </div>
                   </div>
-                  <div className='flex justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 pt-2 border-t border-blue-200'>
-                    <span>Balance (pay on pickup):</span>
-                    <span className='font-semibold text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{remainingBalance?.toLocaleString() || '0'}</span></span>
+                  <div className='bg-primary/5 rounded-2xl p-4 flex justify-between items-center'>
+                    <span className='text-[10px] font-black text-primary/60 uppercase tracking-widest'>Balance on Pickup</span>
+                    <span className='font-black text-primary'>₱{remainingBalance?.toLocaleString()}</span>
                   </div>
                 </>
               )}
+              
               {paymentData.method === 'in_store' && (
-                <div className='flex justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 pt-2 border-t border-blue-200'>
-                  <span>Full amount to be paid in-store:</span>
-                  <span className='font-semibold text-base sm:text-lg text-primary-dull'><span className="text-primary-dull">₱</span><span className="font-bold">{total?.toLocaleString() || '0'}</span></span>
+                <div className='bg-green-50 rounded-2xl p-4 flex items-center gap-3'>
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <p className='text-xs font-bold text-green-700'>Full amount to be settled at the shop</p>
                 </div>
               )}
             </div>
@@ -149,45 +165,73 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
         )}
 
         {/* Payment Method */}
-        <div className='mb-4 sm:mb-6 bg-gray-50 rounded-lg p-3 sm:p-4'>
-          <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base'>Select payment method</h3>
-          <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
-            <label className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'gcash' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
-              <input type='radio' name='method' value='gcash' checked={paymentData.method === 'gcash'} onChange={handleInputChange} className='flex-shrink-0' />
-              <div>
-                <p className='font-semibold text-gray-900 text-sm sm:text-base'>GCash</p>
-                <p className='text-xs text-gray-500'>Upload proof of payment</p>
+        <div className='mb-8'>
+          <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 pl-2'>Choose Payment Method</label>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <button 
+              onClick={() => setPaymentData({ ...paymentData, method: 'gcash' })}
+              className={`flex items-center gap-4 p-5 rounded-[24px] border-2 transition-all text-left ${
+                paymentData.method === 'gcash' 
+                ? 'border-primary bg-primary/5 shadow-inner' 
+                : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
+              }`}
+            >
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                paymentData.method === 'gcash' ? 'bg-primary text-white shadow-lg' : 'bg-white text-gray-300 border border-primary/5'
+              }`}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
               </div>
-            </label>
-            <label className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border cursor-pointer bg-white ${paymentData.method === 'in_store' ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}>
-              <input type='radio' name='method' value='in_store' checked={paymentData.method === 'in_store'} onChange={handleInputChange} className='flex-shrink-0' />
               <div>
-                <p className='font-semibold text-gray-900 text-sm sm:text-base'>Pay In-Store</p>
-                <p className='text-xs text-gray-500'>Cash payment at the shop</p>
+                <p className={`font-black text-sm ${paymentData.method === 'gcash' ? 'text-primary' : 'text-gray-400'}`}>GCash online</p>
+                <p className='text-[10px] text-gray-400 font-bold'>Instant Deposit</p>
               </div>
-            </label>
+            </button>
+
+            <button 
+              onClick={() => setPaymentData({ ...paymentData, method: 'in_store' })}
+              className={`flex items-center gap-4 p-5 rounded-[24px] border-2 transition-all text-left ${
+                paymentData.method === 'in_store' 
+                ? 'border-secondary bg-secondary/5 shadow-inner' 
+                : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
+              }`}
+            >
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                paymentData.method === 'in_store' ? 'bg-secondary text-white shadow-lg' : 'bg-white text-gray-300 border border-primary/5'
+              }`}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <p className={`font-black text-sm ${paymentData.method === 'in_store' ? 'text-secondary' : 'text-gray-400'}`}>In-Store pay</p>
+                <p className='text-[10px] text-gray-400 font-bold'>Pay upon visit</p>
+              </div>
+            </button>
           </div>
         </div>
 
         {/* Payment Instructions (GCash only) */}
         {paymentData.method === 'gcash' && (
-        <div className='mb-4 sm:mb-6 bg-gray-50 rounded-lg p-3 sm:p-4'>
-          <h3 className='font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base'>
-            <span className='bg-primary text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm flex-shrink-0'>1</span>
-            Scan QR Code with GCash
-          </h3>
+        <div className='mb-8'>
+          <div className='flex items-center gap-3 mb-6'>
+            <div className='bg-primary text-white rounded-xl w-8 h-8 flex items-center justify-center font-black shadow-lg'>1</div>
+            <h3 className='font-black text-primary'>Scan QR Code</h3>
+          </div>
           
-          {/* QR Code Display */}
-          <div className='flex justify-center my-4 sm:my-6'>
-            <div className='bg-white p-3 sm:p-4 rounded-xl shadow-md border-2 border-primary'>
+          <div className='flex justify-center'>
+            <div className='bg-white p-6 rounded-[32px] shadow-[0_20px_50px_rgba(1,62,141,0.1)] border-2 border-primary/20 relative group'>
+              <div className="absolute inset-0 bg-primary/5 rounded-[30px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <img 
                 src={assets.gcash_qr} 
                 alt="GCash QR Code" 
-                className='w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain'
+                className='w-48 h-48 sm:w-56 sm:h-56 object-contain relative z-10'
               />
-              <p className='text-center text-xs sm:text-sm text-gray-600 mt-2 font-medium'>
-                Pay <span className="text-primary-dull">₱</span><span className="font-bold text-primary-dull">{depositAmount?.toLocaleString()}</span>
-              </p>
+              <div className='mt-4 text-center relative z-10'>
+                <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Amount to pay</p>
+                <p className='text-xl font-black text-secondary'>₱{depositAmount?.toLocaleString()}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -196,40 +240,48 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
         {paymentData.method === 'gcash' && (
         <>
         {/* Reference Number Input */}
-        <div className='mb-6'>
-          <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-            <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>2</span>
-            Enter Reference Number
-          </h3>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>
-            GCash Reference Number *
-          </label>
-          <input
-            type='text'
-            name='referenceNumber'
-            value={paymentData.referenceNumber}
-            onChange={handleInputChange}
-            placeholder='e.g., 1234567890123'
-            className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all'
-          />
-          <p className='text-xs text-gray-500 mt-1'>
-            Found in your GCash transaction receipt
+        <div className='mb-8'>
+          <div className='flex items-center gap-3 mb-6'>
+            <div className='bg-primary text-white rounded-xl w-8 h-8 flex items-center justify-center font-black shadow-lg'>2</div>
+            <h3 className='font-black text-primary'>Reference Number</h3>
+          </div>
+          <div className="relative">
+            <input
+              type='text'
+              name='referenceNumber'
+              value={paymentData.referenceNumber}
+              onChange={handleInputChange}
+              placeholder='Enter 13-digit reference number'
+              className='w-full px-6 py-5 bg-[#FDFDFF] border border-primary/10 rounded-[20px] focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all font-black text-primary placeholder:text-gray-300'
+            />
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-primary/20">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3 ml-2'>
+            Required for payment verification
           </p>
         </div>
 
         {/* Screenshot Upload */}
-        <div className='mb-6'>
-          <h3 className='font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-            <span className='bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-sm'>3</span>
-            Upload Transaction Screenshot
-          </h3>
+        <div className='mb-10'>
+          <div className='flex items-center gap-3 mb-6'>
+            <div className='bg-primary text-white rounded-xl w-8 h-8 flex items-center justify-center font-black shadow-lg'>3</div>
+            <h3 className='font-black text-primary'>Proof of Payment</h3>
+          </div>
           
           {!paymentData.screenshotPreview ? (
             <label className='block'>
-              <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all'>
-                <img src={assets.upload_icon} alt="upload" className='w-12 h-12 mx-auto mb-3 opacity-50' />
-                <p className='text-gray-600 font-medium mb-1'>Click to upload screenshot</p>
-                <p className='text-sm text-gray-500'>PNG or JPG (max 5MB)</p>
+              <div className='border-2 border-dashed border-primary/10 bg-[#FDFDFF] rounded-[32px] p-10 text-center cursor-pointer hover:border-primary hover:bg-white hover:shadow-xl transition-all group'>
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                </div>
+                <p className='text-sm font-black text-primary mb-1'>Upload Receipt Screenshot</p>
+                <p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest'>PNG, JPG up to 5MB</p>
               </div>
               <input
                 type='file'
@@ -239,21 +291,27 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
               />
             </label>
           ) : (
-            <div className='relative'>
+            <div className='relative group'>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[32px] z-10 flex items-center justify-center">
+                <button
+                  onClick={() => setPaymentData({ ...paymentData, screenshot: null, screenshotPreview: null })}
+                  className='bg-white text-red-500 font-black px-6 py-3 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-xl'
+                >
+                  Remove & Replace
+                </button>
+              </div>
               <img 
                 src={paymentData.screenshotPreview} 
-                alt="Transaction screenshot preview" 
-                className='w-full max-h-64 object-contain border border-gray-300 rounded-lg'
+                alt="Preview" 
+                className='w-full max-h-80 object-cover border border-primary/10 rounded-[32px] shadow-sm'
               />
-              <button
-                onClick={() => setPaymentData({ ...paymentData, screenshot: null, screenshotPreview: null })}
-                className='absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors'
-              >
-                ×
-              </button>
-              <div className='mt-2 flex items-center gap-2 text-green-600'>
-                <img src={assets.check_icon} alt="check" className='w-5 h-5' />
-                <p className='text-sm font-medium'>Screenshot uploaded successfully</p>
+              <div className='mt-4 flex items-center gap-3 bg-green-50 p-4 rounded-2xl border border-green-100'>
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className='text-xs font-black text-green-700 uppercase tracking-widest'>Verification Ready</p>
               </div>
             </div>
           )}
@@ -279,13 +337,27 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
         )}
 
         {/* Continue Button */}
-        <button
-          onClick={handleContinue}
-          disabled={uploading}
-          className='w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dull transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed'
-        >
-          {uploading ? 'Processing...' : 'Continue to Contract Agreement'}
-        </button>
+        <div className="mt-10">
+          <button
+            onClick={handleContinue}
+            disabled={uploading}
+            className={`w-full py-6 rounded-[24px] font-black text-base uppercase tracking-widest transition-all duration-500 relative flex items-center justify-center gap-3 active:scale-95 ${!uploading
+                ? 'bg-primary text-white shadow-[0_15px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1'
+                : 'bg-gray-100 text-gray-400 border border-primary/5 cursor-not-allowed'
+              }`}
+          >
+            {uploading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-b-white rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <span>Continue to Agreement</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

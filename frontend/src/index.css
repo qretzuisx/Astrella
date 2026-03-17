@@ -2,8 +2,18 @@
 
 
 @import "tailwindcss";
+@import 'react-day-picker/dist/style.css';
 
-* {
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+:root {
   font-family: "Geist", sans-serif;
 }
 
@@ -24,26 +34,62 @@
 }
 
 .rdp-root .rdp-day.rdp-day_reserved .rdp-day_button {
-  background: #ef4444 !important;
+  background: #EF4444 !important;
   color: #fff !important;
   border-radius: 50% !important;
 }
 
 .rdp-root .rdp-day.rdp-day_trial .rdp-day_button {
-  background: #6b7280 !important;
+  background: #6B7280 !important;
   color: #fff !important;
   border-radius: 50% !important;
 }
 
 .rdp-root .rdp-day.rdp-day_laundry .rdp-day_button {
-  background: #3b82f6 !important;
+  background: #3B82F6 !important;
   color: #fff !important;
   border-radius: 50% !important;
 }
 
 @theme {
-  --color-primary: #2563EB;
-  --color-primary-dull: #1A2350;
+  --color-primary: #013e8d;
+  --color-primary-dull: #002d66;
+  --color-secondary: #4361ee;
+  --color-secondary-light: #fbbf24;
+  --color-accent-red: #c21807;
   --color-light: #F5F5F5;
-  --color-borderColor: #1A2350;
+  --color-borderColor: #e5e7eb;
 }
+
+/* Mobile App Utilities */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Smooth transitions for a more app-like feel */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Hide scrollbar but keep functionality for a cleaner mobile look */
+@media (max-width: 640px) {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
