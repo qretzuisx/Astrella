@@ -64,7 +64,7 @@ const Navbar = ({ setShowLogin }) => {
 
   return (
     <div
-      className={`flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 text-gray-600 border-b border-borderColor relative transition-all 
+      className={`flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 text-gray-600 relative transition-all shadow-md hover:shadow-lg 
       ${location.pathname === "/" ? "bg-white" : "bg-white"}`}>
 
       <Link to="/">
@@ -74,12 +74,22 @@ const Navbar = ({ setShowLogin }) => {
         className={`max-sm:fixed max-sm:h-screen max-sm:w-full max-sm:top-16 max-sm:border-t border-borderColor right-0 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 max-sm:p-4 transition-all duration-300 z-50 
             ${location.pathname === "/" ? "bg-white" : "bg-white"} 
             ${open ? "max-sm:translate-x-0" : "max-sm:translate-x-full"}`}>
-        {menuLinks.map((link, index) => (
-          <Link key={index} to={link.path}>
-            {link.name}
-          </Link>
-        ))}
-        <form onSubmit={handleNavbarSearch} className="hidden lg:flex items-center text-sm gap-2 border border-borderColor px-3 rounded-full max-w-56">
+        {menuLinks.map((link, index) => {
+          const isActive = location.pathname === link.path
+          return (
+            <Link
+              key={index}
+              to={link.path}
+              className={`transition-colors ${isActive ? "text-primary font-semibold border-b-2 border-primary" : "hover:text-primary"}`}
+            >
+              {link.name}
+            </Link>
+          )
+        })}
+        <form
+          onSubmit={handleNavbarSearch}
+          className="hidden lg:flex items-center text-sm gap-2 px-3 rounded-full max-w-56 bg-white shadow-md hover:shadow-lg focus-within:shadow-lg transition-shadow"
+        >
           <input
             type="text"
             value={navbarSearch}

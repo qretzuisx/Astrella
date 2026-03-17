@@ -142,6 +142,9 @@ const MyBookings = ({ setShowLogin }) => {
   const [availabilityStatus, setAvailabilityStatus] = useState({ loading: false, message: '', valid: false })
   const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialTimeSlots: {}, laundryHoldDates: [] })
 
+  // Filtering state
+  const [currentFilter, setCurrentFilter] = useState('All')
+
   const currency = CURRENCY
 
   // Helper functions for calendar
@@ -599,6 +602,46 @@ const MyBookings = ({ setShowLogin }) => {
         </div>
       )}
 
+      {/* Filter Tabs */}
+      <div className='flex items-center gap-4 sm:gap-8 border-b border-gray-100 mb-6 overflow-x-auto no-scrollbar pb-1'>
+        {['All', 'Trial', 'Pending', 'Confirmed', 'Completed', 'Canceled'].map((filter) => {
+          const count = filter === 'All'
+            ? bookings.length
+            : bookings.filter(b => {
+              const status = (b.status || '').toLowerCase()
+              const type = (b.bookingType || '').toLowerCase()
+              if (filter === 'Trial') return status === 'trial' || type === 'trial'
+              return status === filter.toLowerCase()
+            }).length
+
+          const isActive = currentFilter === filter
+
+          return (
+            <button
+              key={filter}
+              onClick={() => setCurrentFilter(filter)}
+              className={`flex items-center gap-2 pb-3 px-1 transition-all relative whitespace-nowrap ${isActive
+                ? 'text-primary font-bold'
+                : 'text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              <span className='text-sm sm:text-base'>{filter}</span>
+              {count > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${isActive
+                  ? 'bg-blue-100 text-primary'
+                  : 'bg-gray-100 text-gray-600'
+                  }`}>
+                  {count}
+                </span>
+              )}
+              {isActive && (
+                <div className='absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full' />
+              )}
+            </button>
+          )
+        })}
+      </div>
+
       {bookings.length === 0 ? (
         <div className='text-center py-12 sm:py-16 px-4'>
           <p className='text-lg sm:text-xl text-gray-500 mb-3 sm:mb-4'>No bookings found</p>
@@ -606,7 +649,15 @@ const MyBookings = ({ setShowLogin }) => {
         </div>
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
-          {bookings.map((booking) => {
+          {bookings
+            .filter(booking => {
+              if (currentFilter === 'All') return true
+              const status = (booking.status || '').toLowerCase()
+              const type = (booking.bookingType || '').toLowerCase()
+              if (currentFilter === 'Trial') return status === 'trial' || type === 'trial'
+              return status === currentFilter.toLowerCase()
+            })
+            .map((booking) => {
             const editable = isEditableStatus(booking)
             const cancelable = canCancelStatus(booking)
             const isTrial = (booking.status || '').toLowerCase() === 'trial' || (booking.bookingType || '').toLowerCase() === 'trial'
