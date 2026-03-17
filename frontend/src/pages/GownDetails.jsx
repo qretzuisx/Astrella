@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 import { assets } from '../assets/assets'
-import { API_URL, CURRENCY } from '../config'
+import { API_URL, CURRENCY, EXTRA_DAY_FEE } from '../config'
 import PaymentModal from '../components/PaymentModal'
 import ContractModal from '../components/ContractModal'
 
@@ -443,30 +443,24 @@ const GownDetails = () => {
       return
     }
 
-    const pickupDateTime = combineDateAndTime(pickupDate, pickupTime)
-    const returnDateTime = combineDateAndTime(returnDate, returnTime || pickupTime)
-
-    if (!pickupDateTime || !returnDateTime) {
+    // Pricing model:
+    // - Base price covers up to 3 reserved days (pickup/use/return flow).
+    // - Extra reserved days beyond 3 are charged +50/day.
+    const start = new Date(`${pickupDate}T00:00:00`)
+    const end = new Date(`${returnDate}T00:00:00`)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       setDurationDays(0)
       setTotalAmount(0)
       return
     }
 
-    // For same-day bookings: return time must be same or after pickup time (can't return before picking up!)
-    if (pickupDate === returnDate && returnDateTime < pickupDateTime) {
-      setDurationDays(0)
-      setTotalAmount(0)
-      setFieldError('returnDate', 'Return time cannot be earlier than pickup time on same-day bookings.')
-      return
-    }
-
-    // Clear any return date errors if validation passes
     setFieldError('returnDate', '')
-    const diffMs = returnDateTime - pickupDateTime
-    const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+    const diffDays = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1)
     setDurationDays(diffDays)
-    const pricePerDay = gown?.pricePerDay || gown?.price || 0
-    setTotalAmount(diffDays * pricePerDay)
+
+    const basePrice = gown?.pricePerDay || gown?.price || 0
+    const extraDays = Math.max(0, diffDays - 3)
+    setTotalAmount((basePrice || 0) + extraDays * EXTRA_DAY_FEE)
   }, [pickupDate, returnDate, pickupTime, returnTime, gown, bookingType])
 
   // Auto-populate return time when pickup time changes

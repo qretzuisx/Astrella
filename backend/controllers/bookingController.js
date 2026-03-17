@@ -2,6 +2,7 @@ import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import imageKit from "../configs/imagekit.js";
+import { computeReservationPricing } from "../utils/rentalPricing.js";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -36,6 +37,13 @@ const combineDateAndTime = (dateValue, timeValue) => {
   // Create an ISO-like local datetime string and let JS parse it as local time.
   const dateTimeString = `${localDate}T${safeTime}`;
   return new Date(dateTimeString);
+};
+
+const endOfLocalDay = (dateValue) => {
+  if (!dateValue) return null;
+  const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
 };
 
 /** Parse shop operating hours string "HH:MM-HH:MM" to minutes since midnight. Returns null for invalid; use defaults 9*60, 19*60 when null. */
@@ -272,13 +280,16 @@ export const createBooking = async (req, res) => {
     const ownerDoc = gownData.owner && gownData.owner.shopProfile ? gownData.owner : await User.findById(gownData.owner).select("shopProfile");
     const shopHours = parseOperatingHours(ownerDoc?.shopProfile?.operatingHours) || { openMinutes: DEFAULT_OPEN, closeMinutes: DEFAULT_CLOSE };
 
-    if (!isWithinBusinessHours(pickupTime, shopHours) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
+    // Pickup time must be within operating hours. Return time is flexible for reservations (any time within the return day).
+    if (!isWithinBusinessHours(pickupTime, shopHours) || (isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
       return res.status(400).json({ success: false, message: "Selected times must be within the shop's operating hours and in 15-minute intervals." });
     }
 
     const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
-    // For trials, return date is same as pickup date (single-day); use normalizedReturnDate so we don't rely on undefined returnDate.
-    let returnDateTime = combineDateAndTime(normalizedReturnDate, effectiveReturnTime);
+    // Trials: fixed 30-minute slot. Reservations: return can be anytime within the selected return day (end-of-day local).
+    let returnDateTime = isTrial
+      ? combineDateAndTime(normalizedReturnDate, effectiveReturnTime)
+      : endOfLocalDay(normalizedReturnDate);
 
     if (!pickupDateTime || !returnDateTime) {
       return res.status(400).json({ success: false, message: "Invalid pickup or return date." });
@@ -337,23 +348,15 @@ export const createBooking = async (req, res) => {
       return res.json({ success: false, message: "This gown is already reserved during your selected dates." });
     }
 
-    // Dynamic rental pricing based on number of days selected
-    // Grace period: if return is within 1 hour of pickup time, still counts as same day (1 day)
-    const msDiff = returnDateTime.getTime() - pickupDateTime.getTime();
-    const hoursDiff = msDiff / (60 * 60 * 1000); // Convert to hours
-    const rawDays = msDiff / DAY_IN_MS;
-
-    // If return is within 1 hour of pickup, count as 1 day (grace period)
-    // Otherwise, round up to the next day
-    let rentalDays;
-    if (hoursDiff <= 1) {
-      rentalDays = 1; // 1-hour grace period = still 1 day
-    } else {
-      rentalDays = Math.max(1, Math.ceil(rawDays));
-    }
-
-    const pricePerDay = gownData.pricePerDay || gownData.price || 0;
-    const price = rentalDays * pricePerDay;
+    // Reservation pricing: base covers up to 3 reserved days (pickup/use/return),
+    // then +EXTRA_DAY_FEE per extra reserved day beyond that window.
+    const basePrice = gownData.pricePerDay || gownData.price || 0;
+    const pricing = computeReservationPricing({
+      basePrice,
+      pickupDate: pickupDateTime,
+      returnDate: returnDateTime,
+    });
+    const price = pricing.total;
 
     // Determine booking type
     const finalBookingType = isTrial ? 'trial' : 'reservation';
@@ -438,7 +441,13 @@ export const createBooking = async (req, res) => {
       .populate('owner', 'name')
       .populate('user', 'name email')
 
-    res.json({ success: true, message: "Booking Created", booking: populatedBooking, Booking: populatedBooking });
+    res.json({
+      success: true,
+      message: "Booking Created",
+      booking: populatedBooking,
+      Booking: populatedBooking,
+      ...(isTrial ? {} : { pricing }),
+    });
 
   } catch (error) {
     console.error(error);
@@ -724,7 +733,7 @@ export const changeBookingStatus = async (req, res) => {
 export const updateBooking = async (req, res) => {
   try {
     const actor = req.user;
-    const { bookingId, action, pickupDate, returnDate, pickupTime, returnTime } = req.body;
+    let { bookingId, action, pickupDate, returnDate, pickupTime, returnTime } = req.body;
 
     if (!bookingId || !action) {
       return res.status(400).json({ success: false, message: 'bookingId and action are required.' });
@@ -952,12 +961,15 @@ export const updateBooking = async (req, res) => {
     const ownerDoc = await User.findById(booking.owner).select('shopProfile');
     const shopHours = parseOperatingHours(ownerDoc?.shopProfile?.operatingHours) || { openMinutes: DEFAULT_OPEN, closeMinutes: DEFAULT_CLOSE };
 
-    if (!isWithinBusinessHours(pickupTime, shopHours) || (!isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
+    // Pickup time must be within operating hours. Return time is flexible for reservations (any time within the return day).
+    if (!isWithinBusinessHours(pickupTime, shopHours) || (isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
       return res.status(400).json({ success: false, message: 'Times must be within the shop\'s operating hours and in 15-minute increments.' });
     }
 
     const newPickupDateTime = combineDateAndTime(pickupDate, pickupTime);
-    let newReturnDateTime = combineDateAndTime(effectiveReturnDate, effectiveReturnTime);
+    let newReturnDateTime = isTrial
+      ? combineDateAndTime(effectiveReturnDate, effectiveReturnTime)
+      : endOfLocalDay(effectiveReturnDate);
 
     if (!newPickupDateTime || !newReturnDateTime) {
       return res.status(400).json({ success: false, message: 'Invalid pickup or return date.' });
@@ -1046,21 +1058,14 @@ export const updateBooking = async (req, res) => {
 
     // Recalculate price based on new rental period (for non-trial bookings)
     if (!isTrial) {
-      const msDiff = newReturnDateTime.getTime() - newPickupDateTime.getTime();
-      const hoursDiff = msDiff / (60 * 60 * 1000);
-      const rawDays = msDiff / DAY_IN_MS;
-
-      // Apply 1-hour grace period for rental day calculation
-      let rentalDays;
-      if (hoursDiff <= 1) {
-        rentalDays = 1;
-      } else {
-        rentalDays = Math.max(1, Math.ceil(rawDays));
-      }
-
       const gownData = await Gown.findById(booking.gown).select('price pricePerDay');
-      const pricePerDay = gownData.pricePerDay || gownData.price || 0;
-      const newPrice = rentalDays * pricePerDay;
+      const basePrice = gownData.pricePerDay || gownData.price || 0;
+      const pricing = computeReservationPricing({
+        basePrice,
+        pickupDate: newPickupDateTime,
+        returnDate: newReturnDateTime,
+      });
+      const newPrice = pricing.total;
 
       // Update booking price and payment details
       booking.price = newPrice;
