@@ -25,7 +25,7 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
 
   const renderColorSwatches = (colorValue) => {
     if (!colorValue) return <div className="w-4 h-4 rounded-full border border-gray-100 bg-gray-200" />;
-    
+
     const colorMap = {
       'red': '#EF4444',
       'burgundy': '#800020',
@@ -95,9 +95,9 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
     const getHex = (name) => {
       const lower = name.toLowerCase().trim();
       if (colorMap[lower]) return colorMap[lower];
-      
+
       // Fuzzy match - find longest keyword match
-      const keys = Object.keys(colorMap).sort((a,b) => b.length - a.length);
+      const keys = Object.keys(colorMap).sort((a, b) => b.length - a.length);
       for (const key of keys) {
         if (lower.includes(key)) return colorMap[key];
       }
@@ -120,9 +120,9 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
           const normalized = color.toLowerCase();
           const hex = getHex(normalized);
           return (
-            <div 
+            <div
               key={idx}
-              className={`w-4 h-4 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-110 ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
+              className={`w-4 h-4 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-110 ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`}
               style={{ backgroundColor: hex }}
               title={color}
             />
@@ -146,6 +146,11 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
           className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
         />
 
+        {/* Status Pill Overlay */}
+        <div className={`absolute top-4 left-4 px-4 sm:px-3 py-2 sm:py-3 rounded-2xl sm:rounded-[24px] font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(statusText)}`}>
+          {statusText}
+        </div>
+
 
 
         <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 bg-white/60 backdrop-blur-xl text-primary px-4 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-[24px] shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-white/40 transition-all duration-500 sm:group-hover:-translate-y-2 flex items-center gap-2">
@@ -161,9 +166,9 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
           <div className="w-3 sm:w-5 h-0.5 sm:h-1 bg-secondary-light rounded-full opacity-60 group-hover:w-5 sm:group-hover:w-8 group-hover:opacity-100 transition-all duration-500"></div>
           <span className="text-[9px] font-black text-secondary uppercase tracking-widest line-clamp-1">{gown.category || 'Apparel'}</span>
         </div>
-        
+
         <h3 className="text-sm sm:text-xl font-black text-primary mb-1 sm:mb-2 transition-colors duration-500 line-clamp-2 leading-tight">{gown.name}</h3>
-        
+
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -178,7 +183,7 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
 
         {/* Details Section - Consistent 4-detail grid for all devices */}
         <div className="mt-auto pt-4 sm:pt-5 border-t border-gray-100 grid grid-cols-2 gap-x-2 sm:gap-x-4 gap-y-3 sm:gap-y-4">
-          
+
           {/* Colors */}
           <div className="flex flex-col gap-1">
             <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Colors</span>

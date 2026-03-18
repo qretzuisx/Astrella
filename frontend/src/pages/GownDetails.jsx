@@ -21,6 +21,23 @@ const minutesToTimeString = (totalMinutes) => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 }
 
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'available':
+      return 'bg-green-500/90 text-white'
+    case 'unavailable':
+      return 'bg-orange-500/90 text-white'
+    case 'in-laundry':
+      return 'bg-[#3B82F6]/90 text-white'
+    case 'reserved':
+      return 'bg-red-500/90 text-white'
+    case 'in-use':
+      return 'bg-orange-600/90 text-white'
+    default:
+      return 'bg-gray-500/90 text-white'
+  }
+}
+
 
 const GownDetails = () => {
 
@@ -632,6 +649,11 @@ const GownDetails = () => {
               alt={gown.name}
               className='w-full h-auto max-h-[450px] sm:max-h-[550px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
+            
+            {/* Status Pill Overlay */}
+            <div className={`absolute top-4 left-4 sm:top-8 sm:left-8 px-5 sm:px-8 py-2.5 sm:py-4 rounded-2xl sm:rounded-[32px] font-black text-xs sm:text-sm uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(gown.status || 'Available')}`}>
+              {gown.status || 'Available'}
+            </div>
             
 
           </div>
