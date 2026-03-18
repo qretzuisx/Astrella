@@ -81,7 +81,6 @@ const AddGown = () => {
   const runBackgroundRemoval = async (fileToProcess) => {
     if (!fileToProcess) return;
     
-    console.log(`[BG Removal] Process started for file: ${fileToProcess.name}`);
     setIsRemovingBg(true);
     setError('');
     
@@ -91,11 +90,9 @@ const AddGown = () => {
         setTimeout(() => reject(new Error('Background removal taking longer than expected')), 25000)
       );
 
-      console.log(`[BG Removal] Calling @imgly/background-removal...`);
       const bgRemovalPromise = removeBackground(fileToProcess);
       
       const imageBlob = await Promise.race([bgRemovalPromise, timeoutPromise]);
-      console.log(`[BG Removal] AI processing successful!`);
 
       const newFile = new File([imageBlob], fileToProcess.name.replace(/\.[^/.]+$/, "") + ".png", { type: 'image/png' });
       setSelectedImage(newFile);
@@ -103,16 +100,13 @@ const AddGown = () => {
       const newReader = new FileReader();
       newReader.onloadend = () => {
         setImagePreview(newReader.result);
-        console.log(`[BG Removal] Preview updated with transparent image.`);
       };
       newReader.readAsDataURL(newFile);
     } catch (error) {
-      console.error("[BG Removal Error]", error.message);
       // Shortened, easy to understand message as requested by user
       setError("AI Timeout: Retry or use original.");
     } finally {
       setIsRemovingBg(false);
-      console.log(`[BG Removal] Task finished.`);
     }
   };
 

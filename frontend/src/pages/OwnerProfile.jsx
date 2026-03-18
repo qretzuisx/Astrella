@@ -24,7 +24,6 @@ const OwnerProfile = () => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/user/shop-profile/${ownerId}`)
       const data = await response.json()
-      console.log('[DEBUG OwnerProfile] API response:', data)
 
       if (data.success) {
         // API returns shopProfile and ownerName, not 'owner' - construct the owner object
@@ -39,7 +38,6 @@ const OwnerProfile = () => {
         setError(data.message || 'Owner not found')
       }
     } catch (error) {
-      console.error('Error fetching owner profile:', error)
       setError('Failed to load owner profile')
     } finally {
       setLoading(false)
@@ -59,7 +57,7 @@ const OwnerProfile = () => {
         setGowns(ownerGowns)
       }
     } catch (error) {
-      console.error('Error fetching owner gowns:', error)
+      // Silent error or handle as needed
     }
   }
 

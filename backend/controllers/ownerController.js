@@ -1,6 +1,6 @@
 import imageKit from "../configs/imagekit.js";
 import Booking from "../models/booking.js";
-import Gown from "../models/gown.js";
+import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import fs from "fs";
 import { calculateActualGownStatus } from "./bookingController.js";
@@ -112,9 +112,6 @@ export const addGown = async (req, res) => {
             return res.status(400).json({ success: false, message: "Sex/Gender is required" });
         }
 
-        console.log(`[AddGown] Attempting to add gown for user: ${_id}`);
-        console.log(`[AddGown] Gown data received:`, gown);
-
         await Gown.create({
             ...gown,
             description: typeof gown.description === 'string' ? gown.description : '',
@@ -128,7 +125,6 @@ export const addGown = async (req, res) => {
             contactNumber: gownContactNumber
         });
 
-        console.log(`[AddGown] Successfully added gown: ${gown.name}`);
         res.json({ success: true, message: "Gown Added" })
 
 
@@ -287,8 +283,6 @@ export const updateLaundryDays = async (req, res) => {
         const oldDays = gown.laundryDays;
         gown.laundryDays = clampLaundryDays(laundryDays);
         await gown.save();
-
-        console.log(`[LaundryUpdate] Gown ${gownID}: ${oldDays} -> ${gown.laundryDays} days`);
 
         res.json({ success: true, message: "Laundry day updated", laundryDays: gown.laundryDays });
     } catch (error) {

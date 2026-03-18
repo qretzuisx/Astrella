@@ -1,5 +1,5 @@
 import Booking from "../models/booking.js";
-import Gown from "../models/gown.js";
+import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import imageKit from "../configs/imagekit.js";
 import { computeReservationPricing } from "../utils/rentalPricing.js";

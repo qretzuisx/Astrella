@@ -1,5 +1,5 @@
 import User from "../models/User.js"
-import Gown from "../models/gown.js"
+import Gown from "../models/Gown.js"
 import { calculateActualGownStatus } from "./bookingController.js"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -80,7 +80,6 @@ export const registerUser = async (req, res)=>{
 
 
     } catch (error) {
-        console.log(error.message);
         res.json({success: false, message: error.message})
     }
 }
@@ -101,7 +100,6 @@ export const loginUser = async (req, res)=>{
         res.json({success: true, token})
     
     } catch (error) {
-        console.log(error.message);
         res.json({success: false, message: error.message})
     }
 }
@@ -112,7 +110,6 @@ export const getUserData = async (req, res) =>{
         const {user} = req;
         res.json({success: true, user})
     } catch (error) {
-        console.log(error.message);
         res.json({success:false, message: error.message})
     }
 }
@@ -134,7 +131,6 @@ export const requestOwnerRole = async (req, res) => {
         res.json({ success: true, message: "Owner access granted! You can now access the owner dashboard." });
 
     } catch (error) {
-        console.log(error.message);
         res.json({ success: false, message: error.message });
     }
 }
@@ -603,9 +599,6 @@ export const updateShopProfile = async (req, res) => {
         const { _id } = req.user
         const { shopName, description, address, city, operatingHours, openingTime, closingTime, availableDays, facebook, instagram } = req.body
 
-        console.log('Shop profile update request:', { shopName, address, city, openingTime, closingTime })
-        console.log('Files received:', req.files ? Object.keys(req.files) : 'none')
-
         const user = await User.findById(_id)
         
         if (!user) {
@@ -741,23 +734,11 @@ export const updateShopProfile = async (req, res) => {
 export const getShopProfile = async (req, res) => {
     try {
         const { ownerId } = req.params
-        console.log('[DEBUG getShopProfile] Fetching profile for ownerId:', ownerId)
-
         const owner = await User.findById(ownerId).select('name email contactNumber shopProfile createdAt role')
 
         if (!owner) {
-            console.log('[DEBUG getShopProfile] Owner not found for id:', ownerId)
             return res.status(404).json({ success: false, message: "Owner not found" })
         }
-
-        console.log('[DEBUG getShopProfile] Owner found:', owner.name, 'role:', owner.role)
-
-        // Skip role check - allow viewing profiles for users with any role or no role set
-        // This fixes issues with older owner accounts that may not have role properly set
-        // if (owner.role !== 'owner') {
-        //     console.log('[DEBUG getShopProfile] User is not an owner, role:', owner.role)
-        //     return res.status(404).json({ success: false, message: "User is not an owner" })
-        // }
 
         res.json({
             success: true,
@@ -769,10 +750,10 @@ export const getShopProfile = async (req, res) => {
         })
 
     } catch (error) {
-        console.log('[DEBUG getShopProfile] Error:', error.message);
         res.json({ success: false, message: error.message });
     }
 }
+
 
 // API to get shop operating hours for booking (openingTime, closingTime, availableDays)
 export const getShopOperatingHours = async (req, res) => {

@@ -11,6 +11,10 @@ import { getColorHex, parseColors } from '../utils/colorUtils'
 
 const INTERVAL_MINUTES = 15
 
+/**
+ * Converts total minutes from start of day to "HH:MM" string format.
+ * Primarily used for generating selectable trial time slots within business hours.
+ */
 const minutesToTimeString = (totalMinutes) => {
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
@@ -395,8 +399,9 @@ const GownDetails = () => {
     }
 
     // Pricing model:
-    // - Base price covers up to 3 reserved days (pickup/use/return flow).
-    // - Extra reserved days beyond 3 are charged +50/day.
+    // - Base price covers up to 3 reserved days (standard pickup, use, and return cycle).
+    // - Extra reserved days beyond the initial 3 incur an extra fee per day.
+    // - Note: Trial bookings are single-day appointments and have zero total amount.
     const start = new Date(`${pickupDate}T00:00:00`)
     const end = new Date(`${returnDate}T00:00:00`)
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
@@ -406,6 +411,7 @@ const GownDetails = () => {
     }
 
     setFieldError('returnDate', '')
+    // Calculate inclusive number of days in the rental range
     const diffDays = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1)
     setDurationDays(diffDays)
 

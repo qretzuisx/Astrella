@@ -30,8 +30,6 @@ class CollaborativeFilteringModel {
      * Train the model using historical booking data
      */
     async train() {
-        console.log('🤖 Training ML Recommendation Model...');
-        
         try {
             // Fetch all completed bookings (positive interactions)
             const bookings = await Booking.find({ 
@@ -64,9 +62,6 @@ class CollaborativeFilteringModel {
             await this.calculateGownSimilarity();
 
             this.trained = true;
-            console.log(`Model trained with ${bookings.length} bookings`);
-            console.log(`Users in matrix: ${this.userItemMatrix.size}`);
-            
         } catch (error) {
             console.error('❌ Training error:', error);
             throw error;

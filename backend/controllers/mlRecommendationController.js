@@ -12,10 +12,7 @@ import Gown from '../models/Gown.js';
  */
 export const getMLRecommendations = async (req, res) => {
     try {
-        const { bodyType, skinTone, height, eventType, faceShape } = req.query;
         const userId = req.user?._id?.toString(); // Optional: works for both logged-in and guest users
-
-        console.log('🤖 ML Recommendation request:', { userId, preferences: req.query });
 
         // Build preferences object
         const preferences = {
@@ -53,7 +50,6 @@ export const getMLRecommendations = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ ML Recommendation error:', error);
         res.json({ 
             success: false, 
             message: 'Failed to generate recommendations',
@@ -70,8 +66,6 @@ export const getSimilarUserRecommendations = async (req, res) => {
         const { _id } = req.user;
         const userId = _id.toString();
         const limit = parseInt(req.query.limit) || 10;
-
-        console.log('👥 Similar user recommendations for:', userId);
 
         // Get recommendations from similar users
         const recommendations = await mlModel.getSimilarUserRecommendations(userId, limit);
@@ -92,7 +86,6 @@ export const getSimilarUserRecommendations = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Similar user recommendation error:', error);
         res.json({ 
             success: false, 
             message: 'Failed to generate similar user recommendations',
@@ -106,7 +99,6 @@ export const getSimilarUserRecommendations = async (req, res) => {
  */
 export const retrainModel = async (req, res) => {
     try {
-        console.log('🔄 Manual model retraining initiated...');
         
         await mlModel.collaborativeModel.train();
         mlModel.lastTrainingTime = Date.now();
@@ -122,7 +114,6 @@ export const retrainModel = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Model retraining error:', error);
         res.json({ 
             success: false, 
             message: 'Failed to retrain model',

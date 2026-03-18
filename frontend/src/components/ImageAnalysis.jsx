@@ -27,7 +27,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         ]);
         if (mounted) {
           setModelsLoaded(true);
-          console.log('✅ All face-api models loaded successfully');
         }
       } catch (e) {
         console.error('Failed to load face-api models:', e);
@@ -139,12 +138,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
        const medianIndex = Math.floor(skinPixels.length / 2);
        const median = skinPixels[medianIndex];
 
-       console.log('Skin tone analysis:', { 
-         pixelsDetected: skinPixels.length,
-         medianRGB: `rgb(${median.r}, ${median.g}, ${median.b})`,
-         medianHSL: `hsl(${median.h.toFixed(1)}°, ${(median.s*100).toFixed(1)}%, ${(median.l*100).toFixed(1)}%)` 
-       });
-
        // MULTI-METHOD UNDERTONE DETECTION (more reliable)
        let warmVotes = 0;
        let coolVotes = 0;
@@ -169,7 +162,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
        if (median.s < 0.25) coolVotes++;
 
        // Final decision based on voting
-       console.log('Undertone votes - Warm:', warmVotes, 'Cool:', coolVotes);
        
        if (warmVotes > coolVotes + 1) return 'Warm';
        else if (coolVotes > warmVotes + 1) return 'Cool';
@@ -285,24 +277,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         const faceHeight = Math.abs(landmarks[8].y - ((landmarks[19].y + landmarks[24].y) / 2));
         
         // Calculate ratios for classification
-        const faceRatio = faceHeight / Math.max(cheekWidth, 1);
-        const jawToCheek = jawWidth / Math.max(cheekWidth, 1);
-        const foreheadToCheek = foreheadWidth / Math.max(cheekWidth, 1);
-        const chinToJaw = chinWidth / Math.max(jawWidth, 1);
-        
-        console.log('Face shape measurements:', {
-          jawWidth: jawWidth.toFixed(1),
-          cheekWidth: cheekWidth.toFixed(1),
-          foreheadWidth: foreheadWidth.toFixed(1),
-          chinWidth: chinWidth.toFixed(1),
-          faceHeight: faceHeight.toFixed(1),
-          ratios: {
-            faceRatio: faceRatio.toFixed(2),
-            jawToCheek: jawToCheek.toFixed(2),
-            foreheadToCheek: foreheadToCheek.toFixed(2),
-            chinToJaw: chinToJaw.toFixed(2)
-          }
-        });
         
         // Classification based on landmark ratios
         // Oval: Balanced proportions, face longer than wide
@@ -458,7 +432,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 
     setAnalyzing(true);
     setAnalysisProgress('Loading image...');
-    console.log('Starting image analysis...');
 
     try {
       const img = new Image();
@@ -471,7 +444,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       });
 
       setAnalysisProgress('Detecting face...');
-      console.log('Image loaded, analyzing attributes...');
 
       // First, get facial landmarks for improved analysis
       let faceLandmarks = null;
@@ -481,7 +453,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       let sex = '';
 
       try {
-        console.log('Detecting face and landmarks...');
         // Optimized: Reduced inputSize from 416 to 320 for faster processing (still accurate)
         const detection = await faceapi
           .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
@@ -492,8 +463,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
           faceLandmarks = detection.landmarks;
           age = Math.round(detection.age);
           detectedSex = detection.gender; // face-api returns 'male' | 'female'
-
-          console.log('✅ Face detected with', faceLandmarks.positions.length, 'landmarks');
 
           // Map to buckets required by UI
           if (age >= 6 && age <= 9) ageGroup = '6–9 Years'
@@ -520,8 +489,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         analyzeFaceShape(img, faceLandmarks)
       ]);
 
-      console.log('Analysis results:', { skinTone, bodyType, faceShape });
-
       const analysisResults = {
         skinTone: skinTone || 'Neutral',
         bodyType: bodyType || 'Rectangle',
@@ -533,8 +500,6 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         confidence: age && sex ? 'High' : 'Medium'
       };
 
-      console.log('Analysis complete, sending results to Hero:', analysisResults);
-      
       // Automatically send results to Hero component and close modal
       onAnalysisComplete(analysisResults);
     } catch (error) {

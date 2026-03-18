@@ -60,8 +60,8 @@ const Hero = () => {
   const navigate = useNavigate();
   const [bodyType, setBodyType] = useState('');
   const [skinTone, setSkinTone] = useState('');
-  const [eventType, seteventType] = useState('');
-  const [faceShape, setfaceShape] = useState('');
+  const [eventType, setEventType] = useState('');
+  const [faceShape, setFaceShape] = useState('');
   const [ageGroup, setAgeGroup] = useState('');
   const [sex, setSex] = useState('');
   const [showImageAnalysis, setShowImageAnalysis] = useState(false);
@@ -90,8 +90,7 @@ const Hero = () => {
         if (data.success && data.gowns) {
           setPopularGowns(data.gowns || []);
         }
-      } catch (err) {
-        console.error('Error fetching trending gowns:', err);
+        // Silent error handling for cleaner user experience
       } finally {
         setLoadingGowns(false);
       }
@@ -100,10 +99,9 @@ const Hero = () => {
   }, []);
 
   const handleImageAnalysisComplete = (results) => {
-    console.log('📥 Received analysis results:', results);
     setSkinTone(results.skinTone || 'Neutral');
     setBodyType(results.bodyType || 'Rectangle');
-    setfaceShape(results.faceShape || 'Oval');
+    setFaceShape(results.faceShape || 'Oval');
 
     if (results.ageGroup) {
       setAgeGroup(results.ageGroup);
@@ -219,7 +217,7 @@ const Hero = () => {
               label="Event"
               value={eventType}
               options={eventTypeList}
-              onSelect={seteventType}
+              onSelect={setEventType}
               type="shape"
               shapes={{
                 'Wedding': 'M12 2L10 5H14L12 2ZM12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 11.4 17.9 10.8 17.7 10.3L20 8L18 6L16 8.3C15 6.9 13.6 6 12 6ZM12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8Z',
@@ -230,12 +228,12 @@ const Hero = () => {
               }}
             />
 
-            {/* Face Shape */}
+            {/* Face Shape Selector */}
             <AttributeSelector
               label="Face Shape"
               value={faceShape}
               options={faceShapeList}
-              onSelect={setfaceShape}
+              onSelect={setFaceShape}
               type="shape"
               shapes={{
                 'Oval': 'M12 2C9 2 6 6 6 12C6 18 9 22 12 22C15 22 18 18 18 12C18 6 15 2 12 2Z',
@@ -324,7 +322,7 @@ const Hero = () => {
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-primary tracking-tight text-center leading-tight">
             This Season's <span className="text-secondary italic">Top Picks</span>
           </h2>
-          <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-400 font-medium max-w-sm text-center">Rent the look everyone's talking about</p>
+          <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-400 font-medium max-w-sm text-center">Handpicked rental gowns for your special occassions</p>
         </div>
 
         {loadingGowns ? (
@@ -343,15 +341,17 @@ const Hero = () => {
                 const rearranged = [];
                 
                 if (displayGowns.length === limit) {
+                  // Rearrange display order to place the most popular gown (#1) in the center
+                  // for better visual emphasis in the horizontal layout.
                   if (limit === 3) {
-                    // Rearrange to put #1 in the middle: [G2, G1, G3]
+                    // Rearrange to: [Second Most, Most Popular, Third Most]
                     rearranged.push(displayGowns[1], displayGowns[0], displayGowns[2]);
                   } else {
-                    // Rearrange to put #1 in the middle: [G4, G2, G1, G3, G5]
+                    // Rearrange to: [Fourth, Second, Most Popular, Third, Fifth]
                     rearranged.push(displayGowns[3], displayGowns[1], displayGowns[0], displayGowns[2], displayGowns[4]);
                   }
                 } else {
-                  // Fallback if less than target limit
+                  // Fallback for cases with fewer gowns than the target limit
                   rearranged.push(...displayGowns);
                 }
 

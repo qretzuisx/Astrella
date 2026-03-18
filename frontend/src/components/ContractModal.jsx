@@ -13,12 +13,14 @@ const ContractModal = ({ showContract, setShowContract, onSubmit }) => {
     onSubmit()
   }
 
+  // Reset modal state when closing
   const handleClose = () => {
     setShowContract(false)
     setAgreed(false)
     setError('')
   }
 
+  // Purely conditional rendering: Do not mount/render if not explicitly shown
   if (!showContract) return null
 
   return (
