@@ -11,6 +11,12 @@ import { getColorHex, parseColors } from '../utils/colorUtils'
 
 const INTERVAL_MINUTES = 15
 
+const minutesToTimeString = (totalMinutes) => {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
 
 const GownDetails = () => {
 
@@ -145,7 +151,7 @@ const GownDetails = () => {
         if (h === 0) h = 12
         return `${h}:${m[2]} ${ampm}`
       }
-      const bookedTimes = trialSlots.map(slot => {
+      const bookedTimes = (trialSlots || []).map(slot => {
         const start = formatTimeAmPm(slot.start)
         const end = formatTimeAmPm(slot.end)
         return (slot.start === slot.end) ? start : `${start} - ${end}`
@@ -597,7 +603,7 @@ const GownDetails = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 bg-[#FDFDFF] min-h-screen text-gray-800'>
+    <div className='px-4 sm:px-8 lg:px-16 mt-6 sm:mt-12 mb-12 sm:mb-16 pb-24 sm:pb-0 bg-[#FDFDFF] min-h-screen text-gray-800'>
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)} 
@@ -610,15 +616,15 @@ const GownDetails = () => {
       </button>
 
       {/* Main Content */}
-      <div className='flex flex-col lg:flex-row gap-6 lg:gap-12 relative'>
+      <div className='flex flex-col lg:flex-row gap-6 lg:gap-8 relative'>
         {/* Left Column - Image and Descriptions */}
-        <div className='w-full lg:w-3/5 flex flex-col gap-6 sm:gap-10'>
+        <div className='w-full lg:w-1/2 flex flex-col gap-6'>
           {/* Image Section */}
-          <div className='relative rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group'>
+          <div className='relative rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group'>
             <img
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
-              className='w-full h-auto max-h-[800px] object-contain transition-transform duration-1000 group-hover:scale-105'
+              className='w-full h-auto max-h-[450px] sm:max-h-[550px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
             
             {/* Status Badge */}
@@ -642,8 +648,8 @@ const GownDetails = () => {
                 <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
                 <span className="text-gray-400 text-xs font-bold">ID: {gown._id?.slice(-6).toUpperCase()}</span>
               </div>
-              <h1 className='text-4xl sm:text-5xl font-black text-primary tracking-tight leading-tight mb-4'>{gown.name}</h1>
-              <div className='flex items-center gap-4 py-6 border-y border-primary/5'>
+              <h1 className='text-3xl sm:text-5xl font-black text-primary tracking-tight leading-tight mb-2'>{gown.name}</h1>
+              <div className='flex items-center gap-4 py-4 sm:py-6 border-y border-primary/5'>
                 <div className='w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-[0_10px_20px_rgba(1,62,141,0.2)]'>
                   {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
                 </div>
@@ -662,8 +668,8 @@ const GownDetails = () => {
               </div>
             </div>
 
-            {/* Price section */}
-            <div className='p-8 bg-white border border-primary/5 rounded-[32px] text-primary flex items-center justify-between shadow-[0_20px_60px_rgba(1,62,141,0.08)] overflow-hidden relative group backdrop-blur-xl'>
+            {/* Price section - More compact */}
+            <div className='p-6 bg-white border border-primary/5 rounded-[24px] text-primary flex items-center justify-between shadow-sm overflow-hidden relative group'>
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-50"></div>
               <div className="relative z-10">
                 <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2'>Daily Rental rate</p>
@@ -676,28 +682,28 @@ const GownDetails = () => {
             </div>
           </div>
 
-          {/* Info Grid */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
-            <div className='p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_40px_rgba(1,62,141,0.05)] group hover:shadow-[0_15px_60px_rgba(1,62,141,0.08)] transition-all duration-500 backdrop-blur-md hover:border-primary/10'>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-1 bg-gradient-to-r from-secondary-light to-yellow-500 rounded-full shadow-[0_0_10px_rgba(221,175,41,0.2)]"></div>
-                <h2 className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Boutique Location</h2>
+          {/* Info Cards - Compact Layout */}
+          <div className='flex flex-col sm:flex-row gap-4'>
+            <div className='flex-1 p-5 sm:p-7 bg-white rounded-3xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-1 bg-secondary-light rounded-full"></div>
+                <h2 className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Location</h2>
               </div>
-              <p className='text-primary font-black text-lg'>{gown.location || 'Visit our physical store'}</p>
+              <p className='text-primary font-black text-base'>{gown.location || 'Physical Store'}</p>
             </div>
-            <div className='p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_40px_rgba(1,62,141,0.05)] group hover:shadow-[0_15px_60px_rgba(1,62,141,0.08)] transition-all duration-500 backdrop-blur-md hover:border-primary/10'>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-1 bg-gradient-to-r from-secondary-light to-yellow-500 rounded-full shadow-[0_0_10px_rgba(221,175,41,0.2)]"></div>
-                <h2 className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Direct Contact</h2>
+            <div className='flex-1 p-5 sm:p-7 bg-white rounded-3xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-1 bg-secondary-light rounded-full"></div>
+                <h2 className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Contact</h2>
               </div>
-              <p className='text-primary font-black text-lg'>{gown.contactNumber || gown.contact || 'Inquire via Boutique'}</p>
+              <p className='text-primary font-black text-base'>{gown.contactNumber || gown.contact || 'Inquire'}</p>
             </div>
           </div>
 
 
 
           {/* Gown Specifications */}
-          <div className='bg-white rounded-[32px] border border-primary/5 p-8 shadow-[0_20px_60px_rgba(1,62,141,0.06)] backdrop-blur-xl relative overflow-hidden'>
+          <div className='bg-white rounded-[24px] border border-primary/5 p-6 shadow-sm relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl -mr-32 -mt-32"></div>
             <h2 className='text-xl font-black text-primary mb-8 flex items-center gap-3 relative z-10'>
               <div className="w-8 h-8 bg-gradient-to-tr from-secondary-light to-yellow-500 rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(221,175,41,0.2)]">
@@ -707,9 +713,9 @@ const GownDetails = () => {
               </div>
               Specifications
             </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10'>
               {/* Material */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+              <div className='flex items-center gap-6 p-6 bg-white rounded-[24px] sm:rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
                 <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.fabric_icon} alt="fabric" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
@@ -720,7 +726,7 @@ const GownDetails = () => {
               </div>
 
               {/* Size */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+              <div className='flex items-center gap-6 p-6 bg-white rounded-[24px] sm:rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
                 <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.size_icon} alt="size" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
@@ -733,31 +739,32 @@ const GownDetails = () => {
               </div>
 
               {/* Color */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+              <div className='flex items-center gap-6 p-6 bg-white rounded-[24px] sm:rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
                 <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.color_icon} alt="color" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
                   <div className="flex items-center gap-3">
-                      const colors = parseColors(gown.color);
-                      
-                      return (
-                        <div className="flex -space-x-2">
-                          {colors.map((c, i) => {
-                            const normalized = (c || '').toString().toLowerCase();
-                            const hex = getColorHex(normalized);
-                            return (
-                              <div 
-                                key={i} 
-                                className={`w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
-                                style={{ backgroundColor: hex }} 
-                                title={c} 
-                              />
-                            );
-                          })}
-                        </div>
-                      );
+                      {(() => {
+                        const colors = parseColors(gown.color);
+                        return (
+                          <div className="flex -space-x-2">
+                            {(colors || []).map((c, i) => {
+                              const normalized = (c || '').toString().toLowerCase();
+                              const hex = getColorHex(normalized);
+                              return (
+                                <div 
+                                  key={i} 
+                                  className={`w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
+                                  style={{ backgroundColor: hex }} 
+                                  title={c} 
+                                />
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
                     <p className='text-primary font-black text-xl capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
                   </div>
                 </div>
@@ -782,7 +789,7 @@ const GownDetails = () => {
         </div>
 
         {/* Details Section (Right Column) Sticky on Desktop, Static/Bottom on Mobile */}
-        <div className='w-full lg:w-2/5 flex flex-col gap-8 lg:sticky lg:top-24 h-fit pb-24 lg:pb-0'>
+        <div className='w-full lg:w-1/2 flex flex-col gap-6 lg:sticky lg:top-20 h-fit pb-28 sm:pb-24 lg:pb-0'>
           {/* Success/Error Notifications */}
           <div className="space-y-4">
             {success && (
@@ -812,8 +819,8 @@ const GownDetails = () => {
             )}
           </div>
 
-          {/* Booking Card */}
-          <div className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.1)] border border-primary/5 p-8 sm:p-10 relative overflow-hidden backdrop-blur-xl'>
+          {/* Booking Card - More compact padding */}
+          <div className='bg-white rounded-[32px] shadow-lg border border-primary/5 p-6 sm:p-8 relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
             
             <h2 className='text-2xl font-black text-primary mb-8'>Reserve this Gown</h2>
@@ -998,7 +1005,7 @@ const GownDetails = () => {
                     style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
                   >
                     <option value='' className='bg-white'>Slot</option>
-                    {allowedTimes.map(time => {
+                    {(allowedTimes || []).map(time => {
                       if (pickupDate === toIsoDate(new Date())) {
                         const currentTime = new Date().toTimeString().slice(0, 5)
                         if (time < currentTime) return null
@@ -1023,7 +1030,7 @@ const GownDetails = () => {
                         style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
                       >
                         <option value='' className='bg-white'>Slot</option>
-                        {allowedTimes.map(time => {
+                        {(allowedTimes || []).map(time => {
                           if (pickupDate === returnDate && pickupTime && time < pickupTime) return null
                           if (returnDate === toIsoDate(new Date())) {
                             const currentTime = new Date().toTimeString().slice(0, 5)
@@ -1070,7 +1077,7 @@ const GownDetails = () => {
             )}
 
             {/* Final Action Button */}
-            <div className='mt-10 overflow-hidden rounded-[24px]'>
+            <div className='mt-10 overflow-hidden rounded-[24px] sm:sticky sm:relative fixed bottom-20 sm:bottom-auto left-4 right-4 sm:left-auto sm:right-auto z-30 sm:z-auto'>
               {confirmDisabled && !loading && !success && (
                 <div className='text-center p-3 bg-gray-50 border border-primary/5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 rounded-xl'>
                   {gown?.status === 'Unavailable' ? 'Apparel Unavailable' : !isFormComplete ? 'Select Dates & Time' : hasFieldErrors ? 'Check Highlighted Errors' : !scheduleStatus.valid ? 'Schedule Conflict' : 'Verifying...'}
@@ -1101,21 +1108,21 @@ const GownDetails = () => {
               </button>
             </div>
           </div>
-
-          {/* Secondary Modals */}
-          <PaymentModal
-            showPayment={showPayment}
-            setShowPayment={setShowPayment}
-            total={totalAmount || (gown.pricePerDay || gown.price || 0)}
-            onContinue={handlePaymentContinue}
-          />
-          <ContractModal
-            showContract={showContract}
-            setShowContract={setShowContract}
-            onSubmit={handleContractSubmit}
-          />
         </div>
       </div>
+
+      {/* Secondary Modals - Moved to Root to fix stacking context */}
+      <PaymentModal
+        showPayment={showPayment}
+        setShowPayment={setShowPayment}
+        total={totalAmount || (gown.pricePerDay || gown.price || 0)}
+        onContinue={handlePaymentContinue}
+      />
+      <ContractModal
+        showContract={showContract}
+        setShowContract={setShowContract}
+        onSubmit={handleContractSubmit}
+      />
     </div>
   )
 }

@@ -108,9 +108,9 @@ const Hero = () => {
       </div>
 
       {/* Custom Attribute Bar */}
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-4 sm:px-10">
-        <div className="flex items-center bg-white/40 backdrop-blur-xl p-2 sm:p-3 rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-primary/20 w-fit max-w-full hover:border-primary/40 transition-all duration-500 relative z-10">
-          <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-1 pb-0 overflow-x-auto no-scrollbar w-full min-w-0 px-2 sm:px-0">
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-8 sm:gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-4 sm:px-10">
+        <div className="flex items-center bg-white/40 backdrop-blur-xl p-2 sm:p-3 rounded-[32px] sm:rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-primary/20 w-full sm:w-fit max-w-full hover:border-primary/40 transition-all duration-500 relative z-10">
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full min-w-0 px-2 sm:px-0">
 
             {/* Body Type */}
             <AttributeSelector

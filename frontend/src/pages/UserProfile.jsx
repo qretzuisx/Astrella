@@ -225,7 +225,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[#FDFDFF] py-12 px-4 md:px-8 lg:px-16'>
+    <div className='min-h-screen bg-[#FDFDFF] py-12 px-4 md:px-8 lg:px-16 pb-24 sm:pb-12'>
       <div className='max-w-4xl mx-auto'>
         {/* Header */}
         <div className='mb-10 lg:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
@@ -275,7 +275,7 @@ const UserProfile = () => {
           {/* Profile Header */}
           <div className='bg-gradient-to-r from-primary to-primary-dull h-32'></div>
 
-          <div className='px-8 pb-8'>
+          <div className='px-5 sm:px-8 pb-6 sm:pb-8'>
             {/* Profile Picture */}
             <div className='flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 mb-6'>
               <div>
@@ -355,7 +355,7 @@ const UserProfile = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className='flex flex-wrap gap-4 pt-8 border-t border-gray-100'>
+                  <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-8 border-t border-gray-100'>
                     <button
                       onClick={() => setEditing(true)}
                       className='px-8 py-3 bg-primary text-white rounded-2xl text-[10px] uppercase tracking-widest hover:bg-primary-dull transition-all font-black shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.35)] hover:-translate-y-1'
@@ -446,7 +446,13 @@ const UserProfile = () => {
                     </div>
                   </div>
 
-                  <div className='flex flex-wrap gap-4 pt-8 border-t border-gray-100 mt-8'>
+                  <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-8 border-t border-gray-100 mt-8'>
+                    <button
+                      type='submit'
+                      className='w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-2xl text-[10px] uppercase tracking-widest hover:bg-primary-dull transition-all font-black shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.35)] hover:-translate-y-1 order-first sm:order-none'
+                    >
+                      Save Changes
+                    </button>
                     <button
                       type='button'
                       onClick={() => {
@@ -470,11 +476,11 @@ const UserProfile = () => {
 
         {/* Password Change Section */}
         {showPasswordChange && (
-          <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6'>
-            <h2 className='text-2xl font-bold text-gray-900 mb-4'>Change Password</h2>
+          <div className='bg-white rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-blue-50/50 overflow-hidden p-6 sm:p-8 mb-6 hover:shadow-[0_20px_60px_rgba(1,62,141,0.08)] transition-all duration-500'>
+            <h2 className='text-xl sm:text-2xl font-black text-primary tracking-tight mb-6'>Change Password</h2>
             <form onSubmit={handlePasswordChange} className='space-y-4'>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                   Current Password *
                 </label>
                 <input
@@ -482,12 +488,12 @@ const UserProfile = () => {
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   required
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  className='w-full px-5 py-4 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/30'
                 />
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                   New Password * (min. 8 characters)
                 </label>
                 <input
@@ -496,12 +502,12 @@ const UserProfile = () => {
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   required
                   minLength={8}
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  className='w-full px-5 py-4 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/30'
                 />
               </div>
 
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-xs font-black text-primary/50 uppercase tracking-widest mb-3'>
                   Confirm New Password *
                 </label>
                 <input
@@ -510,14 +516,14 @@ const UserProfile = () => {
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   required
                   minLength={8}
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none'
+                  className='w-full px-5 py-4 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/30'
                 />
               </div>
 
               <div className='flex flex-col sm:flex-row gap-4 pt-4'>
                 <button
                   type='submit'
-                  className='flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
+                  className='flex-1 py-3.5 sm:py-3 bg-primary text-white rounded-2xl hover:bg-primary-dull transition-all font-black text-[10px] uppercase tracking-widest shadow-[0_10px_30px_rgba(1,62,141,0.2)]'
                 >
                   Update Password
                 </button>
@@ -531,7 +537,7 @@ const UserProfile = () => {
                       confirmPassword: '',
                     })
                   }}
-                  className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                  className='px-6 py-3.5 sm:py-3 border-2 border-gray-100 text-gray-500 rounded-2xl hover:bg-gray-50 transition-all font-black text-[10px] uppercase tracking-widest'
                 >
                   Cancel
                 </button>
@@ -542,9 +548,9 @@ const UserProfile = () => {
 
         {/* Delete Account Section */}
         {showDeleteAccount && (
-          <div className='bg-red-50 rounded-xl shadow-sm border-2 border-red-200 p-8 mb-6'>
-            <h2 className='text-2xl font-bold text-red-900 mb-4'>Delete Account</h2>
-            <div className='bg-white p-6 rounded-lg mb-4'>
+          <div className='bg-white rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] border-2 border-red-100 overflow-hidden p-6 sm:p-8 mb-6'>
+            <h2 className='text-xl sm:text-2xl font-black text-red-900 tracking-tight mb-4'>Delete Account</h2>
+            <div className='bg-red-50/50 p-5 sm:p-6 rounded-2xl mb-6'>
               <p className='text-gray-800 mb-4'>
                 <strong>Warning:</strong> This action is permanent and cannot be undone. All your data including:
               </p>
@@ -558,7 +564,7 @@ const UserProfile = () => {
 
             <div className='space-y-4'>
               <div>
-                <label className='block text-sm font-medium text-red-900 mb-2'>
+                <label className='block text-xs font-black text-red-800 uppercase tracking-widest mb-3'>
                   Type <strong>DELETE</strong> to confirm
                 </label>
                 <input
@@ -566,7 +572,7 @@ const UserProfile = () => {
                   value={deleteConfirmation}
                   onChange={(e) => setDeleteConfirmation(e.target.value)}
                   placeholder='Type DELETE'
-                  className='w-full px-4 py-3 border-2 border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none'
+                  className='w-full px-5 py-4 border-2 border-red-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none font-bold transition-all'
                 />
               </div>
 
@@ -575,7 +581,7 @@ const UserProfile = () => {
                   type='button'
                   onClick={handleDeleteAccount}
                   disabled={deleteConfirmation !== 'DELETE'}
-                  className={`flex-1 py-3 rounded-lg font-semibold text-white transition-all ${deleteConfirmation === 'DELETE'
+                  className={`flex-1 py-3.5 sm:py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white transition-all ${deleteConfirmation === 'DELETE'
                       ? 'bg-red-600 hover:bg-red-700'
                       : 'bg-gray-400 cursor-not-allowed'
                     }`}
@@ -588,7 +594,7 @@ const UserProfile = () => {
                     setShowDeleteAccount(false)
                     setDeleteConfirmation('')
                   }}
-                  className='px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold'
+                  className='px-6 py-3.5 sm:py-3 border-2 border-gray-100 text-gray-500 rounded-2xl hover:bg-gray-50 transition-all font-black text-[10px] uppercase tracking-widest'
                 >
                   Cancel
                 </button>

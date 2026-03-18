@@ -36,6 +36,19 @@ body {
   --rdp-day_button-width: 48px;
 }
 
+/* Mobile: scale calendar cells smaller so it fits without overflow */
+@media (max-width: 640px) {
+  .rdp-root {
+    --rdp-day-height: 40px;
+    --rdp-day-width: 40px;
+    --rdp-day_button-height: 36px;
+    --rdp-day_button-width: 36px;
+  }
+  .rdp-root .rdp-day_button {
+    font-size: 0.85rem !important;
+  }
+}
+
 .rdp-root .rdp-day_button {
   font-weight: 700 !important;
   font-size: 1rem !important;
@@ -70,6 +83,25 @@ body {
   --color-accent-red: #ac2021;
   --color-light: #F5F5F5;
   --color-borderColor: #e5e7eb;
+
+  --animate-fade-in-down: fade-in-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in-up: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in: fade-in 0.3s ease-out;
+
+  @keyframes fade-in-down {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 /* Mobile App Utilities */
@@ -108,9 +140,9 @@ body {
   }
 }
 
-/* Improved touch targets for mobile */
+/* Improved touch targets for mobile — only explicit touch-target elements and nav links */
 @media (max-width: 640px) {
-  button, a, .touch-target {
+  .touch-target, nav a {
     min-height: 44px;
     min-width: 44px;
     display: inline-flex;
@@ -120,6 +152,35 @@ body {
 
   input, select, textarea {
     font-size: 16px !important; /* Prevents auto-zoom on iOS */
+  }
+}
+
+/* Horizontal scroll with snap for filter tabs and attribute bars */
+.scroll-snap-x {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding: 0 16px;
+}
+.scroll-snap-x > * {
+  scroll-snap-align: start;
+}
+
+/* Fade edges for horizontally scrollable areas */
+.scroll-fade-edge {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+}
+
+/* Full-screen modal on mobile */
+@media (max-width: 640px) {
+  .mobile-full-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
   }
 }
 
@@ -134,4 +195,22 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-}
+}
+
+/* Premium, user-friendly scrollbar for mobile carousels */
+@media (max-width: 640px) {
+  .premium-scrollbar::-webkit-scrollbar {
+    height: 4px;
+    display: block;
+  }
+  .premium-scrollbar::-webkit-scrollbar-track {
+    background: rgba(22, 43, 105, 0.05);
+    border-radius: 10px;
+    margin: 0 40px;
+  }
+  .premium-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(22, 43, 105, 0.3);
+    border-radius: 10px;
+  }
+}
+

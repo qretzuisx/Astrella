@@ -353,13 +353,13 @@ const ManageGowns = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-gray-50'>
+    <div className='flex min-h-screen bg-gray-50 max-w-full overflow-x-hidden'>
       <OwnerSidebar />
 
-      <div className='flex-1 p-4 sm:p-6 lg:p-8'>
+      <div className='flex-1 min-w-0 p-3 sm:p-6 lg:p-8'>
         <div className='max-w-7xl mx-auto'>
           {/* Header Section */}
-          <div className='mb-10 mt-12 lg:mt-0'>
+          <div className='mb-10 mt-16 sm:mt-10 lg:mt-0'>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -387,9 +387,9 @@ const ManageGowns = () => {
 
                 <button
                   onClick={() => navigate('/owner/add-gown')}
-                  className='w-full sm:w-auto px-8 h-14 bg-primary text-white rounded-2xl hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2'
+                  className='w-full sm:w-auto px-8 h-12 sm:h-14 bg-primary text-white rounded-2xl hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all font-black text-xs sm:text-sm uppercase tracking-widest flex items-center justify-center gap-2'
                 >
-                  <img src={assets.addIconColored} alt="add" className='w-5 h-5 filter brightness-0 invert' />
+                  <img src={assets.addIconColored} alt="add" className='w-4 h-4 sm:w-5 sm:h-5 filter brightness-0 invert' />
                   Add Gown
                 </button>
               </div>
@@ -397,8 +397,8 @@ const ManageGowns = () => {
           </div>
 
           {/* Status Filter Tabs - Modern Segmented Control Style */}
-          <div className='mb-10 overflow-x-auto no-scrollbar pb-2'>
-            <div className='flex flex-nowrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit min-w-full sm:min-w-0'>
+          <div className='mb-10 overflow-x-auto no-scrollbar -mx-3 px-3 pb-2'>
+            <div className='inline-flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl min-w-full'>
             {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
               const count = status === 'all'
                 ? gowns.length
@@ -408,12 +408,12 @@ const ManageGowns = () => {
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 relative ${filterStatus === status
-                      ? 'bg-white text-primary shadow-sm scale-105'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
-                    }`}
+                   className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-xs transition-all duration-300 relative whitespace-nowrap ${filterStatus === status
+                       ? 'bg-white text-primary shadow-sm scale-105'
+                       : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                     }`}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 whitespace-nowrap">
                     {status === 'all' ? 'All Gowns' : status}
                     <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${filterStatus === status ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}>
                         {count}
@@ -422,6 +422,7 @@ const ManageGowns = () => {
                 </button>
               )
             })}
+            <div className='w-4 flex-shrink-0 sm:hidden' />
             </div>
           </div>
 
@@ -468,13 +469,13 @@ const ManageGowns = () => {
                   className='group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500'
                 >
                   {/* Gown Image - Premium Presentation */}
-                  <div className='relative h-56 sm:h-64 overflow-hidden'>
+                  <div className='relative h-48 sm:h-64 overflow-hidden'>
                     <img
                       src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1}
                       alt={gown.name}
-                      className='w-full h-full object-contain bg-white group-hover:scale-110 transition-transform duration-700'
+                      className='w-full h-full object-contain bg-white group-hover:scale-110 transition-transform duration-700 p-2 sm:p-0'
                     />
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
                     {/* Status Badge - Refined */}
                     <div className={`absolute top-4 left-4 px-3.5 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md border border-white/20 ${
@@ -489,16 +490,16 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Price Tag - Premium */}
-                    <div className='absolute bottom-4 right-4 bg-white rounded-2xl px-4 py-2.5 shadow-xl border border-gray-100 group-hover:-translate-y-1 transition-transform'>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
-                        <span className='text-lg font-black text-primary-dull'>
-                            <span className="text-sm mr-0.5">₱</span>{gown.price?.toLocaleString() || 0}
+                    <div className='absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-xl border border-gray-100 group-hover:-translate-y-1 transition-transform'>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
+                        <span className='text-base sm:text-lg font-black text-primary-dull'>
+                            <span className="text-xs sm:text-sm mr-0.5">₱</span>{gown.price?.toLocaleString() || 0}
                         </span>
                     </div>
                   </div>
 
                   {/* Gown Details */}
-                  <div className='p-6'>
+                  <div className='p-4 sm:p-6'>
                     <div className="flex items-start justify-between gap-4 mb-4">
                         <h3 className='text-xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
                         {!gown.available && (
@@ -507,22 +508,22 @@ const ManageGowns = () => {
                     </div>
                     
                     {/* Details Grid - Consistent with GownCard */}
-                    <div className='grid grid-cols-2 gap-y-3 gap-x-4 text-xs font-semibold mb-6'>
-                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                        <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.fabric_icon} alt="fabric" className='w-3 h-3' />
+                    <div className='grid grid-cols-2 gap-y-2.5 gap-x-3 sm:gap-y-3 sm:gap-x-4 text-xs sm:text-sm font-semibold mb-6'>
+                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.fabric_icon} alt="fabric" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
                         </div>
                         <span className='truncate'>{gown.fabric}</span>
                       </div>
-                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                         <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.color_icon} alt="color" className='w-3 h-3' />
+                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                         <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.color_icon} alt="color" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
                         </div>
                         <span className='truncate'>{gown.color}</span>
                       </div>
-                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                        <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.event_icon} alt="event" className='w-3 h-3' />
+                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.event_icon} alt="event" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
                         </div>
                         <span className='capitalize truncate'>
                           {Array.isArray(gown.eventType) && gown.eventType.length > 0
@@ -530,9 +531,9 @@ const ManageGowns = () => {
                             : gown.eventType || 'N/A'}
                         </span>
                       </div>
-                      <div className='flex items-center gap-2.5 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                        <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.size_icon} alt="size" className='w-3 h-3' />
+                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <img src={assets.size_icon} alt="size" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
                         </div>
                         <span className='truncate'>
                           {Array.isArray(gown.size) ? gown.size[0] : gown.size || 'N/A'}
@@ -541,7 +542,7 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Laundry Management - Refined */}
-                    <div className='mb-6 p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex flex-row items-center justify-between gap-2 sm:gap-4'>
+                    <div className='mb-6 p-3 sm:p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex flex-row items-center justify-between gap-3 sm:gap-4'>
                       <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
                              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -549,8 +550,7 @@ const ManageGowns = () => {
                              </svg>
                           </div>
                          <div>
-                            <p className='text-xs font-black text-primary-dull/40 uppercase tracking-widest'>Maintenance</p>
-                            <p className="text-xs font-bold text-primary-dull">Laundry Hold</p>
+                            <p className="text-[10px] sm:text-xs font-bold text-primary-dull uppercase tracking-wider">Laundry Hold</p>
                          </div>
                       </div>
                       <div className='flex items-center gap-2'>
@@ -565,7 +565,7 @@ const ManageGowns = () => {
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
+                          className={`px-3 sm:px-4 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-100 text-gray-400'
                               : 'bg-primary text-white hover:shadow-lg hover:shadow-primary/20 active:scale-95'
                             }`}
@@ -595,7 +595,7 @@ const ManageGowns = () => {
                         onClick={() => handleDeleteGown(gown._id || gown.id)}
                         className='h-12 sm:h-14 sm:w-24 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
                       >
-                         <img src={assets.delete_icon} className="w-6 h-6 sm:w-8 sm:h-8 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
+                         <img src={assets.delete_icon} className="w-7 h-7 sm:w-8 sm:h-8 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
                          <span className='sm:hidden font-black text-xs uppercase tracking-widest ml-2'>Delete</span>
                       </button>
                     </div>
@@ -708,13 +708,13 @@ const ManageGowns = () => {
 
               <div className="space-y-4">
                 <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Event Types *</label>
-                <div className='flex flex-wrap gap-2'>
+                <div className='flex flex-wrap gap-2 sm:gap-3'>
                   {['wedding', 'traditional', 'prom', 'formal', 'themed'].map((event) => (
                     <button
                       key={event}
                       type='button'
                       onClick={() => handleEventTypeToggle(event)}
-                      className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.eventType.includes(event)
+                      className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${editForm.eventType.includes(event)
                           ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
                           : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                         }`}
@@ -727,13 +727,13 @@ const ManageGowns = () => {
 
               <div className="space-y-4">
                 <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Sizes *</label>
-                <div className='flex flex-wrap gap-2'>
+                <div className='flex flex-wrap gap-2 sm:gap-3'>
                   {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'].map((size) => (
                     <button
                       key={size}
                       type='button'
                       onClick={() => handleSizeToggle(size)}
-                      className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.size.includes(size)
+                      className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${editForm.size.includes(size)
                           ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
                           : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                         }`}
@@ -746,13 +746,13 @@ const ManageGowns = () => {
 
               <div className="space-y-4">
                 <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Sex *</label>
-                <div className='flex flex-wrap gap-2'>
+                <div className='flex flex-wrap gap-2 sm:gap-3'>
                   {['Male', 'Female', 'Unisex'].map((sex) => (
                     <button
                       key={sex}
                       type='button'
                       onClick={() => setEditForm(prev => ({ ...prev, sex }))}
-                      className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.sex === sex
+                      className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${editForm.sex === sex
                           ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
                           : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                         }`}

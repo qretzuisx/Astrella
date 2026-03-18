@@ -22,7 +22,7 @@ const OwnerSidebar = () => {
       {/* Mobile Menu Button - More Premium Feel */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='lg:hidden fixed top-4 left-4 z-[60] p-2.5 bg-white rounded-xl shadow-lg border border-gray-100 text-primary'
+        className={`lg:hidden fixed top-5 ${isOpen ? 'right-5' : 'left-5'} z-[60] p-2.5 bg-white rounded-xl shadow-lg border border-gray-100 text-primary transition-all duration-300`}
       >
         <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
           {isOpen ? (
@@ -44,16 +44,16 @@ const OwnerSidebar = () => {
       {/* Sidebar - sticky on desktop */}
       <div className={`
         fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 self-start
-        w-64 h-screen lg:max-h-screen bg-white/80 backdrop-blur-2xl border-r border-gray-100/50 flex flex-col
+        w-72 sm:w-80 lg:w-64 h-screen lg:max-h-screen bg-white/95 lg:bg-white/80 backdrop-blur-2xl border-r border-gray-100/50 flex flex-col
         shadow-2xl lg:shadow-none transform transition-transform duration-500 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo Section */}
-        <div className='p-6 mb-2 flex-shrink-0'>
+        <div className='p-8 lg:p-6 mb-2 flex-shrink-0'>
           <Link to='/owner' onClick={closeSidebar} className="block transition-transform hover:scale-105">
             <img src={assets.logo} alt="logo" className='h-10 sm:h-12 w-auto' />
           </Link>
-          <div className="mt-4 px-1">
+          <div className="mt-6 lg:mt-4 px-1">
             <div className="h-px w-full bg-gradient-to-r from-primary/20 via-primary/5 to-transparent"></div>
           </div>
         </div>
@@ -85,10 +85,6 @@ const OwnerSidebar = () => {
                       />
                     </div>
                     <span className='font-black text-sm uppercase tracking-wide'>{link.name}</span>
-                    
-                    {isActive && (
-                      <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-secondary-light shadow-[0_0_10px_#fbbf24] animate-pulse"></div>
-                    )}
                   </Link>
                 </li>
               )

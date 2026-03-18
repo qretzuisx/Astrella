@@ -457,11 +457,11 @@ const ManageBookings = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-[#FDFDFF]'>
+    <div className='flex min-h-screen bg-[#FDFDFF] max-w-full overflow-x-hidden'>
       <OwnerSidebar />
-      <div className='flex-1 p-4 sm:p-6 lg:p-10 transition-all duration-500 font-geist'>
+      <div className='flex-1 min-w-0 p-3 sm:p-6 lg:p-10 transition-all duration-500 font-geist'>
         <div className='max-w-7xl mx-auto'>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 mt-16 sm:mt-10 lg:mt-0">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-8 h-1 bg-primary rounded-full"></div>
@@ -502,8 +502,8 @@ const ManageBookings = () => {
           )}
 
           {/* Status Filter Tabs - Modern Segmented Control */}
-          <div className='mb-10 overflow-x-auto no-scrollbar pb-2'>
-            <div className='flex flex-nowrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit min-w-full sm:min-w-0'>
+          <div className='mb-10 overflow-x-auto no-scrollbar -mx-3 px-3 pb-2'>
+            <div className='inline-flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl min-w-full'>
               {['all', 'trial', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => {
                 const count = status === 'all' 
                   ? bookings.length 
@@ -515,13 +515,13 @@ const ManageBookings = () => {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 relative ${
+                    className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-xs transition-all duration-300 relative whitespace-nowrap ${
                       filterStatus === status
                         ? 'bg-white text-primary shadow-sm scale-105'
                         : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 whitespace-nowrap">
                       {status === 'all' ? 'All Requests' : status.charAt(0).toUpperCase() + status.slice(1)}
                       <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${filterStatus === status ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}>
                           {count}
@@ -530,6 +530,7 @@ const ManageBookings = () => {
                   </button>
                 )
               })}
+              <div className='w-4 flex-shrink-0 sm:hidden' />
             </div>
           </div>
 
@@ -541,14 +542,14 @@ const ManageBookings = () => {
                   key={booking._id || booking.id}
                   className='group bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 font-geist'
                 >
-                  <div className='p-6 sm:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-8'>
+                  <div className='p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 sm:gap-8'>
                     {/* Item and Client Info */}
                     <div className='flex items-center gap-6 flex-1'>
                       <div className="relative flex-shrink-0">
                         <img 
                           src={booking.gown?.image?.[0] || booking.gown?.image || assets.gown_image1} 
                           alt={booking.gown?.name} 
-                          className='w-28 h-28 sm:w-32 sm:h-32 object-contain bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform duration-700'
+                          className='w-20 h-20 sm:w-32 sm:h-32 object-contain bg-white rounded-2xl sm:rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform duration-700'
                         />
                          <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-xl flex items-center justify-center border-4 border-white shadow-md ${
                             booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-500' : 
@@ -573,45 +574,45 @@ const ManageBookings = () => {
                         <h3 className='text-xl sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-3'>
                             {booking.gown?.name || 'Gown Name'}
                         </h3>
-                        <div className="flex flex-wrap items-center gap-y-2 gap-x-5">
-                            <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-gray-50 rounded-lg">
-                                     <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
-                                       <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                     </svg>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Client</p>
-                                    <p className="text-xs font-bold text-gray-700">{booking.user?.name || 'User Name'}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-gray-50 rounded-lg">
-                                     <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
-                                       <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                                     </svg>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Contact</p>
-                                    <p className="text-xs font-bold text-gray-700">{booking.contactNumber || 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
+                         <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-5">
+                             <div className="flex items-center gap-2">
+                                 <div className="p-1.5 bg-gray-50 rounded-lg">
+                                      <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                      </svg>
+                                 </div>
+                                 <div className="min-w-0">
+                                     <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest">Client</p>
+                                     <p className="text-xs font-bold text-gray-700 truncate">{booking.user?.name || 'User Name'}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-center gap-2">
+                                 <div className="p-1.5 bg-gray-50 rounded-lg">
+                                      <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                                      </svg>
+                                 </div>
+                                 <div className="min-w-0">
+                                     <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest">Contact</p>
+                                     <p className="text-xs font-bold text-gray-700 truncate">{booking.contactNumber || 'N/A'}</p>
+                                 </div>
+                             </div>
+                         </div>
                       </div>
                     </div>
 
                     {/* Schedule, Payment & Actions */}
                     <div className='flex flex-wrap xl:flex-nowrap items-center gap-6 xl:border-l xl:border-gray-50 xl:pl-8'>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 min-w-[140px]">
-                           <p className="text-xs font-black text-primary/40 uppercase tracking-widest mb-2">Pickup</p>
-                           <p className="text-sm font-black text-primary-dull">{formatDate(booking.pickupDate)}</p>
-                           <p className="text-[11px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4 overflow-hidden">
+                        <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
+                           <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup</p>
+                           <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.pickupDate)}</p>
+                           <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
                         </div>
-                         <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 min-w-[140px]">
-                           <p className="text-xs font-black text-primary/40 uppercase tracking-widest mb-2">Return</p>
-                           <p className="text-sm font-black text-primary-dull">{formatDate(booking.returnDate)}</p>
-                           <p className="text-[11px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
+                         <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
+                           <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Return</p>
+                           <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.returnDate)}</p>
+                           <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
                         </div>
                       </div>
 
@@ -675,15 +676,16 @@ const ManageBookings = () => {
                           </button>
                         )}
 
-                        {/* Global Cancel for uncompleted bookings */}
-                        {['pending', 'confirmed'].includes(booking.status) && (
-                           <button
-                             onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
-                             className='flex-1 xl:w-48 h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-2xl font-black text-base uppercase tracking-widest transition-all flex items-center justify-center px-8'
-                           >
-                             Cancel
-                           </button>
-                        )}
+                         {/* Global Cancel for uncompleted bookings */}
+                         {['pending', 'confirmed'].includes(booking.status) && (
+                            <button
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
+                              className='flex-1 xl:w-48 h-12 sm:h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-2xl font-black text-xs sm:text-base uppercase tracking-widest transition-all flex items-center justify-center gap-2 px-8'
+                            >
+                              <img src={assets.delete_icon} className="w-5 h-5 sm:w-6 sm:h-6 opacity-40 group-hover:opacity-100 group-hover:brightness-0 group-hover:invert transition-all" alt="cancel" />
+                              Cancel
+                            </button>
+                         )}
                       </div>
                     </div>
                   </div>

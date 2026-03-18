@@ -242,13 +242,13 @@ const AddGown = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-[#FDFDFF]'>
+    <div className='flex min-h-screen bg-[#FDFDFF] max-w-full overflow-x-hidden'>
       <OwnerSidebar />
 
-      <div className='flex-1 p-4 sm:p-8 lg:p-12 overflow-y-auto'>
+      <div className='flex-1 min-w-0 p-4 sm:p-8 lg:p-12 overflow-y-auto'>
         <div className='max-w-4xl mx-auto'>
           {/* Header */}
-          <div className='mb-12 mt-8 lg:mt-0'>
+          <div className='mb-12 mt-16 lg:mt-0'>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-1 bg-primary rounded-full"></div>
               <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
@@ -391,14 +391,14 @@ const AddGown = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Event Types *</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {eventTypeList.map(type => (
                       <button
                         key={type}
                         type="button"
                         onClick={() => handleEventTypeChange(type.toLowerCase())}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.eventType.includes(type.toLowerCase())
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.eventType.includes(type.toLowerCase())
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -410,14 +410,14 @@ const AddGown = () => {
 
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Target Sex *</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {['Female', 'Male', 'Unisex'].map(sex => (
                       <button
                         key={sex}
                         type="button"
                         onClick={() => setFormData({ ...formData, sex })}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.sex === sex
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.sex === sex
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -429,7 +429,7 @@ const AddGown = () => {
 
                 <div className="space-y-4 md:col-span-2">
                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Age Groups *</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map(age => (
                       <button
                         key={age}
@@ -438,8 +438,8 @@ const AddGown = () => {
                           ...prev,
                           ageGroup: prev.ageGroup.includes(age) ? prev.ageGroup.filter(a => a !== age) : [...prev.ageGroup, age]
                         }))}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.ageGroup.includes(age)
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.ageGroup.includes(age)
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -451,14 +451,14 @@ const AddGown = () => {
 
                 <div className="space-y-4 md:col-span-2">
                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Available Sizes *</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {sizeOptions.map(size => (
                       <button
                         key={size}
                         type="button"
                         onClick={() => handleSizeChange(size)}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.size.includes(size)
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.size.includes(size)
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >

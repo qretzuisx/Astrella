@@ -585,7 +585,7 @@ const MyBookings = ({ setShowLogin }) => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 bg-[#FDFDFF] min-h-screen'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 pb-20 sm:pb-0 bg-[#FDFDFF] min-h-screen'>
       <div className='mb-10 lg:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -619,7 +619,7 @@ const MyBookings = ({ setShowLogin }) => {
       )}
 
       {/* Filter Tabs */}
-      <div className='flex items-center gap-2 sm:gap-4 bg-white p-2 rounded-full border border-gray-100 shadow-[0_5px_15px_rgba(0,0,0,0.02)] mb-8 overflow-x-auto no-scrollbar snap-x snap-mandatory'>
+      <div className='flex items-center gap-2 sm:gap-4 bg-white p-2 rounded-full border border-gray-100 shadow-[0_5px_15px_rgba(0,0,0,0.02)] mb-8 overflow-x-auto no-scrollbar scroll-snap-x scroll-fade-edge'>
         {['All', 'Trial', 'Pending', 'Confirmed', 'Completed', 'Canceled'].map((filter) => {
           const count = filter === 'All'
             ? bookings.length
@@ -809,7 +809,7 @@ const MyBookings = ({ setShowLogin }) => {
                           type='button'
                           onClick={() => openEdit(booking, 'reschedule')}
                           disabled={!editable}
-                          className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${editable
+                          className={`px-4 py-3.5 sm:py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${editable
                             ? 'border-primary/20 text-primary hover:bg-primary/5 hover:-translate-y-1 hover:border-primary/40 shadow-sm'
                             : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
                             }`}
@@ -820,7 +820,7 @@ const MyBookings = ({ setShowLogin }) => {
                           type='button'
                           onClick={() => cancelBooking(booking)}
                           disabled={!cancelable}
-                          className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${cancelable 
+                          className={`px-4 py-3.5 sm:py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${cancelable 
                             ? 'border-red-200 text-red-600 hover:bg-red-50 hover:-translate-y-1 hover:border-red-300 shadow-sm' 
                             : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
                             }`}
@@ -853,9 +853,9 @@ const MyBookings = ({ setShowLogin }) => {
       {editOpen && selectedBooking && (() => {
         const isTrial = (selectedBooking.status || '').toLowerCase() === 'trial'
         return (
-          <div className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4 sm:p-0' onClick={closeEdit}>
+          <div className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4' onClick={closeEdit}>
             <div
-              className='bg-white w-full sm:max-w-lg shadow-[0_30px_60px_rgba(1,62,141,0.15)] flex flex-col rounded-3xl max-h-[90vh] overflow-hidden border border-white/50 relative'
+              className='bg-white w-full sm:max-w-lg shadow-[0_30px_60px_rgba(1,62,141,0.15)] flex flex-col rounded-t-3xl sm:rounded-3xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-white/50 relative mobile-full-modal sm:!rounded-3xl sm:!inset-auto sm:!position-relative'
               onClick={(e) => e.stopPropagation()}
             >
               {/* Decorative elements */}

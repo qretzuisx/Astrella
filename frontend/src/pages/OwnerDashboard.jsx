@@ -136,10 +136,10 @@ const OwnerDashboard = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-[#FDFDFF]'>
+    <div className='flex min-h-screen bg-[#FDFDFF] max-w-full overflow-x-hidden'>
       <OwnerSidebar />
       
-      <div className='flex-1 p-4 sm:p-6 lg:p-10 transition-all duration-500'>
+      <div className='flex-1 min-w-0 p-4 sm:p-6 lg:p-10 transition-all duration-500'>
         <div className='max-w-7xl mx-auto'>
           {/* Header Section */}
           <div className='mb-10 mt-12 lg:mt-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
@@ -168,77 +168,93 @@ const OwnerDashboard = () => {
             <button
               type='button'
               onClick={() => navigate('/owner/manage-gown')}
-              className='group bg-white rounded-3xl shadow-sm p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden'
+              className='group bg-white rounded-3xl shadow-sm p-4 sm:p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-row items-center gap-5 sm:block'
             >
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className='flex items-center justify-between mb-6 relative'>
+              <div className='flex-shrink-0 sm:flex sm:items-center sm:justify-between sm:mb-6 relative'>
                 <div className='p-3.5 bg-primary/10 rounded-2xl group-hover:bg-primary group-hover:scale-110 transition-all duration-300'>
                   <img src={assets.gownIconColored} alt="apparel" className='w-6 h-6 group-hover:brightness-0 group-hover:invert transition-all' />
                 </div>
-                <div className="text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
+                <div className="hidden sm:block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
               </div>
-              <h3 className='text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 relative'>Total Apparel</h3>
-              <p className='text-4xl font-black text-primary-dull relative'>
-                {dashboardData?.totalGowns || 0}
-              </p>
+              <div className="flex-1 flex flex-row items-center justify-between sm:block">
+                <h3 className='text-xs font-bold text-gray-400 uppercase tracking-widest sm:mb-1 relative'>Total Apparel</h3>
+                <p className='text-3xl sm:text-4xl font-black text-primary-dull relative'>
+                  {dashboardData?.totalGowns || 0}
+                </p>
+              </div>
             </button>
 
             {/* Total Bookings */}
             <button
               type='button'
               onClick={() => navigate('/owner/manage-bookings')}
-              className='group bg-white rounded-3xl shadow-sm p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden'
+              className='group bg-white rounded-3xl shadow-sm p-4 sm:p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-row items-center gap-5 sm:block'
             >
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className='flex items-center justify-between mb-6 relative'>
+              <div className='flex-shrink-0 sm:flex sm:items-center sm:justify-between sm:mb-6 relative'>
                 <div className='p-3.5 bg-blue-50 rounded-2xl group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-300'>
                   <img src={assets.listIconColored} alt="bookings" className='w-6 h-6 group-hover:brightness-0 group-hover:invert transition-all' />
                 </div>
-                <div className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Manage</div>
+                <div className="hidden sm:block text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Manage</div>
               </div>
-              <h3 className='text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 relative'>Total Bookings</h3>
-              <p className='text-4xl font-black text-primary-dull relative'>
-                {dashboardData?.totalBookings || 0}
-              </p>
+              <div className="flex-1 flex flex-row items-center justify-between sm:block">
+                <h3 className='text-xs font-bold text-gray-400 uppercase tracking-widest sm:mb-1 relative'>Total Bookings</h3>
+                <p className='text-3xl sm:text-4xl font-black text-primary-dull relative'>
+                  {dashboardData?.totalBookings || 0}
+                </p>
+              </div>
             </button>
 
             {/* Pending Bookings */}
             <button
               type='button'
               onClick={() => navigate('/owner/manage-bookings?status=pending')}
-              className='group bg-white rounded-3xl shadow-sm p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-orange-500/5 hover:border-orange-200 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden'
+              className='group bg-white rounded-3xl shadow-sm p-4 sm:p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-orange-500/5 hover:border-orange-200 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-row items-center gap-5 sm:block'
             >
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className='flex items-center justify-between mb-6 relative'>
+              <div className='flex-shrink-0 sm:flex sm:items-center sm:justify-between sm:mb-6 relative'>
                 <div className='p-3.5 bg-orange-50 rounded-2xl group-hover:bg-orange-500 group-hover:scale-110 transition-all duration-300'>
                   <img src={assets.cautionIconColored} alt="pending" className='w-6 h-6 group-hover:brightness-0 group-hover:invert transition-all' />
                 </div>
                 {dashboardData?.pendingBookings > 0 && (
-                  <div className="flex h-2 w-2 relative">
+                  <div className="hidden sm:flex h-2 w-2 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
                   </div>
                 )}
               </div>
-              <h3 className='text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 relative'>Pending Orders</h3>
-              <p className='text-4xl font-black text-primary-dull relative'>
-                {dashboardData?.pendingBookings || 0}
-              </p>
+              <div className="flex-1 flex flex-row items-center justify-between sm:block">
+                <div className="flex items-center gap-2 sm:mb-1 relative">
+                  {dashboardData?.pendingBookings > 0 && (
+                    <div className="flex sm:hidden h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                    </div>
+                  )}
+                  <h3 className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Pending Orders</h3>
+                </div>
+                <p className='text-3xl sm:text-4xl font-black text-primary-dull relative'>
+                  {dashboardData?.pendingBookings || 0}
+                </p>
+              </div>
             </button>
 
             {/* Monthly Revenue */}
-            <div className='group bg-primary-dull rounded-3xl shadow-xl shadow-primary/10 p-6 text-left hover:-translate-y-1 transition-all duration-300 relative overflow-hidden'>
+            <div className='group bg-primary-dull rounded-3xl shadow-xl shadow-primary/10 p-4 sm:p-6 text-left hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-row items-center gap-5 sm:block'>
               <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className='flex items-center justify-between mb-6 relative'>
+              <div className='flex-shrink-0 sm:flex sm:items-center sm:justify-between sm:mb-6 relative'>
                 <div className='p-3.5 bg-white/10 rounded-2xl'>
                   <span className='group-hover:scale-110 block transition-transform text-2xl text-white font-black'>₱</span>
                 </div>
               </div>
-              <h3 className='text-xs font-bold text-white/50 uppercase tracking-widest mb-1 relative'>Est. Revenue</h3>
-              <p className='text-3xl font-black text-white relative flex items-baseline gap-1'>
-                <span className="text-lg opacity-60">{currency}</span>
-                <span>{dashboardData?.monthlyRevenue?.toLocaleString() || 0}</span>
-              </p>
+              <div className="flex-1 flex flex-row items-center justify-between sm:block">
+                <h3 className='text-xs font-bold text-white/50 uppercase tracking-widest sm:mb-1 relative'>Est. Revenue</h3>
+                <p className='text-2xl sm:text-3xl font-black text-white relative flex items-baseline gap-1'>
+                  <span className="text-sm sm:text-lg opacity-60">{currency}</span>
+                  <span>{dashboardData?.monthlyRevenue?.toLocaleString() || 0}</span>
+                </p>
+              </div>
             </div>
           </div>
 
@@ -286,7 +302,9 @@ const OwnerDashboard = () => {
                           <h3 className='text-lg font-black text-primary-dull group-hover:text-primary transition-colors'>{booking.gown?.name || 'Gown'}</h3>
                           <div className="flex flex-col gap-1 mt-1">
                             <div className="flex items-center gap-2">
-                               <img src={assets.user_profile} className="w-3.5 h-3.5 opacity-40" />
+                               <svg className="w-3.5 h-3.5 text-gray-400 opacity-60" fill="currentColor" viewBox="0 0 20 20">
+                                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                               </svg>
                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{booking.user?.name || 'Customer'}</span>
                             </div>
                             <p className='text-[11px] font-medium text-gray-400'>

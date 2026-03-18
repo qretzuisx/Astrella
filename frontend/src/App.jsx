@@ -47,7 +47,7 @@ const App = () => {
       {!isOwnerPath && <BottomNav />}
       
       {/* Mobile spacing for BottomNav */}
-      {!isOwnerPath && <div className="h-16 sm:hidden" />}
+      {!isOwnerPath && <div className="h-20 sm:hidden" />}
     </div>
   )
 }

@@ -186,40 +186,40 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
           <span className="line-clamp-1 truncate block">{gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : 'Owner') : 'Boutique Partner'}</span>
         </button>
 
-        {/* Details Section - Simplified for mobile, Full grid for desktop */}
-        <div className="mt-auto pt-4 sm:pt-5 border-t border-gray-100 flex sm:grid sm:grid-cols-2 gap-2 sm:gap-x-4 sm:gap-y-4 justify-between sm:justify-start">
+        {/* Details Section - Consistent 4-detail grid for all devices */}
+        <div className="mt-auto pt-4 sm:pt-5 border-t border-gray-100 grid grid-cols-2 gap-x-2 sm:gap-x-4 gap-y-3 sm:gap-y-4">
           
-          {/* Colors - Always visible */}
-          <div className="flex flex-col gap-1 items-start sm:items-start max-w-[45%] sm:max-w-none">
-            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60 hidden sm:block">Colors</span>
+          {/* Colors */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Colors</span>
             <div className="flex items-center gap-0 sm:gap-2">
               <div className="h-6 sm:h-8 flex pr-1 sm:pr-0 items-center justify-center">
                 <div className="scale-75 sm:scale-100 origin-left">
                   {renderColorSwatches(gown.color)}
                 </div>
               </div>
-              <span className="text-[9px] sm:text-[10px] font-black text-primary/70 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize hidden sm:block">{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Color')}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-primary/70 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Color')}</span>
             </div>
           </div>
 
-          {/* Size - Always visible */}
-          <div className="flex flex-col gap-1 items-end sm:items-start max-w-[45%] sm:max-w-none">
-            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60 hidden sm:block">Size</span>
-            <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 sm:bg-transparent px-2 py-1 rounded-md sm:p-0 sm:rounded-none">
+          {/* Size */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Size</span>
+            <div className="flex items-center gap-1 sm:gap-2">
               <span className="text-[9px] sm:text-[10px] font-black text-primary/80 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{Array.isArray(gown.size) ? (gown.size[0] || 'Size') : (gown.size || 'Size')}</span>
             </div>
           </div>
 
-          {/* Fabric - Desktop only */}
-          <div className="hidden sm:flex flex-col gap-1">
+          {/* Material */}
+          <div className="flex flex-col gap-1">
             <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Material</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{gown.fabric || 'Fabric'}</span>
             </div>
           </div>
 
-          {/* Best For - Desktop only */}
-          <div className="hidden sm:flex flex-col gap-1">
+          {/* Best For */}
+          <div className="flex flex-col gap-1">
             <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Best For</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">

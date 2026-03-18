@@ -207,7 +207,7 @@ const Gown = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 bg-[#FDFDFF] min-h-screen'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 pb-20 sm:pb-0 bg-[#FDFDFF] min-h-screen'>
       {error && (
         <div className='mb-6 p-6 bg-red-50 border border-red-100 rounded-[32px] animate-shake flex flex-col sm:flex-row items-center justify-between gap-4'>
           <p className='text-red-800 font-bold flex items-center gap-3 text-lg'>
@@ -239,21 +239,21 @@ const Gown = () => {
       </div>
 
         <div 
-          className='sticky top-16 sm:top-20 z-20 py-6 mb-12 bg-white/60 backdrop-blur-xl -mx-4 sm:mx-0 px-4 sm:px-0 rounded-b-[40px]'
+          className='sticky top-16 sm:top-20 z-40 py-3 sm:py-6 mb-8 sm:mb-12 bg-white/80 backdrop-blur-2xl -mx-4 sm:mx-0 px-4 sm:px-0 rounded-b-[24px] sm:rounded-b-[40px] shadow-sm'
           onMouseEnter={() => setShowFilters(true)}
           onMouseLeave={() => setShowFilters(false)}
         >
           <div className='max-w-4xl mx-auto'>
             <div className='relative flex items-center gap-4'>
               {/* Search Input */}
-              <div className='flex-1 flex items-center bg-white rounded-[24px] shadow-[0_20px_60px_rgba(1,62,141,0.05)] border border-blue-50 px-6 py-5 group focus-within:shadow-[0_20px_60px_rgba(1,62,141,0.12)] focus-within:border-primary/20 transition-all'>
-                <img src={assets.search_icon} alt="search" className='w-5 h-5 mr-4 text-primary opacity-20 group-focus-within:opacity-100 transition-all group-focus-within:scale-110' />
+              <div className='flex-1 flex items-center bg-white rounded-[20px] sm:rounded-[24px] shadow-[0_15px_40px_rgba(1,62,141,0.05)] border border-blue-50 px-4 sm:px-6 py-3.5 sm:py-5 group focus-within:shadow-[0_20px_60px_rgba(1,62,141,0.12)] focus-within:border-primary/20 transition-all'>
+                <img src={assets.search_icon} alt="search" className='w-4 h-4 sm:w-5 sm:h-5 mr-3 sm:mr-4 text-primary opacity-20 group-focus-within:opacity-100 transition-all group-focus-within:scale-110' />
                 <input
                   type='text'
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder='Search collection...'
-                  className='flex-1 outline-none text-base text-primary font-black placeholder-gray-300 min-w-0 bg-transparent'
+                  className='flex-1 outline-none text-[15px] sm:text-base text-primary font-black placeholder-gray-300 min-w-0 bg-transparent'
                 />
                 {searchQuery && (
                   <button
@@ -270,41 +270,49 @@ const Gown = () => {
               {/* Filter Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-8 py-5 rounded-[24px] shadow-2xl transition-all flex items-center gap-3 font-black text-sm uppercase tracking-widest whitespace-nowrap active:scale-95 ${hasActiveFilters
+                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-3.5 sm:py-5 rounded-[20px] sm:rounded-[24px] shadow-2xl transition-all font-black text-xs sm:text-sm uppercase tracking-widest whitespace-nowrap active:scale-95 ${hasActiveFilters
                   ? 'bg-primary text-white shadow-[0_20px_50px_rgba(1,62,141,0.3)]'
                   : 'bg-white text-primary border border-blue-50 hover:bg-gray-50'
                   }`}
               >
-                <svg className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-4 h-4 sm:w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                <span>Filters</span>
+                <span className="hidden xs:inline sm:inline">Filters</span>
                 {hasActiveFilters && (
-                  <span className='bg-secondary text-primary text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-black shadow-inner'>
+                  <span className='bg-secondary text-primary text-[9px] sm:text-[10px] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-black shadow-inner'>
                     {[selectedColor, selectedEventType, selectedFabric, selectedSize, selectedAgeGroup, selectedGender].filter(Boolean).length}
                   </span>
                 )}
               </button>
 
-              {/* Filter Dropdown Panel - NOW ABSOLUTE */}
+              {/* Filter Dropdown Panel */}
               {showFilters && (
-                <div className='absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl rounded-[32px] sm:rounded-[40px] shadow-[0_40px_120px_rgba(1,62,141,0.2)] border border-blue-50 p-6 sm:p-10 animate-fade-in-up z-20 max-h-[80vh] overflow-y-auto no-scrollbar'>
-                  <div className='flex items-center justify-between mb-10'>
-                    <div>
-                      <h3 className='text-3xl font-black text-primary tracking-tight'>Refine Selection</h3>
-                      <p className='text-sm text-gray-500 font-bold mt-1'>Filter our collection to find your perfect style.</p>
+                <>
+                  {/* Light Backdrop Overlay for Mobile */}
+                  <div 
+                    className='fixed inset-0 bg-primary/5 z-40 sm:hidden animate-fade-in'
+                    onClick={() => setShowFilters(false)}
+                  />
+                  
+                  <div className='absolute top-full left-0 right-0 mt-3 bg-gradient-to-br from-white via-white to-blue-50/20 rounded-bl-[40px] rounded-br-[40px] sm:rounded-[40px] shadow-[0_30px_80px_rgba(1,62,141,0.1)] border border-blue-50/50 p-7 sm:p-12 animate-fade-in-down z-50 max-h-[85vh] sm:max-h-[80vh] overflow-y-auto no-scrollbar sm:w-[500px] md:w-[700px] lg:w-[900px] sm:left-auto sm:right-0'>
+                    
+                    <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 sm:mb-12'>
+                      <div>
+                        <h3 className='text-3xl sm:text-4xl font-black text-primary tracking-tighter'>Refine Selection</h3>
+                        <p className='text-sm text-gray-400 font-bold mt-1.5'>Discover the perfect fit for your next extraordinary moment.</p>
+                      </div>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={handleClearFilters}
+                          className='px-6 py-3 bg-secondary/5 text-secondary text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-secondary/10 transition-all border border-secondary/10 h-fit w-fit'
+                        >
+                          Reset Filters
+                        </button>
+                      )}
                     </div>
-                    {hasActiveFilters && (
-                      <button
-                        onClick={handleClearFilters}
-                        className='px-5 py-2.5 bg-secondary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-secondary/20 transition-all border border-secondary/20'
-                      >
-                        Reset Filters
-                      </button>
-                    )}
-                  </div>
 
-                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10 mb-14'>
                     {[
                       { label: 'Age Group', value: selectedAgeGroup, setter: setSelectedAgeGroup, options: ['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'], default: 'All Ages' },
                       { label: 'Sex', value: selectedGender, setter: setSelectedGender, options: ['Female', 'Male', 'Unisex'], default: 'All Sexes' },
@@ -321,7 +329,7 @@ const Gown = () => {
                           <select
                             value={filter.value}
                             onChange={(e) => filter.setter(e.target.value)}
-                            className='w-full px-6 py-4.5 bg-gray-50/50 border border-gray-100 rounded-[20px] text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none appearance-none cursor-pointer'
+                            className='w-full h-16 pl-6 pr-12 bg-white border-2 border-gray-50 rounded-[28px] text-[15px] sm:text-base font-black text-primary transition-all focus:border-primary/20 focus:ring-8 focus:ring-primary/5 outline-none appearance-none cursor-pointer truncate shadow-sm hover:shadow-md'
                           >
                             <option value=''>{filter.default}</option>
                             {filter.options.map(opt => (
@@ -338,16 +346,21 @@ const Gown = () => {
                     ))}
                   </div>
 
-                  {/* Apply Button */}
                   <button
                     onClick={() => setShowFilters(false)}
-                    className='w-full py-6 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-[0.2em] relative overflow-hidden group shadow-xl'
+                    className='w-full py-6 bg-primary text-white rounded-full hover:shadow-[0_25px_60px_rgba(1,62,141,0.35)] hover:-translate-y-1 active:scale-[0.98] transition-all font-black text-sm uppercase tracking-[0.3em] relative overflow-hidden group shadow-[0_20px_50px_rgba(1,62,141,0.25)]'
                   >
-                    <span className="relative z-10">Show {filteredGowns.length} items</span>
+                    <span className="relative z-10 flex items-center justify-center gap-3">
+                      Show {filteredGowns.length} items
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                   </button>
                 </div>
-              )}
+              </>
+            )}
             </div>
           </div>
         </div>

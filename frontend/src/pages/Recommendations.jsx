@@ -166,35 +166,35 @@ const Recommendations = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFDFF] py-16 px-4 md:px-8 lg:px-16 xl:px-32">
+    <div className="min-h-screen bg-[#FDFDFF] py-8 sm:py-16 px-4 md:px-8 lg:px-16 xl:px-32">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-16">
+        <div className="mb-10 sm:mb-16">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 mb-10 text-primary hover:text-primary-dull font-black transition-all hover:-translate-x-1 group"
+            className="flex items-center gap-2 mb-6 sm:mb-10 text-primary hover:text-primary-dull font-black transition-all hover:-translate-x-1 group"
           >
             <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span className="uppercase tracking-widest text-xs">Back to Home</span>
+            <span className="uppercase tracking-widest text-[10px] sm:text-xs">Back to Home</span>
           </button>
           
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-1 bg-primary rounded-full"></div>
-                <span className="text-xs font-black text-primary uppercase tracking-[0.3em]">AI Stylist</span>
+                <div className="w-8 h-1 bg-primary rounded-full"></div>
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">AI Stylist</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-secondary">Matches</span></h1>
-              <p className="text-lg text-gray-500 font-medium max-w-2xl">
-                We've selected {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile and preferences.
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-secondary italic">Matches</span></h1>
+              <p className="text-sm sm:text-lg text-gray-500 font-medium max-w-2xl">
+                We've selected {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile.
               </p>
             </div>
             
-            <div className="bg-primary/5 px-6 py-4 rounded-3xl border border-primary/10">
-              <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1">Availability Note</p>
-              <p className="text-xs font-bold text-primary/70">Badges reflect current status. All items bookable for future dates.</p>
+            <div className="bg-primary/5 px-5 py-3.5 rounded-[24px] border border-primary/10">
+              <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mb-1">Availability Note</p>
+              <p className="text-[10px] sm:text-xs font-bold text-primary/70">Badges reflect current status.</p>
             </div>
           </div>
         </div>
@@ -205,36 +205,55 @@ const Recommendations = () => {
           <div className="space-y-12">
             {/* Top 3 Section */}
             {topThree.length > 0 && (
-              <div>
-                <div className="flex items-center gap-4 mb-10">
-                  <h2 className="text-2xl font-black text-primary tracking-tight">Prime Selections</h2>
-                  <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex flex-col mb-8 sm:mb-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 flex-1">
+                      <h2 className="text-xl sm:text-2xl font-black text-primary tracking-tight">Prime Selections</h2>
+                      <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
+                    </div>
+                    {/* Mobile: Pagination Dots at Top */}
+                    <div className="flex sm:hidden items-center gap-2 ml-4">
+                      <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></div>
+                      <div className="w-2 h-2 rounded-full bg-primary/20"></div>
+                      <div className="w-2 h-2 rounded-full bg-primary/20"></div>
+                    </div>
+                    {/* Desktop Indicators */}
+                    <div className="hidden sm:flex items-center gap-2 ml-4">
+                      <div className="w-2 h-2 rounded-full bg-primary/20"></div>
+                      <div className="w-2 h-2 rounded-full bg-primary/20"></div>
+                      <div className="w-2 h-2 rounded-full bg-primary/20"></div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] sm:text-xs font-bold text-primary/40 uppercase tracking-widest sm:hidden">Swipe to explore Top 3</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                {/* Mobile: Horizontal Carousel, Desktop: Grid */}
+                <div className="flex sm:grid flex-nowrap sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 overflow-x-auto sm:overflow-visible premium-scrollbar pb-6 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x">
                   {topThree.map((item, index) => {
                     const badge = getStarBadge(index);
                     return (
-                      <div key={item.gown._id || item.gown.id || index} className="relative flex flex-col group h-full">
+                      <div key={item.gown._id || item.gown.id || index} className="min-w-[85vw] sm:min-w-0 flex flex-col group h-full scroll-snap-align-start">
                         {/* Premium Integrated Wrapper */}
-                        <div className="flex-1 flex flex-col rounded-[40px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
+                        <div className="flex-1 flex flex-col rounded-[32px] sm:rounded-[40px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
                           {/* Rank Badge Header */}
-                          <div className={`flex items-center justify-between p-7 relative overflow-hidden ${badge.bgColor}`}>
+                          <div className={`flex items-center justify-between px-6 py-5 sm:p-7 relative overflow-hidden ${badge.bgColor}`}>
                              {/* Glossy overlay effect */}
                              <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50"></div>
                              
-                             <div className="flex items-center gap-4 relative z-10">
-                               <div className={`w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/30`}>
-                                  <img src={badge.starIcon} alt="star" className="w-6 h-6 brightness-0 invert" />
+                             <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-[14px] sm:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/30`}>
+                                  <img src={badge.starIcon} alt="star" className="w-5 h-5 sm:w-6 sm:h-6 brightness-0 invert" />
                                </div>
                                <div>
-                                 <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-0.5">Rank #{index + 1}</p>
-                                 <span className="font-black text-sm text-white uppercase tracking-widest">{badge.text}</span>
+                                 <p className="text-[10px] sm:text-[10px] font-bold text-white/80 uppercase tracking-widest mb-0.5">Rank #{index + 1}</p>
+                                 <span className="font-black text-xs sm:text-sm text-white uppercase tracking-widest">{badge.text}</span>
                                </div>
                              </div>
 
                              <div className="text-right relative z-10">
-                               <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-0.5">Match Score</p>
-                               <span className="text-3xl font-black text-white tracking-tighter">{item.score}%</span>
+                               <p className="text-[10px] sm:text-[10px] font-bold text-white/70 uppercase tracking-widest mb-0.5">Match Score</p>
+                               <span className="text-2xl sm:text-3xl font-black text-white tracking-tighter">{item.score}%</span>
                              </div>
 
                              {/* Abstract Decorative Circles */}
@@ -262,14 +281,14 @@ const Recommendations = () => {
                 {/* Background decorative element */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-transform duration-700 group-hover:scale-110"></div>
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-10 relative z-10">
                   <div>
-                    <h2 className="text-2xl font-black text-primary tracking-tight mb-2">Style Profile</h2>
-                    <p className="text-sm text-gray-500 font-medium">Refine your traits for even better accuracy.</p>
+                    <h2 className="text-xl sm:text-2xl font-black text-primary tracking-tight mb-2">Style Profile</h2>
+                    <p className="text-xs sm:text-sm text-gray-500 font-medium">Refine your traits for even better accuracy.</p>
                   </div>
                   <button
                     onClick={applyPreferences}
-                    className="bg-primary text-white px-10 py-4 rounded-xl hover:bg-primary-dull transition-all font-black text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] active:scale-95 flex items-center justify-center gap-2"
+                    className="bg-primary text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl hover:bg-primary-dull transition-all font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] active:scale-95 flex items-center justify-center gap-2"
                   >
                     Update Profile
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,14 +297,14 @@ const Recommendations = () => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6 relative z-10">
                   {/* Body Type */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Body Type</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Body Type</label>
                     <select
                       value={editedPrefs.bodyType || ''}
                       onChange={(e) => handlePrefChange('bodyType', e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {bodyTypeList.map(type => (
@@ -295,12 +314,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Skin Tone */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Skin Tone</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Skin Tone</label>
                     <select
                       value={editedPrefs.skinTone || ''}
                       onChange={(e) => handlePrefChange('skinTone', e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {skinToneList.map(tone => (
@@ -310,12 +329,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Event Type */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Events</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Events</label>
                     <select
                       value={editedPrefs.eventType || ''}
                       onChange={(e) => handlePrefChange('eventType', e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {eventTypeList.map(event => (
@@ -325,12 +344,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Face Shape */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Face Shape</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Face Shape</label>
                     <select
                       value={editedPrefs.faceShape || ''}
                       onChange={(e) => handlePrefChange('faceShape', e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {faceShapeList.map(shape => (
@@ -340,12 +359,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Age Group */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Age Group</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Age Group</label>
                     <select
                       value={editedPrefs.age || ''}
                       onChange={(e) => handlePrefChange('age', e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       <option value="6–9 Years">6–9 Years</option>
@@ -358,12 +377,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Sex */}
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Category</label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Category</label>
                     <select
                       value={editedPrefs.sex || ''}
                       onChange={(e) => handlePrefChange('sex', e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-bold text-primary group-hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       <option value="Female">Female</option>
@@ -378,19 +397,21 @@ const Recommendations = () => {
             {/* Other Recommendations */}
             {others.length > 0 && (
               <div>
-                <div className="flex items-center gap-4 mb-10">
-                  <h2 className="text-2xl font-black text-primary tracking-tight">Galleries</h2>
-                  <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
-                  <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">{others.length} Collection Items</span>
+                <div className="flex items-center justify-between mb-8 sm:mb-10">
+                  <div className="flex items-center gap-4 flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-primary tracking-tight">Galleries</h2>
+                    <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-black text-primary/30 uppercase tracking-[0.2em] ml-4">{others.length} Items</span>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                   {others.map((item, index) => (
                     <div key={item.gown._id || item.gown.id || index} className="flex flex-col group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
-                      <div className="rounded-[32px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/5 group-hover:-translate-y-1 bg-white flex-1 flex flex-col">
+                      <div className="rounded-[24px] sm:rounded-[32px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/5 group-hover:-translate-y-1 bg-white flex-1 flex flex-col">
                         <GownCard gown={item.gown} />
                       </div>
                       {item.matchReason && (
-                        <p className="text-[10px] font-bold text-gray-400 mt-4 text-center px-4 leading-relaxed group-hover:text-primary transition-colors">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 mt-3 sm:mt-4 text-center px-2 sm:px-4 leading-relaxed group-hover:text-primary transition-colors">
                           {item.matchReason}
                         </p>
                       )}
