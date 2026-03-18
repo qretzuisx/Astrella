@@ -180,11 +180,11 @@ const Recommendations = () => {
             <span className="uppercase tracking-widest text-[10px] sm:text-xs">Back to Home</span>
           </button>
           
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-16">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-1 bg-primary rounded-full"></div>
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">AI Stylist</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">AI Stylist Results</span>
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-secondary italic">Matches</span></h1>
               <p className="text-sm sm:text-lg text-gray-500 font-medium max-w-2xl">
@@ -192,9 +192,9 @@ const Recommendations = () => {
               </p>
             </div>
             
-            <div className="bg-primary/5 px-5 py-3.5 rounded-[24px] border border-primary/10">
-              <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mb-1">Availability Note</p>
-              <p className="text-[10px] sm:text-xs font-bold text-primary/70">Badges reflect current status.</p>
+            <div className="bg-primary/5 px-6 py-4 rounded-[28px] border border-primary/10 backdrop-blur-sm">
+              <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mb-1 text-center sm:text-left">Availability Notice</p>
+              <p className="text-[10px] sm:text-xs font-bold text-primary/70">Badges reflect real-time status.</p>
             </div>
           </div>
         </div>

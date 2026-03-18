@@ -136,7 +136,7 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
 
   return (
     <div onClick={() => { navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0, 0) }}
-      className={`group overflow-hidden shadow-[0_10px_30px_rgba(1,62,141,0.04)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.1)] hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer flex flex-col h-full bg-white border border-primary/5 ${customClassName || "rounded-[24px] sm:rounded-[32px]"}`}
+      className={`group overflow-hidden shadow-[0_15px_50px_rgba(1,62,141,0.06)] hover:shadow-[0_30px_70px_rgba(1,62,141,0.15)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col h-full bg-white border border-primary/5 ${customClassName || "rounded-[32px] sm:rounded-[48px]"}`}
     >
 
       <div className="relative overflow-hidden bg-white aspect-[3/4] sm:aspect-[2/3] w-full p-2">
@@ -146,22 +146,12 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
           className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
         />
 
-        {/* Status Badge */}
-        <div className={`absolute top-3 sm:top-6 left-3 sm:left-6 px-3 sm:px-6 py-1.5 sm:py-3 rounded-xl sm:rounded-[24px] text-white font-black text-[10px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] shadow-md sm:shadow-2xl backdrop-blur-md border border-white/20 transition-all duration-700 group-hover:translate-x-1 ${
-          gown.status === 'Available' ? 'bg-green-600/90' :
-          gown.status === 'Unavailable' ? 'bg-secondary/90' :
-          gown.status === 'In-Laundry' ? 'bg-primary/90' :
-          gown.status === 'Reserved' ? 'bg-secondary/90' :
-          'bg-gray-600/90'
-        }`}>
-          {gown.status || 'Available'}
-        </div>
 
 
-        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-primary/95 backdrop-blur-md text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl shadow-lg transition-all duration-500 sm:group-hover:-translate-y-1">
-          <div className="flex items-baseline gap-0.5 sm:gap-1">
-            <span className="text-white text-[9px] sm:text-xs font-black">{currency}</span>
-            <span className="font-black text-sm sm:text-lg">{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
+        <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 bg-white/60 backdrop-blur-xl text-primary px-4 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-[24px] shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-white/40 transition-all duration-500 sm:group-hover:-translate-y-2 flex items-center gap-2">
+          <div className="flex items-baseline gap-1">
+            <span className="text-secondary text-[10px] sm:text-xs font-black">{currency}</span>
+            <span className="font-black text-base sm:text-xl text-primary">{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>

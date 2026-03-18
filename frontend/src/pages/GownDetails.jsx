@@ -627,16 +627,6 @@ const GownDetails = () => {
               className='w-full h-auto max-h-[450px] sm:max-h-[550px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
             
-            {/* Status Badge */}
-            <div className={`absolute top-4 sm:top-8 left-4 sm:left-8 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-[32px] text-white font-black text-[11px] sm:text-[13px] uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/20 transition-all duration-500 hover:scale-105 ${
-              gown?.status === 'Available' ? 'bg-green-600/90' :
-              gown?.status === 'Unavailable' ? 'bg-secondary/90' :
-              gown?.status === 'In-Laundry' ? 'bg-primary/90' :
-              gown?.status === 'Reserved' ? 'bg-secondary/90' :
-              'bg-gray-600/90'
-            }`}>
-              {gown.status}
-            </div>
 
           </div>
 
@@ -823,11 +813,11 @@ const GownDetails = () => {
           <div className='bg-white rounded-[32px] shadow-lg border border-primary/5 p-6 sm:p-8 relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
             
-            <h2 className='text-2xl font-black text-primary mb-8'>Reserve this Gown</h2>
+            <h2 className='text-2xl font-black text-primary mb-8'>Reserve this Apparel</h2>
 
             {/* Booking Type Selection */}
             <div className='mb-10'>
-              <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-4'>Select Experience</label>
+              <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-4'>Booking type</label>
               <div className='grid grid-cols-2 gap-4'>
                 <button 
                   onClick={() => setBookingType('reservation')}

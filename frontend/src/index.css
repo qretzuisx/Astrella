@@ -197,6 +197,18 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
+/* Universal Scrollbar Button Removal */
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+}
+
 /* Premium, user-friendly scrollbar for mobile carousels */
 @media (max-width: 640px) {
   .premium-scrollbar::-webkit-scrollbar {
@@ -212,5 +224,33 @@ body {
     background: rgba(22, 43, 105, 0.3);
     border-radius: 10px;
   }
+}
+
+/* Premium Yellow Scrollbar - Consistent across all platforms */
+.premium-scrollbar-yellow::-webkit-scrollbar {
+  height: 4px;
+  display: block;
+}
+
+.premium-scrollbar-yellow::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.premium-scrollbar-yellow::-webkit-scrollbar-thumb {
+  background: #EAB308;
+  border-radius: 10px;
+}
+
+.premium-scrollbar-yellow::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.premium-scrollbar-yellow {
+  scrollbar-width: thin;
+  scrollbar-color: #EAB308 transparent;
+  -webkit-overflow-scrolling: touch;
 }
 

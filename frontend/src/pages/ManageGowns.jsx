@@ -397,7 +397,7 @@ const ManageGowns = () => {
           </div>
 
           {/* Status Filter Tabs - Modern Segmented Control Style */}
-          <div className='mb-10 overflow-x-auto no-scrollbar -mx-3 px-3 pb-2'>
+          <div className='mb-10 overflow-x-auto premium-scrollbar-yellow -mx-3 px-3 pb-2'>
             <div className='inline-flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl min-w-full'>
             {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
               const count = status === 'all'

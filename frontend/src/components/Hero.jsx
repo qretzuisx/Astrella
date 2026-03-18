@@ -7,6 +7,55 @@ import GownCard from './GownCard';
 
 import AttributeSelector from './AttributeSelector';
 
+// Maps common color names to hex values for swatches
+const COLOR_MAP = {
+  white: ['#FFFFFF', '#F5F5F5'],
+  ivory: ['#FFFFF0', '#F5F0DC'],
+  cream: ['#FFF5D7', '#F0E6C8'],
+  black: ['#1A1A1A', '#3D3D3D'],
+  gold: ['#FFD700', '#B8860B'],
+  silver: ['#C0C0C0', '#A9A9A9'],
+  pink: ['#FFB6C1', '#FF69B4'],
+  blush: ['#FFDFE4', '#F4A7B0'],
+  red: ['#E63946', '#A21C25'],
+  blue: ['#4A90D9', '#1D4E8F'],
+  navy: ['#1D3557', '#0A203F'],
+  green: ['#52B788', '#2D6A4F'],
+  peach: ['#FFCBA4', '#F4A261'],
+  lavender: ['#C9B1E0', '#9B72CF'],
+  purple: ['#7B2D8B', '#4B0082'],
+  champagne: ['#F7E7CE', '#E2C897'],
+  beige: ['#F5F0E8', '#D9C4A0'],
+  yellow: ['#FFD166', '#F0A500'],
+  teal: ['#2A9D8F', '#1D6E63'],
+  rose: ['#E9837A', '#C0392B'],
+  coral: ['#FF6B6B', '#E05050'],
+};
+
+const ColorSwatch = ({ colorName }) => {
+  if (!colorName) return null;
+  // Handle compound names like "White / Gold" or "Blue & Pink"
+  const parts = colorName.split(/[\/&,]+/).map(p => p.trim().toLowerCase()).filter(Boolean);
+  const dots = parts.flatMap(part => COLOR_MAP[part] || []).slice(0, 4);
+  if (dots.length > 0) {
+    return (
+      <div className="flex items-center">
+        {dots.map((c, i) => (
+          <div
+            key={i}
+            style={{ backgroundColor: c }}
+            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border border-gray-200/60 shadow-sm ${i > 0 ? '-ml-1' : ''}`}
+          />
+        ))}
+      </div>
+    );
+  }
+  // Fallback: single grey dot
+  return (
+    <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-gray-300 border border-gray-200/60" />
+  );
+};
+
 const Hero = () => {
   const navigate = useNavigate();
   const [bodyType, setBodyType] = useState('');
@@ -19,6 +68,16 @@ const Hero = () => {
   const [validationError, setValidationError] = useState('');
   const [popularGowns, setPopularGowns] = useState([]);
   const [loadingGowns, setLoadingGowns] = useState(true);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 1024 : false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const currency = CURRENCY;
 
@@ -97,20 +156,34 @@ const Hero = () => {
   return (
     <div className='min-h-screen flex flex-col items-center justify-center px-4 relative bg-[#FDFDFF] w-full'>
 
-      {/* Hero Headline */}
-      <div className="max-w-3xl mx-auto z-10 text-center space-y-1 mb-6 mt-4 sm:mt-0">
-        <h1 className='text-4xl sm:text-6xl md:text-7xl font-black text-primary tracking-tighter leading-tight animate-fade-in drop-shadow-sm'>
-          AI <span className="text-secondary italic">Recommendation</span>
-        </h1>
-        <p className="text-[10px] sm:text-xs text-primary/40 font-black uppercase tracking-[0.5em] mt-2">
-          Your Personal AI Stylist
-        </p>
+      {/* Hero Headline - More vibrant and spacious */}
+      <div className="max-w-5xl mx-auto z-10 text-center space-y-8 mb-16 pt-16 sm:pt-28 px-4">
+        <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-secondary/10 border border-secondary/20 shadow-sm animate-fade-in mx-auto">
+          <span className="text-[10px] sm:text-xs font-black text-secondary uppercase tracking-[0.5em]">Introducing Astrella</span>
+        </div>
+        <div className="space-y-6">
+          <h1 className='text-5xl sm:text-7xl md:text-[90px] lg:text-[110px] font-black text-primary tracking-tighter leading-[0.85] animate-fade-in drop-shadow-md pb-4'>
+            Meet Your <br className="sm:hidden" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-primary to-secondary animate-gradient-x italic pr-4 sm:pr-8 inline-block mt-2 sm:mt-0">Personal AI Stylist</span>
+          </h1>
+          <p className="text-base sm:text-xl md:text-2xl text-gray-500 font-bold max-w-3xl mx-auto leading-relaxed animate-fade-in delay-100">
+            Smart gown recommendations tailored specifically for you. <br className="hidden sm:block" />
+            <span className="text-primary/60">Handpicked styles from our exclusive collection.</span>
+          </p>
+        </div>
+
+        {/* Scroll Hint */}
+        <div className="pt-8 animate-bounce opacity-30 hidden sm:block">
+          <svg className="w-6 h-6 mx-auto text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
 
       {/* Custom Attribute Bar */}
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-8 sm:gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-4 sm:px-10">
         <div className="flex items-center bg-white/40 backdrop-blur-xl p-2 sm:p-3 rounded-[32px] sm:rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-primary/20 w-full sm:w-fit max-w-full hover:border-primary/40 transition-all duration-500 relative z-10">
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 w-full min-w-0 px-2 sm:px-0">
+          <div className="flex flex-nowrap overflow-x-auto sm:overflow-visible items-center lg:justify-center gap-1 sm:gap-2 w-full min-w-0 px-2 sm:px-0 premium-scrollbar-yellow">
 
             {/* Body Type */}
             <AttributeSelector
@@ -214,83 +287,168 @@ const Hero = () => {
           </div>
         )}
 
-        <div className="flex flex-row items-center justify-center gap-4 w-full mt-6 sm:scale-100">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full mt-10">
           <button
             type="button"
             onClick={() => setShowImageAnalysis(true)}
-            className="flex-1 sm:flex-none sm:w-auto bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white hover:text-secondary hover:border-secondary transition-all shadow-md flex items-center justify-center gap-3 group active:scale-95"
+            className="w-full sm:w-auto bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-10 py-5 rounded-[28px] sm:rounded-full text-xs sm:text-sm font-black uppercase tracking-widest hover:bg-white hover:text-secondary hover:border-secondary transition-all shadow-lg flex items-center justify-center group active:scale-95"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>Scan Profile</span>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2.5">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="leading-none">Scan Profile</span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-bold text-primary/40 normal-case tracking-normal leading-none">Don't know your attributes? Scan here</span>
+            </div>
           </button>
           <button
             type="submit"
-            className="flex-1 sm:flex-none sm:w-auto bg-primary text-white px-8 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_20px_50px_rgba(22,43,105,0.2)] hover:-translate-y-1 active:scale-95"
+            className="w-full sm:w-auto bg-primary text-white px-12 sm:px-14 py-5 sm:py-6 rounded-[28px] sm:rounded-full text-sm font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_20px_50px_rgba(22,43,105,0.2)] hover:-translate-y-1 active:scale-95 flex items-center justify-center min-h-[60px] sm:min-h-[70px]"
           >
             <span>Find My Fit</span>
           </button>
         </div>
       </form>
 
-      {/* Popular Gown Showcase Section - Adjusted for Single Viewport */}
-      <div className="w-full max-w-6xl mx-auto relative z-10 flex flex-col items-center mt-8 pb-2">
-        <div className="flex items-center gap-4 mb-12 opacity-80">
-          <div className="w-10 h-[1px] bg-primary"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Trending Choice</p>
-          <div className="w-10 h-[1px] bg-primary"></div>
+      {/* Trending Choice Section - Premium Horizontal Carousel */}
+      <div className="w-full mt-24 sm:mt-40 pb-32 relative z-10 overflow-hidden">
+        <div className="flex flex-col items-center mb-12 sm:mb-20 px-4">
+          <div className="flex items-center gap-4 sm:gap-6 mb-3 sm:mb-4">
+            <div className="w-10 sm:w-16 h-[2px] bg-gradient-to-r from-transparent to-secondary"></div>
+            <p className="text-[9px] sm:text-xs font-black uppercase tracking-[0.4em] sm:tracking-[0.6em] text-secondary">Featured Picks</p>
+            <div className="w-10 sm:w-16 h-[2px] bg-gradient-to-l from-transparent to-secondary"></div>
+          </div>
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-primary tracking-tight text-center leading-tight">
+            This Season's <span className="text-secondary italic">Top Picks</span>
+          </h2>
+          <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-400 font-medium max-w-sm text-center">Rent the look everyone's talking about</p>
         </div>
+
         {loadingGowns ? (
-          <div className="flex items-end justify-center gap-3 h-[140px] sm:h-[180px]">
+          <div className="flex gap-8 px-10 overflow-x-hidden">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className={`bg-gray-100 animate-pulse rounded-[24px] ${i === 3 ? 'w-24 h-32 sm:w-32 sm:h-44' : 'w-20 h-28 sm:w-24 sm:h-36 opacity-70'}`}></div>
+              <div key={i} className="min-w-[280px] sm:min-w-[400px] aspect-[4/5] bg-gray-100 animate-pulse rounded-[50px]"></div>
             ))}
           </div>
-        ) : popularGowns.length > 0 && (
-          <div className="flex items-end justify-center gap-3 sm:gap-6 h-[170px] sm:h-[230px] w-full max-w-5xl">
-            {popularGowns.slice(0, 5).map((gown, index) => {
-              // Center is 2 if we have 5, or middle index otherwise
-              const isCenter = index === 2 || (popularGowns.length < 3 && index === 0);
-              const isSide = index === 1 || index === 3;
-              const isOuter = index === 0 || index === 4;
+        ) : popularGowns.length > 0 ? (
+          <div className="max-w-[1600px] mx-auto px-1 sm:px-10 pb-10 overflow-visible">
+            <div className="flex flex-row items-center justify-center gap-0.5 sm:gap-8 overflow-visible no-scrollbar py-6 sm:py-10">
+              {(() => {
+                // Determine limits: 3 for mobile, 5 for desktop
+                const limit = isMobile ? 3 : 5;
+                const displayGowns = [...popularGowns].slice(0, limit);
+                const rearranged = [];
+                
+                if (displayGowns.length === limit) {
+                  if (limit === 3) {
+                    // Rearrange to put #1 in the middle: [G2, G1, G3]
+                    rearranged.push(displayGowns[1], displayGowns[0], displayGowns[2]);
+                  } else {
+                    // Rearrange to put #1 in the middle: [G4, G2, G1, G3, G5]
+                    rearranged.push(displayGowns[3], displayGowns[1], displayGowns[0], displayGowns[2], displayGowns[4]);
+                  }
+                } else {
+                  // Fallback if less than target limit
+                  rearranged.push(...displayGowns);
+                }
 
-              const sizeClass = isCenter
-                ? "w-32 h-36 sm:w-48 sm:h-60 z-30 shadow-[0_25px_60px_rgba(22,43,105,0.2)] ring-[4px] ring-primary/10 scale-110"
-                : isSide
-                  ? "w-28 h-32 sm:w-36 sm:h-48 z-20 opacity-60 scale-95 grayscale-[50%]"
-                  : "w-24 h-28 sm:w-28 sm:h-36 z-10 opacity-30 scale-90 grayscale";
+                return rearranged.map((gown, index) => {
+                  const isTopChoice = gown === popularGowns[0];
+                  // Determine scale: middle is largest, neighbors are smaller, edges are smallest
+                  // But for simplicity, just Top Choice is bigger
 
-              return (
-                <div
-                  key={gown._id || index}
-                  className={`relative rounded-[32px] sm:rounded-[40px] overflow-hidden border border-primary/10 cursor-pointer transform transition-all duration-700 hover:-translate-y-4 bg-white group/gown ${sizeClass}`}
-                  onClick={() => navigate(`/gown-details/${gown._id}`)}
-                >
-                  <img src={Array.isArray(gown.image) ? gown.image[0] : gown.image} alt={gown.name} className="w-full h-full object-contain transition-transform duration-1000 group-hover/gown:scale-110" />
+                  return (
+                    <div
+                      key={gown._id || index}
+                      className={`flex flex-col items-center transition-all duration-1000 w-full ${isTopChoice ? 'lg:w-[400px] z-20 scale-100 sm:scale-110 mb-8 sm:mb-0' : 'lg:w-[300px] z-10 opacity-70 scale-95 sm:scale-90 hover:opacity-100 hover:scale-100'}`}
+                    >
 
-                  {/* Info Overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-transparent transition-opacity duration-500 ${isCenter ? 'opacity-100' : 'opacity-0 group-hover/gown:opacity-100'}`}>
-                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white transform transition-transform duration-500 translate-y-2 group-hover/gown:translate-y-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-secondary-light mb-1 drop-shadow-md">{gown.category || 'Apparel'}</p>
-                      <h3 className="text-xs sm:text-sm font-black truncate mb-2 drop-shadow-md">{gown.name}</h3>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-black drop-shadow-md">
-                          <span className="text-secondary-light mr-1">{currency}</span>
-                          {(gown.pricePerDay || gown.price || 0).toLocaleString()}
-                        </p>
-                        <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                          </svg>
+                      <div
+                        className={`relative aspect-[4/5] w-full max-w-[380px] rounded-[40px] sm:rounded-[50px] overflow-hidden bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-700 group cursor-pointer ${isTopChoice ? 'ring-8 ring-secondary/5 shadow-[0_40px_100px_rgba(239,68,68,0.12)]' : 'border border-primary/5 shadow-sm'}`}
+                        onClick={() => navigate(`/gown-details/${gown._id}`)}
+                      >
+                        <img
+                          src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
+                          alt={gown.name}
+                          className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-110 p-4 sm:p-8"
+                        />
+
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 bg-gradient-to-t from-primary via-primary/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-700">
+                          <h3 className="text-base sm:text-lg font-black text-white mb-2 sm:mb-4 line-clamp-1 drop-shadow-md">{gown.name}</h3>
+                          {/* Gown details row */}
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {gown.fabric && (
+                              <span className="text-[9px] sm:text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm">{gown.fabric}</span>
+                            )}
+                            {gown.size && gown.size.length > 0 && (
+                              <span className="text-[9px] sm:text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm">{gown.size[0]}</span>
+                            )}
+                            {gown.eventType && gown.eventType.length > 0 && (
+                              <span className="text-[9px] sm:text-[10px] font-bold bg-secondary/80 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">{gown.eventType[0]}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/20">
+                            <p className="text-lg sm:text-xl font-black text-white leading-none drop-shadow-sm">
+                              <span className="text-secondary-light mr-1 font-medium italic">{currency}</span>
+                              {(gown.pricePerDay || gown.price || 0).toLocaleString()}
+                            </p>
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-secondary-light text-primary flex items-center justify-center shadow-lg">
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Detailed Card Info Below Image */}
+                      <div className="mt-4 sm:mt-8 text-center space-y-2 px-2 sm:px-4 animate-fade-in">
+                        {/* Catchy badge for top choice */}
+                        {isTopChoice && (
+                          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-secondary/10 to-primary/10 border border-secondary/20 px-3 py-1 rounded-full mb-1">
+                            <span className="text-secondary text-[9px] sm:text-[10px]">✦</span>
+                            <span className="text-[9px] sm:text-[10px] font-black text-secondary uppercase tracking-[0.15em]">#1 Most Booked</span>
+                            <span className="text-secondary text-[9px] sm:text-[10px]">✦</span>
+                          </div>
+                        )}
+                        <h3 className={`font-black text-primary line-clamp-1 leading-tight ${isTopChoice ? 'text-base sm:text-xl' : 'text-sm sm:text-base'}`}>
+                          {gown.name}
+                        </h3>
+                        {/* Color swatch + shop */}
+                        <div className="flex flex-col items-center gap-1.5">
+                          {gown.color && (
+                            <div className="flex items-center gap-1.5">
+                              <ColorSwatch colorName={gown.color} />
+                              <span className="text-[9px] sm:text-[10px] font-semibold text-gray-400 capitalize">{gown.color}</span>
+                            </div>
+                          )}
+                          <p className="text-[10px] sm:text-[11px] font-black text-secondary uppercase tracking-[0.15em] sm:tracking-[0.2em]">
+                            {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : 'Boutique Partner') : 'Exclusive Boutique'}
+                          </p>
+
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                });
+              })()}
+            </div>
+            <div className="mt-16 flex justify-center">
+              <button
+                onClick={() => navigate('/gowns')}
+                className="bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-12 py-4 rounded-full text-sm font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-lg active:scale-95"
+              >
+                Explore more Apparel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-10 text-center py-32 bg-gray-50/50 rounded-[60px] border border-dashed border-gray-200">
+            <p className="text-gray-400 font-bold text-xl">Our next trending collection is on its way.</p>
           </div>
         )}
       </div>

@@ -56,7 +56,7 @@ const AttributeSelector = ({ label, value, options, onSelect, type, shapes, colo
               <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             <div className="h-[1px] bg-gray-50 mx-4 mb-1 sm:mb-0"></div>
-            
+
             <div className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto no-scrollbar">
               {options.map((opt) => (
                 <button
@@ -66,7 +66,7 @@ const AttributeSelector = ({ label, value, options, onSelect, type, shapes, colo
                   className={`w-full px-4 py-2.5 sm:py-2.5 text-left flex items-center justify-between group/item hover:bg-primary active:bg-primary transition-all rounded-xl sm:rounded-xl mb-0.5 sm:mb-0 ${value === opt ? 'bg-primary text-white' : 'text-primary'}`}
                 >
                   <span className={`text-[12px] sm:text-xs font-black transition-colors ${value === opt ? 'text-white' : 'group-hover/item:text-white'}`}>{opt}</span>
-                  
+
                   {/* Visuals in Dropdown */}
                   {type === 'shape' && shapes?.[opt] && (
                     <svg className={`w-5 h-5 transition-colors ${value === opt ? 'text-white' : 'text-primary/10 group-hover/item:text-white'}`} viewBox="0 0 24 24" fill="currentColor">
