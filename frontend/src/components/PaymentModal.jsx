@@ -303,7 +303,7 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
               <img 
                 src={paymentData.screenshotPreview} 
                 alt="Preview" 
-                className='w-full max-h-80 object-cover border border-primary/10 rounded-[32px] shadow-sm'
+                className='w-full max-h-80 object-contain bg-white border border-primary/10 rounded-[32px] shadow-sm'
               />
               <div className='mt-4 flex items-center gap-3 bg-green-50 p-4 rounded-2xl border border-green-100'>
                 <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white">

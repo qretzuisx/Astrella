@@ -112,6 +112,9 @@ export const addGown = async (req, res) => {
             return res.status(400).json({ success: false, message: "Sex/Gender is required" });
         }
 
+        console.log(`[AddGown] Attempting to add gown for user: ${_id}`);
+        console.log(`[AddGown] Gown data received:`, gown);
+
         await Gown.create({
             ...gown,
             description: typeof gown.description === 'string' ? gown.description : '',
@@ -125,11 +128,12 @@ export const addGown = async (req, res) => {
             contactNumber: gownContactNumber
         });
 
+        console.log(`[AddGown] Successfully added gown: ${gown.name}`);
         res.json({ success: true, message: "Gown Added" })
 
 
     } catch (error) {
-        console.error(error);
+        console.error(`[AddGown Error]`, error);
         res.json({ success: false, message: error.message })
     }
 }

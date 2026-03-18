@@ -34,7 +34,7 @@ const AddGown = () => {
   const getColorPreview = (colorName) => {
     if (!colorName) return 'transparent';
     const lower = colorName.toLowerCase().trim();
-    
+
     // Improved matching logic for preview
     const colorMap = {
       'red': '#EF4444', 'burgundy': '#800020', 'maroon': '#800000', 'crimson': '#DC143C', 'ruby': '#E0115F', 'rose': '#FF007F', 'wine': '#722F37',
@@ -45,13 +45,13 @@ const AddGown = () => {
       'purple': '#A855F7', 'lavender': '#E6E6FA', 'violet': '#EE82EE', 'plum': '#8E4585', 'indigo': '#4B0082', 'lilac': '#C8A2C8',
       'white': '#FFFFFF', 'ivory': '#FFFFF0', 'cream': '#FFFDD0', 'beige': '#F5F5DC', 'black': '#000000', 'gray': '#6B7280', 'grey': '#6B7280', 'silver': '#C0C0C0', 'nude': '#E3BC9A', 'champagne': '#F7E7CE'
     };
-    
+
     if (colorMap[lower]) return colorMap[lower];
-    const keys = Object.keys(colorMap).sort((a,b) => b.length - a.length);
+    const keys = Object.keys(colorMap).sort((a, b) => b.length - a.length);
     for (const key of keys) {
       if (lower.includes(key)) return colorMap[key];
     }
-    return '#CCCCCC'; 
+    return '#CCCCCC';
   };
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -103,31 +103,49 @@ const AddGown = () => {
     const file = e.target.files[0]
     if (file) {
       setSelectedImage(file)
-      // Create preview
+      // Create preview immediately
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
       }
       reader.readAsDataURL(file)
 
-      // Automatically remove background
-      try {
-        setIsRemovingBg(true)
-        const imageBlob = await removeBackground(file)
-        const newFile = new File([imageBlob], file.name.replace(/\.[^/.]+$/, "") + ".png", { type: 'image/png' })
-        
-        setSelectedImage(newFile)
-        
-        const newReader = new FileReader()
-        newReader.onloadend = () => {
-          setImagePreview(newReader.result)
+      // Automatically remove background in the background
+      setIsRemovingBg(true)
+      
+      const removeBgWithTimeout = async () => {
+        console.log(`[BG Removal] Process started for file: ${file.name}`);
+        try {
+          // 20 second timeout for background removal as requested
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Background removal timed out')), 20000)
+          );
+
+          console.log(`[BG Removal] Calling @imgly/background-removal...`);
+          const bgRemovalPromise = removeBackground(file);
+          
+          const imageBlob = await Promise.race([bgRemovalPromise, timeoutPromise]);
+          console.log(`[BG Removal] AI processing successful!`);
+
+          const newFile = new File([imageBlob], file.name.replace(/\.[^/.]+$/, "") + ".png", { type: 'image/png' });
+          setSelectedImage(newFile);
+
+          const newReader = new FileReader();
+          newReader.onloadend = () => {
+            setImagePreview(newReader.result);
+            console.log(`[BG Removal] Preview updated with transparent image.`);
+          };
+          newReader.readAsDataURL(newFile);
+        } catch (error) {
+          console.error("[BG Removal Error]", error.message);
+          // We keep the original image if removal fails or times out
+        } finally {
+          setIsRemovingBg(false);
+          console.log(`[BG Removal] Task finished.`);
         }
-        newReader.readAsDataURL(newFile)
-      } catch (error) {
-        console.error("Error removing background:", error)
-      } finally {
-        setIsRemovingBg(false)
-      }
+      };
+
+      removeBgWithTimeout();
     }
   }
 
@@ -218,7 +236,7 @@ const AddGown = () => {
           price: '',
           color: '',
           size: ['Free Size'],
-          ageGroup: '',
+          ageGroup: [],
           sex: '',
           available: true
         })
@@ -271,14 +289,14 @@ const AddGown = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-4 sm:p-10 space-y-10'>
-            
+
             {/* Image Upload Area */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 px-2">
                 <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
                 <h3 className="text-sm font-black text-primary uppercase tracking-widest">Visual Presentation</h3>
               </div>
-              
+
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="flex-1 w-full space-y-3">
                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Apparel Image *</label>
@@ -294,13 +312,13 @@ const AddGown = () => {
                 </div>
 
                 {imagePreview && (
-                  <div className="w-full md:w-56 aspect-[3/4] overflow-hidden rounded-[32px] border border-gray-100 shadow-2xl relative group">
-                    <img src={imagePreview} alt='Preview' className={`w-full h-full object-cover transition-transform duration-700 ${isRemovingBg ? 'opacity-50 blur-sm' : 'group-hover:scale-110'}`} />
-                    <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                  <div className="w-full md:w-56 aspect-[3/4] overflow-hidden rounded-[32px] border border-gray-100 shadow-2xl relative group bg-gray-50/50">
+                    <img src={imagePreview} alt='Preview' className={`w-full h-full object-contain transition-transform duration-700 ${isRemovingBg ? 'opacity-50 blur-sm' : 'group-hover:scale-105'}`} />
+                    <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
                     {isRemovingBg && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 backdrop-blur-sm">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm">
                         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
-                        <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-white/80 px-2 py-1 rounded-md">Removing BG...</span>
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] bg-white/90 px-3 py-1.5 rounded-full shadow-sm">AI Processing...</span>
                       </div>
                     )}
                   </div>
@@ -381,99 +399,95 @@ const AddGown = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Event Types *</label>
-                   <div className="flex flex-wrap gap-2">
-                      {eventTypeList.map(type => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => handleEventTypeChange(type.toLowerCase())}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                            formData.eventType.includes(type.toLowerCase())
-                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Event Types *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {eventTypeList.map(type => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => handleEventTypeChange(type.toLowerCase())}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.eventType.includes(type.toLowerCase())
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                            : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                   </div>
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-4">
-                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Target Sex *</label>
-                   <div className="flex flex-wrap gap-2">
-                      {['Female', 'Male', 'Unisex'].map(sex => (
-                        <button
-                          key={sex}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, sex })}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                            formData.sex === sex
-                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Target Sex *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Female', 'Male', 'Unisex'].map(sex => (
+                      <button
+                        key={sex}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, sex })}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.sex === sex
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                            : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
-                        >
-                          {sex}
-                        </button>
-                      ))}
-                   </div>
+                      >
+                        {sex}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-4 md:col-span-2">
-                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Age Groups *</label>
-                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map(age => (
-                        <button
-                          key={age}
-                          type="button"
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            ageGroup: prev.ageGroup.includes(age) ? prev.ageGroup.filter(a => a !== age) : [...prev.ageGroup, age]
-                          }))}
-                          className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                            formData.ageGroup.includes(age)
-                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Age Groups *</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map(age => (
+                      <button
+                        key={age}
+                        type="button"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          ageGroup: prev.ageGroup.includes(age) ? prev.ageGroup.filter(a => a !== age) : [...prev.ageGroup, age]
+                        }))}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.ageGroup.includes(age)
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                            : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
-                        >
-                          {age}
-                        </button>
-                      ))}
-                   </div>
+                      >
+                        {age}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-4 md:col-span-2">
-                   <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Available Sizes *</label>
-                   <div className="flex flex-wrap gap-2">
-                      {sizeOptions.map(size => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => handleSizeChange(size)}
-                          className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                            formData.size.includes(size)
-                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
-                              : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
+                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Available Sizes *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {sizeOptions.map(size => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleSizeChange(size)}
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${formData.size.includes(size)
+                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                            : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                   </div>
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="md:col-span-2 px-2 flex items-center gap-3">
-                    <input
-                      type='checkbox'
-                      id='available'
-                      checked={formData.available}
-                      onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                      className='w-5 h-5 rounded-lg border-gray-200 text-primary focus:ring-primary/20 transition-all'
-                    />
-                    <label htmlFor='available' className='text-[10px] font-black text-primary uppercase tracking-widest cursor-pointer'>
-                      Available for immediate booking
-                    </label>
+                  <input
+                    type='checkbox'
+                    id='available'
+                    checked={formData.available}
+                    onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                    className='w-5 h-5 rounded-lg border-gray-200 text-primary focus:ring-primary/20 transition-all'
+                  />
+                  <label htmlFor='available' className='text-[10px] font-black text-primary uppercase tracking-widest cursor-pointer'>
+                    Available for immediate booking
+                  </label>
                 </div>
               </div>
             </div>
@@ -485,8 +499,10 @@ const AddGown = () => {
                 disabled={loading || isRemovingBg}
                 className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 relative overflow-hidden group'
               >
-                 <span className="relative z-10">{(loading || isRemovingBg) ? 'Processing...' : 'Add to Collection'}</span>
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                <span className="relative z-10">
+                  {loading ? 'Saving Apparel...' : (isRemovingBg ? 'Removing Background...' : 'Add to Collection')}
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
               </button>
               <button
                 type='button'

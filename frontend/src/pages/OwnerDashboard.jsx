@@ -274,7 +274,7 @@ const OwnerDashboard = () => {
                           <img 
                             src={booking.gown?.image || assets.gown_image1} 
                             alt={booking.gown?.name}
-                            className='w-20 h-20 object-cover rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-500'
+                            className='w-20 h-20 object-contain bg-white rounded-2xl shadow-md group-hover:scale-105 transition-transform duration-500'
                           />
                           <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center border-2 border-white shadow-sm ${
                             booking.status === 'confirmed' ? 'bg-green-500' : 'bg-orange-500'
