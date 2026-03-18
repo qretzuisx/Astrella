@@ -589,12 +589,12 @@ const ManageGowns = () => {
                       >
                         {gown.available ? 'Hide' : 'Show'}
                       </button>
-                        <button
-                          onClick={() => handleDeleteGown(gown._id || gown.id)}
-                          className='w-14 h-14 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
-                        >
-                           <img src={assets.delete_icon} className="w-6 h-6 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
-                        </button>
+                      <button
+                        onClick={() => handleDeleteGown(gown._id || gown.id)}
+                        className='w-20 sm:w-24 h-16 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
+                      >
+                         <img src={assets.delete_icon} className="w-9 h-9 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
+                      </button>
                     </div>
                   </div>
                 </div>
