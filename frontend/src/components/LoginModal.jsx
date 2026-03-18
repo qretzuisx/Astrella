@@ -31,12 +31,25 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
   const [providedResetToken, setProvidedResetToken] = useState('')
   const [forgotNewPassword, setForgotNewPassword] = useState('')
   const [forgotConfirmNewPassword, setForgotConfirmNewPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [forgotShowPassword, setForgotShowPassword] = useState(false)
+  const [forgotShowConfirmPassword, setForgotShowConfirmPassword] = useState(false)
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    const { name, value } = e.target
+    if (name === 'contactNumber') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 11)
+      setFormData({
+        ...formData,
+        [name]: digitsOnly
+      })
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      })
+    }
     setError('')
     setSuccess('')
   }
@@ -139,8 +152,8 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
         }
 
         const digitsOnly = formData.contactNumber.toString().replace(/\D/g, '')
-        if (digitsOnly.length < 10 || digitsOnly.length > 13) {
-          setError('Contact number must be 10-13 digits')
+        if (digitsOnly.length !== 11) {
+          setError('Contact number must be exactly 11 digits')
           setLoading(false)
           return
         }
@@ -551,14 +564,25 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                       </svg>
                     </div>
                     <input
-                      type='password'
+                      type={showPassword ? 'text' : 'password'}
                       name='password'
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder='••••••••'
-                      className='w-full pl-11 pr-4 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
+                      className='w-full pl-11 pr-16 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
                       required
                     />
+                    <button
+                      type='button'
+                      onClick={() => setShowPassword(!showPassword)}
+                      className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
+                    >
+                      <img 
+                        src={showPassword ? assets.eye_close_icon : assets.eye_icon} 
+                        alt="toggle password" 
+                        className='w-11 h-11 opacity-70 hover:opacity-100 transition-opacity'
+                      />
+                    </button>
                   </div>
                 </div>
 
@@ -574,14 +598,25 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                         </svg>
                       </div>
                       <input
-                        type='password'
+                        type={showConfirmPassword ? 'text' : 'password'}
                         name='confirmPassword'
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         placeholder='••••••••'
-                        className='w-full pl-11 pr-4 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
+                        className='w-full pl-11 pr-16 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
                         required={!isLogin}
                       />
+                      <button
+                        type='button'
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
+                      >
+                        <img 
+                          src={showConfirmPassword ? assets.eye_close_icon : assets.eye_icon} 
+                          alt="toggle password" 
+                          className='w-10 h-10 opacity-70 hover:opacity-100 transition-opacity'
+                        />
+                      </button>
                     </div>
                   </div>
                 )}
@@ -714,27 +749,53 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                     <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1'>
                       New Password
                     </label>
-                    <input
-                      type='password'
-                      value={forgotNewPassword}
-                      onChange={(e) => setForgotNewPassword(e.target.value)}
-                      placeholder='••••••••'
-                      className='w-full px-4 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
-                      required
-                    />
+                    <div className='relative group/field'>
+                      <input
+                        type={forgotShowPassword ? 'text' : 'password'}
+                        value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        placeholder='••••••••'
+                        className='w-full px-4 pr-16 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
+                        required
+                      />
+                      <button
+                        type='button'
+                        onClick={() => setForgotShowPassword(!forgotShowPassword)}
+                        className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
+                      >
+                        <img 
+                          src={forgotShowPassword ? assets.eye_close_icon : assets.eye_icon} 
+                          alt="toggle password" 
+                          className='w-10 h-10 opacity-70 hover:opacity-100 transition-opacity'
+                        />
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1'>
                       Confirm Password
                     </label>
-                    <input
-                      type='password'
-                      value={forgotConfirmNewPassword}
-                      onChange={(e) => setForgotConfirmNewPassword(e.target.value)}
-                      placeholder='••••••••'
-                      className='w-full px-4 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
-                      required
-                    />
+                    <div className='relative group/field'>
+                      <input
+                        type={forgotShowConfirmPassword ? 'text' : 'password'}
+                        value={forgotConfirmNewPassword}
+                        onChange={(e) => setForgotConfirmNewPassword(e.target.value)}
+                        placeholder='••••••••'
+                        className='w-full px-4 pr-16 py-3.5 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium'
+                        required
+                      />
+                      <button
+                        type='button'
+                        onClick={() => setForgotShowConfirmPassword(!forgotShowConfirmPassword)}
+                        className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
+                      >
+                        <img 
+                          src={forgotShowConfirmPassword ? assets.eye_close_icon : assets.eye_icon} 
+                          alt="toggle password" 
+                          className='w-10 h-10 opacity-70 hover:opacity-100 transition-opacity'
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

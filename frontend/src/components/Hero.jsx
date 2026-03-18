@@ -180,8 +180,8 @@ const Hero = () => {
 
       {/* Custom Attribute Bar */}
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-8 sm:gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-4 sm:px-10">
-        <div className="flex items-center bg-white/40 backdrop-blur-xl p-2 sm:p-3 rounded-[32px] sm:rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-primary/20 w-full sm:w-fit max-w-full hover:border-primary/40 transition-all duration-500 relative z-10">
-          <div className="flex flex-nowrap overflow-x-auto sm:overflow-visible items-center lg:justify-center gap-1 sm:gap-2 w-full min-w-0 px-2 sm:px-0 premium-scrollbar-yellow">
+        <div className="flex items-center bg-white p-2.5 sm:p-2.5 rounded-[32px] sm:rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-gray-200 w-full sm:w-fit max-w-[95vw] sm:max-w-full relative z-10 transition-all duration-300">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-center gap-y-1 sm:gap-0 w-full min-w-0 py-1 sm:py-0.5">
 
             {/* Body Type */}
             <AttributeSelector
@@ -339,7 +339,7 @@ const Hero = () => {
                 const limit = isMobile ? 3 : 5;
                 const displayGowns = [...popularGowns].slice(0, limit);
                 const rearranged = [];
-                
+
                 if (displayGowns.length === limit) {
                   // Rearrange display order to place the most popular gown (#1) in the center
                   // for better visual emphasis in the horizontal layout.

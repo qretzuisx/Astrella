@@ -20,9 +20,10 @@ const ManageBookings = () => {
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectingPayment, setRejectingPayment] = useState(false)
 
-  // Get URL search params for gown filtering
+  // Get URL search params for gown filtering and highlighting
   const [searchParams] = useSearchParams()
   const initialGownFilter = searchParams.get('gownId') || 'all'
+  const highlightId = searchParams.get('highlightId')
 
   // Set initial filters from URL
   useEffect(() => {
@@ -35,6 +36,23 @@ const ManageBookings = () => {
       setFilterGown(initialGownFilter)
     }
   }, [searchParams, initialGownFilter])
+
+  // Handle auto-scrolling and highlighting
+  useEffect(() => {
+    if (highlightId && !loading && filteredBookings.length > 0) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`booking-${highlightId}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          element.classList.add('ring-4', 'ring-primary/30', 'bg-primary/5')
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-primary/30', 'bg-primary/5')
+          }, 5000)
+        }
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightId, loading, filteredBookings])
 
   // Reschedule / Extend modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -540,7 +558,8 @@ const ManageBookings = () => {
               filteredBookings.map((booking) => (
                 <div
                   key={booking._id || booking.id}
-                  className='group bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 font-geist'
+                  id={`booking-${booking._id || booking.id}`}
+                  className={`group bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 font-geist ${(booking._id || booking.id) === highlightId && (booking.status === 'trial' || (booking.status === 'pending' && booking.payment?.status === 'pending')) ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : ''}`}
                 >
                   <div className='p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 sm:gap-8'>
                     {/* Item and Client Info */}
@@ -604,36 +623,48 @@ const ManageBookings = () => {
                     {/* Schedule, Payment & Actions */}
                     <div className='flex flex-wrap xl:flex-nowrap items-center gap-6 xl:border-l xl:border-gray-50 xl:pl-8'>
                       <div className="grid grid-cols-2 gap-3 sm:gap-4 overflow-hidden">
-                        <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
-                           <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup</p>
-                           <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.pickupDate)}</p>
-                           <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
-                        </div>
-                         <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
-                           <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Return</p>
-                           <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.returnDate)}</p>
-                           <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
-                        </div>
+                        {booking.status === 'trial' ? (
+                          <div className="bg-primary/5 p-3 sm:p-4 rounded-2xl border border-primary/10 min-w-[140px] col-span-2">
+                            <p className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-widest mb-1.5">Try-on Schedule</p>
+                            <p className="text-sm sm:text-base font-black text-primary-dull">{formatDate(booking.pickupDate)}</p>
+                            <p className="text-[10px] sm:text-xs font-bold text-primary/60 mt-0.5">{booking.pickupTime || '09:00'}</p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
+                               <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup</p>
+                               <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.pickupDate)}</p>
+                               <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
+                            </div>
+                             <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
+                               <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Return</p>
+                               <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.returnDate)}</p>
+                               <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Value & Actions */}
-                      <div className="flex flex-col items-center xl:items-end justify-center min-w-[140px]">
-                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
-                        <p className='text-3xl font-black text-primary-dull flex items-baseline gap-1'>
-                          <span className="text-sm opacity-40">₱</span>
-                          {booking.price?.toLocaleString()}
-                        </p>
-                        
-                        {/* Status Badge Secondary */}
-                        {booking.payment && (
-                            <div className={`mt-3 px-3 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider ${
-                                booking.payment.status === 'verified' ? 'bg-green-50 text-green-700' :
-                                booking.payment.status === 'pending' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
-                            }`}>
-                                {booking.payment.method === 'gcash' ? 'GCash' : 'Cash'} • {booking.payment.status}
-                            </div>
-                        )}
-                      </div>
+                      {booking.status !== 'trial' && (
+                        <div className="flex flex-col items-center xl:items-end justify-center min-w-[140px]">
+                           <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
+                          <p className='text-3xl font-black text-primary-dull flex items-baseline gap-1'>
+                            <span className="text-sm opacity-40">₱</span>
+                            {booking.price?.toLocaleString()}
+                          </p>
+                          
+                          {/* Status Badge Secondary */}
+                          {booking.payment && (
+                              <div className={`mt-3 px-3 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider ${
+                                  booking.payment.status === 'verified' ? 'bg-green-50 text-green-700' :
+                                  booking.payment.status === 'pending' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
+                              }`}>
+                                  {booking.payment.method === 'gcash' ? 'GCash' : 'Cash'} • {booking.payment.status}
+                              </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Control Actions */}
                       <div className='flex flex-col sm:flex-row xl:flex-col gap-2.5 w-full xl:w-auto'>

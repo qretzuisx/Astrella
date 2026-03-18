@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import sendEmail from '../utils/email.js'
+import Booking from "../models/booking.js"
 
 
 // jwt token
@@ -24,8 +25,8 @@ export const registerUser = async (req, res)=>{
             return res.json({success: false, message: 'Fill all the Fields !'})
         }
 
-        if (!cleanContactNumber || cleanContactNumber.length < 10 || cleanContactNumber.length > 13) {
-            return res.json({ success: false, message: 'Contact number must be 10-13 digits.' });
+        if (!cleanContactNumber || cleanContactNumber.length !== 11) {
+            return res.json({ success: false, message: 'Contact number must be exactly 11 digits.' });
         }
 
         if (normalizedRole !== 'user' && normalizedRole !== 'owner') {
@@ -270,6 +271,11 @@ export const updateProfile = async (req, res) => {
             return res.json({ success: false, message: 'Name is required' });
         }
 
+        const cleanContactNumber = (contactNumber || "").toString().replace(/\D/g, "");
+        if (cleanContactNumber && cleanContactNumber.length !== 11) {
+            return res.json({ success: false, message: 'Contact number must be exactly 11 digits' });
+        }
+
         // Update user
         const updatedUser = await User.findByIdAndUpdate(
             _id,
@@ -410,7 +416,6 @@ export const resetPassword = async (req, res) => {
 export const getUserStatistics = async (req, res) => {
     try {
         const { _id } = req.user;
-        const Booking = (await import("../models/booking.js")).default;
 
         // Get all user bookings
         const allBookings = await Booking.find({ user: _id });
@@ -446,17 +451,24 @@ export const deleteAccount = async (req, res) => {
         }
 
 
-        // Check if user has any pending bookings
-        const Booking = (await import("../models/booking.js")).default;
-        const pendingBookings = await Booking.find({ 
+        // Check if user has any active bookings (as a customer)
+        const activeBookings = await Booking.find({ 
             user: _id, 
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'confirmed', 'trial'] }
         });
+        
+        const now = new Date();
+        const hasValidTrial = activeBookings.some(b => 
+            b.status === 'trial' && (!b.trialExpiresAt || new Date(b.trialExpiresAt) > now)
+        );
+        const hasActiveReservation = activeBookings.some(b => 
+            ['pending', 'confirmed'].includes(b.status)
+        );
 
-        if (pendingBookings.length > 0) {
+        if (hasActiveReservation || hasValidTrial) {
             return res.json({ 
                 success: false, 
-                message: 'Please cancel or complete all active bookings before deleting your account' 
+                message: 'Please cancel or complete all active reservations and trial holds before deleting your account' 
             });
         }
 
@@ -668,7 +680,12 @@ export const updateShopProfile = async (req, res) => {
         }
 
         // Get contact number from request body
-        const contactNumber = req.body.contactNumber || user.shopProfile?.contactNumber || user.contactNumber || ''
+        const rawContactNumber = req.body.contactNumber || user.shopProfile?.contactNumber || user.contactNumber || ''
+        const contactNumber = rawContactNumber.toString().replace(/\D/g, '').slice(0, 11)
+        
+        if (contactNumber && contactNumber.length !== 11) {
+            return res.status(400).json({ success: false, message: "Shop contact number must be exactly 11 digits" })
+        }
 
         // Build operatingHours string if separate time fields are provided
         let finalOperatingHours = operatingHours

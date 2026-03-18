@@ -30,6 +30,11 @@ const UserProfile = () => {
 
   // Delete account state
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    window.location.href = '/'
+  }
 
   const role = user ? (typeof user.role === 'object' ? user.role.name : user.role) : null
   const roleLabel = role // Display actual role
@@ -178,7 +183,7 @@ const UserProfile = () => {
   }
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmation !== 'DELETE') {
+    if (deleteConfirmation.toUpperCase() !== 'DELETE') {
       setError('Please type DELETE to confirm')
       return
     }
@@ -199,7 +204,7 @@ const UserProfile = () => {
 
       if (data.success) {
         localStorage.removeItem('token')
-        navigate('/')
+        window.location.href = '/'
       } else {
         setError(data.message || 'Failed to delete account')
       }
@@ -369,6 +374,12 @@ const UserProfile = () => {
                       Change Password
                     </button>
                     <button
+                      onClick={handleLogout}
+                      className='px-8 py-3 bg-white border-2 border-primary text-primary rounded-2xl text-[10px] uppercase tracking-widest hover:bg-primary/5 transition-all font-black hover:-translate-y-1 shadow-sm sm:hidden'
+                    >
+                      Logout
+                    </button>
+                    <button
                       onClick={() => setShowDeleteAccount(!showDeleteAccount)}
                       className='px-8 py-3 border border-red-100 text-red-500 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-red-50 hover:border-red-200 transition-all font-black ml-auto hover:-translate-y-1 shadow-sm'
                     >
@@ -414,10 +425,11 @@ const UserProfile = () => {
                         type='text'
                         value={formData.contactNumber}
                         onChange={(e) => {
-                          setFormData({ ...formData, contactNumber: e.target.value })
-                          if (e.target.value === '') {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 11)
+                          setFormData({ ...formData, contactNumber: val })
+                          if (val === '') {
                             setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
-                          } else if (validatePhoneNumber(e.target.value)) {
+                          } else if (validatePhoneNumber(val)) {
                             setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
                           }
                         }}

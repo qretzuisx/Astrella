@@ -33,60 +33,72 @@ const OwnerDashboard = () => {
     return '--:--'
   }
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setError('Please login to access the dashboard')
-          setLoading(false)
-          return
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setError('Please login to access the dashboard')
+        setLoading(false)
+        return
+      }
+
+      // First check user data to see their role
+      const userResponse = await fetch(`${API_URL}/user/data`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      })
 
-        // First check user data to see their role
-        const userResponse = await fetch(`${API_URL}/user/data`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+      const userData = await userResponse.json()
 
-        const userData = await userResponse.json()
-        
-        if (userData.success) {
-          const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
-          setUserRole(role)
-          
+      if (userData.success) {
+        const role = userData.user ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role) : null
+        setUserRole(role)
+
         // Check if user is owner
         if (role !== 'owner') {
           setError('You need owner access to view this dashboard. Please submit an owner request first.')
-            setLoading(false)
-            return
-          }
+          setLoading(false)
+          return
         }
-
-        // Fetch dashboard data
-        const response = await fetch(`${API_URL}/owner/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        const data = await response.json()
-        
-        if (data.success) {
-          setDashboardData(data.dashboardData)
-        } else {
-          setError(data.message || 'Failed to load dashboard data')
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard:', error)
-        setError('An error occurred. Please try again.')
-      } finally {
-        setLoading(false)
       }
-    }
 
+      // Fetch dashboard data
+      const response = await fetch(`${API_URL}/owner/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setDashboardData(data.dashboardData)
+      } else {
+        setError(data.message || 'Failed to load dashboard data')
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard:', error)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchDashboardData()
+
+    // Set up polling every 10 seconds
+    const intervalId = setInterval(fetchDashboardData, 10000)
+
+    // Refresh when window gains focus
+    const handleFocus = () => fetchDashboardData()
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      clearInterval(intervalId)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   if (loading) {
@@ -281,8 +293,8 @@ const OwnerDashboard = () => {
                       key={booking._id || booking.id}
                       className='group flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-gray-100 rounded-3xl hover:bg-gray-50/80 hover:border-primary/10 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden'
                       onClick={() => {
-                        const gownId = booking.gown?._id || booking.gown?.id || booking.gown
-                        navigate(`/owner/manage-bookings?gownId=${gownId}`)
+                        const bookingId = booking._id || booking.id
+                        navigate(`/owner/manage-bookings?highlightId=${bookingId}`)
                       }}
                     >
                       <div className='flex items-center gap-5'>
