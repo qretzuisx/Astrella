@@ -665,24 +665,24 @@ const GownDetails = () => {
       </button>
 
       {/* Main Content */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8'>
+      <div className='flex flex-col lg:flex-row gap-6 lg:gap-12 relative'>
         {/* Left Column - Image and Descriptions */}
-        <div className='w-full flex flex-col gap-10'>
+        <div className='w-full lg:w-3/5 flex flex-col gap-6 sm:gap-10'>
           {/* Image Section */}
           <div className='relative rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group'>
             <img
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
-              className='w-full h-auto max-h-[700px] object-cover transition-transform duration-1000 group-hover:scale-105'
+              className='w-full h-auto max-h-[800px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
             
             {/* Status Badge */}
-            <div className={`absolute top-8 left-8 px-8 py-3.5 rounded-2xl text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/20 ${
-              gown?.status === 'Available' ? 'bg-primary/80' :
-              gown?.status === 'Unavailable' ? 'bg-orange-500/80' :
-              gown?.status === 'In-Laundry' ? 'bg-secondary/80' :
-              gown?.status === 'Reserved' ? 'bg-pink-500/80' :
-              'bg-gray-600/80'
+            <div className={`absolute top-8 left-8 px-10 py-5 rounded-[24px] text-white font-black text-[12px] uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/20 transition-all duration-500 hover:scale-105 ${
+              gown?.status === 'Available' ? 'bg-green-600/90' :
+              gown?.status === 'Unavailable' ? 'bg-secondary/90' :
+              gown?.status === 'In-Laundry' ? 'bg-primary/90' :
+              gown?.status === 'Reserved' ? 'bg-secondary/90' :
+              'bg-gray-600/90'
             }`}>
               {gown.status}
             </div>
@@ -692,7 +692,7 @@ const GownDetails = () => {
           <div className='space-y-6'>
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <span className="px-3 py-1 bg-[#FF3B30]/5 text-[#FF3B30] text-[10px] font-black uppercase tracking-widest rounded-full">{gown.category || 'Apparel'}</span>
+                <span className="px-3 py-1 bg-secondary/5 text-secondary text-[10px] font-black uppercase tracking-widest rounded-full">{gown.category || 'Apparel'}</span>
                 <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
                 <span className="text-gray-400 text-xs font-bold">ID: {gown._id?.slice(-6).toUpperCase()}</span>
               </div>
@@ -708,7 +708,7 @@ const GownDetails = () => {
                       const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
                       navigate(`/owner-profile/${ownerId}`)
                     }}
-                    className='text-primary hover:text-[#FFD700] font-black text-lg transition-colors'
+                    className='text-primary hover:text-secondary-light font-black text-lg transition-colors'
                   >
                     {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
                   </button>
@@ -722,7 +722,7 @@ const GownDetails = () => {
               <div className="relative z-10">
                 <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2'>Daily Rental rate</p>
                 <div className='text-4xl font-black flex items-baseline gap-2'>
-                  <span className="text-[#FF3B30]">{currency}</span>
+                  <span className="text-secondary">{currency}</span>
                   <span className='text-primary'>{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
                 </div>
               </div>
@@ -734,14 +734,14 @@ const GownDetails = () => {
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
             <div className='p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_40px_rgba(1,62,141,0.05)] group hover:shadow-[0_15px_60px_rgba(1,62,141,0.08)] transition-all duration-500 backdrop-blur-md hover:border-primary/10'>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-1 bg-gradient-to-r from-[#FFD700] to-yellow-500 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.2)]"></div>
+                <div className="w-6 h-1 bg-gradient-to-r from-secondary-light to-yellow-500 rounded-full shadow-[0_0_10px_rgba(221,175,41,0.2)]"></div>
                 <h2 className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Boutique Location</h2>
               </div>
               <p className='text-primary font-black text-lg'>{gown.location || 'Visit our physical store'}</p>
             </div>
             <div className='p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_40px_rgba(1,62,141,0.05)] group hover:shadow-[0_15px_60px_rgba(1,62,141,0.08)] transition-all duration-500 backdrop-blur-md hover:border-primary/10'>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-1 bg-gradient-to-r from-[#FFD700] to-yellow-500 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.2)]"></div>
+                <div className="w-6 h-1 bg-gradient-to-r from-secondary-light to-yellow-500 rounded-full shadow-[0_0_10px_rgba(221,175,41,0.2)]"></div>
                 <h2 className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Direct Contact</h2>
               </div>
               <p className='text-primary font-black text-lg'>{gown.contactNumber || gown.contact || 'Inquire via Boutique'}</p>
@@ -754,7 +754,7 @@ const GownDetails = () => {
           <div className='bg-white rounded-[32px] border border-primary/5 p-8 shadow-[0_20px_60px_rgba(1,62,141,0.06)] backdrop-blur-xl relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl -mr-32 -mt-32"></div>
             <h2 className='text-xl font-black text-primary mb-8 flex items-center gap-3 relative z-10'>
-              <div className="w-8 h-8 bg-gradient-to-tr from-[#FFD700] to-yellow-500 rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(255,215,0,0.2)]">
+              <div className="w-8 h-8 bg-gradient-to-tr from-secondary-light to-yellow-500 rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(221,175,41,0.2)]">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -763,83 +763,74 @@ const GownDetails = () => {
             </h2>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10'>
               {/* Material */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.fabric_icon} alt="fabric" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Material</p>
-                  <p className='text-primary font-black text-xl truncate'>{gown.fabric || 'Premium Blends'}</p>
+                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Material</p>
+                  <p className='text-primary font-black text-xl'>{gown.fabric || 'Premium Blends'}</p>
                 </div>
               </div>
 
               {/* Size */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.size_icon} alt="size" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Available Size</p>
-                  <p className='text-primary font-black text-xl truncate'>
+                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Size</p>
+                  <p className='text-primary font-black text-xl'>
                     {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size}
                   </p>
                 </div>
               </div>
 
               {/* Color */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.color_icon} alt="color" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
+                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
                   <div className="flex items-center gap-3">
                     {(() => {
                       const colorMap = {
-                        'off-white': '#FAF9F6',
-                        'ivory': '#FFFFF0',
-                        'champagne': '#F7E7CE',
-                        'cream': '#FFFDD0',
-                        'nude': '#E3BC9A',
-                        'peach': '#FFDAB9',
-                        'blush': '#FE828C',
-                        'sky blue': '#87CEEB',
-                        'royal blue': '#4169E1',
-                        'wine red': '#722F37',
-                        'maroon': '#800000',
-                        'gold': '#FFD700',
-                        'silver': '#C0C0C0',
-                        'white': '#FFFFFF',
-                        'black': '#000000',
-                        'navy': '#000080',
-                        'emerald': '#50C878',
-                        'sage': '#BCB88A',
-                        'sage green': '#BCB88A',
-                        'dusty rose': '#DCAE96',
-                        'rose gold': '#B76E79',
-                        'burgundy': '#800020',
-                        'mocha': '#967969',
-                        'lavender': '#E6E6FA',
-                        'lilac': '#C8A2C8',
-                        'mint': '#98FF98',
-                        'teal': '#008080',
-                        'rust': '#B7410E',
-                        'terracotta': '#E2725B',
-                        'mustard': '#FFDB58',
-                        'olive': '#808000'
+                        'red': '#EF4444', 'burgundy': '#800020', 'maroon': '#800000', 'crimson': '#DC143C', 'ruby': '#E0115F', 'rose': '#FF007F', 'wine': '#722F37', 'brick': '#B22222',
+                        'pink': '#EC4899', 'blush': '#DE5D83', 'magenta': '#FF00FF', 'fuchsia': '#FF00FF', 'coral': '#FF7F50', 'peach': '#FFDAB9', 'salmon': '#FA8072', 'hotpink': '#FF69B4',
+                        'orange': '#F97316', 'rust': '#B7410E', 'terracotta': '#E2725B', 'yellow': '#EAB308', 'gold': '#FFD700', 'amber': '#FFBF00', 'mustard': '#FFDB58', 'canary': '#FFEF00',
+                        'green': '#22C55E', 'emerald': '#50C878', 'mint': '#98FF98', 'teal': '#008080', 'olive': '#808000', 'jade': '#00A86B', 'sage': '#BCB88A', 'forest': '#228B22',
+                        'blue': '#3B82F6', 'navy': '#000080', 'sky': '#87CEEB', 'sapphire': '#0F52BA', 'azure': '#007FFF', 'cobalt': '#0047AB', 'turquoise': '#40E0D0', 'royal': '#4169E1', 'cyan': '#00FFFF',
+                        'purple': '#A855F7', 'lavender': '#E6E6FA', 'violet': '#EE82EE', 'plum': '#8E4585', 'indigo': '#4B0082', 'lilac': '#C8A2C8', 'mauve': '#E0B0FF',
+                        'brown': '#964B00', 'chocolate': '#7B3F00', 'tan': '#D2B48C', 'khaki': '#C3B091',
+                        'white': '#FFFFFF', 'ivory': '#FFFFF0', 'cream': '#FFFDD0', 'beige': '#F5F5DC', 'black': '#000000', 'gray': '#6B7280', 'grey': '#6B7280', 'silver': '#C0C0C0', 'charcoal': '#36454F', 'nude': '#E3BC9A', 'champagne': '#F7E7CE'
+                      };
+                      
+                      const getHex = (name) => {
+                        const lower = (name || '').toLowerCase().trim();
+                        if (colorMap[lower]) return colorMap[lower];
+                        const keys = Object.keys(colorMap).sort((a,b) => b.length - a.length);
+                        for (const key of keys) {
+                          if (lower.includes(key)) return colorMap[key];
+                        }
+                        return '#CCCCCC';
                       };
                       
                       const colorValue = gown.color;
                       let colors = [];
-                      if (Array.isArray(colorValue)) colors = colorValue;
-                      else if (typeof colorValue === 'string') colors = colorValue.split(',').map(c => c.trim());
-                      else colors = [colorValue || '#eee'];
+                      if (Array.isArray(colorValue)) {
+                        colors = colorValue;
+                      } else if (typeof colorValue === 'string') {
+                        colors = colorValue.split(/[,/&]+/).map(c => c.trim()).filter(Boolean);
+                      } else {
+                        colors = [colorValue || '#eee'];
+                      }
                       
                       return (
                         <div className="flex -space-x-2">
                           {colors.map((c, i) => {
-                            const normalized = c.toLowerCase();
-                            const hex = colorMap[normalized] || normalized;
+                            const normalized = (c || '').toString().toLowerCase();
+                            const hex = getHex(normalized);
                             return (
                               <div 
                                 key={i} 
@@ -850,21 +841,21 @@ const GownDetails = () => {
                             );
                           })}
                         </div>
-                      )
+                      );
                     })()}
-                    <p className='text-primary font-black text-xl truncate capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
+                    <p className='text-primary font-black text-xl capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Event Types */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-[#FF3B30]/20 hover:shadow-[0_20px_50px_rgba(255,59,48,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-[#FF3B30]/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-[#FF3B30] transition-all duration-500'>
+              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.event_icon} alt="event" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Best for</p>
-                  <p className='text-primary font-black text-xl capitalize truncate'>
+                  <p className='text-primary font-black text-xl capitalize'>
                     {Array.isArray(gown.eventType) && gown.eventType.length > 0
                       ? gown.eventType.join(', ')
                       : gown.eventtype || gown.eventType || 'All Occasions'}
@@ -875,8 +866,8 @@ const GownDetails = () => {
           </div>
         </div>
 
-        {/* Details Section (Right Column) */}
-        <div className='flex flex-col gap-8'>
+        {/* Details Section (Right Column) Sticky on Desktop, Static/Bottom on Mobile */}
+        <div className='w-full lg:w-2/5 flex flex-col gap-8 lg:sticky lg:top-24 h-fit pb-24 lg:pb-0'>
           {/* Success/Error Notifications */}
           <div className="space-y-4">
             {success && (
@@ -1039,7 +1030,7 @@ const GownDetails = () => {
 
                 {blockedClick && (
                   <div className='mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl animate-fade-in backdrop-blur-md'>
-                    <p className='text-[10px] font-black text-red-500 uppercase tracking-widest mb-1'>Date Unavailable</p>
+                    <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1'>Date Unavailable</p>
                     <p className="text-orange-600 text-xs font-bold">{blockedClick.message}</p>
                   </div>
                 )}
@@ -1087,9 +1078,9 @@ const GownDetails = () => {
                       setFieldError('pickupTime', '')
                     }}
                     className={`w-full px-5 py-4 bg-[#FDFDFF] border rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
-                      formErrors.pickupTime ? 'border-red-500' : 'border-primary/10 focus:border-primary'
+                      formErrors.pickupTime ? 'border-secondary' : 'border-primary/10 focus:border-primary'
                     } appearance-none relative`}
-                    style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23013E8D%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
+                    style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
                   >
                     <option value='' className='bg-white'>Slot</option>
                     {allowedTimes.map(time => {
@@ -1114,7 +1105,7 @@ const GownDetails = () => {
                         className={`w-full px-5 py-4 bg-[#FDFDFF] border rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
                           formErrors.returnTime ? 'border-red-500' : 'border-primary/10 focus:border-primary'
                         } appearance-none relative`}
-                        style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23013E8D%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
+                        style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
                       >
                         <option value='' className='bg-white'>Slot</option>
                         {allowedTimes.map(time => {

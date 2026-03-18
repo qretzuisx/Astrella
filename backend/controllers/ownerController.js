@@ -154,9 +154,12 @@ export const getOwnersGowns = async (req, res) => {
 // API to get all public gowns (available for browsing)
 export const getAllGowns = async (req, res) => {
     try {
-        const gowns = await Gown.find({})
+        let gowns = await Gown.find({})
             .populate('owner', 'name')
             .sort({ createdAt: -1 })
+        
+        // Filter out gowns whose owners were deleted
+        gowns = gowns.filter(gown => gown.owner !== null);
         // Calculate actual status for each gown based on current date and bookings
         for (let gown of gowns) {
             gown.status = await calculateActualGownStatus(gown._id);
@@ -419,3 +422,177 @@ export const updateUserImage = async (req, res) => {
     }
 }
 
+
+// Optimized API to get trending gowns (most booked)
+export const getTrendingGowns = async (req, res) => {
+    try {
+        const now = new Date();
+        const currentTime = now.getTime();
+        const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+        // 1. Get top booked gowns via aggregation
+        const trendingData = await Booking.aggregate([
+            {
+                $match: {
+                    status: { $in: ['confirmed', 'completed'] }
+                }
+            },
+            {
+                $group: {
+                    _id: '$gown',
+                    bookingCount: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { bookingCount: -1 }
+            },
+            {
+                $limit: 10
+            }
+        ]);
+
+        const trendingIds = trendingData.map(item => item._id);
+        
+        // 2. Fetch specific gowns + fallback if needed
+        let initialGowns = await Gown.find({ 
+            _id: { $in: trendingIds },
+            available: true,
+            verified: true
+        }).populate('owner', 'name shopName');
+
+        // Filter out orphaned gowns
+        initialGowns = initialGowns.filter(gown => gown.owner !== null);
+
+        let gowns = initialGowns;
+
+        if (gowns.length < 5) {
+            let recentGowns = await Gown.find({
+                _id: { $nin: gownIds },
+                available: true
+                // Removed strict verified filter for fallback to ensure something shows up
+                // to avoid empty trending choice section
+            })
+            .populate('owner', 'name shopName')
+            .sort({ verified: -1, createdAt: -1 }) // Prioritize verified if available
+            .limit(10 - gowns.length);
+            
+            // Filter out orphaned gowns
+            recentGowns = recentGowns.filter(g => g.owner !== null);
+            
+            gowns = [...gowns, ...recentGowns];
+        }
+
+        const gownIds = gowns.map(g => g._id);
+
+        // 3. Fetch all potentially conflicting bookings for these gowns in ONE query
+        // Max laundry days is 14
+        const maxLaundryMs = 14 * 24 * 60 * 60 * 1000;
+        const relevantBookings = await Booking.find({
+            gown: { $in: gownIds },
+            status: { $in: ['pending', 'confirmed', 'completed'] },
+            pickupDate: { $lte: new Date(currentTime + maxLaundryMs + DAY_IN_MS) },
+            returnDate: { $gte: new Date(currentTime - maxLaundryMs - DAY_IN_MS) }
+        }).sort({ pickupDate: 1 });
+
+        // Map bookings to gowns for easier lookup
+        const bookingsMap = {};
+        relevantBookings.forEach(b => {
+            const gid = b.gown.toString();
+            if (!bookingsMap[gid]) bookingsMap[gid] = [];
+            bookingsMap[gid].push(b);
+        });
+
+        const combineDateAndTime = (dateValue, timeValue) => {
+            if (!dateValue) return null;
+            const d = new Date(dateValue);
+            const safeTime = timeValue || "09:00";
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return new Date(`${yyyy}-${mm}-${dd}T${safeTime}`);
+        };
+
+        // 4. Calculate statuses in-memory
+        const finalizedGowns = gowns.map(gown => {
+            const g = gown.toObject();
+            const gid = g._id.toString();
+            
+            if (g.statusOverride) {
+                g.status = g.statusOverride;
+                return g;
+            }
+
+            const gBookings = bookingsMap[gid] || [];
+            const laundryDays = g.laundryDays || 0;
+            let finalStatus = 'Available';
+
+            for (const booking of gBookings) {
+                const pickupDateTime = combineDateAndTime(booking.pickupDate, booking.pickupTime);
+                const returnDateTime = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime);
+
+                if (!pickupDateTime || !returnDateTime) continue;
+
+                const pickupTimeMs = pickupDateTime.getTime();
+                const returnTimeMs = returnDateTime.getTime();
+
+                if (booking.status === 'confirmed') {
+                    if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
+                        finalStatus = 'In-Use';
+                        break;
+                    }
+                    if (pickupDateTime.toDateString() === now.toDateString()) {
+                        finalStatus = 'Reserved';
+                    }
+                } else if (booking.status === 'pending') {
+                    if (pickupDateTime.toDateString() === now.toDateString() || (currentTime >= pickupTimeMs && currentTime <= returnTimeMs)) {
+                        finalStatus = 'Reserved';
+                    }
+                } else if (booking.status === 'completed' && laundryDays > 0) {
+                    const laundryEndDate = new Date(returnDateTime);
+                    laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
+                    laundryEndDate.setHours(23, 59, 59, 999);
+                    if (now >= returnDateTime && now <= laundryEndDate) {
+                        finalStatus = 'In-Laundry';
+                    }
+                }
+            }
+
+            g.status = finalStatus;
+            return g;
+        });
+
+        // 5. Restore original trending order for the first set
+        const trendingOrderMap = {};
+        trendingIds.forEach((id, idx) => { trendingOrderMap[id.toString()] = idx; });
+        
+        finalizedGowns.sort((a, b) => {
+            const idxA = trendingOrderMap[a._id.toString()] ?? 999;
+            const idxB = trendingOrderMap[b._id.toString()] ?? 999;
+            if (idxA !== idxB) return idxA - idxB;
+            // secondary sort by newest if both were fallback
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        res.json({ success: true, gowns: finalizedGowns.slice(0, 10) });
+    } catch (error) {
+        console.error('getTrendingGowns:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// API to get existing attributes for suggestions
+export const getExistingAttributes = async (req, res) => {
+    try {
+        const uniqueFabrics = await Gown.distinct('fabric');
+        const uniqueColors = await Gown.distinct('color');
+        
+        // Clean up: filter out nulls/empties and trim
+        const fabrics = [...new Set(uniqueFabrics.filter(f => f).map(f => f.trim()))].sort();
+        const colors = [...new Set(uniqueColors.filter(c => c).map(c => c.trim()))].sort();
+        
+        res.json({ success: true, fabrics, colors });
+    } catch (error) {
+        console.error('getExistingAttributes:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

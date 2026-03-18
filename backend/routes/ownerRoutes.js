@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/auth.js";
-import { addGown, DeleteGown, getAllGowns, getDashboardData, getGownById, getOwnersGowns, ToggleGownAvailability, updateLaundryDays, updateUserImage, updateGown } from "../controllers/ownerController.js";
+import { addGown, DeleteGown, getAllGowns, getDashboardData, getGownById, getOwnersGowns, ToggleGownAvailability, updateLaundryDays, updateUserImage, updateGown, getTrendingGowns, getExistingAttributes } from "../controllers/ownerController.js";
 import upload from "../middleware/multer.js";
 import { verifyOwner } from "../middleware/verify.js";
 
@@ -9,6 +9,7 @@ const ownerRouter = express.Router();
 // Public routes for browsing
 ownerRouter.get("/all-gowns", getAllGowns)
 ownerRouter.get("/gowns/:id", getGownById)
+ownerRouter.get("/get-attributes", protect, verifyOwner, getExistingAttributes)
 
 ownerRouter.post("/add-gown", protect, verifyOwner, upload.single("image"), addGown)
 ownerRouter.get("/gowns", protect, verifyOwner, getOwnersGowns)
@@ -17,6 +18,7 @@ ownerRouter.put("/gown/laundry-days", protect, verifyOwner, updateLaundryDays)
 ownerRouter.put("/gown/update", protect, verifyOwner, updateGown)
 ownerRouter.delete("/delete-gown", protect, verifyOwner, DeleteGown)
 ownerRouter.get("/dashboard", protect, verifyOwner, getDashboardData)
+ownerRouter.get("/trending-gowns", getTrendingGowns)
 ownerRouter.post("/update-image", protect, verifyOwner, upload.single("image"), updateUserImage)
 
 export default ownerRouter;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { assets, eventTypeList } from '../assets/assets'
 import { API_URL } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
+import { removeBackground } from '@imgly/background-removal'
 
 const AddGown = () => {
   const navigate = useNavigate()
@@ -24,9 +25,34 @@ const AddGown = () => {
 
   const [selectedImage, setSelectedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
+  const [isRemovingBg, setIsRemovingBg] = useState(false)
+
 
   const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size']
 
+  // Helper for dynamic color preview
+  const getColorPreview = (colorName) => {
+    if (!colorName) return 'transparent';
+    const lower = colorName.toLowerCase().trim();
+    
+    // Improved matching logic for preview
+    const colorMap = {
+      'red': '#EF4444', 'burgundy': '#800020', 'maroon': '#800000', 'crimson': '#DC143C', 'ruby': '#E0115F', 'rose': '#FF007F', 'wine': '#722F37',
+      'pink': '#EC4899', 'blush': '#DE5D83', 'magenta': '#FF00FF', 'fuchsia': '#FF00FF', 'coral': '#FF7F50', 'peach': '#FFDAB9', 'salmon': '#FA8072',
+      'orange': '#F97316', 'rust': '#B7410E', 'terracotta': '#E2725B', 'yellow': '#EAB308', 'gold': '#FFD700', 'amber': '#FFBF00', 'mustard': '#FFDB58',
+      'green': '#22C55E', 'emerald': '#50C878', 'mint': '#98FF98', 'teal': '#008080', 'olive': '#808000', 'jade': '#00A86B', 'sage': '#BCB88A',
+      'blue': '#3B82F6', 'navy': '#000080', 'sky': '#87CEEB', 'sapphire': '#0F52BA', 'azure': '#007FFF', 'cobalt': '#0047AB', 'turquoise': '#40E0D0', 'royal': '#4169E1',
+      'purple': '#A855F7', 'lavender': '#E6E6FA', 'violet': '#EE82EE', 'plum': '#8E4585', 'indigo': '#4B0082', 'lilac': '#C8A2C8',
+      'white': '#FFFFFF', 'ivory': '#FFFFF0', 'cream': '#FFFDD0', 'beige': '#F5F5DC', 'black': '#000000', 'gray': '#6B7280', 'grey': '#6B7280', 'silver': '#C0C0C0', 'nude': '#E3BC9A', 'champagne': '#F7E7CE'
+    };
+    
+    if (colorMap[lower]) return colorMap[lower];
+    const keys = Object.keys(colorMap).sort((a,b) => b.length - a.length);
+    for (const key of keys) {
+      if (lower.includes(key)) return colorMap[key];
+    }
+    return '#CCCCCC'; 
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData({
@@ -73,7 +99,7 @@ const AddGown = () => {
     })
   }
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0]
     if (file) {
       setSelectedImage(file)
@@ -83,6 +109,25 @@ const AddGown = () => {
         setImagePreview(reader.result)
       }
       reader.readAsDataURL(file)
+
+      // Automatically remove background
+      try {
+        setIsRemovingBg(true)
+        const imageBlob = await removeBackground(file)
+        const newFile = new File([imageBlob], file.name.replace(/\.[^/.]+$/, "") + ".png", { type: 'image/png' })
+        
+        setSelectedImage(newFile)
+        
+        const newReader = new FileReader()
+        newReader.onloadend = () => {
+          setImagePreview(newReader.result)
+        }
+        newReader.readAsDataURL(newFile)
+      } catch (error) {
+        console.error("Error removing background:", error)
+      } finally {
+        setIsRemovingBg(false)
+      }
     }
   }
 
@@ -225,7 +270,7 @@ const AddGown = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-6 sm:p-10 space-y-10'>
+          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-4 sm:p-10 space-y-10'>
             
             {/* Image Upload Area */}
             <div className="space-y-6">
@@ -250,8 +295,14 @@ const AddGown = () => {
 
                 {imagePreview && (
                   <div className="w-full md:w-56 aspect-[3/4] overflow-hidden rounded-[32px] border border-gray-100 shadow-2xl relative group">
-                    <img src={imagePreview} alt='Preview' className='w-full h-full object-cover transition-transform group-hover:scale-110 duration-700' />
+                    <img src={imagePreview} alt='Preview' className={`w-full h-full object-cover transition-transform duration-700 ${isRemovingBg ? 'opacity-50 blur-sm' : 'group-hover:scale-110'}`} />
                     <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                    {isRemovingBg && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 backdrop-blur-sm">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-white/80 px-2 py-1 rounded-md">Removing BG...</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -292,7 +343,9 @@ const AddGown = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Main Color *</label>
+                  <div className="flex items-center justify-between ml-4">
+                    <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Main Color *</label>
+                  </div>
                   <input
                     type='text'
                     name='color'
@@ -429,10 +482,10 @@ const AddGown = () => {
             <div className='flex flex-col sm:flex-row gap-4 pt-4'>
               <button
                 type='submit'
-                disabled={loading}
+                disabled={loading || isRemovingBg}
                 className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 relative overflow-hidden group'
               >
-                 <span className="relative z-10">{loading ? 'Adding to Collection...' : 'Add to Collection'}</span>
+                 <span className="relative z-10">{(loading || isRemovingBg) ? 'Processing...' : 'Add to Collection'}</span>
                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
               </button>
               <button

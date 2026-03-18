@@ -4,6 +4,7 @@ import { calculateActualGownStatus } from "./bookingController.js"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import sendEmail from '../utils/email.js'
 
 
 // jwt token
@@ -351,7 +352,7 @@ export const requestPasswordReset = async (req, res) => {
             return res.status(404).json({ success: false, message: 'No account found with that email' });
         }
 
-        const rawToken = crypto.randomBytes(20).toString('hex');
+        const rawToken = Math.floor(10000 + Math.random() * 90000).toString(); // Secure 5-digit numeric code
         const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
         user.resetPasswordToken = hashedToken;
@@ -463,8 +464,8 @@ export const deleteAccount = async (req, res) => {
             });
         }
 
-        // Delete user's bookings history
-        await Booking.deleteMany({ user: _id });
+        // Delete user's gowns
+        await Gown.deleteMany({ owner: _id });
 
         // Delete user
         await User.findByIdAndDelete(_id);
@@ -487,6 +488,9 @@ export const getRecommendations = async (req, res) => {
         let allGowns = await Gown.find({ available: true })
             .populate('owner', 'name')
             .sort({ createdAt: -1 });
+
+        // Filter out orphaned gowns (owner deleted)
+        allGowns = allGowns.filter(gown => gown.owner !== null);
 
         // Recalculate dynamic status for each gown so Recommendations uses the same
         // availability logic as the Available Apparel grid.

@@ -58,5 +58,8 @@ const bookingSchema = new mongoose.Schema({
     balancePaidAmount: { type: Number }
 }, { timestamps: true })
 
+bookingSchema.index({ gown: 1, status: 1 });
+bookingSchema.index({ status: 1, pickupDate: 1, returnDate: 1 });
+
 const Booking = mongoose.model('Booking', bookingSchema)
 export default Booking;

@@ -358,31 +358,40 @@ const ManageGowns = () => {
 
       <div className='flex-1 p-4 sm:p-6 lg:p-8'>
         <div className='max-w-7xl mx-auto'>
-          {/* Header */}
-          <div className='mb-6 sm:mb-8 mt-12 lg:mt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-            <div>
-              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2'>Manage Apparel</h1>
-              <p className='text-sm sm:text-base text-gray-600'>View and manage all your apparel.</p>
-            </div>
-            <div className='flex flex-col gap-3 w-full sm:w-auto'>
-              <button
-                onClick={() => navigate('/owner/add-gown')}
-                className='w-full px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold flex items-center justify-center gap-2 text-sm sm:text-base'
-              >
-                <img src={assets.addIconColored} alt="add" className='w-4 h-4 sm:w-5 sm:h-5 filter brightness-0 invert' />
-                Add New Gown
-              </button>
-              <div className='relative'>
-                <input
-                  type='text'
-                  placeholder='Search apparel...'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm'
-                />
-                <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
-                  <img src={assets.search_icon} alt="search" className='w-4 h-4 opacity-40' />
+          {/* Header Section */}
+          <div className='mb-10 mt-12 lg:mt-0'>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-1 bg-primary rounded-full"></div>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Operations</span>
                 </div>
+                <h1 className='text-3xl sm:text-4xl font-black text-primary-dull tracking-tight mb-2'>Manage Apparel</h1>
+                <p className='text-sm sm:text-base text-gray-500 font-medium'>View and manage all your apparel inventory.</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                {/* Search Bar */}
+                <div className="w-full sm:w-80 relative group">
+                  <input
+                    type="text"
+                    placeholder="Search apparel name, color..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                    <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate('/owner/add-gown')}
+                  className='w-full sm:w-auto px-8 h-14 bg-primary text-white rounded-2xl hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2'
+                >
+                  <img src={assets.addIconColored} alt="add" className='w-5 h-5 filter brightness-0 invert' />
+                  Add Gown
+                </button>
               </div>
             </div>
           </div>
@@ -416,38 +425,41 @@ const ManageGowns = () => {
 
           {/* Success/Error Messages */}
           {success && (
-            <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <p className='text-green-800 text-sm sm:text-base'>{success}</p>
+            <div className='mb-8 p-4 bg-green-50 border border-green-100 rounded-3xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500'>
+               <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-lg font-bold">✓</div>
+               <p className='text-green-800 font-bold text-sm'>{success}</p>
             </div>
           )}
 
           {error && (
-            <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
-              <p className='text-red-800 text-sm sm:text-base'>{error}</p>
+            <div className='mb-8 p-4 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500'>
+               <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white text-lg font-bold">!</div>
+               <p className='text-red-800 font-bold text-sm'>{error}</p>
             </div>
           )}
 
           {/* Gowns Grid */}
           {filteredGowns.length === 0 ? (
-            <div className='text-center py-12 sm:py-16 bg-white rounded-xl border border-gray-200 px-4'>
-              <img src={assets.gownIcon} alt="gown" className='w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-50' />
-              <p className='text-lg sm:text-xl text-gray-500 mb-3 sm:mb-4'>
-                {gowns.length === 0 ? 'No apparel found' : `No ${filterStatus.toLowerCase()} gowns`}
+            <div className='text-center py-32 bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100'>
+              <div className="p-6 bg-white inline-block rounded-[2rem] shadow-sm mb-6">
+                  <img src={assets.gownIconColored} className="w-10 h-10 opacity-20" />
+              </div>
+              <p className='text-xl font-black text-gray-400'>
+                {gowns.length === 0 ? 'No apparel inventory yet' : `No ${filterStatus.toLowerCase()} apparel found`}
               </p>
               {gowns.length === 0 && (
-                <>
-                  <p className='text-sm sm:text-base text-gray-400 mb-4 sm:mb-6'>Start by adding your first gown!</p>
+                <div className="mt-8">
                   <button
                     onClick={() => navigate('/owner/add-gown')}
-                    className='px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-colors font-semibold text-sm sm:text-base'
+                    className='px-8 h-14 bg-primary text-white rounded-2xl hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 mx-auto'
                   >
-                    Add Your First Gown
+                    Add Your First Item
                   </button>
-                </>
+                </div>
               )}
             </div>
           ) : (
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20'>
               {filteredGowns.map((gown) => (
                 <div
                   key={gown._id || gown.id}
@@ -458,7 +470,7 @@ const ManageGowns = () => {
                     <img
                       src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1}
                       alt={gown.name}
-                      className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700'
+                      className='w-full h-full object-contain bg-white group-hover:scale-110 transition-transform duration-700'
                     />
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
@@ -529,9 +541,11 @@ const ManageGowns = () => {
                     {/* Laundry Management - Refined */}
                     <div className='mb-6 p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex items-center justify-between'>
                       <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
-                            <img src={assets.laundry_icon} className="w-4 h-4" />
-                         </div>
+                          <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                             <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                             </svg>
+                          </div>
                          <div>
                             <p className='text-[10px] font-black text-primary-dull/40 uppercase tracking-widest'>Maintenance</p>
                             <p className="text-xs font-bold text-primary-dull">Laundry Hold</p>
@@ -557,46 +571,30 @@ const ManageGowns = () => {
                           {laundrySaving === (gown._id || gown.id) ? '...' : 'Save'}
                         </button>
                       </div>
-                    </div>
-
-                    {/* Action Buttons - Premium Control Bar */}
-                    <div className='flex gap-2.5'>
-                      <button
-                        onClick={() => openEditModal(gown)}
-                        className='flex-1 h-11 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2'
-                      >
-                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                         </svg>
-                        Edit
-                      </button>
+                    </div>                    {/* Action Buttons - Premium Control Bar */}
+                    <div className='flex gap-3'>
+                        <button
+                          onClick={() => openEditModal(gown)}
+                          className='flex-1 h-14 bg-gray-50 text-gray-700 rounded-2xl hover:bg-primary hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2 group/btn'
+                        >
+                           <img src={assets.edit_profile_icon} className="w-5 h-5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
+                          Edit
+                        </button>
                       <button
                         onClick={() => handleToggleAvailability(gown._id || gown.id)}
-                        className={`flex-1 h-11 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${gown.available
+                        className={`flex-1 h-14 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${gown.available
                             ? 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'
                             : 'bg-green-50 text-green-700 hover:bg-green-600 hover:text-white'
                           }`}
                       >
-                        {gown.available ? (
-                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                             </svg>
-                        ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                             </svg>
-                        )}
                         {gown.available ? 'Hide' : 'Show'}
                       </button>
-                      <button
-                        onClick={() => handleDeleteGown(gown._id || gown.id)}
-                        className='w-11 h-11 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center'
-                      >
-                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                         </svg>
-                      </button>
+                        <button
+                          onClick={() => handleDeleteGown(gown._id || gown.id)}
+                          className='w-14 h-14 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
+                        >
+                           <img src={assets.delete_icon} className="w-6 h-6 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
+                        </button>
                     </div>
                   </div>
                 </div>
@@ -613,23 +611,23 @@ const ManageGowns = () => {
           onClick={closeEditModal}
         >
           <div
-            className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-2xl w-full p-8 sm:p-10 max-h-[90vh] overflow-y-auto border border-blue-50 relative'
+            className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-2xl w-full p-5 sm:p-10 max-h-[90vh] overflow-y-auto border border-blue-50 relative'
             onClick={(e) => e.stopPropagation()}
           >
             <div className='flex items-start justify-between gap-6 mb-10'>
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-1 bg-primary rounded-full"></div>
-                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">Editor</span>
+                  <div className="w-8 h-1 bg-primary rounded-full"></div>
+                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Editor</span>
                 </div>
-                <h2 className='text-3xl font-black text-primary tracking-tight leading-tight'>
-                  Edit Apparel
+                <h2 className='text-3xl font-black text-primary-dull tracking-tight leading-tight'>
+                  Edit Inventory
                 </h2>
-                <p className='text-sm text-gray-500 font-bold mt-1'>{selectedGown.name}</p>
+                <p className='text-sm text-gray-500 font-medium mt-1'>{selectedGown.name}</p>
               </div>
               <button
                 onClick={closeEditModal}
-                className='w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-primary/40 hover:text-primary hover:bg-primary/5 transition-all group'
+                className='w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-primary-dull/40 hover:text-primary hover:bg-primary/5 transition-all group'
               >
                 <svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />

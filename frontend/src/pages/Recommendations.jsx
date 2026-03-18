@@ -186,7 +186,7 @@ const Recommendations = () => {
                 <div className="w-10 h-1 bg-primary rounded-full"></div>
                 <span className="text-xs font-black text-primary uppercase tracking-[0.3em]">AI Stylist</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-[#FF3B30]">Matches</span></h1>
+              <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-secondary">Matches</span></h1>
               <p className="text-lg text-gray-500 font-medium max-w-2xl">
                 We've curated {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile and preferences.
               </p>
@@ -387,7 +387,7 @@ const Recommendations = () => {
                   {others.map((item, index) => (
                     <div key={item.gown._id || item.gown.id || index} className="flex flex-col group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                       <div className="rounded-[32px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/5 group-hover:-translate-y-1 bg-white flex-1 flex flex-col">
-                        <GownCard gown={item.gown} useContainImage={true} />
+                        <GownCard gown={item.gown} />
                       </div>
                       {item.matchReason && (
                         <p className="text-[10px] font-bold text-gray-400 mt-4 text-center px-4 leading-relaxed group-hover:text-primary transition-colors">

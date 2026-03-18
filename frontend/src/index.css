@@ -15,6 +15,17 @@
 
 :root {
   font-family: "Geist", sans-serif;
+  overscroll-behavior-y: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #FDFDFF;
 }
 
 /* react-day-picker: maximize date space, bold, circular stamps, colors match legend */
@@ -52,11 +63,11 @@
 }
 
 @theme {
-  --color-primary: #013e8d;
-  --color-primary-dull: #002d66;
-  --color-secondary: #4361ee;
-  --color-secondary-light: #fbbf24;
-  --color-accent-red: #c21807;
+  --color-primary: #162b69;
+  --color-primary-dull: #0d1a40;
+  --color-secondary: #ac2021;
+  --color-secondary-light: #ddaf29;
+  --color-accent-red: #ac2021;
   --color-light: #F5F5F5;
   --color-borderColor: #e5e7eb;
 }
@@ -66,14 +77,27 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
 /* Smooth transitions for a more app-like feel */
 .transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
+  transition-duration: 250ms;
 }
 
 /* Hide scrollbar but keep functionality for a cleaner mobile look */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media (max-width: 640px) {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
@@ -86,10 +110,28 @@
 
 /* Improved touch targets for mobile */
 @media (max-width: 640px) {
-  button, a {
+  button, a, .touch-target {
     min-height: 44px;
+    min-width: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
+
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+  }
+}
+
+/* Prevent text selection where not needed for a more app-like feel */
+.interactive-none {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }

@@ -26,14 +26,13 @@ const Hero = () => {
     const fetchPopularGowns = async () => {
       try {
         setLoadingGowns(true);
-        const response = await fetch(`${API_URL}/owner/all-gowns`);
+        const response = await fetch(`${API_URL}/owner/trending-gowns`);
         const data = await response.json();
         if (data.success && data.gowns) {
-          // Take the first 5 gowns for the trending showcase
-          setPopularGowns(data.gowns.filter(g => g.available).slice(0, 5));
+          setPopularGowns(data.gowns || []);
         }
       } catch (err) {
-        console.error('Error fetching popular gowns:', err);
+        console.error('Error fetching trending gowns:', err);
       } finally {
         setLoadingGowns(false);
       }
@@ -97,7 +96,7 @@ const Hero = () => {
 
   return (
     <div className='h-[calc(100vh-64px)] min-h-[500px] flex flex-col items-center justify-center px-4 relative bg-[#FDFDFF] w-full'>
-      
+
       {/* Hero Headline */}
       <div className="max-w-3xl mx-auto z-10 text-center space-y-0.5 mb-4 mt-2 sm:mt-0">
         <h1 className='text-5xl sm:text-7xl font-black text-primary tracking-tighter leading-tight animate-fade-in drop-shadow-sm'>
@@ -109,10 +108,10 @@ const Hero = () => {
       </div>
 
       {/* Custom Attribute Bar */}
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full max-w-[1440px] relative z-50 mb-0 px-4 sm:px-10">
-        <div className="flex items-center bg-white/40 backdrop-blur-xl p-1.5 sm:p-2 rounded-[40px] shadow-[0_20px_60px_rgba(1,62,141,0.12)] border border-primary/20 w-fit hover:border-primary/40 transition-all duration-500 relative z-20">
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full max-w-[1440px] relative z-20 mb-0 px-4 sm:px-10">
+        <div className="flex items-center bg-white/40 backdrop-blur-xl p-1.5 sm:p-2 rounded-[40px] shadow-[0_20px_60px_rgba(22,43,105,0.12)] border border-primary/20 w-fit hover:border-primary/40 transition-all duration-500 relative z-10">
           <div className="flex flex-nowrap items-center justify-center gap-0 pb-0 overflow-visible w-full min-w-0">
-            
+
             {/* Body Type */}
             <AttributeSelector
               label="Body Type"
@@ -229,7 +228,7 @@ const Hero = () => {
           </button>
           <button
             type="submit"
-            className="flex-1 sm:flex-none sm:w-auto bg-primary text-white px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_15px_40px_rgba(1,62,141,0.15)] hover:-translate-y-0.5 active:scale-95"
+            className="flex-1 sm:flex-none sm:w-auto bg-primary text-white px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_15px_40px_rgba(22,43,105,0.15)] hover:-translate-y-0.5 active:scale-95"
           >
             <span>Find My Fit</span>
           </button>
@@ -245,9 +244,9 @@ const Hero = () => {
         </div>
         {loadingGowns ? (
           <div className="flex items-end justify-center gap-3 h-[140px] sm:h-[180px]">
-             {[1,2,3,4,5].map(i => (
-               <div key={i} className={`bg-gray-100 animate-pulse rounded-[24px] ${i === 3 ? 'w-24 h-32 sm:w-32 sm:h-44' : 'w-20 h-28 sm:w-24 sm:h-36 opacity-70'}`}></div>
-             ))}
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className={`bg-gray-100 animate-pulse rounded-[24px] ${i === 3 ? 'w-24 h-32 sm:w-32 sm:h-44' : 'w-20 h-28 sm:w-24 sm:h-36 opacity-70'}`}></div>
+            ))}
           </div>
         ) : popularGowns.length > 0 && (
           <div className="flex items-end justify-center gap-3 sm:gap-6 h-[170px] sm:h-[230px] w-full max-w-5xl">
@@ -257,20 +256,20 @@ const Hero = () => {
               const isSide = index === 1 || index === 3;
               const isOuter = index === 0 || index === 4;
 
-              const sizeClass = isCenter 
-                ? "w-32 h-36 sm:w-48 sm:h-60 z-30 shadow-[0_25px_60px_rgba(1,62,141,0.2)] ring-[4px] ring-primary/10 scale-110" 
+              const sizeClass = isCenter
+                ? "w-32 h-36 sm:w-48 sm:h-60 z-30 shadow-[0_25px_60px_rgba(22,43,105,0.2)] ring-[4px] ring-primary/10 scale-110"
                 : isSide
                   ? "w-28 h-32 sm:w-36 sm:h-48 z-20 opacity-60 scale-95 grayscale-[50%]"
                   : "w-24 h-28 sm:w-28 sm:h-36 z-10 opacity-30 scale-90 grayscale";
-              
+
               return (
-                <div 
-                  key={gown._id || index} 
+                <div
+                  key={gown._id || index}
                   className={`relative rounded-[32px] sm:rounded-[40px] overflow-hidden border border-primary/10 cursor-pointer transform transition-all duration-700 hover:-translate-y-4 bg-white group/gown ${sizeClass}`}
                   onClick={() => navigate(`/gown-details/${gown._id}`)}
                 >
-                  <img src={Array.isArray(gown.image) ? gown.image[0] : gown.image} alt={gown.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover/gown:scale-110" />
-                  
+                  <img src={Array.isArray(gown.image) ? gown.image[0] : gown.image} alt={gown.name} className="w-full h-full object-contain transition-transform duration-1000 group-hover/gown:scale-110" />
+
                   {/* Info Overlay */}
                   <div className={`absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-transparent transition-opacity duration-500 ${isCenter ? 'opacity-100' : 'opacity-0 group-hover/gown:opacity-100'}`}>
                     <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white transform transition-transform duration-500 translate-y-2 group-hover/gown:translate-y-0">

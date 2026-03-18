@@ -49,7 +49,14 @@ const Gown = () => {
         if (data.success && data.gowns) {
           setError('')
           // Only show gowns that have an owner (deleted gowns won't have owner)
-          const validGowns = data.gowns.filter(gown => gown.owner && gown.owner._id)
+          let validGowns = data.gowns.filter(gown => gown.owner && gown.owner._id)
+          
+          // Randomize gowns on fetch
+          for (let i = validGowns.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [validGowns[i], validGowns[j]] = [validGowns[j], validGowns[i]];
+          }
+          
           setGowns(validGowns)
           setFilteredGowns(validGowns)
 
@@ -229,7 +236,7 @@ const Gown = () => {
           <div className="w-8 h-1 bg-primary rounded-full"></div>
         </div>
         <h1 className='text-4xl sm:text-5xl md:text-6xl font-black text-primary tracking-tight leading-tight'>
-          Available <span className="text-[#FF3B30]">Apparel</span>
+          Available <span className="text-secondary">Apparel</span>
         </h1>
         <p className='text-sm sm:text-base text-gray-500 font-bold mt-2 max-w-2xl'>Discover the perfect fit for your next extraordinary moment.</p>
       </div>
@@ -383,7 +390,7 @@ const Gown = () => {
               )}
             </div>
           ) : (
-            <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8'>
+            <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 lg:gap-8'>
               {filteredGowns.map((gown) => (
                 <GownCard key={gown._id || gown.id} gown={gown} />
               ))}

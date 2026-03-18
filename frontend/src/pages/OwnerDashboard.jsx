@@ -205,7 +205,7 @@ const OwnerDashboard = () => {
             {/* Pending Bookings */}
             <button
               type='button'
-              onClick={() => navigate('/owner/manage-bookings')}
+              onClick={() => navigate('/owner/manage-bookings?status=pending')}
               className='group bg-white rounded-3xl shadow-sm p-6 border border-gray-100 text-left hover:shadow-xl hover:shadow-orange-500/5 hover:border-orange-200 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden'
             >
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-50 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
@@ -253,7 +253,7 @@ const OwnerDashboard = () => {
                 onClick={() => navigate('/owner/manage-bookings')}
                 className="px-5 py-2.5 bg-gray-100 hover:bg-primary hover:text-white rounded-xl text-xs font-bold text-gray-600 transition-all active:scale-95 shadow-sm"
               >
-                View Analytics
+                View Bookings
               </button>
             </div>
             

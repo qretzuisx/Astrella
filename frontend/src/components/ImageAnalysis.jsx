@@ -570,31 +570,32 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-        <div className="p-4 sm:p-6">
-          <div className="flex justify-between items-center mb-3 sm:mb-4">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold pr-2">Upload Photo for Analysis</h2>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-[32px] sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-primary/10 relative">
+        <div className="p-6 sm:p-10">
+          <div className="flex justify-between items-center mb-4 sm:mb-6 leading-none">
+            <h2 className="text-2xl sm:text-3xl font-black text-primary tracking-tight pr-4">AI Profiler</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl flex-shrink-0"
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full w-10 h-10 flex items-center justify-center transition-all bg-gray-50 flex-shrink-0"
             >
-              ×
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
 
-          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-            Upload a full-body or face photo. We'll analyze it to detect your body type, skin tone, and face shape.
+          <p className="text-sm text-gray-500 font-medium mb-8">
+            Upload a clear photo. Our AI will analyze your features to curate the perfect recommendations for you.
           </p>
 
           {analysisError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800">{analysisError}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+              <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <p className="text-[11px] font-black text-red-800 uppercase tracking-widest">{analysisError}</p>
             </div>
           )}
 
           {!preview ? (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center">
+            <div className="border-2 border-dashed border-primary/20 bg-primary/5 rounded-[32px] p-8 sm:p-12 text-center group hover:bg-primary/10 hover:border-primary/40 transition-all cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -602,41 +603,43 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                 accept="image/*"
                 className="hidden"
               />
+              <div className="w-16 h-16 bg-white rounded-full mx-auto mb-6 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                 <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                 </svg>
+              </div>
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-primary text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-primary-dull transition-all text-sm sm:text-base"
+                className="bg-primary text-white px-8 py-3 rounded-full hover:bg-primary-dull transition-all text-xs font-black uppercase tracking-widest shadow-md mb-3"
               >
                 Choose Photo
               </button>
-              <p className="text-xs sm:text-sm text-gray-500 mt-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 JPG, PNG up to 5MB
               </p>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
-              <div className="relative">
+            <div className="space-y-6">
+              <div className="relative bg-gray-50 rounded-[32px] p-2 border border-gray-100">
                 <img
                   src={preview}
                   alt="Preview"
-                  className="w-full h-auto rounded-lg max-h-64 sm:max-h-96 object-contain mx-auto"
+                  className="w-full h-auto rounded-[24px] max-h-64 sm:max-h-96 object-contain mx-auto"
                 />
                 <canvas ref={canvasRef} className="hidden" />
               </div>
 
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-4">
                 {analyzing && analysisProgress && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                      <span className="text-xs sm:text-sm text-blue-800">{analysisProgress}</span>
-                    </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center justify-center gap-3">
+                    <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-blue-800">{analysisProgress}</span>
                   </div>
                 )}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={analyzeImage}
                     disabled={analyzing || !modelsLoaded || !image}
-                    className="flex-1 bg-primary text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50 text-sm sm:text-base font-medium"
+                    className="flex-1 bg-primary text-white px-6 py-4 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50 text-xs font-black uppercase tracking-[0.2em] shadow-[0_10px_20px_rgba(22,43,105,0.15)] active:scale-95"
                   >
                     {analyzing ? 'Analyzing...' : (!modelsLoaded ? 'Loading models...' : 'Analyze Photo')}
                   </button>
@@ -646,7 +649,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                       setImage(null);
                       setResults(null);
                     }}
-                    className="px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-all text-sm sm:text-base"
+                    disabled={analyzing}
+                    className="px-6 py-4 bg-white text-gray-600 border-2 border-gray-200 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all text-xs font-black uppercase tracking-[0.2em] active:scale-95 disabled:opacity-50"
                   >
                     Change Photo
                   </button>

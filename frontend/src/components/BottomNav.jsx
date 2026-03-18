@@ -53,24 +53,25 @@ const BottomNav = () => {
   }
 
   return (
-    <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white/70 backdrop-blur-xl border-t border-gray-100/50 z-[100] pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[20px]">
-      <div className="flex justify-around items-center h-16 px-4">
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-gray-100/50 z-[100] pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-[32px] interactive-none">
+      <div className="flex justify-around items-center h-16 sm:h-20 px-6">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           return (
             <NavLink
               key={item.name}
               to={item.path}
-              className="flex flex-col items-center justify-center w-full h-full space-y-0.5 transition-all relative group"
+              className="flex flex-col items-center justify-center w-full h-full space-y-1 relative group touch-target"
             >
-              <div className={`p-1.5 rounded-xl transition-all duration-300 ${isActive ? 'bg-secondary-light/10 text-secondary-light' : 'text-gray-400 group-hover:text-primary'}`}>
+              <div className={`p-2 rounded-2xl transition-all duration-500 transform ${isActive ? 'bg-primary/5 text-primary scale-110 shadow-sm' : 'text-gray-400 group-hover:text-primary active:scale-90'}`}>
                 {renderIcon(item.icon, isActive)}
               </div>
-              <span className={`text-[9px] font-black uppercase tracking-tighter transition-colors ${isActive ? 'text-primary' : 'text-gray-400'}`}>
+              <span className={`text-[8.5px] font-black uppercase tracking-widest transition-all duration-300 ${isActive ? 'text-primary opacity-100 scale-100' : 'text-gray-400 opacity-60 scale-95'}`}>
                 {item.name}
               </span>
+              
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-secondary-light rounded-full"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(22,43,105,0.4)]"></div>
               )}
             </NavLink>
           )

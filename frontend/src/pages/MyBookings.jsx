@@ -529,13 +529,17 @@ const MyBookings = ({ setShowLogin }) => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'confirmed':
-        return 'bg-green-100 text-green-800 border-green-200'
+      case 'completed':
+        return 'bg-green-500/90 text-white'
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+        return 'bg-orange-500/90 text-white'
+      case 'trial':
+        return 'bg-gray-500/90 text-white'
       case 'canceled':
-        return 'bg-red-100 text-red-800 border-red-200'
+      case 'failed':
+        return 'bg-red-500/90 text-white'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-500/90 text-white'
     }
   }
 
@@ -544,36 +548,50 @@ const MyBookings = ({ setShowLogin }) => {
   // Show login required message if not authenticated
   if (showLoginRequired) {
     return (
-      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-        <div className='bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8 mx-4'>
-          <div className='text-center mb-6'>
-            <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-              <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-              </svg>
-            </div>
-            <h2 className='text-2xl font-bold text-gray-900 mb-3'>Login Required</h2>
-            <p className='text-gray-600 mb-6'>
-              Please log in first to view your bookings. Sign in with your account to access all your booking information and manage your reservations.
-            </p>
-          </div>
+      <div className='fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-300'>
+        <div className='bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] max-w-md w-full p-8 sm:p-10 border border-white/40 relative overflow-hidden group'>
+          {/* Decorative Background Elements */}
+          <div className='absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500'></div>
+          <div className='absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500'></div>
 
-          <div className='space-y-3'>
-            <button
-              onClick={() => {
-                setShowLoginRequired(false)
-                setShowLogin(true)
-              }}
-              className='w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold'
-            >
-              Go to Login
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className='w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold'
-            >
-              Return to Home
-            </button>
+          <div className='relative z-10 text-center'>
+            {/* Animated Icon Container */}
+            <div className='w-20 h-20 bg-gradient-to-tr from-primary/10 to-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm border border-white/50'>
+              <div className='w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-inner'>
+                <svg className='w-8 h-8 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' />
+                </svg>
+              </div>
+            </div>
+
+            <h2 className='text-3xl font-black text-gray-900 mb-4 tracking-tight leading-tight'>
+              Login <span className='text-primary'>Required</span>
+            </h2>
+            <p className='text-gray-500 mb-10 leading-relaxed font-medium'>
+              Unlock your personal boutique experience. Log in to view and manage your curated reservations.
+            </p>
+
+            <div className='flex flex-col gap-4'>
+              <button
+                onClick={() => {
+                  setShowLoginRequired(false)
+                  setShowLogin(true)
+                }}
+                className='w-full px-8 py-4 bg-primary text-white rounded-2xl hover:bg-primary/90 hover:shadow-[0_20px_40px_-12px_rgba(255,59,48,0.3)] transition-all duration-300 font-bold text-lg flex items-center justify-center group/btn active:scale-95'
+              >
+                Go to Login
+                <svg className='w-5 h-5 ml-2 transform group-hover/btn:translate-x-1 transition-transform' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 7l5 5m0 0l-5 5m5-5H6' />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => navigate('/')}
+                className='w-full px-8 py-4 bg-white/50 text-gray-700 rounded-2xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 font-bold text-lg active:scale-95'
+              >
+                Return to Home
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -631,7 +649,7 @@ const MyBookings = ({ setShowLogin }) => {
       )}
 
       {/* Filter Tabs */}
-      <div className='flex items-center gap-2 sm:gap-4 bg-white p-2 rounded-full border border-gray-100 shadow-[0_5px_15px_rgba(0,0,0,0.02)] mb-8 overflow-x-auto no-scrollbar'>
+      <div className='flex items-center gap-2 sm:gap-4 bg-white p-2 rounded-full border border-gray-100 shadow-[0_5px_15px_rgba(0,0,0,0.02)] mb-8 overflow-x-auto no-scrollbar snap-x snap-mandatory'>
         {['All', 'Trial', 'Pending', 'Confirmed', 'Completed', 'Canceled'].map((filter) => {
           const count = filter === 'All'
             ? bookings.length
@@ -648,7 +666,7 @@ const MyBookings = ({ setShowLogin }) => {
             <button
               key={filter}
               onClick={() => setCurrentFilter(filter)}
-              className={`flex items-center gap-2 py-2.5 px-6 rounded-full transition-all duration-300 relative whitespace-nowrap font-black text-[10px] uppercase tracking-widest ${isActive
+              className={`flex-shrink-0 flex items-center gap-2 py-2.5 px-5 sm:px-6 rounded-full transition-all duration-300 relative whitespace-nowrap font-black text-[10px] uppercase tracking-widest snap-start ${isActive
                 ? 'bg-primary text-white shadow-md hover:-translate-y-0.5'
                 : 'text-gray-400 hover:text-primary hover:bg-gray-50'
                 }`}
@@ -700,9 +718,9 @@ const MyBookings = ({ setShowLogin }) => {
                     <img
                       src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1}
                       alt={booking.gown?.name || 'Gown'}
-                      className='w-full h-auto max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-96 object-cover transition-transform duration-1000 group-hover:scale-110'
+                      className='w-full h-auto max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-96 object-contain p-4 transition-transform duration-1000 group-hover:scale-110'
                     />
-                    <div className={`absolute top-4 left-4 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
+                    <div className={`absolute top-6 left-6 px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
                       {booking.status?.toUpperCase() || 'PENDING'}
                     </div>
                   </div>

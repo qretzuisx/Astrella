@@ -35,6 +35,8 @@ const gownSchema = new mongoose.Schema({
     sex: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},
 }, {timestamps: true})
 
+gownSchema.index({ available: 1, verified: 1, createdAt: -1 });
+
 const Gown = mongoose.model('Gown', gownSchema) 
 
 export default Gown

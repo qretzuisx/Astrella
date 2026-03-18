@@ -11,6 +11,8 @@
 import Booking from '../models/booking.js';
 import Gown from '../models/Gown.js';
 import User from '../models/User.js';
+import colorUtils from '../utils/colorUtils.js';
+import fabricUtils from '../utils/fabricUtils.js';
 
 /**
  * USER-ITEM MATRIX (Collaborative Filtering)
@@ -157,42 +159,11 @@ class CollaborativeFilteringModel {
     }
 
     areColorsSimilar(colorA, colorB) {
-        const colorGroups = {
-            warm: ['red', 'orange', 'yellow', 'gold', 'peach', 'coral'],
-            cool: ['blue', 'green', 'purple', 'teal', 'turquoise'],
-            neutral: ['white', 'black', 'gray', 'beige', 'ivory', 'cream'],
-            dark: ['black', 'navy', 'burgundy', 'maroon', 'dark']
-        };
-
-        for (const group of Object.values(colorGroups)) {
-            const colorALower = colorA.toLowerCase();
-            const colorBLower = colorB.toLowerCase();
-            
-            const aInGroup = group.some(c => colorALower.includes(c));
-            const bInGroup = group.some(c => colorBLower.includes(c));
-            
-            if (aInGroup && bInGroup) return true;
-        }
-        return false;
+        return colorUtils.areColorsSimilar(colorA, colorB);
     }
 
     areFabricsSimilar(fabricA, fabricB) {
-        const fabricGroups = {
-            light: ['chiffon', 'tulle', 'organza', 'lace'],
-            heavy: ['satin', 'silk', 'velvet', 'brocade'],
-            structured: ['taffeta', 'mikado', 'duchess']
-        };
-
-        for (const group of Object.values(fabricGroups)) {
-            const fabricALower = fabricA.toLowerCase();
-            const fabricBLower = fabricB.toLowerCase();
-            
-            const aInGroup = group.some(f => fabricALower.includes(f));
-            const bInGroup = group.some(f => fabricBLower.includes(f));
-            
-            if (aInGroup && bInGroup) return true;
-        }
-        return false;
+        return fabricUtils.areFabricsSimilar(fabricA, fabricB);
     }
 
     /**
@@ -509,66 +480,75 @@ const calculateRecommendationScore = (gown, preferences) => {
     // Body Type Recommendations (25 points)
     const bodyTypeRecommendations = {
         'Hourglass': {
-            colors: ['Navy', 'Black', 'Burgundy', 'Emerald'],
-            fabrics: ['Satin', 'Silk', 'Chiffon'],
+            families: ['red', 'blue', 'neutral'], // Navy, Black, Burgundy, Emerald
+            fabrics: ['satin', 'silk', 'chiffon'],
         },
         'Pear': {
-            colors: ['Dark', 'Navy', 'Black', 'Deep'],
-            fabrics: ['Chiffon', 'Tulle', 'Organza'],
+            families: ['blue', 'neutral'], // Navy, Black
+            fabrics: ['chiffon', 'tulle', 'organza'],
         },
         'Rectangle': {
-            colors: ['All'],
-            fabrics: ['Chiffon', 'Tulle', 'Organza', 'Satin'],
+            families: ['all'],
+            fabrics: ['chiffon', 'tulle', 'organza', 'satin'],
         },
         'Diamond': {
-            colors: ['Dark', 'Navy', 'Black'],
-            fabrics: ['Chiffon', 'Tulle'],
+            families: ['blue', 'neutral'], // Navy, Black
+            fabrics: ['chiffon', 'tulle'],
         }
     };
 
+    const colorProps = colorUtils.getColorProperties(gown.color);
+    const fabricProps = fabricUtils.getFabricProperties(gown.fabric);
+
     if (preferences.bodyType && bodyTypeRecommendations[preferences.bodyType]) {
         const rec = bodyTypeRecommendations[preferences.bodyType];
-        const gownColor = gown.color?.toLowerCase();
-        const gownFabric = gown.fabric?.toLowerCase();
         
-        if (rec.colors.some(c => gownColor?.includes(c.toLowerCase()))) {
+        if (rec.families.includes('all') || rec.families.includes(colorProps.family)) {
             score += 10;
         }
-        if (rec.fabrics.some(f => gownFabric?.includes(f.toLowerCase()))) {
+        
+        // Dynamic fabric matching based on properties (light, heavy, structured)
+        const matchesFabric = rec.fabrics.some(f => {
+            if (f === 'light' && fabricProps.isLight) return true;
+            if (f === 'heavy' && fabricProps.isHeavy) return true;
+            if (f === 'structured' && fabricProps.isStructured) return true;
+            return gown.fabric?.toLowerCase().includes(f);
+        });
+
+        if (matchesFabric) {
             score += 10;
         }
         score += 5;
     }
 
     // Skin Tone Color Recommendations (20 points)
-    const skinToneColors = {
-        'Warm': ['Gold', 'Peach', 'Coral', 'Ivory', 'Warm White', 'Blush', 'Cream'],
-        'Cool': ['Silver', 'Blue', 'Pink', 'Cool White', 'Lavender', 'Mint'],
-        'Neutral': ['All colors work well'],
+    const skinToneWarmthMap = {
+        'Warm': 'Warm',
+        'Cool': 'Cool',
+        'Neutral': 'Neutral'
     };
 
-    if (preferences.skinTone && skinToneColors[preferences.skinTone]) {
-        const recommendedColors = skinToneColors[preferences.skinTone];
-        const gownColor = gown.color?.toLowerCase();
-        
-        if (recommendedColors.some(c => gownColor?.includes(c.toLowerCase()))) {
+    if (preferences.skinTone) {
+        if (preferences.skinTone === 'Neutral') {
+            score += 20; // Neutrals work with everything
+        } else if (colorProps.warmth === skinToneWarmthMap[preferences.skinTone]) {
             score += 20;
-        } else if (recommendedColors[0] === 'All colors work well') {
-            score += 15;
+        } else if (colorProps.warmth === 'Neutral') {
+            score += 15; // Neutral colors are the safest secondary choice
         }
     }
 
     // Height Recommendations (15 points)
     if (preferences.height) {
-        const gownFabric = gown.fabric?.toLowerCase();
+        const fabricProps = fabricUtils.getFabricProperties(gown.fabric);
         if (preferences.height === 'Small') {
-            if (['chiffon', 'tulle', 'organza'].some(f => gownFabric?.includes(f))) {
+            if (fabricProps.isLight) {
                 score += 15;
             } else {
                 score += 5;
             }
         } else if (preferences.height === 'Tall') {
-            if (['satin', 'silk', 'velvet'].some(f => gownFabric?.includes(f))) {
+            if (fabricProps.isHeavy || fabricProps.isStructured) {
                 score += 15;
             } else {
                 score += 10;

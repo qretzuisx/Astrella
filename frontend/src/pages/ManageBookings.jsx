@@ -12,6 +12,7 @@ const ManageBookings = () => {
   const [success, setSuccess] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterGown, setFilterGown] = useState('all') // Filter by gown
+  const [searchTerm, setSearchTerm] = useState('')
   const currency = CURRENCY
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -22,12 +23,17 @@ const ManageBookings = () => {
   const [searchParams] = useSearchParams()
   const initialGownFilter = searchParams.get('gownId') || 'all'
 
-  // Set initial gown filter from URL
+  // Set initial filters from URL
   useEffect(() => {
+    const statusParam = searchParams.get('status')
+    if (statusParam && ['trial', 'pending', 'confirmed', 'completed', 'canceled'].includes(statusParam)) {
+      setFilterStatus(statusParam)
+    }
+    
     if (initialGownFilter !== 'all') {
       setFilterGown(initialGownFilter)
     }
-  }, [initialGownFilter])
+  }, [searchParams, initialGownFilter])
 
   // Reschedule / Extend modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -67,8 +73,24 @@ const ManageBookings = () => {
       })
     }
 
+    // Filter by search term
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(booking => {
+        const customerName = (booking.user?.name || '').toLowerCase();
+        const gownName = (booking.gown?.name || '').toLowerCase();
+        const contactNumber = (booking.contactNumber || '').toLowerCase();
+        const transactionRef = (booking.payment?.transactionRef || '').toLowerCase();
+        
+        return customerName.includes(term) || 
+               gownName.includes(term) || 
+               contactNumber.includes(term) || 
+               transactionRef.includes(term);
+      });
+    }
+
     setFilteredBookings(filtered)
-  }, [bookings, filterStatus, filterGown])
+  }, [bookings, filterStatus, filterGown, searchTerm])
 
   const fetchBookings = async () => {
     try {
@@ -455,15 +477,30 @@ const ManageBookings = () => {
       <OwnerSidebar />
       <div className='flex-1 p-4 sm:p-6 lg:p-10 transition-all duration-500 font-geist'>
         <div className='max-w-7xl mx-auto'>
-          {/* Header Section */}
-          <div className='mb-10 mt-12 lg:mt-0'>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-1 bg-primary rounded-full"></div>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Operations</span>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-1 bg-primary rounded-full"></div>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Operations</span>
+                </div>
+                <h1 className='text-3xl sm:text-4xl font-black text-primary-dull tracking-tight mb-2'>Manage Bookings</h1>
+                <p className='text-sm sm:text-base text-gray-500 font-medium'>Oversee and process your client reservations and appointments.</p>
+              </div>
+
+              {/* Search Bar */}
+              <div className="w-full md:w-80 relative group">
+                <input
+                  type="text"
+                  placeholder="Search clients, gowns, or refs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
+                />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                   <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                </div>
+              </div>
             </div>
-            <h1 className='text-3xl sm:text-4xl font-black text-primary-dull tracking-tight mb-2'>Manage Bookings</h1>
-            <p className='text-sm sm:text-base text-gray-500 font-medium'>Oversee and process your client reservations and appointments.</p>
-          </div>
 
           {/* Success/Error Messages */}
           {success && (
@@ -487,7 +524,7 @@ const ManageBookings = () => {
                 ? bookings.length 
                 : bookings.filter(b => b.status === status).length;
               
-              if (count === 0 && status !== 'all' && filterStatus !== status) return null;
+              // Ensure critical tabs are always visible
 
               return (
                 <button
@@ -525,11 +562,12 @@ const ManageBookings = () => {
                         <img 
                           src={booking.gown?.image?.[0] || booking.gown?.image || assets.gown_image1} 
                           alt={booking.gown?.name} 
-                          className='w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform duration-700'
+                          className='w-28 h-28 sm:w-32 sm:h-32 object-contain bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform duration-700'
                         />
                          <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-xl flex items-center justify-center border-4 border-white shadow-md ${
                             booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-500' : 
-                            booking.status === 'pending' || booking.status === 'trial' ? 'bg-orange-500' : 'bg-red-500'
+                            booking.status === 'pending' ? 'bg-orange-500' :
+                            booking.status === 'trial' ? 'bg-gray-500' : 'bg-red-500'
                           }`}>
                             <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
                           </div>
@@ -538,20 +576,23 @@ const ManageBookings = () => {
                         <div className="flex items-center gap-3 mb-2">
                             <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${
                                 booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-50 text-green-700' : 
-                                booking.status === 'pending' || booking.status === 'trial' ? 'bg-orange-50 text-orange-600' : 
+                                booking.status === 'pending' ? 'bg-orange-50 text-orange-600' : 
+                                booking.status === 'trial' ? 'bg-gray-100 text-gray-600' : 
                                 'bg-red-50 text-red-600'
                             }`}>
                                 {booking.status}
                             </span>
                              <span className="text-[10px] font-bold text-gray-400">ID: #{(booking._id || booking.id)?.slice(-6).toUpperCase()}</span>
                         </div>
-                        <h3 className='text-xl sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-3 truncate'>
+                        <h3 className='text-xl sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-3'>
                             {booking.gown?.name || 'Gown Name'}
                         </h3>
                         <div className="flex flex-wrap items-center gap-y-2 gap-x-5">
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 bg-gray-50 rounded-lg">
-                                     <img src={assets.user_profile} className="w-3.5 h-3.5 opacity-40" />
+                                     <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
+                                       <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                     </svg>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client</p>
@@ -560,7 +601,9 @@ const ManageBookings = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 bg-gray-50 rounded-lg">
-                                     <img src={assets.phone_icon} className="w-3.5 h-3.5 opacity-40" />
+                                     <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
+                                       <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                                     </svg>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact</p>
@@ -611,7 +654,7 @@ const ManageBookings = () => {
                         {booking.status === 'trial' && (
                           <button
                             onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
-                            className='flex-1 xl:w-32 h-11 bg-red-50 text-red-600 border border-red-100 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2'
+                            className='flex-1 xl:w-44 h-14 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-black text-base uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 px-8'
                           >
                             Cancel
                           </button>
@@ -621,7 +664,7 @@ const ManageBookings = () => {
                         {booking.status === 'pending' && booking.payment?.status === 'pending' && (
                           <button
                             onClick={() => openPaymentModal(booking)}
-                            className='flex-1 xl:w-36 h-11 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2'
+                            className='flex-1 xl:w-48 h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 px-8'
                           >
                             Verify
                           </button>
@@ -631,7 +674,7 @@ const ManageBookings = () => {
                         {booking.status === 'pending' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
                            <button
                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
-                             className='flex-1 xl:w-36 h-11 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2'
+                             className='flex-1 xl:w-48 h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 px-8'
                            >
                              Confirm pickup
                            </button>
@@ -640,7 +683,7 @@ const ManageBookings = () => {
                         {booking.status === 'confirmed' && (
                           <button
                             onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
-                            className='flex-1 xl:w-36 h-11 bg-green-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:shadow-xl hover:shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2'
+                            className='flex-1 xl:w-48 h-14 bg-green-600 text-white rounded-2xl font-black text-base uppercase tracking-widest hover:shadow-2xl hover:shadow-green-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 px-8'
                           >
                             Completed
                           </button>
@@ -650,7 +693,7 @@ const ManageBookings = () => {
                         {['pending', 'confirmed'].includes(booking.status) && (
                            <button
                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
-                             className='flex-1 xl:w-36 h-11 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center'
+                             className='flex-1 xl:w-48 h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-2xl font-black text-base uppercase tracking-widest transition-all flex items-center justify-center px-8'
                            >
                              Cancel
                            </button>

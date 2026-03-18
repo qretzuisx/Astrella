@@ -64,10 +64,10 @@ const Navbar = ({ setShowLogin }) => {
 
   return (
     <div
-      className={`sticky top-0 z-50 flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 text-gray-700 transition-all border-b border-gray-100/50 bg-white/40 backdrop-blur-3xl shadow-sm hover:shadow-md ${location.pathname === "/" ? "" : ""}`}>
+      className={`sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 py-3 sm:py-4 text-gray-700 transition-all border-b border-gray-100/50 bg-white/60 backdrop-blur-3xl shadow-sm pt-safe touch-target`}>
 
-      <Link to="/">
-        <img src={assets.logo} alt="logo" className="h-12" />
+      <Link to="/" className="flex items-center">
+        <img src={assets.logo} alt="logo" className="h-8 sm:h-12 w-auto object-contain" />
       </Link>
       <div
         className="hidden sm:flex flex-row items-center gap-4 sm:gap-8 transition-all duration-300 z-50">
@@ -128,7 +128,7 @@ const Navbar = ({ setShowLogin }) => {
                           ? user.shopProfile.shopName
                           : user.name}
                       </p>
-                      <p className="text-[9px] text-secondary-light font-black uppercase tracking-[0.15em] mt-0.5">{role}</p>
+                      <p className="text-[9px] text-secondary font-black uppercase tracking-[0.15em] mt-0.5">{role}</p>
                     </div>
                     {user.image ? (
                       <div className="relative">
@@ -158,7 +158,7 @@ const Navbar = ({ setShowLogin }) => {
               ) : (
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="cursor-pointer px-8 py-2.5 bg-primary hover:bg-primary-dull transition-all text-white rounded-full font-black text-sm shadow-[0_10px_20px_rgba(1,62,141,0.2)] active:scale-95"
+                  className="cursor-pointer px-8 py-2.5 bg-primary hover:bg-primary-dull transition-all text-white rounded-full font-black text-sm shadow-[0_10px_20px_rgba(22,43,105,0.2)] active:scale-95"
                 >
                   Login
                 </button>
@@ -166,6 +166,18 @@ const Navbar = ({ setShowLogin }) => {
             </>
           )}
         </div>
+      </div>
+
+      {/* Mobile Right Section (Login/Avatar) */}
+      <div className="sm:hidden flex items-center gap-3">
+        {!loading && !user && (
+          <button
+            onClick={() => setShowLogin(true)}
+            className="px-6 py-2 bg-primary text-white rounded-full font-black text-xs uppercase tracking-widest shadow-md"
+          >
+            Login
+          </button>
+        )}
       </div>
     </div>
   );

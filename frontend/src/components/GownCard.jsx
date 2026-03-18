@@ -27,44 +27,89 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
     if (!colorValue) return <div className="w-4 h-4 rounded-full border border-gray-100 bg-gray-200" />;
     
     const colorMap = {
-      'off-white': '#FAF9F6',
-      'ivory': '#FFFFF0',
-      'champagne': '#F7E7CE',
-      'cream': '#FFFDD0',
-      'nude': '#E3BC9A',
-      'peach': '#FFDAB9',
-      'blush': '#FE828C',
-      'sky blue': '#87CEEB',
-      'royal blue': '#4169E1',
-      'wine red': '#722F37',
-      'maroon': '#800000',
-      'gold': '#FFD700',
-      'silver': '#C0C0C0',
-      'white': '#FFFFFF',
-      'black': '#000000',
-      'navy': '#000080',
-      'emerald': '#50C878',
-      'sage': '#BCB88A',
-      'sage green': '#BCB88A',
-      'dusty rose': '#DCAE96',
-      'rose gold': '#B76E79',
+      'red': '#EF4444',
       'burgundy': '#800020',
-      'mocha': '#967969',
-      'lavender': '#E6E6FA',
-      'lilac': '#C8A2C8',
-      'mint': '#98FF98',
-      'teal': '#008080',
+      'maroon': '#800000',
+      'crimson': '#DC143C',
+      'ruby': '#E0115F',
+      'rose': '#FF007F',
+      'wine': '#722F37',
+      'brick': '#B22222',
+      'pink': '#EC4899',
+      'blush': '#DE5D83',
+      'magenta': '#FF00FF',
+      'fuchsia': '#FF00FF',
+      'coral': '#FF7F50',
+      'peach': '#FFDAB9',
+      'salmon': '#FA8072',
+      'hotpink': '#FF69B4',
+      'orange': '#F97316',
       'rust': '#B7410E',
       'terracotta': '#E2725B',
+      'yellow': '#EAB308',
+      'gold': '#FFD700',
+      'amber': '#FFBF00',
       'mustard': '#FFDB58',
-      'olive': '#808000'
+      'canary': '#FFEF00',
+      'green': '#22C55E',
+      'emerald': '#50C878',
+      'mint': '#98FF98',
+      'teal': '#008080',
+      'olive': '#808000',
+      'jade': '#00A86B',
+      'sage': '#BCB88A',
+      'forest': '#228B22',
+      'blue': '#3B82F6',
+      'navy': '#000080',
+      'sky': '#87CEEB',
+      'sapphire': '#0F52BA',
+      'azure': '#007FFF',
+      'cobalt': '#0047AB',
+      'turquoise': '#40E0D0',
+      'royal': '#4169E1',
+      'cyan': '#00FFFF',
+      'purple': '#A855F7',
+      'lavender': '#E6E6FA',
+      'violet': '#EE82EE',
+      'plum': '#8E4585',
+      'indigo': '#4B0082',
+      'lilac': '#C8A2C8',
+      'mauve': '#E0B0FF',
+      'brown': '#964B00',
+      'chocolate': '#7B3F00',
+      'tan': '#D2B48C',
+      'khaki': '#C3B091',
+      'white': '#FFFFFF',
+      'ivory': '#FFFFF0',
+      'cream': '#FFFDD0',
+      'beige': '#F5F5DC',
+      'black': '#000000',
+      'gray': '#6B7280',
+      'grey': '#6B7280',
+      'silver': '#C0C0C0',
+      'charcoal': '#36454F',
+      'nude': '#E3BC9A',
+      'champagne': '#F7E7CE'
+    };
+
+    const getHex = (name) => {
+      const lower = name.toLowerCase().trim();
+      if (colorMap[lower]) return colorMap[lower];
+      
+      // Fuzzy match - find longest keyword match
+      const keys = Object.keys(colorMap).sort((a,b) => b.length - a.length);
+      for (const key of keys) {
+        if (lower.includes(key)) return colorMap[key];
+      }
+      return '#CCCCCC'; // Fallback
     };
 
     let colors = [];
     if (Array.isArray(colorValue)) {
       colors = colorValue;
     } else if (typeof colorValue === 'string') {
-      colors = colorValue.split(',').map(c => c.trim());
+      // Split by common separators: comma, slash, ampersand
+      colors = colorValue.split(/[,/&]+/).map(c => c.trim()).filter(Boolean);
     } else {
       colors = [colorValue];
     }
@@ -73,7 +118,7 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
       <div className="flex -space-x-1 overflow-hidden">
         {colors.map((color, idx) => {
           const normalized = color.toLowerCase();
-          const hex = colorMap[normalized] || normalized;
+          const hex = getHex(normalized);
           return (
             <div 
               key={idx}
@@ -91,42 +136,42 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
 
   return (
     <div onClick={() => { navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0, 0) }}
-      className={`group overflow-hidden shadow-[0_20px_60px_rgba(1,62,141,0.06)] hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col h-full bg-white border border-primary/5 ${customClassName || "rounded-[40px]"}`}
+      className={`group overflow-hidden shadow-[0_10px_30px_rgba(1,62,141,0.04)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.1)] hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer flex flex-col h-full bg-white border border-primary/5 ${customClassName || "rounded-[24px] sm:rounded-[32px]"}`}
     >
 
-      <div className={`relative overflow-hidden bg-white ${useContainImage ? 'aspect-[4/5] bg-gray-50/30' : ''}`}>
+      <div className="relative overflow-hidden bg-white aspect-[3/4] sm:aspect-[2/3] w-full p-1 sm:p-2">
         <img
           src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
           alt={gown.name}
-          className={`w-full h-full transition-transform duration-1000 group-hover:scale-105 ${useContainImage ? 'object-contain p-4' : 'h-auto max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-96 object-cover group-hover:scale-110'}`}
+          className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
         />
 
         {/* Status Badge */}
-        <div className={`absolute top-6 left-6 px-6 py-3 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-700 group-hover:translate-x-1 ${
-          gown.status === 'Available' ? 'bg-green-500/90' :
-          gown.status === 'Unavailable' ? 'bg-orange-500/90' :
-          gown.status === 'In-Laundry' ? 'bg-[#3B82F6]/90' :
-          gown.status === 'Reserved' ? 'bg-red-500/90' :
-          'bg-gray-500/90'
+        <div className={`absolute top-2 sm:top-4 left-2 sm:left-4 px-2 sm:px-4 py-1 sm:py-2 rounded-xl sm:rounded-2xl text-white font-black text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] shadow-md sm:shadow-xl backdrop-blur-md border border-white/20 transition-all duration-700 group-hover:translate-x-1 ${
+          gown.status === 'Available' ? 'bg-green-600/90' :
+          gown.status === 'Unavailable' ? 'bg-secondary/90' :
+          gown.status === 'In-Laundry' ? 'bg-primary/90' :
+          gown.status === 'Reserved' ? 'bg-secondary/90' :
+          'bg-gray-600/90'
         }`}>
           {gown.status || 'Available'}
         </div>
 
-        <div className="absolute bottom-4 right-4 bg-primary text-white px-5 py-2.5 rounded-2xl shadow-xl transition-all duration-500 group-hover:-translate-y-1">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-white text-xl font-black">{currency}</span>
-            <span className="font-black text-xl">{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
+        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-primary/95 backdrop-blur-md text-white px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl shadow-lg transition-all duration-500 sm:group-hover:-translate-y-1">
+          <div className="flex items-baseline gap-0.5 sm:gap-1">
+            <span className="text-white text-[9px] sm:text-xs font-black">{currency}</span>
+            <span className="font-black text-sm sm:text-lg">{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>
 
-      <div className="p-8 flex flex-col flex-grow bg-white">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-5 h-1 bg-[#FFD700] rounded-full opacity-60 group-hover:w-8 group-hover:opacity-100 transition-all duration-700"></div>
-          <span className="text-[10px] font-black text-[#FF3B30] uppercase tracking-widest">{gown.category || 'Apparel'}</span>
+      <div className="p-3 sm:p-6 flex flex-col flex-grow bg-white">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+          <div className="w-3 sm:w-5 h-0.5 sm:h-1 bg-secondary-light rounded-full opacity-60 group-hover:w-5 sm:group-hover:w-8 group-hover:opacity-100 transition-all duration-500"></div>
+          <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest line-clamp-1">{gown.category || 'Apparel'}</span>
         </div>
         
-        <h3 className="text-2xl font-black text-primary mb-2 transition-colors duration-700">{gown.name}</h3>
+        <h3 className="text-sm sm:text-xl font-black text-primary mb-1 sm:mb-2 transition-colors duration-500 line-clamp-2 leading-tight">{gown.name}</h3>
         
         <button
           onClick={(e) => {
@@ -134,54 +179,48 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
             const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
             navigate(`/owner-profile/${ownerId}`)
           }}
-          className="text-gray-400 hover:text-primary text-xs mb-6 font-bold text-left transition-colors flex items-center gap-2"
+          className="text-gray-400 hover:text-primary text-[10px] sm:text-xs mb-3 sm:mb-5 font-bold text-left transition-colors flex items-center gap-1 sm:gap-2 touch-target w-fit -ml-1 sm:ml-0 px-1 sm:px-0"
         >
-          <div className="w-2 h-2 rounded-full bg-gray-200 group-hover:bg-primary/20 transition-colors"></div>
-          {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-200 group-hover:bg-primary/20 transition-colors"></div>
+          <span className="line-clamp-1 truncate block">{gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : 'Owner') : 'Boutique Partner'}</span>
         </button>
 
-        {/* Details Section - 4-item Grid with Red Labels */}
-        <div className="mt-auto pt-6 border-t border-gray-100 grid grid-cols-2 gap-x-4 gap-y-4">
-          {/* Material */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-black text-[#FF3B30] uppercase tracking-widest opacity-60">Material</span>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-blue-50/50 flex items-center justify-center group-hover:shadow-[0_8px_20px_rgba(1,62,141,0.1)] group-hover:border-primary/10 transition-all duration-500">
-                <img src={assets.fabric_icon} alt="" className="h-4 w-4 opacity-40 group-hover:opacity-100 transition-all duration-500" />
+        {/* Details Section - Simplified for mobile, Full grid for desktop */}
+        <div className="mt-auto pt-3 sm:pt-5 border-t border-gray-100 flex sm:grid sm:grid-cols-2 gap-2 sm:gap-x-4 sm:gap-y-4 justify-between sm:justify-start">
+          
+          {/* Colors - Always visible */}
+          <div className="flex flex-col gap-1 items-start sm:items-start max-w-[45%] sm:max-w-none">
+            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60 hidden sm:block">Colors</span>
+            <div className="flex items-center gap-0 sm:gap-2">
+              <div className="h-6 sm:h-8 flex pr-1 sm:pr-0 items-center justify-center">
+                <div className="scale-75 sm:scale-100 origin-left">
+                  {renderColorSwatches(gown.color)}
+                </div>
               </div>
+              <span className="text-[9px] sm:text-[10px] font-black text-primary/70 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize hidden sm:block">{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Color')}</span>
+            </div>
+          </div>
+
+          {/* Size - Always visible */}
+          <div className="flex flex-col gap-1 items-end sm:items-start max-w-[45%] sm:max-w-none">
+            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60 hidden sm:block">Size</span>
+            <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 sm:bg-transparent px-2 py-1 rounded-md sm:p-0 sm:rounded-none">
+              <span className="text-[9px] sm:text-[10px] font-black text-primary/80 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{Array.isArray(gown.size) ? (gown.size[0] || 'Size') : (gown.size || 'Size')}</span>
+            </div>
+          </div>
+
+          {/* Fabric - Desktop only */}
+          <div className="hidden sm:flex flex-col gap-1">
+            <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Material</span>
+            <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{gown.fabric || 'Fabric'}</span>
             </div>
           </div>
 
-          {/* Size */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-black text-[#FF3B30] uppercase tracking-widest opacity-60">Size</span>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-blue-50/50 flex items-center justify-center group-hover:shadow-[0_8px_20px_rgba(1,62,141,0.1)] group-hover:border-primary/10 transition-all duration-500">
-                <img src={assets.size_icon} alt="" className="h-4 w-4 opacity-40 group-hover:opacity-100 transition-all duration-500" />
-              </div>
-              <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{Array.isArray(gown.size) ? (gown.size[0] || 'Size') : (gown.size || 'Size')}</span>
-            </div>
-          </div>
-
-          {/* Colors */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-black text-[#FF3B30] uppercase tracking-widest opacity-60">Colors</span>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-blue-50/50 flex items-center justify-center group-hover:shadow-[0_8px_20px_rgba(1,62,141,0.1)] group-hover:border-primary/10 transition-all duration-500">
-                {renderColorSwatches(gown.color)}
-              </div>
-              <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Color')}</span>
-            </div>
-          </div>
-
-          {/* Best For */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-black text-[#FF3B30] uppercase tracking-widest opacity-60">Best For</span>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-blue-50/50 flex items-center justify-center group-hover:shadow-[0_8px_20px_rgba(1,62,141,0.1)] group-hover:border-primary/10 transition-all duration-500">
-                <img src={assets.event_icon || assets.star_blue} alt="" className="h-4 w-4 opacity-40 group-hover:opacity-100 transition-all duration-500" />
-              </div>
+          {/* Best For - Desktop only */}
+          <div className="hidden sm:flex flex-col gap-1">
+            <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Best For</span>
+            <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">
                 {Array.isArray(gown.eventType) && gown.eventType.length > 0
                   ? gown.eventType[0]
@@ -189,6 +228,7 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
               </span>
             </div>
           </div>
+
         </div>
       </div>
     </div>
