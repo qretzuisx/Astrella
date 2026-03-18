@@ -584,7 +584,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
           </div>
 
           <p className="text-sm text-gray-500 font-medium mb-8">
-            Upload a clear photo. Our AI will analyze your features to curate the perfect recommendations for you.
+            Upload a clear photo. Our AI will analyze your features to recommend the perfect match for you.
           </p>
 
           {analysisError && (

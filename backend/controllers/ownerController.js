@@ -1,6 +1,6 @@
 import imageKit from "../configs/imagekit.js";
 import Booking from "../models/booking.js";
-import Gown from "../models/Gown.js";
+import Gown from "../models/gown.js";
 import User from "../models/User.js";
 import fs from "fs";
 import { calculateActualGownStatus } from "./bookingController.js";
@@ -143,10 +143,12 @@ export const getOwnersGowns = async (req, res) => {
     try {
         const { _id } = req.user;
         const gowns = await Gown.find({ owner: _id })
-        // Calculate actual status for each gown based on current date and bookings
-        for (let gown of gowns) {
+        
+        // Calculate actual status for each gown in parallel
+        await Promise.all(gowns.map(async (gown) => {
             gown.status = await calculateActualGownStatus(gown._id);
-        }
+        }));
+
         res.json({ success: true, gowns })
     } catch (error) {
         console.error(error);
@@ -160,14 +162,16 @@ export const getAllGowns = async (req, res) => {
     try {
         let gowns = await Gown.find({})
             .populate('owner', 'name')
-            .sort({ createdAt: -1 })
+            .sort({ views: -1, createdAt: -1 })
         
         // Filter out gowns whose owners were deleted
         gowns = gowns.filter(gown => gown.owner !== null);
-        // Calculate actual status for each gown based on current date and bookings
-        for (let gown of gowns) {
+
+        // Calculate actual status for ALL gowns in parallel
+        await Promise.all(gowns.map(async (gown) => {
             gown.status = await calculateActualGownStatus(gown._id);
-        }
+        }));
+
         res.json({ success: true, gowns })
     } catch (error) {
         console.error('getAllGowns:', error);
@@ -179,7 +183,11 @@ export const getAllGowns = async (req, res) => {
 export const getGownById = async (req, res) => {
     try {
         const { id } = req.params;
-        const gown = await Gown.findById(id).populate('owner', 'name shopName');
+        const gown = await Gown.findByIdAndUpdate(
+            id, 
+            { $inc: { views: 1 } }, 
+            { new: true }
+        ).populate('owner', 'name shopName');
         if (!gown) {
             return res.status(404).json({ success: false, message: 'Gown not found' });
         }

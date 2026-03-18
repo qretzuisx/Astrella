@@ -6,53 +6,11 @@ import { assets } from '../assets/assets'
 import { API_URL, CURRENCY, EXTRA_DAY_FEE } from '../config'
 import PaymentModal from '../components/PaymentModal'
 import ContractModal from '../components/ContractModal'
+import { toIsoDate, formatDate, combineDateAndTime } from '../utils/dateUtils'
+import { getColorHex, parseColors } from '../utils/colorUtils'
 
 const INTERVAL_MINUTES = 15
 
-const minutesToTimeString = (totalMinutes) => {
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-}
-
-const normalizeTimeInput = (rawValue, openMinutes = 540, closeMinutes = 1140) => {
-  if (!rawValue) {
-    return { valid: false, message: 'Time is required.' }
-  }
-
-  const sanitized = rawValue.replace(/[^\d:]/g, '')
-  // Accept HH:MM or HH:MM:SS (e.g. from type="time" which may include seconds)
-  const match = sanitized.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
-  if (!match) {
-    return { valid: false, message: 'Please use the HH:MM format.' }
-  }
-
-  let hours = parseInt(match[1], 10)
-  let minutes = parseInt(match[2], 10)
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return { valid: false, message: 'Invalid time provided.' }
-  }
-
-  let totalMinutes = hours * 60 + minutes
-
-  if (totalMinutes < openMinutes) {
-    return { valid: true, time: minutesToTimeString(openMinutes), autoAdjusted: true }
-  }
-
-  if (totalMinutes > closeMinutes) {
-    return { valid: true, time: minutesToTimeString(closeMinutes), autoAdjusted: true }
-  }
-
-  const remainder = totalMinutes % INTERVAL_MINUTES
-  if (remainder !== 0) {
-    const roundedUp = totalMinutes + (INTERVAL_MINUTES - remainder)
-    const roundedDown = totalMinutes - remainder
-    totalMinutes = roundedUp <= closeMinutes ? roundedUp : roundedDown
-    return { valid: true, time: minutesToTimeString(totalMinutes), autoAdjusted: true }
-  }
-
-  return { valid: true, time: minutesToTimeString(totalMinutes), autoAdjusted: false }
-}
 
 const GownDetails = () => {
 
@@ -165,24 +123,11 @@ const GownDetails = () => {
     return `${hour.toString().padStart(2, '0')}:${minuteString} ${period}`
   }
 
-  const combineDateAndTime = (dateValue, timeValue) => {
-    if (!dateValue || !timeValue) return null
-    return new Date(`${dateValue}T${timeValue}`)
-  }
 
   const setFieldError = (field, message) => {
     setFormErrors(prev => ({ ...prev, [field]: message }))
   }
 
-  const toIsoDate = (dateObj) => {
-    if (!dateObj) return ''
-    const d = dateObj instanceof Date ? dateObj : new Date(dateObj)
-    if (Number.isNaN(d.getTime())) return ''
-    const yyyy = d.getFullYear()
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const dd = String(d.getDate()).padStart(2, '0')
-    return `${yyyy}-${mm}-${dd}`
-  }
 
   const blockedReasonForDate = (isoDate) => {
     if (calendarInfo.unavailableDates.includes(isoDate)) return { reason: 'reserved', message: 'Reserved date.' }
@@ -677,7 +622,7 @@ const GownDetails = () => {
             />
             
             {/* Status Badge */}
-            <div className={`absolute top-8 left-8 px-10 py-5 rounded-[24px] text-white font-black text-[12px] uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/20 transition-all duration-500 hover:scale-105 ${
+            <div className={`absolute top-4 sm:top-8 left-4 sm:left-8 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-[32px] text-white font-black text-[11px] sm:text-[13px] uppercase tracking-[0.2em] shadow-2xl backdrop-blur-xl border border-white/20 transition-all duration-500 hover:scale-105 ${
               gown?.status === 'Available' ? 'bg-green-600/90' :
               gown?.status === 'Unavailable' ? 'bg-secondary/90' :
               gown?.status === 'In-Laundry' ? 'bg-primary/90' :
@@ -686,6 +631,7 @@ const GownDetails = () => {
             }`}>
               {gown.status}
             </div>
+
           </div>
 
           {/* Title and Owner Information */}
@@ -794,43 +740,13 @@ const GownDetails = () => {
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
                   <div className="flex items-center gap-3">
-                    {(() => {
-                      const colorMap = {
-                        'red': '#EF4444', 'burgundy': '#800020', 'maroon': '#800000', 'crimson': '#DC143C', 'ruby': '#E0115F', 'rose': '#FF007F', 'wine': '#722F37', 'brick': '#B22222',
-                        'pink': '#EC4899', 'blush': '#DE5D83', 'magenta': '#FF00FF', 'fuchsia': '#FF00FF', 'coral': '#FF7F50', 'peach': '#FFDAB9', 'salmon': '#FA8072', 'hotpink': '#FF69B4',
-                        'orange': '#F97316', 'rust': '#B7410E', 'terracotta': '#E2725B', 'yellow': '#EAB308', 'gold': '#FFD700', 'amber': '#FFBF00', 'mustard': '#FFDB58', 'canary': '#FFEF00',
-                        'green': '#22C55E', 'emerald': '#50C878', 'mint': '#98FF98', 'teal': '#008080', 'olive': '#808000', 'jade': '#00A86B', 'sage': '#BCB88A', 'forest': '#228B22',
-                        'blue': '#3B82F6', 'navy': '#000080', 'sky': '#87CEEB', 'sapphire': '#0F52BA', 'azure': '#007FFF', 'cobalt': '#0047AB', 'turquoise': '#40E0D0', 'royal': '#4169E1', 'cyan': '#00FFFF',
-                        'purple': '#A855F7', 'lavender': '#E6E6FA', 'violet': '#EE82EE', 'plum': '#8E4585', 'indigo': '#4B0082', 'lilac': '#C8A2C8', 'mauve': '#E0B0FF',
-                        'brown': '#964B00', 'chocolate': '#7B3F00', 'tan': '#D2B48C', 'khaki': '#C3B091',
-                        'white': '#FFFFFF', 'ivory': '#FFFFF0', 'cream': '#FFFDD0', 'beige': '#F5F5DC', 'black': '#000000', 'gray': '#6B7280', 'grey': '#6B7280', 'silver': '#C0C0C0', 'charcoal': '#36454F', 'nude': '#E3BC9A', 'champagne': '#F7E7CE'
-                      };
-                      
-                      const getHex = (name) => {
-                        const lower = (name || '').toLowerCase().trim();
-                        if (colorMap[lower]) return colorMap[lower];
-                        const keys = Object.keys(colorMap).sort((a,b) => b.length - a.length);
-                        for (const key of keys) {
-                          if (lower.includes(key)) return colorMap[key];
-                        }
-                        return '#CCCCCC';
-                      };
-                      
-                      const colorValue = gown.color;
-                      let colors = [];
-                      if (Array.isArray(colorValue)) {
-                        colors = colorValue;
-                      } else if (typeof colorValue === 'string') {
-                        colors = colorValue.split(/[,/&]+/).map(c => c.trim()).filter(Boolean);
-                      } else {
-                        colors = [colorValue || '#eee'];
-                      }
+                      const colors = parseColors(gown.color);
                       
                       return (
                         <div className="flex -space-x-2">
                           {colors.map((c, i) => {
                             const normalized = (c || '').toString().toLowerCase();
-                            const hex = getHex(normalized);
+                            const hex = getColorHex(normalized);
                             return (
                               <div 
                                 key={i} 
@@ -842,7 +758,6 @@ const GownDetails = () => {
                           })}
                         </div>
                       );
-                    })()}
                     <p className='text-primary font-black text-xl capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
                   </div>
                 </div>
@@ -909,7 +824,7 @@ const GownDetails = () => {
               <div className='grid grid-cols-2 gap-4'>
                 <button 
                   onClick={() => setBookingType('reservation')}
-                  className={`flex flex-col gap-3 p-5 rounded-3xl border-2 transition-all text-left ${
+                  className={`flex flex-col gap-2 sm:gap-3 p-4 sm:p-5 rounded-3xl border-2 transition-all text-left ${
                     bookingType === 'reservation' 
                     ? 'border-primary bg-primary/5 shadow-[inner_0_0_20px_rgba(1,62,141,0.05)]' 
                     : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
@@ -928,7 +843,7 @@ const GownDetails = () => {
 
                 <button 
                   onClick={() => setBookingType('trial')}
-                  className={`flex flex-col gap-3 p-5 rounded-3xl border-2 transition-all text-left group/trial ${
+                  className={`flex flex-col gap-2 sm:gap-3 p-4 sm:p-5 rounded-3xl border-2 transition-all text-left group/trial ${
                     bookingType === 'trial' 
                     ? 'border-secondary bg-secondary/5 shadow-[inner_0_0_20px_rgba(67,97,238,0.05)]' 
                     : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'

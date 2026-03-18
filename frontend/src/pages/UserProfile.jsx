@@ -58,7 +58,7 @@ const UserProfile = () => {
       })
       const userData = await userResponse.json()
 
-      if (userData.success || userData.sucess) {
+      if (userData.success) {
         setUser(userData.user)
         setFormData({
           name: userData.user.name || '',
@@ -514,7 +514,7 @@ const UserProfile = () => {
                 />
               </div>
 
-              <div className='flex gap-4 pt-4'>
+              <div className='flex flex-col sm:flex-row gap-4 pt-4'>
                 <button
                   type='submit'
                   className='flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary-dull transition-all font-semibold'
@@ -570,7 +570,7 @@ const UserProfile = () => {
                 />
               </div>
 
-              <div className='flex gap-4'>
+              <div className='flex flex-col sm:flex-row gap-4'>
                 <button
                   type='button'
                   onClick={handleDeleteAccount}

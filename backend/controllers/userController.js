@@ -1,5 +1,5 @@
 import User from "../models/User.js"
-import Gown from "../models/Gown.js"
+import Gown from "../models/gown.js"
 import { calculateActualGownStatus } from "./bookingController.js"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -492,16 +492,14 @@ export const getRecommendations = async (req, res) => {
         // Filter out orphaned gowns (owner deleted)
         allGowns = allGowns.filter(gown => gown.owner !== null);
 
-        // Recalculate dynamic status for each gown so Recommendations uses the same
-        // availability logic as the Available Apparel grid.
-        for (const gown of allGowns) {
-            // Respect owner's manual status override (In-Laundry, Unavailable)
+        // Recalculate dynamic status for each gown in parallel
+        await Promise.all(allGowns.map(async (gown) => {
             if (gown.statusOverride) {
                 gown.status = gown.statusOverride;
             } else {
                 gown.status = await calculateActualGownStatus(gown._id);
             }
-        }
+        }));
 
         if (allGowns.length === 0) {
             return res.json({ 

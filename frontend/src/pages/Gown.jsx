@@ -43,6 +43,7 @@ const Gown = () => {
     // Fetch gowns from API
     const fetchGowns = async () => {
       try {
+        setLoading(true)
         const response = await fetch(`${API_URL}/owner/all-gowns`, { cache: 'no-store' })
         const data = await response.json()
 
@@ -50,12 +51,6 @@ const Gown = () => {
           setError('')
           // Only show gowns that have an owner (deleted gowns won't have owner)
           let validGowns = data.gowns.filter(gown => gown.owner && gown.owner._id)
-          
-          // Randomize gowns on fetch
-          for (let i = validGowns.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [validGowns[i], validGowns[j]] = [validGowns[j], validGowns[i]];
-          }
           
           setGowns(validGowns)
           setFilteredGowns(validGowns)
@@ -79,11 +74,6 @@ const Gown = () => {
     }
 
     fetchGowns()
-
-    // Refresh every 30 seconds to get new gowns
-    const refreshInterval = setInterval(fetchGowns, 30000)
-
-    return () => clearInterval(refreshInterval)
   }, [])
 
   // Filter gowns based on search query and filters
@@ -219,15 +209,22 @@ const Gown = () => {
   return (
     <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 bg-[#FDFDFF] min-h-screen'>
       {error && (
-        <div className='mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
-          <p className='text-red-800 font-bold flex items-center gap-2'>
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <div className='mb-6 p-6 bg-red-50 border border-red-100 rounded-[32px] animate-shake flex flex-col sm:flex-row items-center justify-between gap-4'>
+          <p className='text-red-800 font-bold flex items-center gap-3 text-lg'>
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
             {error}
           </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className='px-8 py-3 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg active:scale-95 text-xs'
+          >
+            Retry
+          </button>
         </div>
       )}
+
       {/* Header Section */}
       <div className='flex flex-col items-center text-center mb-14 mt-12 lg:mt-0'>
         <div className="flex items-center gap-2 mb-2">
@@ -291,7 +288,7 @@ const Gown = () => {
 
               {/* Filter Dropdown Panel - NOW ABSOLUTE */}
               {showFilters && (
-                <div className='absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl rounded-[40px] shadow-[0_40px_120px_rgba(1,62,141,0.2)] border border-blue-50 p-8 sm:p-10 animate-fade-in-up z-20'>
+                <div className='absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl rounded-[32px] sm:rounded-[40px] shadow-[0_40px_120px_rgba(1,62,141,0.2)] border border-blue-50 p-6 sm:p-10 animate-fade-in-up z-20 max-h-[80vh] overflow-y-auto no-scrollbar'>
                   <div className='flex items-center justify-between mb-10'>
                     <div>
                       <h3 className='text-3xl font-black text-primary tracking-tight'>Refine Selection</h3>

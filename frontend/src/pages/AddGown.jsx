@@ -4,6 +4,7 @@ import { assets, eventTypeList } from '../assets/assets'
 import { API_URL } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 import { removeBackground } from '@imgly/background-removal'
+import { getColorHex } from '../utils/colorUtils'
 
 const AddGown = () => {
   const navigate = useNavigate()
@@ -30,29 +31,6 @@ const AddGown = () => {
 
   const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size']
 
-  // Helper for dynamic color preview
-  const getColorPreview = (colorName) => {
-    if (!colorName) return 'transparent';
-    const lower = colorName.toLowerCase().trim();
-
-    // Improved matching logic for preview
-    const colorMap = {
-      'red': '#EF4444', 'burgundy': '#800020', 'maroon': '#800000', 'crimson': '#DC143C', 'ruby': '#E0115F', 'rose': '#FF007F', 'wine': '#722F37',
-      'pink': '#EC4899', 'blush': '#DE5D83', 'magenta': '#FF00FF', 'fuchsia': '#FF00FF', 'coral': '#FF7F50', 'peach': '#FFDAB9', 'salmon': '#FA8072',
-      'orange': '#F97316', 'rust': '#B7410E', 'terracotta': '#E2725B', 'yellow': '#EAB308', 'gold': '#FFD700', 'amber': '#FFBF00', 'mustard': '#FFDB58',
-      'green': '#22C55E', 'emerald': '#50C878', 'mint': '#98FF98', 'teal': '#008080', 'olive': '#808000', 'jade': '#00A86B', 'sage': '#BCB88A',
-      'blue': '#3B82F6', 'navy': '#000080', 'sky': '#87CEEB', 'sapphire': '#0F52BA', 'azure': '#007FFF', 'cobalt': '#0047AB', 'turquoise': '#40E0D0', 'royal': '#4169E1',
-      'purple': '#A855F7', 'lavender': '#E6E6FA', 'violet': '#EE82EE', 'plum': '#8E4585', 'indigo': '#4B0082', 'lilac': '#C8A2C8',
-      'white': '#FFFFFF', 'ivory': '#FFFFF0', 'cream': '#FFFDD0', 'beige': '#F5F5DC', 'black': '#000000', 'gray': '#6B7280', 'grey': '#6B7280', 'silver': '#C0C0C0', 'nude': '#E3BC9A', 'champagne': '#F7E7CE'
-    };
-
-    if (colorMap[lower]) return colorMap[lower];
-    const keys = Object.keys(colorMap).sort((a, b) => b.length - a.length);
-    for (const key of keys) {
-      if (lower.includes(key)) return colorMap[key];
-    }
-    return '#CCCCCC';
-  };
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData({
@@ -99,6 +77,45 @@ const AddGown = () => {
     })
   }
 
+
+  const runBackgroundRemoval = async (fileToProcess) => {
+    if (!fileToProcess) return;
+    
+    console.log(`[BG Removal] Process started for file: ${fileToProcess.name}`);
+    setIsRemovingBg(true);
+    setError('');
+    
+    try {
+      // 25 second timeout as requested by user
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Background removal taking longer than expected')), 25000)
+      );
+
+      console.log(`[BG Removal] Calling @imgly/background-removal...`);
+      const bgRemovalPromise = removeBackground(fileToProcess);
+      
+      const imageBlob = await Promise.race([bgRemovalPromise, timeoutPromise]);
+      console.log(`[BG Removal] AI processing successful!`);
+
+      const newFile = new File([imageBlob], fileToProcess.name.replace(/\.[^/.]+$/, "") + ".png", { type: 'image/png' });
+      setSelectedImage(newFile);
+
+      const newReader = new FileReader();
+      newReader.onloadend = () => {
+        setImagePreview(newReader.result);
+        console.log(`[BG Removal] Preview updated with transparent image.`);
+      };
+      newReader.readAsDataURL(newFile);
+    } catch (error) {
+      console.error("[BG Removal Error]", error.message);
+      // Shortened, easy to understand message as requested by user
+      setError("AI Timeout: Retry or use original.");
+    } finally {
+      setIsRemovingBg(false);
+      console.log(`[BG Removal] Task finished.`);
+    }
+  };
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -110,42 +127,8 @@ const AddGown = () => {
       }
       reader.readAsDataURL(file)
 
-      // Automatically remove background in the background
-      setIsRemovingBg(true)
-      
-      const removeBgWithTimeout = async () => {
-        console.log(`[BG Removal] Process started for file: ${file.name}`);
-        try {
-          // 20 second timeout for background removal as requested
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Background removal timed out')), 20000)
-          );
-
-          console.log(`[BG Removal] Calling @imgly/background-removal...`);
-          const bgRemovalPromise = removeBackground(file);
-          
-          const imageBlob = await Promise.race([bgRemovalPromise, timeoutPromise]);
-          console.log(`[BG Removal] AI processing successful!`);
-
-          const newFile = new File([imageBlob], file.name.replace(/\.[^/.]+$/, "") + ".png", { type: 'image/png' });
-          setSelectedImage(newFile);
-
-          const newReader = new FileReader();
-          newReader.onloadend = () => {
-            setImagePreview(newReader.result);
-            console.log(`[BG Removal] Preview updated with transparent image.`);
-          };
-          newReader.readAsDataURL(newFile);
-        } catch (error) {
-          console.error("[BG Removal Error]", error.message);
-          // We keep the original image if removal fails or times out
-        } finally {
-          setIsRemovingBg(false);
-          console.log(`[BG Removal] Task finished.`);
-        }
-      };
-
-      removeBgWithTimeout();
+      // Automatically remove background
+      runBackgroundRemoval(file);
     }
   }
 
@@ -226,7 +209,7 @@ const AddGown = () => {
 
       const data = await response.json()
 
-      if (data.success || data.sucess) {
+      if (data.success) {
         setSuccess('Apparel added successfully!')
         // Reset form
         setFormData({
@@ -315,11 +298,19 @@ const AddGown = () => {
                   <div className="w-full md:w-56 aspect-[3/4] overflow-hidden rounded-[32px] border border-gray-100 shadow-2xl relative group bg-gray-50/50">
                     <img src={imagePreview} alt='Preview' className={`w-full h-full object-contain transition-transform duration-700 ${isRemovingBg ? 'opacity-50 blur-sm' : 'group-hover:scale-105'}`} />
                     <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
-                    {isRemovingBg && (
+                    {isRemovingBg ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm">
                         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
                         <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] bg-white/90 px-3 py-1.5 rounded-full shadow-sm">AI Processing...</span>
                       </div>
+                    ) : (
+                      <button 
+                        type="button"
+                        onClick={() => runBackgroundRemoval(selectedImage)}
+                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-[10px] font-black text-primary uppercase tracking-widest shadow-xl border border-white hover:bg-white transition-all hover:scale-105 active:scale-95 z-20"
+                      >
+                        Retry AI
+                      </button>
                     )}
                   </div>
                 )}
@@ -500,7 +491,7 @@ const AddGown = () => {
                 className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 relative overflow-hidden group'
               >
                 <span className="relative z-10">
-                  {loading ? 'Saving Apparel...' : (isRemovingBg ? 'Removing Background...' : 'Add to Collection')}
+                  {loading ? 'Saving Apparel...' : (isRemovingBg ? 'AI Processing...' : 'Add to Collection')}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
               </button>

@@ -28,7 +28,7 @@ const Navbar = ({ setShowLogin }) => {
         })
         const data = await response.json()
 
-        if (data.success || data.sucess) {
+        if (data.success) {
           setUser(data.user)
         }
       } catch (error) {
@@ -177,6 +177,20 @@ const Navbar = ({ setShowLogin }) => {
           >
             Login
           </button>
+        )}
+        {!loading && user && (
+          <div 
+            onClick={() => navigate('/profile')}
+            className="w-10 h-10 rounded-full border-2 border-primary/10 overflow-hidden shadow-sm active:scale-95 transition-transform"
+          >
+            {user.image ? (
+              <img src={user.image} alt="User" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                {user.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

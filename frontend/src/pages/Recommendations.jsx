@@ -138,7 +138,7 @@ const Recommendations = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#FDFDFF]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-6 shadow-2xl shadow-primary/10"></div>
-          <p className="text-xl font-black text-primary tracking-tight">Curating your perfect style...</p>
+          <p className="text-xl font-black text-primary tracking-tight">Preparing your perfect style...</p>
         </div>
       </div>
     );
@@ -188,7 +188,7 @@ const Recommendations = () => {
               </div>
               <h1 className="text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-secondary">Matches</span></h1>
               <p className="text-lg text-gray-500 font-medium max-w-2xl">
-                We've curated {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile and preferences.
+                We've selected {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile and preferences.
               </p>
             </div>
             

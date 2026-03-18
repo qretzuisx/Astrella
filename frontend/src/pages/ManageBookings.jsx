@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 import { useSearchParams } from 'react-router-dom'
+import { toIsoDate, formatDate } from '../utils/dateUtils'
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([])
@@ -178,14 +179,6 @@ const ManageBookings = () => {
     }
   }
 
-  const toDateInputValue = (dateString) => {
-    if (!dateString) return ''
-    const d = new Date(dateString)
-    const yyyy = d.getFullYear()
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const dd = String(d.getDate()).padStart(2, '0')
-    return `${yyyy}-${mm}-${dd}`
-  }
 
   const allowedTimes = React.useMemo(() => {
     const times = []
@@ -207,8 +200,8 @@ const ManageBookings = () => {
     setSelectedBooking(booking)
     setEditMode(mode)
     setEditForm({
-      pickupDate: toDateInputValue(booking.pickupDate),
-      returnDate: toDateInputValue(booking.returnDate),
+      pickupDate: toIsoDate(booking.pickupDate),
+      returnDate: toIsoDate(booking.returnDate),
       pickupTime,
       returnTime,
     })
@@ -314,7 +307,7 @@ const ManageBookings = () => {
       const payload = {
         bookingId: selectedBooking._id || selectedBooking.id,
         action: 'reschedule',
-        pickupDate: editMode === 'extend' ? toDateInputValue(selectedBooking.pickupDate) : editForm.pickupDate,
+        pickupDate: editMode === 'extend' ? toIsoDate(selectedBooking.pickupDate) : editForm.pickupDate,
         returnDate: editForm.returnDate,
         pickupTime: editMode === 'extend' ? (selectedBooking.pickupTime || editForm.pickupTime) : editForm.pickupTime,
         returnTime: editForm.returnTime,
@@ -378,15 +371,6 @@ const ManageBookings = () => {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    })
-  }
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -518,33 +502,35 @@ const ManageBookings = () => {
           )}
 
           {/* Status Filter Tabs - Modern Segmented Control */}
-          <div className='mb-10 flex flex-wrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit'>
-            {['all', 'trial', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => {
-              const count = status === 'all' 
-                ? bookings.length 
-                : bookings.filter(b => b.status === status).length;
-              
-              // Ensure critical tabs are always visible
+          <div className='mb-10 overflow-x-auto no-scrollbar pb-2'>
+            <div className='flex flex-nowrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit min-w-full sm:min-w-0'>
+              {['all', 'trial', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => {
+                const count = status === 'all' 
+                  ? bookings.length 
+                  : bookings.filter(b => b.status === status).length;
+                
+                // Ensure critical tabs are always visible
 
-              return (
-                <button
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 relative ${
-                    filterStatus === status
-                      ? 'bg-white text-primary shadow-sm scale-105'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    {status === 'all' ? 'All Requests' : status.charAt(0).toUpperCase() + status.slice(1)}
-                    <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${filterStatus === status ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}>
-                        {count}
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status)}
+                    className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-300 relative ${
+                      filterStatus === status
+                        ? 'bg-white text-primary shadow-sm scale-105'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {status === 'all' ? 'All Requests' : status.charAt(0).toUpperCase() + status.slice(1)}
+                      <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${filterStatus === status ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}>
+                          {count}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              )
-            })}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Bookings List */}
@@ -574,7 +560,7 @@ const ManageBookings = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${
+                            <span className={`px-3 py-1 rounded-full text-[11px] font-black tracking-widest uppercase ${
                                 booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-50 text-green-700' : 
                                 booking.status === 'pending' ? 'bg-orange-50 text-orange-600' : 
                                 booking.status === 'trial' ? 'bg-gray-100 text-gray-600' : 
@@ -582,7 +568,7 @@ const ManageBookings = () => {
                             }`}>
                                 {booking.status}
                             </span>
-                             <span className="text-[10px] font-bold text-gray-400">ID: #{(booking._id || booking.id)?.slice(-6).toUpperCase()}</span>
+                             <span className="text-xs font-bold text-gray-400">ID: #{(booking._id || booking.id)?.slice(-6).toUpperCase()}</span>
                         </div>
                         <h3 className='text-xl sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-3'>
                             {booking.gown?.name || 'Gown Name'}
@@ -595,7 +581,7 @@ const ManageBookings = () => {
                                      </svg>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client</p>
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Client</p>
                                     <p className="text-xs font-bold text-gray-700">{booking.user?.name || 'User Name'}</p>
                                 </div>
                             </div>
@@ -606,7 +592,7 @@ const ManageBookings = () => {
                                      </svg>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact</p>
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Contact</p>
                                     <p className="text-xs font-bold text-gray-700">{booking.contactNumber || 'N/A'}</p>
                                 </div>
                             </div>
@@ -618,12 +604,12 @@ const ManageBookings = () => {
                     <div className='flex flex-wrap xl:flex-nowrap items-center gap-6 xl:border-l xl:border-gray-50 xl:pl-8'>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 min-w-[140px]">
-                           <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-2">Pickup</p>
+                           <p className="text-xs font-black text-primary/40 uppercase tracking-widest mb-2">Pickup</p>
                            <p className="text-sm font-black text-primary-dull">{formatDate(booking.pickupDate)}</p>
                            <p className="text-[11px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
                         </div>
                          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 min-w-[140px]">
-                           <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-2">Return</p>
+                           <p className="text-xs font-black text-primary/40 uppercase tracking-widest mb-2">Return</p>
                            <p className="text-sm font-black text-primary-dull">{formatDate(booking.returnDate)}</p>
                            <p className="text-[11px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
                         </div>
@@ -631,7 +617,7 @@ const ManageBookings = () => {
 
                       {/* Value & Actions */}
                       <div className="flex flex-col items-center xl:items-end justify-center min-w-[140px]">
-                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
+                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
                         <p className='text-3xl font-black text-primary-dull flex items-baseline gap-1'>
                           <span className="text-sm opacity-40">₱</span>
                           {booking.price?.toLocaleString()}
@@ -639,7 +625,7 @@ const ManageBookings = () => {
                         
                         {/* Status Badge Secondary */}
                         {booking.payment && (
-                            <div className={`mt-3 px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider ${
+                            <div className={`mt-3 px-3 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider ${
                                 booking.payment.status === 'verified' ? 'bg-green-50 text-green-700' :
                                 booking.payment.status === 'pending' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
                             }`}>
@@ -649,7 +635,7 @@ const ManageBookings = () => {
                       </div>
 
                       {/* Control Actions */}
-                      <div className='flex flex-row xl:flex-col gap-2.5 w-full xl:w-auto'>
+                      <div className='flex flex-col sm:flex-row xl:flex-col gap-2.5 w-full xl:w-auto'>
                         {/* Trial Actions */}
                         {booking.status === 'trial' && (
                           <button

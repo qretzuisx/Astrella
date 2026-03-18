@@ -91,7 +91,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
         const data = await response.json()
 
-        if (data.sucess || data.success) {
+        if (data.success) {
           localStorage.setItem('token', data.token)
 
           // Fetch user data to determine role and redirect
@@ -102,7 +102,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
           })
           const userData = await userResponse.json()
 
-          if (userData.success || userData.sucess) {
+          if (userData.success) {
             const actualRole = userData.user
               ? (typeof userData.user.role === 'object' ? userData.user.role.name : userData.user.role)
               : 'user'
@@ -193,7 +193,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
         const data = await response.json()
 
-        if (data.sucess || data.success) {
+        if (data.success) {
           localStorage.setItem('token', data.token)
           
           // Fetch user data to determine role and redirect
@@ -244,7 +244,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
       })
 
       const data = await response.json()
-      if (response.ok && (data.success || data.sucess)) {
+      if (response.ok && data.success) {
         setSuccess('Reset code generated! Please copy the 5-digit code below.')
         setGeneratedResetToken(data.resetToken || '')
         setProvidedResetToken(data.resetToken || '')
@@ -295,7 +295,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
       })
 
       const data = await response.json()
-      if (response.ok && (data.success || data.sucess)) {
+      if (response.ok && data.success) {
         setSuccess('Password updated successfully. You can now log in.')
         setTimeout(() => {
           exitForgotFlow()

@@ -95,22 +95,22 @@ const Hero = () => {
   };
 
   return (
-    <div className='h-[calc(100vh-64px)] min-h-[500px] flex flex-col items-center justify-center px-4 relative bg-[#FDFDFF] w-full'>
+    <div className='min-h-screen flex flex-col items-center justify-center px-4 relative bg-[#FDFDFF] w-full'>
 
       {/* Hero Headline */}
-      <div className="max-w-3xl mx-auto z-10 text-center space-y-0.5 mb-4 mt-2 sm:mt-0">
-        <h1 className='text-5xl sm:text-7xl font-black text-primary tracking-tighter leading-tight animate-fade-in drop-shadow-sm'>
-          AI <span className="text-accent-red italic">Recommendation</span>
+      <div className="max-w-3xl mx-auto z-10 text-center space-y-1 mb-6 mt-4 sm:mt-0">
+        <h1 className='text-4xl sm:text-6xl md:text-7xl font-black text-primary tracking-tighter leading-tight animate-fade-in drop-shadow-sm'>
+          AI <span className="text-secondary italic">Recommendation</span>
         </h1>
-        <p className="text-[10px] sm:text-xs text-primary/40 font-black uppercase tracking-[0.5em]">
+        <p className="text-[10px] sm:text-xs text-primary/40 font-black uppercase tracking-[0.5em] mt-2">
           Your Personal AI Stylist
         </p>
       </div>
 
       {/* Custom Attribute Bar */}
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full max-w-[1440px] relative z-20 mb-0 px-4 sm:px-10">
-        <div className="flex items-center bg-white/40 backdrop-blur-xl p-1.5 sm:p-2 rounded-[40px] shadow-[0_20px_60px_rgba(22,43,105,0.12)] border border-primary/20 w-fit hover:border-primary/40 transition-all duration-500 relative z-10">
-          <div className="flex flex-nowrap items-center justify-center gap-0 pb-0 overflow-visible w-full min-w-0">
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-4 sm:px-10">
+        <div className="flex items-center bg-white/40 backdrop-blur-xl p-2 sm:p-3 rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-primary/20 w-fit max-w-full hover:border-primary/40 transition-all duration-500 relative z-10">
+          <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-1 pb-0 overflow-x-auto no-scrollbar w-full min-w-0 px-2 sm:px-0">
 
             {/* Body Type */}
             <AttributeSelector
@@ -214,13 +214,13 @@ const Hero = () => {
           </div>
         )}
 
-        <div className="flex flex-row items-center justify-center gap-3 w-full mt-4">
+        <div className="flex flex-row items-center justify-center gap-4 w-full mt-6 sm:scale-100">
           <button
             type="button"
             onClick={() => setShowImageAnalysis(true)}
-            className="flex-1 sm:flex-none sm:w-auto bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-secondary hover:border-secondary transition-all shadow-sm flex items-center justify-center gap-2 group active:scale-95"
+            className="flex-1 sm:flex-none sm:w-auto bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white hover:text-secondary hover:border-secondary transition-all shadow-md flex items-center justify-center gap-3 group active:scale-95"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -228,7 +228,7 @@ const Hero = () => {
           </button>
           <button
             type="submit"
-            className="flex-1 sm:flex-none sm:w-auto bg-primary text-white px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_15px_40px_rgba(22,43,105,0.15)] hover:-translate-y-0.5 active:scale-95"
+            className="flex-1 sm:flex-none sm:w-auto bg-primary text-white px-8 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_20px_50px_rgba(22,43,105,0.2)] hover:-translate-y-1 active:scale-95"
           >
             <span>Find My Fit</span>
           </button>

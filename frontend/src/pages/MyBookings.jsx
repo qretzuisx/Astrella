@@ -4,6 +4,8 @@ import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
+import { toIsoDate, formatDate, formatTime } from '../utils/dateUtils'
+
 
 // Live countdown timer for trial booking expiration
 // Only shows countdown when the try-on appointment is actively happening
@@ -32,11 +34,7 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
 
   // Format time for display
   const formatTimeDisplay = (timeStr) => {
-    if (!timeStr) return ''
-    const [h, m] = timeStr.split(':').map(Number)
-    const period = h >= 12 ? 'PM' : 'AM'
-    const h12 = h % 12 || 12
-    return `${h12}:${String(m).padStart(2, '0')} ${period}`
+    return formatTime(timeStr)
   }
 
   const isExpired = now >= expiresMs
@@ -104,9 +102,10 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
       </div>
       <div className='flex-1 min-w-0'>
         <p className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-600/70 mb-1'>Try-on scheduled</p>
-        <p className='text-sm font-bold text-blue-900'>
-          {isToday ? `Today at ${formatTimeDisplay(pickupTime)}` : `${apptStr} at ${formatTimeDisplay(pickupTime)}`}
-        </p>
+      <p className='text-sm font-bold text-blue-900'>
+        {isToday ? `Today at ${formatTimeDisplay(pickupTime)}` : `${formatDate(pickupDate)} at ${formatTimeDisplay(pickupTime)}`}
+      </p>
+
       </div>
       <span className='text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full bg-blue-200 text-blue-800'>
         30 min slot
@@ -158,14 +157,6 @@ const MyBookings = ({ setShowLogin }) => {
   const currency = CURRENCY
 
   // Helper functions for calendar
-  const toIsoDate = (date) => {
-    if (!date) return ''
-    const d = new Date(date)
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
 
   const isPastIsoDate = (isoDate) => {
     const today = toIsoDate(new Date())
@@ -502,28 +493,7 @@ const MyBookings = ({ setShowLogin }) => {
     navigate(`/gown-details/${gownId}`)
   }
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
 
-  // Format 24h time (HH:MM or HH:MM:SS) for display as 12h
-  const formatTime = (timeValue) => {
-    if (!timeValue) return ''
-    const parts = String(timeValue).trim().split(':')
-    const hours = parseInt(parts[0], 10)
-    const minutes = parts[1] ? parseInt(parts[1], 10) : 0
-    if (Number.isNaN(hours)) return timeValue
-    const period = hours >= 12 ? 'PM' : 'AM'
-    const h12 = hours % 12 || 12
-    return `${h12}:${String(minutes).padStart(2, '0')} ${period}`
-  }
 
   // Get status badge color
   const getStatusColor = (status) => {
@@ -568,7 +538,7 @@ const MyBookings = ({ setShowLogin }) => {
               Login <span className='text-primary'>Required</span>
             </h2>
             <p className='text-gray-500 mb-10 leading-relaxed font-medium'>
-              Unlock your personal boutique experience. Log in to view and manage your curated reservations.
+              Unlock your personal boutique experience. Log in to view and manage your selected reservations.
             </p>
 
             <div className='flex flex-col gap-4'>

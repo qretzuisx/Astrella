@@ -204,7 +204,7 @@ const OwnerProfile = () => {
                     <div className='p-8 rounded-[32px] bg-white/60 border border-white/80 shadow-sm'>
                       <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-4'>Total Collection</h3>
                       <p className='text-4xl font-black text-primary'>{gowns.length}</p>
-                      <p className='text-xs text-primary/40 font-bold mt-1'>Curated Items</p>
+                      <p className='text-xs text-primary/40 font-bold mt-1'>Selected Items</p>
                     </div>
                     <div className='p-8 rounded-[32px] bg-white/60 border border-white/80 shadow-sm'>
                       <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-4'>Member Since</h3>

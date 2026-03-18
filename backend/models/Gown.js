@@ -33,8 +33,11 @@ const gownSchema = new mongoose.Schema({
     // Optional demographic tags to improve browsing/recommendations
     ageGroup: {type: [String], default: []},
     sex: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},
+    // Track popularity/clicks
+    views: { type: Number, default: 0 }
 }, {timestamps: true})
 
+gownSchema.index({ views: -1, createdAt: -1 });
 gownSchema.index({ available: 1, verified: 1, createdAt: -1 });
 
 const Gown = mongoose.model('Gown', gownSchema) 

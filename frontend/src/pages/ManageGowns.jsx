@@ -104,7 +104,7 @@ const ManageGowns = () => {
 
       const data = await response.json()
 
-      if (data.success || data.sucess) {
+      if (data.success) {
         setSuccess('Availability updated successfully')
         // Refresh gowns list
         fetchGowns()
@@ -140,7 +140,7 @@ const ManageGowns = () => {
 
       const data = await response.json()
 
-      if (data.success || data.sucess) {
+      if (data.success) {
         setSuccess('Gown deleted successfully')
         // Refresh gowns list
         fetchGowns()
@@ -186,7 +186,7 @@ const ManageGowns = () => {
       })
 
       const data = await response.json()
-      if (data.success || data.sucess) {
+      if (data.success) {
         setSuccess('Laundry days updated successfully')
         setGowns(prev => prev.map(g => (g._id || g.id) == gownId ? { ...g, laundryDays: data.laundryDays } : g))
         setLaundryForm(prev => ({ ...prev, [gownId]: String(data.laundryDays ?? parsedValue) }))
@@ -397,7 +397,8 @@ const ManageGowns = () => {
           </div>
 
           {/* Status Filter Tabs - Modern Segmented Control Style */}
-          <div className='mb-10 flex flex-wrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit'>
+          <div className='mb-10 overflow-x-auto no-scrollbar pb-2'>
+            <div className='flex flex-nowrap items-center gap-3 p-1.5 bg-gray-100/50 rounded-2xl w-fit min-w-full sm:min-w-0'>
             {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
               const count = status === 'all'
                 ? gowns.length
@@ -421,6 +422,7 @@ const ManageGowns = () => {
                 </button>
               )
             })}
+            </div>
           </div>
 
           {/* Success/Error Messages */}
@@ -475,7 +477,7 @@ const ManageGowns = () => {
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
                     {/* Status Badge - Refined */}
-                    <div className={`absolute top-4 left-4 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md border border-white/20 ${
+                    <div className={`absolute top-4 left-4 px-3.5 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md border border-white/20 ${
                         getDisplayStatus(gown) === 'Available' ? 'bg-green-500/80' :
                         getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500/80' :
                         getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500/80' :
@@ -488,7 +490,7 @@ const ManageGowns = () => {
 
                     {/* Price Tag - Premium */}
                     <div className='absolute bottom-4 right-4 bg-white rounded-2xl px-4 py-2.5 shadow-xl border border-gray-100 group-hover:-translate-y-1 transition-transform'>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
                         <span className='text-lg font-black text-primary-dull'>
                             <span className="text-sm mr-0.5">₱</span>{gown.price?.toLocaleString() || 0}
                         </span>
@@ -500,7 +502,7 @@ const ManageGowns = () => {
                     <div className="flex items-start justify-between gap-4 mb-4">
                         <h3 className='text-xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
                         {!gown.available && (
-                            <div className="p-1 px-2 bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-lg">Hidden</div>
+                            <div className="p-1 px-2 bg-gray-100 text-xs font-black text-gray-400 uppercase tracking-widest rounded-lg">Hidden</div>
                         )}
                     </div>
                     
@@ -539,7 +541,7 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Laundry Management - Refined */}
-                    <div className='mb-6 p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex items-center justify-between'>
+                    <div className='mb-6 p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex flex-row items-center justify-between gap-2 sm:gap-4'>
                       <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
                              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -547,7 +549,7 @@ const ManageGowns = () => {
                              </svg>
                           </div>
                          <div>
-                            <p className='text-[10px] font-black text-primary-dull/40 uppercase tracking-widest'>Maintenance</p>
+                            <p className='text-xs font-black text-primary-dull/40 uppercase tracking-widest'>Maintenance</p>
                             <p className="text-xs font-bold text-primary-dull">Laundry Hold</p>
                          </div>
                       </div>
@@ -563,7 +565,7 @@ const ManageGowns = () => {
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
+                          className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-100 text-gray-400'
                               : 'bg-primary text-white hover:shadow-lg hover:shadow-primary/20 active:scale-95'
                             }`}
@@ -572,17 +574,17 @@ const ManageGowns = () => {
                         </button>
                       </div>
                     </div>                    {/* Action Buttons - Premium Control Bar */}
-                    <div className='flex gap-3'>
+                    <div className='flex flex-col sm:flex-row gap-3'>
                         <button
                           onClick={() => openEditModal(gown)}
-                          className='flex-1 h-14 bg-gray-50 text-gray-700 rounded-2xl hover:bg-primary hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2 group/btn'
+                          className='flex-1 h-12 sm:h-14 bg-gray-50 text-gray-700 rounded-2xl hover:bg-primary hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2 group/btn'
                         >
-                           <img src={assets.edit_profile_icon} className="w-5 h-5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
+                           <img src={assets.edit_profile_icon} className="w-4 h-4 sm:w-5 sm:h-5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
                           Edit
                         </button>
                       <button
                         onClick={() => handleToggleAvailability(gown._id || gown.id)}
-                        className={`flex-1 h-14 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${gown.available
+                        className={`flex-1 h-12 sm:h-14 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${gown.available
                             ? 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'
                             : 'bg-green-50 text-green-700 hover:bg-green-600 hover:text-white'
                           }`}
@@ -591,9 +593,10 @@ const ManageGowns = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteGown(gown._id || gown.id)}
-                        className='w-20 sm:w-24 h-16 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
+                        className='h-12 sm:h-14 sm:w-24 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
                       >
-                         <img src={assets.delete_icon} className="w-9 h-9 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
+                         <img src={assets.delete_icon} className="w-6 h-6 sm:w-8 sm:h-8 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
+                         <span className='sm:hidden font-black text-xs uppercase tracking-widest ml-2'>Delete</span>
                       </button>
                     </div>
                   </div>

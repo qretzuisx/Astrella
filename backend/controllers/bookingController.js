@@ -1,62 +1,17 @@
 import Booking from "../models/booking.js";
-import Gown from "../models/Gown.js";
+import Gown from "../models/gown.js";
 import User from "../models/User.js";
 import imageKit from "../configs/imagekit.js";
 import { computeReservationPricing } from "../utils/rentalPricing.js";
+import { 
+  toLocalDateString, 
+  combineDateAndTime, 
+  endOfLocalDay, 
+  parseOperatingHours, 
+  doTimeSlotsOverlap 
+} from "../utils/dateUtils.js";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-
-/** Format a Date as YYYY-MM-DD in server local time (avoids UTC shift for calendar dates). */
-const toLocalDateString = (dateObj) => {
-  if (!dateObj) return "";
-  const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
-  if (Number.isNaN(d.getTime())) return "";
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-const combineDateAndTime = (dateValue, timeValue) => {
-  if (!dateValue) return null;
-
-  // IMPORTANT: Avoid using toISOString() here.
-  // toISOString() converts to UTC and can shift the date backward/forward depending on timezone,
-  // which causes UI "today" selections to appear as past days for some users.
-  const safeTime = timeValue || "09:00";
-
-  // Accept either Date or string and extract the local calendar date (YYYY-MM-DD)
-  const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(d.getTime())) return null;
-
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const localDate = `${yyyy}-${mm}-${dd}`;
-
-  // Create an ISO-like local datetime string and let JS parse it as local time.
-  const dateTimeString = `${localDate}T${safeTime}`;
-  return new Date(dateTimeString);
-};
-
-const endOfLocalDay = (dateValue) => {
-  if (!dateValue) return null;
-  const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(d.getTime())) return null;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-};
-
-/** Parse shop operating hours string "HH:MM-HH:MM" to minutes since midnight. Returns null for invalid; use defaults 9*60, 19*60 when null. */
-const parseOperatingHours = (ohString) => {
-  if (!ohString || typeof ohString !== "string") return null;
-  const trimmed = ohString.trim();
-  const match = trimmed.match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
-  if (!match) return null;
-  const openMinutes = parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-  const closeMinutes = parseInt(match[3], 10) * 60 + parseInt(match[4], 10);
-  if (openMinutes < 0 || closeMinutes > 24 * 60) return null;
-  return { openMinutes, closeMinutes };
-};
 
 const DEFAULT_OPEN = 9 * 60;
 const DEFAULT_CLOSE = 19 * 60;
@@ -72,26 +27,6 @@ const isWithinBusinessHours = (timeValue, shopHours = null) => {
 };
 
 // Helper: Extract time in minutes since midnight for comparison (avoids timezone issues)
-const getMinutesSinceMidnight = (dateObj) => {
-  if (!dateObj) return 0;
-  const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
-  return d.getHours() * 60 + d.getMinutes();
-};
-
-// Helper: Check if two time slots overlap on the same calendar day
-// Returns true if they conflict, false if they don't
-const doTimeSlotsOverlap = (slot1Start, slot1End, slot2Start, slot2End) => {
-  // Get calendar dates (YYYY-MM-DD)
-  const slot1Date = toLocalDateString(slot1Start);
-  const slot2Date = toLocalDateString(slot2Start);
-
-  // Different dates = no time conflict possible
-  if (slot1Date !== slot2Date) return false;
-
-  // Same date - check time overlap
-  // Overlap occurs if: start1 < end2 AND end1 > start2
-  return slot1Start < slot2End && slot1End > slot2Start;
-};
 
 // Helper: Check if a single date falls within a booking's pickup-to-return date RANGE
 // (ignoring time-of-day). Used to detect when a trial is scheduled during a multi-day reservation.
