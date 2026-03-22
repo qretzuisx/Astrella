@@ -208,7 +208,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
         if (data.success) {
           localStorage.setItem('token', data.token)
-          
+
           // Fetch user data to determine role and redirect
           const userResponse = await fetch(`${API_URL}/user/data`, {
             headers: {
@@ -216,11 +216,11 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
             }
           })
           const userData = await userResponse.json()
-          
+
           setSuccess('Registration successful!')
           setTimeout(() => {
             setShowLogin(false)
-            
+
             // Redirect based on user role (new users are 'user' by default)
             window.location.href = '/'
           }, 1000)
@@ -349,11 +349,11 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
   if (!showLogin) return null
 
   return (
-    <div 
+    <div
       className='fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 transition-all duration-500 animate-in fade-in'
       onClick={handleClose}
     >
-      <div 
+      <div
         className='bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] max-w-md w-full p-8 sm:p-10 border border-white/60 relative overflow-hidden group/modal max-h-[90vh] overflow-y-auto custom-scrollbar'
         onClick={(e) => e.stopPropagation()}
       >
@@ -482,7 +482,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                         </svg>
                         <span className='text-xs font-black text-primary uppercase tracking-wider'>Boutique Details</span>
                       </div>
-                      
+
                       <div className='grid grid-cols-1 gap-4'>
                         <input
                           type='text'
@@ -577,9 +577,9 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                       onClick={() => setShowPassword(!showPassword)}
                       className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
                     >
-                      <img 
-                        src={showPassword ? assets.eye_close_icon : assets.eye_icon} 
-                        alt="toggle password" 
+                      <img
+                        src={showPassword ? assets.eye_close_icon : assets.eye_icon}
+                        alt="toggle password"
                         className='w-11 h-11 opacity-70 hover:opacity-100 transition-opacity'
                       />
                     </button>
@@ -611,9 +611,9 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
                       >
-                        <img 
-                          src={showConfirmPassword ? assets.eye_close_icon : assets.eye_icon} 
-                          alt="toggle password" 
+                        <img
+                          src={showConfirmPassword ? assets.eye_close_icon : assets.eye_icon}
+                          alt="toggle password"
                           className='w-10 h-10 opacity-70 hover:opacity-100 transition-opacity'
                         />
                       </button>
@@ -698,7 +698,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
               </div>
             )}
 
-            <form 
+            <form
               onSubmit={forgotStep === 'request' ? handleForgotRequest : handleResetPassword}
               className='space-y-4'
             >
@@ -732,7 +732,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                       required
                     />
                   </div>
-                  
+
                   {generatedResetToken && (
                     <div className='p-6 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border border-blue-100 rounded-3xl shadow-sm text-center'>
                       <p className='text-[10px] uppercase tracking-widest font-black text-blue-500/80 mb-3'>Your Reset Code</p>
@@ -763,9 +763,9 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                         onClick={() => setForgotShowPassword(!forgotShowPassword)}
                         className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
                       >
-                        <img 
-                          src={forgotShowPassword ? assets.eye_close_icon : assets.eye_icon} 
-                          alt="toggle password" 
+                        <img
+                          src={forgotShowPassword ? assets.eye_close_icon : assets.eye_icon}
+                          alt="toggle password"
                           className='w-10 h-10 opacity-70 hover:opacity-100 transition-opacity'
                         />
                       </button>
@@ -789,9 +789,9 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                         onClick={() => setForgotShowConfirmPassword(!forgotShowConfirmPassword)}
                         className='absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none'
                       >
-                        <img 
-                          src={forgotShowConfirmPassword ? assets.eye_close_icon : assets.eye_icon} 
-                          alt="toggle password" 
+                        <img
+                          src={forgotShowConfirmPassword ? assets.eye_close_icon : assets.eye_icon}
+                          alt="toggle password"
                           className='w-10 h-10 opacity-70 hover:opacity-100 transition-opacity'
                         />
                       </button>

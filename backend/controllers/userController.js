@@ -9,20 +9,20 @@ import Booking from "../models/booking.js"
 
 
 // jwt token
-const generateToken = (userId)=>{
+const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
 // register user
-export const registerUser = async (req, res)=>{
+export const registerUser = async (req, res) => {
     try {
-        const {name, email, password, contactNumber, role, shopProfile} = req.body
+        const { name, email, password, contactNumber, role, shopProfile } = req.body
 
         const cleanContactNumber = (contactNumber || "").toString().replace(/\D/g, "");
         const normalizedRole = (role || 'user').toString().toLowerCase();
 
-        if(!name || !email || !password || password.length < 8){
-            return res.json({success: false, message: 'Fill all the Fields !'})
+        if (!name || !email || !password || password.length < 8) {
+            return res.json({ success: false, message: 'Fill all the Fields !' })
         }
 
         if (!cleanContactNumber || cleanContactNumber.length !== 11) {
@@ -44,9 +44,9 @@ export const registerUser = async (req, res)=>{
             if (!operatingHours) return res.status(400).json({ success: false, message: 'Operating hours are required for owner sign-up.' });
         }
 
-        const userExists = await User.findOne({email})
-        if(userExists){
-            return res.json({success: false, message: 'User already exists'})
+        const userExists = await User.findOne({ email })
+        if (userExists) {
+            return res.json({ success: false, message: 'User already exists' })
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
@@ -77,41 +77,41 @@ export const registerUser = async (req, res)=>{
             ...(initialShopProfile ? { shopProfile: initialShopProfile } : {})
         })
         const token = generateToken(user._id.toString())
-        res.json({success: true, token})
+        res.json({ success: true, token })
 
 
     } catch (error) {
-        res.json({success: false, message: error.message})
+        res.json({ success: false, message: error.message })
     }
 }
 
 // login user
-export const loginUser = async (req, res)=>{
+export const loginUser = async (req, res) => {
     try {
-        const {email, password} = req.body
-        const user = await User.findOne({email})
-        if(!user){
-            return res.json({success: false, message: "User not found"})
+        const { email, password } = req.body
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.json({ success: false, message: "User not found" })
         }
         const isMatch = await bcrypt.compare(password, user.password)
-        if(!isMatch){
-            return res.json({success: false, message: "Invalid Credentials"})
+        if (!isMatch) {
+            return res.json({ success: false, message: "Invalid Credentials" })
         }
         const token = generateToken(user._id.toString())
-        res.json({success: true, token})
-    
+        res.json({ success: true, token })
+
     } catch (error) {
-        res.json({success: false, message: error.message})
+        res.json({ success: false, message: error.message })
     }
 }
 
 // user data using jwt
-export const getUserData = async (req, res) =>{
+export const getUserData = async (req, res) => {
     try {
-        const {user} = req;
-        res.json({success: true, user})
+        const { user } = req;
+        res.json({ success: true, user })
     } catch (error) {
-        res.json({success:false, message: error.message})
+        res.json({ success: false, message: error.message })
     }
 }
 
@@ -144,7 +144,7 @@ const calculateRecommendationScore = (gown, preferences) => {
     // Event Type Match (30 points) - STRICT MATCHING ONLY
     if (preferences.eventType) {
         const userEventType = preferences.eventType.toLowerCase().trim();
-        
+
         // Handle both array and string eventType
         if (Array.isArray(gown.eventType)) {
             const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
@@ -192,7 +192,7 @@ const calculateRecommendationScore = (gown, preferences) => {
         const rec = bodyTypeRecommendations[preferences.bodyType];
         const gownColor = gown.color?.toLowerCase();
         const gownFabric = gown.fabric?.toLowerCase();
-        
+
         if (rec.colors.some(c => gownColor?.includes(c.toLowerCase()))) {
             score += 10;
         }
@@ -213,7 +213,7 @@ const calculateRecommendationScore = (gown, preferences) => {
     if (preferences.skinTone && skinToneColors[preferences.skinTone]) {
         const recommendedColors = skinToneColors[preferences.skinTone];
         const gownColor = gown.color?.toLowerCase();
-        
+
         if (recommendedColors.some(c => gownColor?.includes(c.toLowerCase()))) {
             score += 20;
         } else if (recommendedColors[0] === 'All colors work well') {
@@ -288,10 +288,10 @@ export const updateProfile = async (req, res) => {
             { new: true, runValidators: true }
         ).select('-password');
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Profile updated successfully',
-            user: updatedUser 
+            user: updatedUser
         });
 
     } catch (error) {
@@ -361,10 +361,10 @@ export const requestPasswordReset = async (req, res) => {
         user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
         await user.save();
 
-        res.json({ 
-            success: true, 
-            message: 'Password reset code generated. Use it within 60 minutes.', 
-            resetToken: rawToken 
+        res.json({
+            success: true,
+            message: 'Password reset code generated. Use it within 60 minutes.',
+            resetToken: rawToken
         });
     } catch (error) {
         console.log(error.message);
@@ -452,23 +452,23 @@ export const deleteAccount = async (req, res) => {
 
 
         // Check if user has any active bookings (as a customer)
-        const activeBookings = await Booking.find({ 
-            user: _id, 
+        const activeBookings = await Booking.find({
+            user: _id,
             status: { $in: ['pending', 'confirmed', 'trial'] }
         });
-        
+
         const now = new Date();
-        const hasValidTrial = activeBookings.some(b => 
+        const hasValidTrial = activeBookings.some(b =>
             b.status === 'trial' && (!b.trialExpiresAt || new Date(b.trialExpiresAt) > now)
         );
-        const hasActiveReservation = activeBookings.some(b => 
+        const hasActiveReservation = activeBookings.some(b =>
             ['pending', 'confirmed'].includes(b.status)
         );
 
         if (hasActiveReservation || hasValidTrial) {
-            return res.json({ 
-                success: false, 
-                message: 'Please cancel or complete all active reservations and trial holds before deleting your account' 
+            return res.json({
+                success: false,
+                message: 'Please cancel or complete all active reservations and trial holds before deleting your account'
             });
         }
 
@@ -510,10 +510,10 @@ export const getRecommendations = async (req, res) => {
         }));
 
         if (allGowns.length === 0) {
-            return res.json({ 
-                success: true, 
+            return res.json({
+                success: true,
                 recommendations: [],
-                message: "No gowns available at the moment" 
+                message: "No gowns available at the moment"
             });
         }
 
@@ -533,11 +533,11 @@ export const getRecommendations = async (req, res) => {
 
             // If no gowns match the event type, return empty
             if (allGowns.length === 0) {
-                return res.json({ 
-                    success: true, 
+                return res.json({
+                    success: true,
                     recommendations: [],
                     preferences: { bodyType, skinTone, height, eventType, faceShape, age, sex },
-                    message: `No gowns available for ${eventType} events` 
+                    message: `No gowns available for ${eventType} events`
                 });
             }
         }
@@ -566,8 +566,8 @@ export const getRecommendations = async (req, res) => {
 
         // If no preferences provided, return all filtered gowns
         if (!bodyType && !skinTone && !height && !eventType && !faceShape && !age && !sex) {
-            return res.json({ 
-                success: true, 
+            return res.json({
+                success: true,
                 recommendations: allGowns.map(gown => ({
                     gown,
                     score: 50, // Default score
@@ -583,9 +583,9 @@ export const getRecommendations = async (req, res) => {
             return {
                 gown,
                 score,
-                matchReason: score >= 70 ? "Excellent match" : 
-                            score >= 50 ? "Good match" : 
-                            score >= 30 ? "Fair match" : "Consider"
+                matchReason: score >= 70 ? "Excellent match" :
+                    score >= 50 ? "Good match" :
+                        score >= 30 ? "Fair match" : "Consider"
             };
         });
 
@@ -593,8 +593,8 @@ export const getRecommendations = async (req, res) => {
         scoredGowns.sort((a, b) => b.score - a.score);
 
         // Return all matched gowns (already filtered by event type)
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             recommendations: scoredGowns,
             preferences,
             totalMatches: scoredGowns.length
@@ -612,7 +612,7 @@ export const updateShopProfile = async (req, res) => {
         const { shopName, description, address, city, operatingHours, openingTime, closingTime, availableDays, facebook, instagram } = req.body
 
         const user = await User.findById(_id)
-        
+
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" })
         }
@@ -630,7 +630,7 @@ export const updateShopProfile = async (req, res) => {
             const imageKit = (await import('../configs/imagekit.js')).default
             const fs = await import('fs')
             const file = req.files.businessPermit[0]
-            
+
             // Read file from disk
             let fileBuffer
             if (file.buffer) {
@@ -638,14 +638,14 @@ export const updateShopProfile = async (req, res) => {
             } else if (file.path) {
                 fileBuffer = fs.readFileSync(file.path)
             }
-            
+
             const uploadResponse = await imageKit.upload({
                 file: fileBuffer.toString('base64'),
                 fileName: `business_permit_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
                 folder: '/business_documents'
             })
             businessPermitUrl = uploadResponse.url
-            
+
             // Clean up temp file
             if (file.path) {
                 fs.unlinkSync(file.path)
@@ -657,7 +657,7 @@ export const updateShopProfile = async (req, res) => {
             const imageKit = (await import('../configs/imagekit.js')).default
             const fs = await import('fs')
             const file = req.files.dtiRegistration[0]
-            
+
             // Read file from disk
             let fileBuffer
             if (file.buffer) {
@@ -665,14 +665,14 @@ export const updateShopProfile = async (req, res) => {
             } else if (file.path) {
                 fileBuffer = fs.readFileSync(file.path)
             }
-            
+
             const uploadResponse = await imageKit.upload({
                 file: fileBuffer.toString('base64'),
                 fileName: `dti_registration_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
                 folder: '/business_documents'
             })
             dtiRegistrationUrl = uploadResponse.url
-            
+
             // Clean up temp file
             if (file.path) {
                 fs.unlinkSync(file.path)
@@ -682,7 +682,7 @@ export const updateShopProfile = async (req, res) => {
         // Get contact number from request body
         const rawContactNumber = req.body.contactNumber || user.shopProfile?.contactNumber || user.contactNumber || ''
         const contactNumber = rawContactNumber.toString().replace(/\D/g, '').slice(0, 11)
-        
+
         if (contactNumber && contactNumber.length !== 11) {
             return res.status(400).json({ success: false, message: "Shop contact number must be exactly 11 digits" })
         }
@@ -691,7 +691,7 @@ export const updateShopProfile = async (req, res) => {
         let finalOperatingHours = operatingHours
         let finalOpeningTime = openingTime
         let finalClosingTime = closingTime
-        
+
         if (openingTime && closingTime) {
             finalOperatingHours = `${openingTime}-${closingTime}`
             finalOpeningTime = openingTime
@@ -735,8 +735,8 @@ export const updateShopProfile = async (req, res) => {
 
         await user.save()
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "Shop profile updated successfully",
             shopProfile: user.shopProfile
         })
