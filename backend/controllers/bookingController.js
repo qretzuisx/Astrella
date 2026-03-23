@@ -602,10 +602,22 @@ export const getOwnerBooking = async (req, res) => {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const Bookings = await Booking.find({ owner: req.user._id })
+    const allBookings = await Booking.find({ owner: req.user._id })
       .populate('gown')
       .populate('user', '-password')
       .sort({ createdAt: -1 });
+
+    // Filter out expired trial bookings for cleaner real-time view
+    const now = new Date();
+    const Bookings = allBookings.filter(booking => {
+      const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+      if (!isTrial) return true;
+      // If trial has expired, exclude it from the list
+      if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now) {
+        return false;
+      }
+      return true;
+    });
 
     res.json({ success: true, bookings: Bookings });
 
@@ -1269,7 +1281,7 @@ export const calculateActualGownStatus = async (gownId) => {
     // Query active bookings that could influence today's status
     const bookings = await Booking.find({
       gown: gownId,
-      status: { $in: ['pending', 'confirmed', 'completed'] },
+      status: { $in: ['pending', 'confirmed', 'completed', 'trial'] },
       pickupDate: { $lte: new Date(currentTime + laundryWindowMs + DAY_IN_MS) },
       returnDate: { $gte: new Date(currentTime - laundryWindowMs - DAY_IN_MS) }
     }).sort({ pickupDate: 1 });
@@ -1285,6 +1297,18 @@ export const calculateActualGownStatus = async (gownId) => {
 
       const pickupTimeMs = pickupDateTime.getTime();
       const returnTimeMs = returnDateTime.getTime();
+
+      // ── TRIAL booking = active try-on appointment ──
+      if (booking.status === 'trial') {
+        // Only consider non-expired trials
+        if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) > now) {
+          const expiresMs = new Date(booking.trialExpiresAt).getTime();
+          if (currentTime >= pickupTimeMs && currentTime <= expiresMs) {
+            return 'Reserved';
+          }
+        }
+        continue;
+      }
 
       // ── CONFIRMED booking = owner confirmed pickup ──
       if (booking.status === 'confirmed') {
@@ -1307,14 +1331,18 @@ export const calculateActualGownStatus = async (gownId) => {
         }
       }
 
-      // ── COMPLETED booking — check laundry window ──
-      if (booking.status === 'completed') {
+      // ── CONFIRMED/COMPLETED booking — check laundry window ──
+      // Both confirmed (in-use or just finished) and completed bookings 
+      // block the gown for a laundry period.
+      if (booking.status === 'confirmed' || booking.status === 'completed') {
         if (laundryDays > 0) {
           const laundryEndDate = new Date(returnDateTime);
           laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
+          // Normalize to end of day
           laundryEndDate.setHours(23, 59, 59, 999);
 
-          if (now >= returnDateTime && now <= laundryEndDate) {
+          // If current time is after the return time but before laundry is done
+          if (now > returnDateTime && now <= laundryEndDate) {
             return 'In-Laundry';
           }
         }

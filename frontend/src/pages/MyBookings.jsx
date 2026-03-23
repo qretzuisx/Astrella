@@ -587,15 +587,33 @@ const MyBookings = ({ setShowLogin }) => {
   return (
     <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 pb-20 sm:pb-0 bg-[#FDFDFF] min-h-screen'>
       <div className='mb-10 lg:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-8 h-1 bg-primary rounded-full"></div>
             <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Customer Space</span>
           </div>
-          <h1 className='text-3xl sm:text-4xl md:text-5xl font-black text-primary-dull tracking-tight mb-2'>My Bookings</h1>
-          <p className='text-sm sm:text-base text-gray-500 font-medium'>Track and manage your upcoming try-ons and reservations.</p>
+          <div className="flex items-center justify-between sm:justify-start sm:gap-6">
+            <h1 className='text-3xl sm:text-4xl md:text-5xl font-black text-primary-dull tracking-tight'>My Bookings</h1>
+            {/* Refresh Button */}
+            <button 
+              onClick={() => {
+                fetchBookings();
+                const btn = document.getElementById('refresh-btn');
+                if (btn) btn.classList.add('animate-spin-once');
+                setTimeout(() => { if (btn) btn.classList.remove('animate-spin-once'); }, 1000);
+              }}
+              id="refresh-btn"
+              className='p-2.5 sm:p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all group'
+              title="Refresh Bookings"
+            >
+              <svg className="w-5 h-5 text-primary group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+          <p className='text-sm sm:text-base text-gray-500 font-medium mt-2'>Track and manage your upcoming try-ons and reservations.</p>
         </div>
-        <div className="hidden sm:flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(1,62,141,0.05)]">
+        <div className="hidden sm:flex items-center gap-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(1,62,141,0.05)] h-fit">
           <div className="p-2 bg-primary/5 rounded-xl">
              <img src={assets.calendar_icon_colored} alt="calendar" className="w-5 h-5" />
           </div>
@@ -661,7 +679,7 @@ const MyBookings = ({ setShowLogin }) => {
           <p className='text-sm sm:text-base text-gray-400'>Start booking apparel to see them here!</p>
         </div>
       ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5'>
           {bookings
             .filter(booking => {
               if (currentFilter === 'All') return true
@@ -678,7 +696,7 @@ const MyBookings = ({ setShowLogin }) => {
               return (
                 <div
                   key={booking._id || booking.id}
-                  className='bg-white rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-[0_20px_60px_rgba(1,62,141,0.12)] transition-all duration-500 group border border-blue-50/50 flex flex-col h-full'
+                  className='bg-white rounded-[24px] sm:rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] overflow-hidden hover:shadow-[0_20px_60px_rgba(1,62,141,0.12)] transition-all duration-500 group border border-blue-50/50 flex flex-col h-full'
                 >
                   {/* Gown Image */}
                   <div
@@ -688,35 +706,36 @@ const MyBookings = ({ setShowLogin }) => {
                     <img
                       src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1}
                       alt={booking.gown?.name || 'Gown'}
-                      className='w-full h-auto max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-96 object-contain p-4 transition-transform duration-1000 group-hover:scale-110'
+                      loading="lazy"
+                      className='w-full h-auto max-h-40 sm:max-h-52 md:max-h-64 object-contain p-3 sm:p-4 transition-transform duration-1000 group-hover:scale-110'
                     />
-                    <div className={`absolute top-6 left-6 px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
+                    <div className={`absolute top-4 left-4 sm:top-6 sm:left-6 px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
                       {booking.status?.toUpperCase() || 'PENDING'}
                     </div>
                   </div>
 
                   {/* Booking Details */}
-                  <div className='p-6 md:p-8 flex flex-col flex-grow bg-white'>
+                  <div className='p-4 sm:p-6 flex flex-col flex-grow bg-white'>
                     <h3
-                      className='text-xl font-black text-primary mb-2 line-clamp-1 group-hover:text-secondary transition-colors duration-500 cursor-pointer'
+                      className='text-base sm:text-xl font-black text-primary mb-1.5 sm:mb-2 line-clamp-1 group-hover:text-secondary transition-colors duration-500 cursor-pointer'
                       onClick={() => continueToBook(booking)}
                     >
                       {booking.gown?.name || 'Gown Name'}
                     </h3>
-                    <p className='text-xs font-bold text-gray-400 mb-6'>
+                    <p className='text-[10px] sm:text-xs font-bold text-gray-400 mb-4 sm:mb-6'>
                       by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
                     </p>
 
                     {/* Rejection Reason Display */}
                     {(booking.status?.toLowerCase() === 'canceled' && booking.payment?.status?.toLowerCase() === 'rejected' && booking.payment?.rejectionReason) && (
-                      <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl'>
+                      <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl'>
                         <p className='text-xs font-black text-red-800 uppercase tracking-widest mb-1'>Payment Rejected</p>
                         <p className='text-sm text-red-700 font-medium'>{booking.payment.rejectionReason}</p>
                       </div>
                     )}
 
                     {/* Date/Status Information */}
-                    <div className='space-y-4 mb-auto'>
+                    <div className='space-y-3 sm:space-y-4 mb-auto'>
                       {isTrial ? (
                         /* Use TrialCountdown for the primary time display on trials */
                         booking.trialExpiresAt && (
@@ -731,7 +750,7 @@ const MyBookings = ({ setShowLogin }) => {
                         )
                       ) : (
                         /* Grid layout for Reservation pickup/return - Stylized like Trial box */
-                        <div className='bg-primary/5 rounded-[24px] p-6 grid grid-cols-2 gap-x-6 mb-4 border border-primary/10 relative overflow-hidden group/box'>
+                        <div className='bg-primary/5 rounded-xl sm:rounded-[24px] p-4 sm:p-6 grid grid-cols-2 gap-x-4 sm:gap-x-6 mb-3 sm:mb-4 border border-primary/10 relative overflow-hidden group/box'>
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/box:opacity-100 transition-opacity duration-700"></div>
                           <div className='flex flex-col relative z-10'>
                             <p className='text-[9px] font-black text-primary/30 uppercase tracking-[0.15em] mb-2'>Pickup</p>
@@ -792,7 +811,7 @@ const MyBookings = ({ setShowLogin }) => {
 
                     {/* Price - Only show for reservations */}
                     {!isTrial && (
-                      <div className='pt-6 border-t border-gray-100 mt-6'>
+                      <div className='pt-4 sm:pt-6 border-t border-gray-100 mt-4 sm:mt-6'>
                         <div className='flex justify-between items-end'>
                           <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Total Price</span>
                           <span className='text-2xl font-black text-primary flex items-baseline gap-1'>
@@ -804,8 +823,8 @@ const MyBookings = ({ setShowLogin }) => {
                     )}
 
                     {/* Actions - Reschedule and Cancel aligned in one row */}
-                    <div className='mt-6 flex flex-col gap-3'>
-                      <div className='grid grid-cols-2 gap-3'>
+                    <div className='mt-4 sm:mt-6 flex flex-col gap-2 sm:gap-3'>
+                      <div className='grid grid-cols-2 gap-2 sm:gap-3'>
                         <button
                           type='button'
                           onClick={() => openEdit(booking, 'reschedule')}

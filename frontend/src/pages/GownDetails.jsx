@@ -11,6 +11,10 @@ import { getColorHex, parseColors } from '../utils/colorUtils'
 
 const INTERVAL_MINUTES = 15
 
+// Simple client-side cache for gown calendar data (30s TTL)
+const calendarCache = new Map();
+const CACHE_TTL = 30000; 
+
 /**
  * Converts total minutes from start of day to "HH:MM" string format.
  * Primarily used for generating selectable trial time slots within business hours.
@@ -567,16 +571,28 @@ const GownDetails = () => {
       try {
         setCalendarLoading(true)
         setCalendarError('')
+        
+        // Check cache first
+        const cached = calendarCache.get(gownId);
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+          setCalendarInfo(cached.data);
+          setCalendarLoading(false);
+          return;
+        }
+
         const response = await fetch(`${API_URL}/bookings/calendar/${gownId}`)
         const data = await response.json()
         if (ignore) return
         if (response.ok && data.success) {
-          setCalendarInfo({
+          const info = {
             unavailableDates: data.calendar?.unavailableDates || [],
             trialTimeSlots: data.calendar?.trialTimeSlots || {},
             laundryHoldDates: data.calendar?.laundryHoldDates || [],
             laundryDays: data.calendar?.laundryDays || 0
-          })
+          };
+          setCalendarInfo(info)
+          // Store in cache
+          calendarCache.set(gownId, { data: info, timestamp: Date.now() });
         } else {
           setCalendarError(data.message || 'Unable to load availability highlights.')
         }
@@ -647,6 +663,7 @@ const GownDetails = () => {
             <img
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
+              loading="lazy"
               className='w-full h-auto max-h-[450px] sm:max-h-[550px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
             
@@ -721,45 +738,45 @@ const GownDetails = () => {
 
 
           {/* Gown Specifications */}
-          <div className='bg-white rounded-[24px] border border-primary/5 p-6 shadow-sm relative overflow-hidden'>
+          <div className='bg-white rounded-2xl sm:rounded-[24px] border border-primary/5 p-4 sm:p-6 shadow-sm relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <h2 className='text-xl font-black text-primary mb-8 flex items-center gap-3 relative z-10'>
-              <div className="w-8 h-8 bg-gradient-to-tr from-secondary-light to-yellow-500 rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(221,175,41,0.2)]">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h2 className='text-base sm:text-xl font-black text-primary mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 relative z-10'>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-tr from-secondary-light to-yellow-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(221,175,41,0.2)]">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               Specifications
             </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10'>
+            <div className='grid grid-cols-2 gap-2 sm:gap-3 relative z-10'>
               {/* Material */}
-              <div className='flex items-center gap-6 p-6 bg-white rounded-[24px] sm:rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.fabric_icon} alt="fabric" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.fabric_icon} alt="fabric" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Material</p>
-                  <p className='text-primary font-black text-xl'>{gown.fabric || 'Premium Blends'}</p>
+                  <p className='text-primary font-black text-sm sm:text-base'>{gown.fabric || 'Premium Blends'}</p>
                 </div>
               </div>
 
               {/* Size */}
-              <div className='flex items-center gap-6 p-6 bg-white rounded-[24px] sm:rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.size_icon} alt="size" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.size_icon} alt="size" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Size</p>
-                  <p className='text-primary font-black text-xl'>
+                  <p className='text-primary font-black text-sm sm:text-base'>
                     {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size}
                   </p>
                 </div>
               </div>
 
               {/* Color */}
-              <div className='flex items-center gap-6 p-6 bg-white rounded-[24px] sm:rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.color_icon} alt="color" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.color_icon} alt="color" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
@@ -783,19 +800,19 @@ const GownDetails = () => {
                           </div>
                         );
                       })()}
-                    <p className='text-primary font-black text-xl capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
+                    <p className='text-primary font-black text-sm sm:text-base capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Event Types */}
-              <div className='flex items-center gap-6 p-8 bg-white rounded-[32px] border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-5 rounded-2xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.event_icon} alt="event" className='w-8 h-8 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.event_icon} alt="event" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
                   <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Best for</p>
-                  <p className='text-primary font-black text-xl capitalize'>
+                  <p className='text-primary font-black text-sm sm:text-base capitalize'>
                     {Array.isArray(gown.eventType) && gown.eventType.length > 0
                       ? gown.eventType.join(', ')
                       : gown.eventtype || gown.eventType || 'All Occasions'}
@@ -844,7 +861,7 @@ const GownDetails = () => {
             <h2 className='text-2xl font-black text-primary mb-8'>Reserve this Apparel</h2>
 
             {/* Booking Type Selection */}
-            <div className='mb-10'>
+            <div className='mb-6 sm:mb-8'>
               <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-4'>Booking type</label>
               <div className='grid grid-cols-2 gap-4'>
                 <button 
@@ -889,7 +906,7 @@ const GownDetails = () => {
             </div>
 
             {/* Date Selection Section */}
-            <div className='mb-10'>
+            <div className='mb-6 sm:mb-8'>
               <div className="flex items-center justify-between mb-4">
                 <label className='block text-xs font-black text-gray-500 uppercase tracking-widest'>Select Schedule</label>
                 <div className='flex items-center gap-4 text-[10px] font-black uppercase tracking-widest'>
@@ -1006,7 +1023,7 @@ const GownDetails = () => {
             </div>
 
             {/* Time Slot Selection */}
-            <div className='mb-10'>
+            <div className='mb-6 sm:mb-8'>
               <label className='block text-xs font-black text-gray-500 uppercase tracking-widest mb-4'>Select Preferred Time</label>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div className="space-y-2">

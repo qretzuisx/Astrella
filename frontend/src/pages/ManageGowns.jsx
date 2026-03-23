@@ -14,6 +14,7 @@ const ManageGowns = () => {
   const [laundryForm, setLaundryForm] = useState({})
   const [laundrySaving, setLaundrySaving] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterEventType, setFilterEventType] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const currency = CURRENCY
 
@@ -331,12 +332,22 @@ const ManageGowns = () => {
       setEditSaving(false)
     }
   }
-  // Filter gowns by status and search term
+  // Filter gowns by status, event type, and search term
   const filteredGowns = gowns.filter(gown => {
     const matchesStatus = filterStatus === 'all' || getDisplayStatus(gown) === filterStatus
+    
+    // Filter by event type
+    let matchesEvent = true
+    if (filterEventType !== 'all') {
+      const gownEvents = gown.eventType || []
+      const eventArr = Array.isArray(gownEvents) ? gownEvents : [gownEvents]
+      matchesEvent = eventArr.some(e => e.toLowerCase() === filterEventType.toLowerCase())
+    }
+
     const matchesSearch = (gown.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (gown.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesStatus && matchesSearch
+    
+    return matchesStatus && matchesEvent && matchesSearch
   })
   if (loading) {
     return (
@@ -382,6 +393,27 @@ const ManageGowns = () => {
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2">
                     <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                  </div>
+                </div>
+
+                {/* Event Type Filter Dropdown */}
+                <div className="w-full sm:w-48 relative group">
+                  <select
+                    value={filterEventType}
+                    onChange={(e) => setFilterEventType(e.target.value)}
+                    className="w-full pl-6 pr-10 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-black text-primary/70 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm appearance-none cursor-pointer"
+                  >
+                    <option value="all">All Occasions</option>
+                    <option value="wedding">Wedding</option>
+                    <option value="traditional">Traditional</option>
+                    <option value="prom">Prom</option>
+                    <option value="formal">Formal</option>
+                    <option value="themed">Themed</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
                 </div>
 

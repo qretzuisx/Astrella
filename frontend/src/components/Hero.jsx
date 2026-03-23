@@ -155,18 +155,18 @@ const Hero = () => {
     <div className='min-h-screen flex flex-col items-center justify-center px-4 relative bg-[#FDFDFF] w-full'>
 
       {/* Hero Headline - More vibrant and spacious */}
-      <div className="max-w-5xl mx-auto z-10 text-center space-y-8 mb-16 pt-16 sm:pt-28 px-4">
-        <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-secondary/10 border border-secondary/20 shadow-sm animate-fade-in mx-auto">
-          <span className="text-[10px] sm:text-xs font-black text-secondary uppercase tracking-[0.5em]">Introducing Astrella</span>
+      <div className="max-w-5xl mx-auto z-10 text-center space-y-6 sm:space-y-8 mb-10 sm:mb-16 pt-10 sm:pt-28 px-4">
+        <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 shadow-sm animate-fade-in mx-auto">
+          <span className="text-[9px] sm:text-[11px] font-black text-secondary uppercase tracking-[0.5em]">Introducing Astrella</span>
         </div>
         <div className="space-y-6">
-          <h1 className='text-5xl sm:text-7xl md:text-[90px] lg:text-[110px] font-black text-primary tracking-tighter leading-[0.85] animate-fade-in drop-shadow-md pb-4'>
+          <h1 className='text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-primary tracking-tighter leading-[0.85] animate-fade-in drop-shadow-md pb-4'>
             Meet Your <br className="sm:hidden" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-primary to-secondary animate-gradient-x italic pr-4 sm:pr-8 inline-block mt-2 sm:mt-0">Personal AI Stylist</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-primary to-secondary animate-gradient-x italic pr-1 sm:pr-4 inline-block mt-1 sm:mt-0">Personal AI Stylist</span>
           </h1>
-          <p className="text-base sm:text-xl md:text-2xl text-gray-500 font-bold max-w-3xl mx-auto leading-relaxed animate-fade-in delay-100">
-            Smart gown recommendations tailored specifically for you. <br className="hidden sm:block" />
-            <span className="text-primary/60">Handpicked styles from our exclusive collection.</span>
+          <p className="text-sm sm:text-lg md:text-xl text-gray-500 font-bold max-w-3xl mx-auto leading-relaxed animate-fade-in delay-100">
+            Browse Zyanna's Collection in Maharlika Baguio City. <br className="hidden sm:block" />
+            <span className="text-primary/60">Book try-ons, reserve online, and show up looking your best — all in one place.</span>
           </p>
         </div>
 
@@ -179,9 +179,9 @@ const Hero = () => {
       </div>
 
       {/* Custom Attribute Bar */}
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-8 sm:gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-4 sm:px-10">
-        <div className="flex items-center bg-white p-2.5 sm:p-2.5 rounded-[32px] sm:rounded-[50px] shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-gray-200 w-full sm:w-fit max-w-[95vw] sm:max-w-full relative z-10 transition-all duration-300">
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-center gap-y-1 sm:gap-0 w-full min-w-0 py-1 sm:py-0.5">
+      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-5 sm:gap-6 w-full max-w-[1440px] relative z-20 mb-4 px-3 sm:px-10">
+        <div className="flex items-center bg-white p-1.5 sm:p-2 rounded-2xl sm:rounded-full shadow-[0_30px_80px_rgba(22,43,105,0.15)] border border-gray-100 w-full lg:w-fit max-w-[100vw] lg:max-w-full relative z-10 transition-all duration-300">
+          <div className="flex flex-wrap lg:flex-nowrap items-center justify-center lg:justify-center gap-y-0 lg:gap-0 w-full min-w-0 py-0.5 sm:py-0.5">
 
             {/* Body Type */}
             <AttributeSelector
@@ -285,11 +285,11 @@ const Hero = () => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full mt-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full mt-6 sm:mt-10">
           <button
             type="button"
             onClick={() => setShowImageAnalysis(true)}
-            className="w-full sm:w-auto bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-10 py-5 rounded-[28px] sm:rounded-full text-xs sm:text-sm font-black uppercase tracking-widest hover:bg-white hover:text-secondary hover:border-secondary transition-all shadow-lg flex items-center justify-center group active:scale-95"
+            className="w-full sm:w-auto bg-white/80 backdrop-blur-md text-primary border border-primary/20 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl sm:rounded-full text-xs sm:text-sm font-black uppercase tracking-widest hover:bg-white hover:text-secondary hover:border-secondary transition-all shadow-lg flex items-center justify-center group active:scale-95"
           >
             <div className="flex flex-col items-center gap-1">
               <div className="flex items-center gap-2.5">
@@ -304,7 +304,7 @@ const Hero = () => {
           </button>
           <button
             type="submit"
-            className="w-full sm:w-auto bg-primary text-white px-12 sm:px-14 py-5 sm:py-6 rounded-[28px] sm:rounded-full text-sm font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_20px_50px_rgba(22,43,105,0.2)] hover:-translate-y-1 active:scale-95 flex items-center justify-center min-h-[60px] sm:min-h-[70px]"
+            className="w-full sm:w-auto bg-primary text-white px-10 sm:px-14 py-4 sm:py-6 rounded-2xl sm:rounded-full text-sm font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-[0_20px_50px_rgba(22,43,105,0.2)] hover:-translate-y-1 active:scale-95 flex items-center justify-center min-h-[56px] sm:min-h-[70px]"
           >
             <span>Find My Fit</span>
           </button>
@@ -373,6 +373,7 @@ const Hero = () => {
                         <img
                           src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
                           alt={gown.name}
+                          loading="lazy"
                           className="w-full h-full object-contain transition-transform duration-1000 group-hover:scale-110 p-4 sm:p-8"
                         />
 
@@ -447,8 +448,32 @@ const Hero = () => {
             </div>
           </div>
         ) : (
-          <div className="mx-10 text-center py-32 bg-gray-50/50 rounded-[60px] border border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold text-xl">Our next trending collection is on its way.</p>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-10">
+            <div className="flex flex-row items-center justify-center gap-2 sm:gap-8 py-6 sm:py-10">
+              {[1, 2, 3].map(i => (
+                <div key={i} className={`flex flex-col items-center w-full ${i === 2 ? 'scale-105 z-10' : 'opacity-50 scale-90'}`}>
+                  <div className="aspect-[4/5] w-full max-w-[320px] bg-gradient-to-b from-gray-100 to-gray-50 rounded-[40px] sm:rounded-[50px] border border-dashed border-gray-200 flex items-center justify-center">
+                    <div className="text-center space-y-3 px-6">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto flex items-center justify-center">
+                        <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      {i === 2 && <p className="text-sm font-bold text-gray-300">Coming soon</p>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center space-y-4 pb-8">
+              <p className="text-gray-400 font-bold text-base sm:text-lg">Our trending collection is being prepared for you.</p>
+              <button
+                onClick={() => navigate('/gowns')}
+                className="bg-primary text-white px-10 py-4 rounded-full text-sm font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-lg active:scale-95"
+              >
+                Browse All Apparel
+              </button>
+            </div>
           </div>
         )}
       </div>

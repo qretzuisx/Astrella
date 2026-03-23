@@ -15,14 +15,14 @@ const AttributeSelector = ({ label, value, options, onSelect, type, shapes, colo
   }, []);
 
   return (
-    <div className="relative flex-none w-1/3 sm:w-auto min-w-0 sm:min-w-fit" ref={dropdownRef} style={{ zIndex: isOpen ? 100 : 10 }}>
+    <div className="relative flex-none w-1/2 md:w-auto min-w-0 md:min-w-fit" ref={dropdownRef} style={{ zIndex: isOpen ? 100 : 10 }}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-2 sm:px-10 py-3 sm:py-3.5 bg-transparent text-sm text-primary font-black focus:outline-none transition-all cursor-pointer flex flex-col items-center justify-center gap-1 sm:gap-1.5 touch-target rounded-[20px] sm:rounded-[40px] ${isOpen ? 'bg-gray-50' : 'hover:bg-gray-50/30'}`}
+        className={`w-full px-2 sm:px-4 md:px-6 py-2 sm:py-3.5 bg-transparent text-sm text-primary font-black focus:outline-none transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 touch-target rounded-xl sm:rounded-[40px] ${isOpen ? 'bg-gray-50' : 'hover:bg-gray-50/30'}`}
       >
         <div className="flex items-center gap-1 sm:gap-1.5">
-          <span className="uppercase tracking-wider whitespace-nowrap text-[12px] sm:text-sm">{value || label}</span>
+          <span className="uppercase tracking-wider whitespace-nowrap text-[9px] sm:text-xs">{value || label}</span>
           <svg className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
           </svg>
@@ -45,7 +45,7 @@ const AttributeSelector = ({ label, value, options, onSelect, type, shapes, colo
 
       {/* Custom Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 sm:mt-2 w-56 sm:w-64 bg-white rounded-[24px] sm:rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden z-[200] animate-in zoom-in slide-in-from-top-2 duration-300">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 sm:mt-2 w-48 sm:w-64 bg-white rounded-2xl sm:rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden z-[200] animate-in zoom-in slide-in-from-top-2 duration-300">
           <div className="p-1 sm:p-2">
             <button
               type="button"

@@ -12,7 +12,7 @@ const ManageBookings = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [filterGown, setFilterGown] = useState('all') // Filter by gown
+  const [filterEventType, setFilterEventType] = useState('all') // Filter by event type
   const [searchTerm, setSearchTerm] = useState('')
   const currency = CURRENCY
   const [selectedPayment, setSelectedPayment] = useState(null)
@@ -33,7 +33,10 @@ const ManageBookings = () => {
     }
     
     if (initialGownFilter !== 'all') {
-      setFilterGown(initialGownFilter)
+      // For now, if a gownId is passed, we might still want to filter by that specific gown
+      // but the UI only allows filtering by Event Type.
+      // Re-evaluating: user said "instead of name filter". 
+      // I will keep the state as filterEventType but handle the legacy param if needed by finding the gown's event.
     }
   }, [searchParams, initialGownFilter])
 
@@ -74,7 +77,7 @@ const ManageBookings = () => {
     fetchBookings()
   }, [])
 
-  // Filter bookings when filterStatus or filterGown changes
+  // Filter bookings when filterStatus or filterEventType changes
   useEffect(() => {
     let filtered = [...bookings]
 
@@ -83,13 +86,14 @@ const ManageBookings = () => {
       filtered = filtered.filter(booking => booking.status === filterStatus)
     }
 
-    // Filter by gown
-    if (filterGown !== 'all') {
-      const gownId = filterGown
+    // Filter by event type
+    if (filterEventType !== 'all') {
       filtered = filtered.filter(booking => {
-        const bookingGownId = booking.gown?._id || booking.gown?.id || booking.gown
-        return bookingGownId === gownId
-      })
+        const gownEvents = booking.gown?.eventType || [];
+        const eventArr = Array.isArray(gownEvents) ? gownEvents : [gownEvents];
+        // Support search by event type (case-insensitive)
+        return eventArr.some(e => e.toLowerCase() === filterEventType.toLowerCase());
+      });
     }
 
     // Filter by search term
@@ -109,7 +113,7 @@ const ManageBookings = () => {
     }
 
     setFilteredBookings(filtered)
-  }, [bookings, filterStatus, filterGown, searchTerm])
+  }, [bookings, filterStatus, filterEventType, searchTerm])
 
   const fetchBookings = async () => {
     try {
@@ -502,6 +506,26 @@ const ManageBookings = () => {
                    <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
                 </div>
               </div>
+              {/* Event Type Filter Dropdown */}
+              <div className="w-full md:w-64 relative group">
+                <select
+                  value={filterEventType}
+                  onChange={(e) => setFilterEventType(e.target.value)}
+                  className="w-full pl-6 pr-10 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-black text-primary/70 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="all">All Occasions</option>
+                  <option value="wedding">Wedding</option>
+                  <option value="traditional">Traditional</option>
+                  <option value="prom">Prom</option>
+                  <option value="formal">Formal</option>
+                  <option value="themed">Themed</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
           {/* Success/Error Messages */}
@@ -568,6 +592,7 @@ const ManageBookings = () => {
                         <img 
                           src={booking.gown?.image?.[0] || booking.gown?.image || assets.gown_image1} 
                           alt={booking.gown?.name} 
+                          loading="lazy"
                           className='w-20 h-20 sm:w-32 sm:h-32 object-contain bg-white rounded-2xl sm:rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform duration-700'
                         />
                          <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-xl flex items-center justify-center border-4 border-white shadow-md ${
