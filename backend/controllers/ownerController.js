@@ -183,7 +183,7 @@ export const getGownById = async (req, res) => {
             id, 
             { $inc: { views: 1 } }, 
             { new: true }
-        ).populate('owner', 'name shopName');
+        ).populate('owner', 'name shopName shopProfile contactNumber');
         if (!gown) {
             return res.status(404).json({ success: false, message: 'Gown not found' });
         }

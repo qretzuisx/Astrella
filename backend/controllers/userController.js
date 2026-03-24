@@ -734,6 +734,12 @@ export const updateShopProfile = async (req, res) => {
         user.contactNumber = contactNumber
 
         await user.save()
+        
+        // Sync all gowns with the new shop info for "easy accessibility" and redundancy
+        await Gown.updateMany(
+            { owner: _id },
+            { $set: { contactNumber: contactNumber, location: address || user.shopProfile.address } }
+        )
 
         res.json({
             success: true,

@@ -350,7 +350,7 @@ const Hero = () => {
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-primary tracking-tight text-center leading-tight">
             This Season's <span className="text-secondary italic">Top Picks</span>
           </h2>
-          <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-400 font-medium max-w-sm text-center">Handpicked rental gowns for your special occassions</p>
+          <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-400 font-medium max-w-sm text-center">Handpicked rental gowns for your special occasions</p>
         </div>
 
         {loadingGowns ? (

@@ -81,6 +81,9 @@ const GownDetails = () => {
     availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   })
   const [shopProfile, setShopProfile] = useState(null)
+  const [ownerContactNumber, setOwnerContactNumber] = useState('')
+  const [ownerAddress, setOwnerAddress] = useState('')
+  const [ownerName, setOwnerName] = useState('')
 
   useEffect(() => {
     const fetchGown = async () => {
@@ -110,8 +113,11 @@ const GownDetails = () => {
             try {
               const profileResponse = await fetch(`${API_URL}/user/shop-profile/${ownerId}`)
               const profileData = await profileResponse.json()
-              if (profileData.success && profileData.owner) {
-                setShopProfile(profileData.owner)
+              if (profileData.success) {
+                setShopProfile(profileData.shopProfile)
+                setOwnerName(profileData.ownerName || '')
+                setOwnerContactNumber(profileData.ownerContactNumber || '')
+                setOwnerAddress(profileData.shopProfile?.address || '')
               }
             } catch (profileError) {
               console.error('Error fetching shop profile:', profileError)
@@ -689,7 +695,7 @@ const GownDetails = () => {
                   {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Handpicked by</p>
+                  <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>by</p>
                   <button
                     onClick={() => {
                       const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
@@ -724,14 +730,14 @@ const GownDetails = () => {
                 <div className="w-4 h-1 bg-secondary-light rounded-full"></div>
                 <h2 className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Location</h2>
               </div>
-              <p className='text-primary font-black text-base'>{gown.location || 'Physical Store'}</p>
+              <p className='text-primary font-black text-base'>{ownerAddress || shopProfile?.address || gown.owner?.shopProfile?.address || gown.location || 'Physical Store'}</p>
             </div>
             <div className='flex-1 p-5 sm:p-7 bg-white rounded-3xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-4 h-1 bg-secondary-light rounded-full"></div>
                 <h2 className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Contact</h2>
               </div>
-              <p className='text-primary font-black text-base'>{gown.contactNumber || gown.contact || 'Inquire'}</p>
+              <p className='text-primary font-black text-base'>{ownerContactNumber || shopProfile?.contactNumber || gown.owner?.shopProfile?.contactNumber || gown.owner?.contactNumber || gown.contactNumber || gown.contact || 'Inquire'}</p>
             </div>
           </div>
 
