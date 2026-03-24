@@ -165,8 +165,29 @@ const Hero = () => {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-primary to-secondary animate-gradient-x italic pr-1 sm:pr-4 inline-block mt-1 sm:mt-0">Personal AI Stylist</span>
           </h1>
           <p className="text-sm sm:text-lg md:text-xl text-gray-500 font-bold max-w-3xl mx-auto leading-relaxed animate-fade-in delay-100">
-            Browse Zyanna's Collection in Maharlika Baguio City. <br className="hidden sm:block" />
-            <span className="text-primary/60">Book try-ons, reserve online, and show up looking your best — all in one place.</span>
+            Powered by smart style-matching, Astrella's AI analyzes your unique traits — body type, skin tone, face shape, and more — to recommend the perfect apparel for any occasion.
+          </p>
+
+          {/* How It Works Steps */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mt-6 sm:mt-8 animate-fade-in delay-200">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs sm:text-sm font-black">1</div>
+              <span className="text-[10px] sm:text-xs font-bold text-gray-500">Select your attributes <br className="sm:hidden" /><span className="text-primary/50">or scan a photo</span></span>
+            </div>
+            <div className="hidden sm:block w-8 h-[2px] bg-gray-200"></div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-secondary/10 text-secondary flex items-center justify-center text-xs sm:text-sm font-black">2</div>
+              <span className="text-[10px] sm:text-xs font-bold text-gray-500">AI matches your profile <br className="sm:hidden" /><span className="text-primary/50">with the best fits</span></span>
+            </div>
+            <div className="hidden sm:block w-8 h-[2px] bg-gray-200"></div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs sm:text-sm font-black">3</div>
+              <span className="text-[10px] sm:text-xs font-bold text-gray-500">Browse & book <br className="sm:hidden" /><span className="text-primary/50">your perfect look</span></span>
+            </div>
+          </div>
+
+          <p className="text-[10px] sm:text-xs text-gray-400 font-medium mt-4 sm:mt-5 animate-fade-in delay-300">
+            Browse Zyanna's Collection in Maharlika Baguio City · Book try-ons & reserve online
           </p>
         </div>
 
