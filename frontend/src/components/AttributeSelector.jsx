@@ -15,14 +15,14 @@ const AttributeSelector = ({ label, value, options, onSelect, type, shapes, colo
   }, []);
 
   return (
-    <div className="relative flex-none w-1/2 md:w-auto min-w-0 md:min-w-fit" ref={dropdownRef} style={{ zIndex: isOpen ? 100 : 10 }}>
+    <div className="relative flex-none w-1/2 lg:w-auto lg:flex-1 min-w-0" ref={dropdownRef} style={{ zIndex: isOpen ? 100 : 10 }}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-2 sm:px-4 md:px-6 py-2 sm:py-3.5 bg-transparent text-sm text-primary font-black focus:outline-none transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 touch-target rounded-xl sm:rounded-[40px] ${isOpen ? 'bg-gray-50' : 'hover:bg-gray-50/30'}`}
+        className={`w-full px-3 sm:px-5 md:px-6 lg:px-7 py-3 sm:py-4 bg-transparent text-sm text-primary font-black focus:outline-none transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 touch-target rounded-xl sm:rounded-[40px] ${isOpen ? 'bg-gray-50' : 'hover:bg-gray-50/30'}`}
       >
         <div className="flex items-center gap-1 sm:gap-1.5">
-          <span className="uppercase tracking-wider whitespace-nowrap text-[9px] sm:text-xs">{value || label}</span>
+          <span className="uppercase tracking-wider whitespace-nowrap text-[10px] sm:text-xs md:text-sm">{value || label}</span>
           <svg className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
           </svg>
