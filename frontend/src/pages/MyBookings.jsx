@@ -750,32 +750,32 @@ const MyBookings = ({ setShowLogin }) => {
                         )
                       ) : (
                         /* Grid layout for Reservation pickup/return - Stylized like Trial box */
-                        <div className='bg-primary/5 rounded-xl sm:rounded-[24px] p-4 sm:p-6 grid grid-cols-2 gap-x-4 sm:gap-x-6 mb-3 sm:mb-4 border border-primary/10 relative overflow-hidden group/box'>
+                        <div className='bg-primary/5 rounded-xl sm:rounded-[24px] p-3 sm:p-6 grid grid-cols-2 gap-x-2 sm:gap-x-6 mb-3 sm:mb-4 border border-primary/10 relative overflow-hidden group/box'>
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/box:opacity-100 transition-opacity duration-700"></div>
                           <div className='flex flex-col relative z-10'>
                             <p className='text-[9px] font-black text-primary/30 uppercase tracking-[0.15em] mb-2'>Pickup</p>
-                            <div className='flex items-center gap-3'>
-                              <div className="w-6 h-6 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <svg className='w-3.5 h-3.5 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <div className='flex items-center gap-1.5 sm:gap-3'>
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <svg className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
                                 </svg>
                               </div>
                               <div className='min-w-0'>
-                                <p className='text-[13px] font-black text-primary truncate leading-tight'>{formatDate(booking.pickupDate)}</p>
+                                <p className='text-[11.5px] sm:text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.pickupDate)}</p>
                                 {booking.pickupTime && <p className='text-[9px] text-primary/40 font-bold uppercase tracking-wider mt-0.5'>{formatTime(booking.pickupTime)}</p>}
                               </div>
                             </div>
                           </div>
-                          <div className='flex flex-col border-l border-primary/10 pl-6 relative z-10'>
+                          <div className='flex flex-col border-l border-primary/10 pl-3 sm:pl-6 relative z-10'>
                             <p className='text-[9px] font-black text-primary/30 uppercase tracking-[0.15em] mb-2'>Return</p>
-                            <div className='flex items-center gap-3'>
-                              <div className="w-6 h-6 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <svg className='w-3.5 h-3.5 text-secondary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <div className='flex items-center gap-1.5 sm:gap-3'>
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <svg className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-secondary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
                                 </svg>
                               </div>
                               <div className='min-w-0'>
-                                <p className='text-[13px] font-black text-primary truncate leading-tight'>{formatDate(booking.returnDate)}</p>
+                                <p className='text-[11.5px] sm:text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.returnDate)}</p>
                                 {(booking.returnTime || booking.pickupTime) && <p className='text-[9px] text-secondary/40 font-bold uppercase tracking-wider mt-0.5'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
                               </div>
                             </div>

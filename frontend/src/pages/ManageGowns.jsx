@@ -371,7 +371,7 @@ const ManageGowns = () => {
         <div className='max-w-7xl mx-auto'>
           {/* Header Section */}
           <div className='mb-10 mt-16 sm:mt-10 lg:mt-0'>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-8 h-1 bg-primary rounded-full"></div>
@@ -381,9 +381,9 @@ const ManageGowns = () => {
                 <p className='text-sm sm:text-base text-gray-500 font-medium'>View and manage all your apparel inventory.</p>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                 {/* Search Bar */}
-                <div className="w-full sm:w-80 relative group">
+                <div className="w-full sm:w-72 lg:w-80 relative group">
                   <input
                     type="text"
                     placeholder="Search apparel name, color..."
@@ -397,7 +397,7 @@ const ManageGowns = () => {
                 </div>
 
                 {/* Event Type Filter Dropdown */}
-                <div className="w-full sm:w-48 relative group">
+                <div className="w-full sm:w-44 lg:w-48 relative group">
                   <select
                     value={filterEventType}
                     onChange={(e) => setFilterEventType(e.target.value)}
