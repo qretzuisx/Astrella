@@ -473,22 +473,33 @@ const calculateRecommendationScore = (gown, preferences) => {
     }
 
     // Body Type Recommendations (25 points)
-    const bodyTypeRecommendations = {
-        'Hourglass': {
-            families: ['red', 'blue', 'neutral'], // Navy, Black, Burgundy, Emerald
-            fabrics: ['satin', 'silk', 'chiffon'],
+    const bodyTypeRecommendations = {        'Hourglass': {
+            families: ['blue', 'neutral', 'red', 'green'],
+            fabrics: ['satin', 'silk', 'chiffon', 'wool', 'cotton', 'linen'],
         },
         'Pear': {
-            families: ['blue', 'neutral'], // Navy, Black
-            fabrics: ['chiffon', 'tulle', 'organza'],
+            families: ['neutral', 'blue', 'gray', 'dark'],
+            fabrics: ['chiffon', 'tulle', 'organza', 'wool', 'structured'],
         },
         'Rectangle': {
-            families: ['all'],
-            fabrics: ['chiffon', 'tulle', 'organza', 'satin'],
+            families: ['all', 'vibrant', 'earth'],
+            fabrics: ['chiffon', 'tulle', 'organza', 'satin', 'denim', 'velvet', 'leather'],
         },
         'Diamond': {
-            families: ['blue', 'neutral'], // Navy, Black
-            fabrics: ['chiffon', 'tulle'],
+            families: ['neutral', 'blue', 'gray'],
+            fabrics: ['chiffon', 'tulle', 'wool', 'silk'],
+        },
+        'Inverted Triangle': {
+            families: ['blue', 'neutral', 'gray', 'white', 'beige'],
+            fabrics: ['wool', 'cotton', 'linen', 'structured', 'piña', 'jusi', 'silk', 'organza', 'satin'],
+        },
+        'Trapezoid': {
+            families: ['all', 'blue', 'neutral', 'gray', 'red', 'green'],
+            fabrics: ['wool', 'cotton', 'linen', 'structured', 'piña', 'jusi', 'silk', 'satin'],
+        },
+        'Oval': {
+            families: ['blue', 'neutral', 'gray', 'red'],
+            fabrics: ['wool', 'cotton', 'linen', 'structured', 'silk'],
         }
     };
 
@@ -556,6 +567,35 @@ const calculateRecommendationScore = (gown, preferences) => {
     // Face Shape Recommendations (10 points)
     if (preferences.faceShape) {
         score += 10;
+    }
+
+    // Sex Matching (Bonus for explicit match - 10 points)
+    if (preferences.sex && gown.sex) {
+        const userSex = preferences.sex.toLowerCase();
+        const gownSex = gown.sex.toLowerCase();
+        if (userSex === gownSex) {
+            score += 10;
+        } else if (gownSex === 'unisex') {
+            score += 5;
+        }
+    }
+
+    // Male-specific fabric/style preferences (Bonus - 10 points)
+    if (preferences.sex === 'Male') {
+        const fabricProps = fabricUtils.getFabricProperties(gown.fabric);
+        const gownName = gown.name?.toLowerCase();
+        const maleFormalStyles = ['suit', 'tuxedo', 'blazer', 'barong', 'vest'];
+
+        if (fabricProps.isStructured || ['wool', 'linen', 'cotton', 'piña', 'jusi'].some(f => gown.fabric?.toLowerCase().includes(f))) {
+            score += 5;
+        }
+        if (maleFormalStyles.some(s => gownName?.includes(s))) {
+            score += 5;
+            // Additional bonus for Traditional events matching Barong
+            if (preferences.eventType?.toLowerCase() === 'traditional' && gownName.includes('barong')) {
+                score += 10;
+            }
+        }
     }
 
     return Math.min(score, maxScore);

@@ -34,9 +34,9 @@ import star_green from "./star-green.svg"
 
 // AI RECCOMENDATION LIST
 export const eventTypeList = ['Wedding', 'Traditional', 'Prom', 'Formal', 'Themed']
-export const bodyTypeList = ['Hourglass', 'Pear', 'Rectangle', 'Diamond']
+export const bodyTypeList = ['Hourglass', 'Pear', 'Rectangle', 'Diamond', 'Inverted Triangle', 'Trapezoid', 'Oval']
 export const skinToneList = ['Warm', 'Cool', 'Neutral']
-export const faceShapeList = ['Oval', 'Square', 'Round', 'Heart', 'Diamond']
+export const faceShapeList = ['Oval', 'Square', 'Round', 'Heart', 'Diamond', 'Long', 'Triangle', 'Rectangle']
 
 export const assets = {
     logo,

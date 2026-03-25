@@ -256,6 +256,16 @@ const ManageGowns = () => {
     })
   }
 
+  const handleAgeGroupToggle = (ageGroup) => {
+    setEditForm(prev => {
+      if (prev.ageGroup.includes(ageGroup)) {
+        return { ...prev, ageGroup: prev.ageGroup.filter(a => a !== ageGroup) }
+      } else {
+        return { ...prev, ageGroup: [...prev.ageGroup, ageGroup] }
+      }
+    })
+  }
+
   const submitEditGown = async () => {
     if (!selectedGown) return
 
@@ -779,7 +789,7 @@ const ManageGowns = () => {
               <div className="space-y-4">
                 <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Sex *</label>
                 <div className='flex flex-wrap gap-2 sm:gap-3'>
-                  {['Male', 'Female', 'Unisex'].map((sex) => (
+                  {['Female', 'Male', 'Unisex'].map((sex) => (
                     <button
                       key={sex}
                       type='button'
@@ -790,6 +800,25 @@ const ManageGowns = () => {
                         }`}
                     >
                       {sex}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Age Groups *</label>
+                <div className='flex flex-wrap gap-2 sm:gap-3'>
+                  {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map((age) => (
+                    <button
+                      key={age}
+                      type='button'
+                      onClick={() => handleAgeGroupToggle(age)}
+                      className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${editForm.ageGroup.includes(age)
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
+                        }`}
+                    >
+                      {age}
                     </button>
                   ))}
                 </div>

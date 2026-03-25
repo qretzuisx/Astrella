@@ -167,24 +167,39 @@ const calculateRecommendationScore = (gown, preferences) => {
     // Body Type Recommendations (25 points)
     const bodyTypeRecommendations = {
         'Hourglass': {
-            colors: ['Navy', 'Black', 'Burgundy', 'Emerald'],
-            fabrics: ['Satin', 'Silk', 'Chiffon'],
-            styles: ['A-line', 'Mermaid', 'Fit and Flare']
+            colors: ['Navy', 'Black', 'Burgundy', 'Emerald', 'Deep Red', 'Royal Blue'],
+            fabrics: ['Satin', 'Silk', 'Chiffon', 'Wool', 'Cotton', 'Linen'],
+            styles: ['A-line', 'Mermaid', 'Fit and Flare', 'Slim Fit', 'Tailored', 'Bodycon']
         },
         'Pear': {
-            colors: ['Dark', 'Navy', 'Black', 'Deep'],
-            fabrics: ['Chiffon', 'Tulle', 'Organza'],
-            styles: ['A-line', 'Ball Gown', 'Empire']
+            colors: ['Dark', 'Navy', 'Black', 'Deep', 'Grey', 'Charcoal'],
+            fabrics: ['Chiffon', 'Tulle', 'Organza', 'Wool', 'Structured'],
+            styles: ['A-line', 'Ball Gown', 'Empire', 'Structured Shoulders', 'Padded Blazers']
         },
         'Rectangle': {
-            colors: ['All'],
-            fabrics: ['Chiffon', 'Tulle', 'Organza', 'Satin'],
-            styles: ['A-line', 'Ball Gown', 'Mermaid']
+            colors: ['All', 'Vibrant', 'Earth Tones'],
+            fabrics: ['Chiffon', 'Tulle', 'Organza', 'Satin', 'Denim', 'Velvet', 'Leather'],
+            styles: ['A-line', 'Ball Gown', 'Mermaid', 'Layered', 'Structured', 'Pocket Details']
         },
         'Diamond': {
-            colors: ['Dark', 'Navy', 'Black'],
-            fabrics: ['Chiffon', 'Tulle'],
-            styles: ['A-line', 'Empire']
+            colors: ['Dark', 'Navy', 'Black', 'Charcoal', 'Slate'],
+            fabrics: ['Chiffon', 'Tulle', 'Wool', 'Silk'],
+            styles: ['A-line', 'Empire', 'Regular Fit', 'V-neck']
+        },
+        'Inverted Triangle': {
+            colors: ['Dark', 'Navy', 'Grey', 'Black', 'White', 'Ivory', 'Cream', 'Beige', 'Blue'],
+            fabrics: ['Wool', 'Cotton', 'Linen', 'Satin', 'Piña', 'Jusi', 'Silk', 'Organza'],
+            styles: ['V-neck', 'Tailored', 'Slim Fit', 'Barong', 'Shift', 'Empire']
+        },
+        'Trapezoid': {
+            colors: ['All', 'Navy', 'Grey', 'Charcoal', 'Blue', 'Burgundy', 'Emerald'],
+            fabrics: ['Wool', 'Cotton', 'Linen', 'Silk', 'Piña', 'Jusi', 'Satin'],
+            styles: ['Tailored', 'Regular Fit', 'Blazer', 'Barong', 'Wrap', 'Shift']
+        },
+        'Oval': {
+            colors: ['Dark', 'Navy', 'Black', 'Charcoal', 'Deep Blue', 'Burgundy'],
+            fabrics: ['Wool', 'Cotton', 'Linen', 'Structured', 'Silk'],
+            styles: ['Structured', 'Vertical Straights', 'Regular Fit', 'Empire', 'V-neck']
         }
     };
 
@@ -204,10 +219,9 @@ const calculateRecommendationScore = (gown, preferences) => {
 
     // Skin Tone Color Recommendations (20 points)
     const skinToneColors = {
-        'Warm': ['Gold', 'Peach', 'Coral', 'Ivory', 'Warm White', 'Blush', 'Cream'],
-        'Cold': ['Silver', 'Blue', 'Pink', 'Cool White', 'Lavender', 'Mint'],
-        'Neutral': ['All colors work well'],
-        'Nuetral': ['All colors work well'] // Handle typo in assets
+        'Warm': ['Gold', 'Peach', 'Coral', 'Ivory', 'Warm White', 'Blush', 'Cream', 'Earth', 'Olive', 'Khaki', 'Camel', 'Mustard'],
+        'Cool': ['Silver', 'Blue', 'Pink', 'Cool White', 'Lavender', 'Mint', 'Grey', 'Navy', 'Charcoal', 'Slate', 'Burgundy', 'Royal Blue'],
+        'Neutral': ['All colors work well']
     };
 
     if (preferences.skinTone && skinToneColors[preferences.skinTone]) {
@@ -255,6 +269,36 @@ const calculateRecommendationScore = (gown, preferences) => {
 
     if (preferences.faceShape && faceShapeRecommendations[preferences.faceShape]) {
         score += 10; // Base score for face shape consideration
+    }
+
+    // Sex Matching (Bonus for explicit match - 10 points)
+    if (preferences.sex && gown.sex) {
+        const userSex = preferences.sex.toLowerCase();
+        const gownSex = gown.sex.toLowerCase();
+        if (userSex === gownSex) {
+            score += 10;
+        } else if (gownSex === 'unisex') {
+            score += 5;
+        }
+    }
+
+    // Male-specific fabric/style preferences (Bonus - 10 points)
+    if (preferences.sex === 'Male') {
+        const gownFabric = gown.fabric?.toLowerCase();
+        const gownName = gown.name?.toLowerCase();
+        const malePreferredFabrics = ['wool', 'linen', 'cotton', 'leather', 'denim', 'velvet', 'piña', 'jusi'];
+        const maleFormalStyles = ['suit', 'tuxedo', 'blazer', 'barong', 'vest'];
+
+        if (malePreferredFabrics.some(f => gownFabric?.includes(f))) {
+            score += 5;
+        }
+        if (maleFormalStyles.some(s => gownName?.includes(s))) {
+            score += 5;
+            // Additional bonus for Traditional events matching Barong
+            if (preferences.eventType?.toLowerCase() === 'traditional' && gownName.includes('barong')) {
+                score += 10;
+            }
+        }
     }
 
     return Math.min(score, maxScore);
@@ -489,7 +533,9 @@ export const deleteAccount = async (req, res) => {
 // Get AI Recommendations
 export const getRecommendations = async (req, res) => {
     try {
-        const { bodyType, skinTone, height, eventType, faceShape, age, sex } = req.query;
+        const { bodyType, skinTone, height, eventType, faceShape, ageGroup, sex } = req.query;
+        // Backward compatibility for 'age' param
+        const userAgeGroup = ageGroup || req.query.age;
 
         // Only exclude globally unavailable gowns (owner toggled off).
         // Reservation / In-Use / In-Laundry gowns are still shown so users can see them for future bookings.
@@ -543,8 +589,8 @@ export const getRecommendations = async (req, res) => {
         }
 
         // Filter by age group if provided
-        if (age) {
-            const userAge = age.toLowerCase().trim();
+        if (userAgeGroup) {
+            const userAge = userAgeGroup.toLowerCase().trim();
             allGowns = allGowns.filter(gown => {
                 if (Array.isArray(gown.ageGroup)) {
                     return gown.ageGroup.some(a => a.toLowerCase().trim() === userAge);
@@ -577,7 +623,7 @@ export const getRecommendations = async (req, res) => {
         }
 
         // Calculate scores for each gown (now only scoring the filtered gowns)
-        const preferences = { bodyType, skinTone, height, eventType, faceShape, age, sex };
+        const preferences = { bodyType, skinTone, height, eventType, faceShape, ageGroup: userAgeGroup, sex };
         const scoredGowns = allGowns.map(gown => {
             const score = calculateRecommendationScore(gown, preferences);
             return {

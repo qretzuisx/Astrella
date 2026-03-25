@@ -238,13 +238,17 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       const hipToShoulder = hipWidth / shoulderWidth;
       const shoulderToHip = shoulderWidth / hipWidth;
 
-      // Improved classification thresholds
+      // Improved classification thresholds (Male & Female)
       if (waistToShoulder < 0.75 && waistToHip < 0.75 && Math.abs(hipToShoulder - 1) < 0.1)
         return 'Hourglass';
       else if (hipToShoulder > 1.1 && waistToHip < 0.85)
         return 'Pear';
-      else if (shoulderToHip > 1.1 && waistToShoulder > 0.85)
+      else if (shoulderToHip > 1.15 && waistToShoulder < 0.85) // Broad shoulders, narrow waist
         return 'Inverted Triangle';
+      else if (shoulderToHip > 1.05 && waistToShoulder < 0.9) // Average fit male build
+        return 'Trapezoid';
+      else if (waistToShoulder > 1.0 && waistToHip > 1.0) // Waist wider than shoulders/hips
+        return 'Oval';
       else if (waistToShoulder > 0.9 && waistToHip > 0.9 && Math.abs(hipToShoulder - 1) < 0.15)
         return 'Rectangle';
       else
@@ -277,36 +281,34 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         const faceHeight = Math.abs(landmarks[8].y - ((landmarks[19].y + landmarks[24].y) / 2));
 
         // Calculate ratios for classification
+        const faceRatio = faceHeight / cheekWidth;
+        const foreheadToCheek = foreheadWidth / cheekWidth;
+        const jawToCheek = jawWidth / cheekWidth;
+        const chinToJaw = chinWidth / jawWidth;
+        // 1. Long Face: Height is much larger than width
+        if (faceRatio > 1.45) return 'Long';
 
-        // Classification based on landmark ratios
-        // Oval: Balanced proportions, face longer than wide
-        if (faceRatio > 1.35 && Math.abs(foreheadToCheek - 1) < 0.15 && Math.abs(jawToCheek - 1) < 0.15) {
-          return 'Oval';
-        }
+        // 2. Heart Shape: Wide forehead, narrow chin
+        if (foreheadToCheek > 1.05 && chinToJaw < 0.7) return 'Heart';
 
-        // Heart: Wide forehead, narrow chin
-        if (foreheadToCheek > 1.08 && chinToJaw < 0.65 && jawToCheek < 0.92) {
-          return 'Heart';
-        }
+        // 3. Triangle Face: Wide jaw, narrow forehead
+        if (jawToCheek > 1.05 && foreheadToCheek < 0.95) return 'Triangle';
 
-        // Round: Face nearly as wide as it is long, soft curves
-        if (faceRatio < 1.2 && Math.abs(foreheadToCheek - 1) < 0.12 && Math.abs(jawToCheek - 1) < 0.12) {
-          return 'Round';
-        }
+        // 4. Round Face: Balanced, nearly circular
+        if (faceRatio < 1.15 && Math.abs(foreheadToCheek - 1) < 0.15 && Math.abs(jawToCheek - 1) < 0.15) return 'Round';
 
-        // Square: Equal forehead, cheek, and jaw widths, strong jawline
-        if (Math.abs(foreheadToCheek - 1) < 0.1 && Math.abs(jawToCheek - 1) < 0.1 && chinToJaw > 0.7) {
-          return 'Square';
-        }
+        // 5. Rectangle Face: Balanced widths but long face
+        if (faceRatio > 1.25 && Math.abs(foreheadToCheek - 1) < 0.12 && Math.abs(jawToCheek - 1) < 0.12) return 'Rectangle';
 
-        // Diamond: Widest at cheeks, narrow forehead and jaw
-        if (cheekWidth > foreheadWidth && cheekWidth > jawWidth &&
-          (cheekWidth - foreheadWidth) > 8 && (cheekWidth - jawWidth) > 8) {
-          return 'Diamond';
-        }
+        // 6. Square Face: Balanced widths and balanced height
+        if (Math.abs(foreheadToCheek - 1) < 0.12 && Math.abs(jawToCheek - 1) < 0.12) return 'Square';
 
-        // Default to Oval (most common and versatile)
+        // 7. Diamond Face: Widest at cheeks
+        if (cheekWidth > foreheadWidth && cheekWidth > jawWidth) return 'Diamond';
+
+        // 8. Oval Face: Default balanced proportions
         return 'Oval';
+
       }
 
       // Fallback to old method if no landmarks available

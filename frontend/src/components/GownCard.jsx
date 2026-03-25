@@ -225,7 +225,6 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
               </span>
             </div>
           </div>
-
         </div>
       </div>
     </div>
