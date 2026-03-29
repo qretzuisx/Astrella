@@ -16,6 +16,7 @@ import ShopProfile from './pages/ShopProfile'
 import OwnerProfile from './pages/OwnerProfile'
 
 import BottomNav from './components/BottomNav'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const App = () => {
   const [ShowLogin, setShowLogin] = useState(false)
@@ -28,6 +29,7 @@ const App = () => {
       <LoginModal showLogin={ShowLogin} setShowLogin={setShowLogin} />
 
       <main className="flex-1">
+        <ErrorBoundary>
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/gown-details/:id' element={<GownDetails />} />
@@ -42,6 +44,7 @@ const App = () => {
           <Route path='/owner/manage-gown' element={<ManageGowns />} />
           <Route path='/owner/manage-bookings' element={<ManageBookings />} />
         </Routes>
+        </ErrorBoundary>
       </main>
 
       {!isOwnerPath && <BottomNav />}

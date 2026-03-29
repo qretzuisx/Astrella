@@ -1,6 +1,14 @@
 import React, { useState } from 'react'
 import { assets } from '../assets/assets'
 
+// [SECTION] PAYMENT MODAL STATE
+/** 
+ * [INFO] Handles the collection of payment details (GCash or In-Store).
+ * [FLOW] 
+ * 1. User selects payment method.
+ * 2. If GCash: user scans QR, enters reference number, and uploads screenshot.
+ * 3. On Continue: Data is passed back to the parent `onContinue` handler.
+ */
 const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
   const [paymentData, setPaymentData] = useState({
     method: 'gcash',
@@ -11,11 +19,9 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
 
-  // Calculate deposit (50% of total) - only for GCash
-  const depositAmount = Math.round(total * 0.5)
+  // [LOGIC] Pricing Calculations
+  const depositAmount = Math.round(total * 0.5) // (50% deposit for GCash)
   const remainingBalance = total - depositAmount
-  
-  // For in-store, show full amount
   const displayAmount = paymentData.method === 'in_store' ? total : depositAmount
 
   const handleInputChange = (e) => {
@@ -24,25 +30,25 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
     setError('')
   }
 
+  /** 
+   * [INFO] Handles payment screenshot upload and validation.
+   * [LOGIC] Restricts to PNG/JPG; max size 5MB. Generates local preview URL.
+   */
   const handleFileChange = (e) => {
     const file = e.target.files[0]
-    
     if (!file) return
 
-    // Validate file type
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg']
     if (!validTypes.includes(file.type)) {
       setError('Please upload a PNG or JPG image')
       return
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('File size must be less than 5MB')
       return
     }
 
-    // Create preview
     const reader = new FileReader()
     reader.onloadend = () => {
       setPaymentData({
@@ -55,13 +61,18 @@ const PaymentModal = ({ showPayment, setShowPayment, total, onContinue }) => {
     reader.readAsDataURL(file)
   }
 
+  /** 
+   * [INFO] Validates payment data before proceeding to the agreement stage.
+   * [LOGIC] 
+   * 1. If In-Store: Skip validation.
+   * 2. If GCash: Ensure Reference Number (min 10 chars) and Screenshot exist.
+   */
   const handleContinue = () => {
     if (paymentData.method === 'in_store') {
       onContinue(paymentData)
       return
     }
 
-    // GCash validation
     if (!paymentData.referenceNumber || paymentData.referenceNumber.trim() === '') {
       setError('Please enter the GCash reference number')
       return

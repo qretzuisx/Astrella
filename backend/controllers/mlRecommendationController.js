@@ -13,6 +13,7 @@ import Gown from '../models/Gown.js';
 export const getMLRecommendations = async (req, res) => {
     try {
         const userId = req.user?._id?.toString(); // Optional: works for both logged-in and guest users
+        const { bodyType, skinTone, height, eventType, faceShape } = req.query;
 
         // Build preferences object
         const preferences = {
@@ -50,7 +51,7 @@ export const getMLRecommendations = async (req, res) => {
         });
 
     } catch (error) {
-        res.json({ 
+        res.status(500).json({ 
             success: false, 
             message: 'Failed to generate recommendations',
             error: error.message 
@@ -86,7 +87,7 @@ export const getSimilarUserRecommendations = async (req, res) => {
         });
 
     } catch (error) {
-        res.json({ 
+        res.status(500).json({ 
             success: false, 
             message: 'Failed to generate similar user recommendations',
             error: error.message 
@@ -114,7 +115,7 @@ export const retrainModel = async (req, res) => {
         });
 
     } catch (error) {
-        res.json({ 
+        res.status(500).json({ 
             success: false, 
             message: 'Failed to retrain model',
             error: error.message 
@@ -155,7 +156,7 @@ export const getModelStats = async (req, res) => {
 
     } catch (error) {
         console.error('❌ Stats error:', error);
-        res.json({ 
+        res.status(500).json({ 
             success: false, 
             message: 'Failed to get model stats',
             error: error.message 
@@ -175,13 +176,13 @@ export const getPersonalizedFeed = async (req, res) => {
         // Get user's saved preferences (if any)
         const user = await (await import('../models/User.js')).default.findById(_id);
         
-        // Use stored preferences or defaults
+        // Use query params for preferences
         const preferences = {
-            bodyType: req.query.bodyType || user.preferences?.bodyType,
-            skinTone: req.query.skinTone || user.preferences?.skinTone,
-            height: req.query.height || user.preferences?.height,
-            eventType: req.query.eventType,
-            faceShape: req.query.faceShape || user.preferences?.faceShape
+            bodyType: req.query.bodyType || undefined,
+            skinTone: req.query.skinTone || undefined,
+            height: req.query.height || undefined,
+            eventType: req.query.eventType || undefined,
+            faceShape: req.query.faceShape || undefined
         };
 
         // Get hybrid recommendations
@@ -195,7 +196,7 @@ export const getPersonalizedFeed = async (req, res) => {
 
     } catch (error) {
         console.error('❌ Personalized feed error:', error);
-        res.json({ 
+        res.status(500).json({ 
             success: false, 
             message: 'Failed to generate personalized feed',
             error: error.message 

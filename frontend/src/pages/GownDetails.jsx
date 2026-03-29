@@ -532,10 +532,10 @@ const GownDetails = () => {
   const isFormComplete = bookingType === 'trial'
     ? Boolean(pickupDate && pickupTime)
     : Boolean(pickupDate && returnDate && pickupTime)
-  // NOTE: Only disable booking if gown status is 'Unavailable' (owner's manual toggle).
+  // NOTE: Only disable booking if gown status is 'Unavailable' or 'Sold Out' (owner's manual toggle).
   // Temporary statuses (In-Use, In-Laundry, Reserved) should NOT block future bookings.
   // Date-based availability is checked through scheduleStatus.valid.
-  const gownIsManuallyUnavailable = gown?.status === 'Unavailable'
+  const gownIsManuallyUnavailable = gown?.status === 'Unavailable' || gown?.status === 'Sold Out'
   const confirmDisabled = gownIsManuallyUnavailable
     || !isFormComplete
     || hasFieldErrors

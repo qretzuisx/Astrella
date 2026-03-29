@@ -1,6 +1,7 @@
 /**
- * Fabric Utilities for Astrella
- * Handles dynamic mapping of fabric names to properties and similarity detection
+ * [SECTION] FABRIC UTILITIES
+ * [INFO] Handles dynamic mapping of fabric names to properties and similarity detection.
+ * [FLOW] Used by the AI Stylist to recommend apparel based on weight and drape.
  */
 
 const FABRIC_GROUPS = {
@@ -10,15 +11,18 @@ const FABRIC_GROUPS = {
     structured: ['taffeta', 'mikado', 'duchess', 'neoprene', 'scuba', 'linen', 'cotton']
 };
 
-/**
- * Categorizes a fabric name string
+/** 
+ * [INFO] Categorizes a fabric name string into weight and structure properties.
+ * [LOGIC] 
+ * 1. Matches keywords (e.g., 'tulle') against predefined density groups.
+ * 2. Returns boolean flags to simplify scoring logic in `recommendationUtils.js`.
  */
 export const getFabricProperties = (fabricName) => {
     if (!fabricName) return { category: 'unknown', weight: 'Medium' };
     
     const lower = fabricName.toLowerCase().trim();
     
-    // Determine category based on keywords
+    // [LOGIC] Determine category based on keyword density
     let category = 'unknown';
     if (FABRIC_GROUPS.light.some(f => lower.includes(f))) category = 'Light';
     else if (FABRIC_GROUPS.heavy.some(f => lower.includes(f))) category = 'Heavy';
@@ -33,8 +37,9 @@ export const getFabricProperties = (fabricName) => {
     };
 };
 
-/**
- * Determines if two fabrics are similar
+/** 
+ * [INFO] Determines if two fabrics share similar functional properties.
+ * [LOGIC] Checks if both fabric names fall into the same group (e.g., silk and satin).
  */
 export const areFabricsSimilar = (fabricA, fabricB) => {
     if (!fabricA || !fabricB) return false;

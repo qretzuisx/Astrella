@@ -13,7 +13,7 @@ ownerRouter.get("/get-attributes", protect, verifyOwner, getExistingAttributes)
 
 ownerRouter.post("/add-gown", protect, verifyOwner, upload.single("image"), addGown)
 ownerRouter.get("/gowns", protect, verifyOwner, getOwnersGowns)
-ownerRouter.put("/toogle-gown", protect, verifyOwner, ToggleGownAvailability)
+ownerRouter.put("/toggle-gown", protect, verifyOwner, ToggleGownAvailability)
 ownerRouter.put("/gown/laundry-days", protect, verifyOwner, updateLaundryDays)
 ownerRouter.put("/gown/update", protect, verifyOwner, updateGown)
 ownerRouter.delete("/delete-gown", protect, verifyOwner, DeleteGown)

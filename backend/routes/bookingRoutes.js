@@ -19,6 +19,16 @@ const bookingRateLimiter = (req, res, next) => {
   next();
 };
 
+// Clean up old rate limit entries every 60s to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [userId, times] of bookingRateLimit) {
+    const active = times.filter(t => now - t < 60000);
+    if (active.length === 0) bookingRateLimit.delete(userId);
+    else bookingRateLimit.set(userId, active);
+  }
+}, 60000);
+
 const bookingRouter = express.Router();
 
 bookingRouter.post('/check-availability', validateBookingWindow)
@@ -29,6 +39,6 @@ bookingRouter.put('/change-status', protect, changeBookingStatus)
 bookingRouter.put('/verify-payment', protect, verifyPayment)
 bookingRouter.put('/update', protect, updateBooking)
 bookingRouter.get('/calendar/:gownId', getGownCalendar)
-bookingRouter.post('/cleanup-expired-trials', cleanupExpiredTrials)
+bookingRouter.post('/cleanup-expired-trials', protect, cleanupExpiredTrials)
 
 export default bookingRouter;

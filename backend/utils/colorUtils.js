@@ -1,10 +1,11 @@
 /**
- * Color Utilities for Astrella
- * Handles dynamic mapping of color names to properties and similarity detection
+ * [SECTION] COLOR UTILITIES
+ * [INFO] Handles dynamic mapping of color names to properties and similarity detection.
+ * [FLOW] Used by the AI Stylist to match apparel colors with user skin tones.
  */
 
 const COLOR_MAP = {
-    // REDS
+    // [LOGIC] REDS
     'red': { family: 'red', warmth: 'Warm', hex: '#EF4444' },
     'burgundy': { family: 'red', warmth: 'Warm', hex: '#800020' },
     'maroon': { family: 'red', warmth: 'Warm', hex: '#800000' },
@@ -14,7 +15,7 @@ const COLOR_MAP = {
     'wine': { family: 'red', warmth: 'Warm', hex: '#722F37' },
     'brick': { family: 'red', warmth: 'Warm', hex: '#B22222' },
     
-    // PINKS
+    // [LOGIC] PINKS
     'pink': { family: 'pink', warmth: 'Cool', hex: '#EC4899' },
     'blush': { family: 'pink', warmth: 'Warm', hex: '#DE5D83' },
     'magenta': { family: 'pink', warmth: 'Cool', hex: '#FF00FF' },
@@ -24,7 +25,7 @@ const COLOR_MAP = {
     'salmon': { family: 'pink', warmth: 'Warm', hex: '#FA8072' },
     'hotpink': { family: 'pink', warmth: 'Cool', hex: '#FF69B4' },
     
-    // ORANGES/YELLOWS
+    // [LOGIC] ORANGES/YELLOWS
     'orange': { family: 'orange', warmth: 'Warm', hex: '#F97316' },
     'rust': { family: 'orange', warmth: 'Warm', hex: '#B7410E' },
     'terracotta': { family: 'orange', warmth: 'Warm', hex: '#E2725B' },
@@ -34,7 +35,7 @@ const COLOR_MAP = {
     'mustard': { family: 'yellow', warmth: 'Warm', hex: '#FFDB58' },
     'canary': { family: 'yellow', warmth: 'Warm', hex: '#FFEF00' },
     
-    // GREENS
+    // [LOGIC] GREENS
     'green': { family: 'green', warmth: 'Cool', hex: '#22C55E' },
     'emerald': { family: 'green', warmth: 'Cool', hex: '#50C878' },
     'mint': { family: 'green', warmth: 'Cool', hex: '#98FF98' },
@@ -44,7 +45,7 @@ const COLOR_MAP = {
     'sage': { family: 'green', warmth: 'Warm', hex: '#BCB88A' },
     'forest': { family: 'green', warmth: 'Cool', hex: '#228B22' },
     
-    // BLUES
+    // [LOGIC] BLUES
     'blue': { family: 'blue', warmth: 'Cool', hex: '#3B82F6' },
     'navy': { family: 'blue', warmth: 'Cool', hex: '#000080' },
     'sky': { family: 'blue', warmth: 'Cool', hex: '#87CEEB' },
@@ -55,7 +56,7 @@ const COLOR_MAP = {
     'royal': { family: 'blue', warmth: 'Cool', hex: '#4169E1' },
     'cyan': { family: 'blue', warmth: 'Cool', hex: '#00FFFF' },
     
-    // PURPLES
+    // [LOGIC] PURPLES
     'purple': { family: 'purple', warmth: 'Cool', hex: '#A855F7' },
     'lavender': { family: 'purple', warmth: 'Cool', hex: '#E6E6FA' },
     'violet': { family: 'purple', warmth: 'Cool', hex: '#EE82EE' },
@@ -64,13 +65,13 @@ const COLOR_MAP = {
     'lilac': { family: 'purple', warmth: 'Cool', hex: '#C8A2C8' },
     'mauve': { family: 'purple', warmth: 'Cool', hex: '#E0B0FF' },
     
-    // BROWNS
+    // [LOGIC] BROWNS
     'brown': { family: 'brown', warmth: 'Warm', hex: '#964B00' },
     'chocolate': { family: 'brown', warmth: 'Warm', hex: '#7B3F00' },
     'tan': { family: 'brown', warmth: 'Warm', hex: '#D2B48C' },
     'khaki': { family: 'brown', warmth: 'Warm', hex: '#C3B091' },
     
-    // NEUTRALS
+    // [LOGIC] NEUTRALS
     'white': { family: 'neutral', warmth: 'Neutral', hex: '#FFFFFF' },
     'ivory': { family: 'neutral', warmth: 'Warm', hex: '#FFFFF0' },
     'cream': { family: 'neutral', warmth: 'Warm', hex: '#FFFDD0' },
@@ -84,47 +85,36 @@ const COLOR_MAP = {
     'champagne': { family: 'neutral', warmth: 'Warm', hex: '#F7E7CE' }
 };
 
-/**
- * Extracts properties from a color name string
- * Handles compound names like 'Dark Emerald Green'
+/** 
+ * [INFO] Extracts family and warmth properties from any color name string.
+ * [LOGIC] 
+ * 1. Sanitizes input string (lowercased, trimmed).
+ * 2. Checks for exact matches in COLOR_MAP.
+ * 3. Fallbacks to keyword matching for compound names (e.g., 'Dark Emerald Green').
  */
 export const getColorProperties = (colorName) => {
     if (!colorName) return { family: 'unknown', warmth: 'Neutral', hex: '#CCCCCC' };
     
     const lower = colorName.toLowerCase().trim();
-    const words = lower.split(/[\s-]+/);
     
     // Check for exact matches first
     if (COLOR_MAP[lower]) return COLOR_MAP[lower];
     
-    // Check if any word in the name matches a known color
-    // We reverse the list to prioritize more specific colors if they appear
+    // [LOGIC] Partial matching for compound names
     const knownColors = Object.keys(COLOR_MAP).sort((a, b) => b.length - a.length);
     
     for (const known of knownColors) {
         if (lower.includes(known)) {
-            // Found a base color match within the string
-            const base = { ...COLOR_MAP[known] };
-            
-            // Adjust hex slightly for modifiers
-            if (lower.includes('dark') || lower.includes('deep') || lower.includes('midnight')) {
-                // Return same family/warmth
-                return base;
-            }
-            if (lower.includes('light') || lower.includes('pale') || lower.includes('pastel')) {
-                return base;
-            }
-            return base;
+            return { ...COLOR_MAP[known] };
         }
     }
     
-    // Fallback if no keywords found: find the first word that might be a color
-    // or just return a default based on some logic
     return { family: 'unknown', warmth: 'Neutral', hex: '#CCCCCC' };
 };
 
-/**
- * Determines if two colors are similar based on family and name overlap
+/** 
+ * [INFO] Determines if two colors are functionally similar.
+ * [LOGIC] Returns TRUE if both colors belong to the same family (e.g., 'Navy' and 'Sky Blue' both match 'Blue').
  */
 export const areColorsSimilar = (colorA, colorB) => {
     if (!colorA || !colorB) return false;
@@ -132,14 +122,12 @@ export const areColorsSimilar = (colorA, colorB) => {
     const propsA = getColorProperties(colorA);
     const propsB = getColorProperties(colorB);
     
-    // Same family is a strong match
+    // [LOGIC] Same family is a strong match
     if (propsA.family !== 'unknown' && propsA.family === propsB.family) return true;
     
-    // Check for keyword overlap (e.g., 'Rose Gold' and 'Gold')
+    // [LOGIC] Check for manual keyword overlap in complex strings
     const wordsA = colorA.toLowerCase().split(/[\s-]+/);
     const wordsB = colorB.toLowerCase().split(/[\s-]+/);
-    
-    // If they share a significant color keyword
     const commonWords = wordsA.filter(w => wordsB.includes(w));
     const isCommon = commonWords.some(w => COLOR_MAP[w]);
     

@@ -27,7 +27,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotStep, setForgotStep] = useState('request')
   const [forgotEmail, setForgotEmail] = useState('')
-  const [generatedResetToken, setGeneratedResetToken] = useState('')
+  // generatedResetToken removed — code is now sent via email, never returned by the API
   const [providedResetToken, setProvidedResetToken] = useState('')
   const [forgotNewPassword, setForgotNewPassword] = useState('')
   const [forgotConfirmNewPassword, setForgotConfirmNewPassword] = useState('')
@@ -56,7 +56,6 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
   const resetForgotState = () => {
     setForgotStep('request')
-    setGeneratedResetToken('')
     setProvidedResetToken('')
     setForgotNewPassword('')
     setForgotConfirmNewPassword('')
@@ -199,7 +198,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
               address: formData.address.trim(),
               city: formData.city.trim(),
               operatingHours: `${formData.operatingHoursOpen}-${formData.operatingHoursClose}`,
-              socialMedia: { facebook: '', instagram: '' }
+              socialMedia: { facebook: '' }
             } : undefined
           })
         })
@@ -258,9 +257,7 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
 
       const data = await response.json()
       if (response.ok && data.success) {
-        setSuccess('Reset code generated! Please copy the 5-digit code below.')
-        setGeneratedResetToken(data.resetToken || '')
-        setProvidedResetToken(data.resetToken || '')
+        setSuccess(data.message || 'Reset code sent! Please check your email inbox.')
         setForgotStep('reset')
       } else {
         setError(data.message || 'Unable to start password reset.')
@@ -733,17 +730,10 @@ const LoginModal = ({ showLogin, setShowLogin }) => {
                     />
                   </div>
 
-                  {generatedResetToken && (
-                    <div className='p-6 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border border-blue-100 rounded-3xl shadow-sm text-center'>
-                      <p className='text-[10px] uppercase tracking-widest font-black text-blue-500/80 mb-3'>Your Reset Code</p>
-                      <div className='text-3xl font-black tracking-[0.2em] py-4 bg-white/80 backdrop-blur-sm rounded-xl border border-primary/10 text-primary shadow-sm font-mono'>
-                        {generatedResetToken}
-                      </div>
-                      <p className='text-[10px] text-gray-400 mt-2 font-medium italic'>
-                        Copy this and enter it above
-                      </p>
-                    </div>
-                  )}
+                  {/* Reset code is sent via email — do not display it here */}
+                  <div className='p-4 bg-blue-50/60 border border-blue-100 rounded-2xl text-center'>
+                    <p className='text-xs font-bold text-blue-700'>📧 Check your email for the 5-digit reset code and enter it above.</p>
+                  </div>
 
                   <div>
                     <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1'>

@@ -3,8 +3,10 @@ import Booking from "../models/booking.js";
 import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import fs from "fs";
-import { calculateActualGownStatus } from "./bookingController.js";
+import { calculateActualGownStatus, batchUpdateGownStatuses } from "./bookingController.js";
+import { combineDateAndTime } from "../utils/dateUtils.js";
 
+// [SECTION] OWNER UTILITIES
 const clampLaundryDays = (value) => {
     const parsed = Number(value);
     if (Number.isNaN(parsed) || parsed < 0) {
@@ -13,7 +15,11 @@ const clampLaundryDays = (value) => {
     return Math.min(Math.floor(parsed), 14);
 };
 
-// API to list gowns
+// [SECTION] OWNER DASHBOARD DATA
+/**
+ * [INFO] Aggregates financial and inventory metrics for the owner's dashboard.
+ */
+// [SECTION] OWNER HELPER FUNCTIONS
 const normalizeOptionalTags = (gown) => {
     let normalizedAgeGroup = []
     if (Array.isArray(gown.ageGroup)) {
@@ -33,7 +39,15 @@ const normalizeOptionalTags = (gown) => {
 }
 
 const uploadAndOptimizeGownImage = async (imageFile) => {
-    const fileBuffer = fs.readFileSync(imageFile.path)
+    let fileBuffer;
+    if (imageFile.buffer) {
+        fileBuffer = imageFile.buffer;
+    } else if (imageFile.path) {
+        fileBuffer = fs.readFileSync(imageFile.path);
+    } else {
+        throw new Error('No image data found (buffer or path missing)');
+    }
+
     const response = await imageKit.upload({
         file: fileBuffer,
         fileName: imageFile.originalname,
@@ -98,8 +112,6 @@ export const addGown = async (req, res) => {
         // Save image as array (model expects array)
         const image = [optimizedImageUrl];
 
-        // Get contact number from either location (shopProfile takes priority)
-        const gownContactNumber = user.shopProfile?.contactNumber || user.contactNumber || ''
 
         // Normalize ageGroup/sex (optional)
         const { normalizedAgeGroup, normalizedSex } = normalizeOptionalTags(gown)
@@ -122,7 +134,7 @@ export const addGown = async (req, res) => {
             verified: true,
             laundryDays,
             location: user.shopProfile.address,
-            contactNumber: gownContactNumber
+            contactNumber
         });
 
         res.json({ success: true, message: "Gown Added" })
@@ -130,7 +142,7 @@ export const addGown = async (req, res) => {
 
     } catch (error) {
         console.error(`[AddGown Error]`, error);
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -140,33 +152,30 @@ export const getOwnersGowns = async (req, res) => {
         const { _id } = req.user;
         const gowns = await Gown.find({ owner: _id })
         
-        // Calculate actual status for each gown in parallel
-        await Promise.all(gowns.map(async (gown) => {
-            gown.status = await calculateActualGownStatus(gown._id);
-        }));
+        // Calculate actual status for each gown in batch to avoid N+1 queries
+        await batchUpdateGownStatuses(gowns);
 
         res.json({ success: true, gowns })
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
-
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
 // API to get all public gowns (available for browsing)
 export const getAllGowns = async (req, res) => {
     try {
-        let gowns = await Gown.find({})
+        let gowns = await Gown.find({ 
+            statusOverride: { $ne: 'Sold Out' }
+        })
             .populate('owner', 'name')
             .sort({ views: -1, createdAt: -1 })
         
         // Filter out gowns whose owners were deleted
         gowns = gowns.filter(gown => gown.owner !== null);
 
-        // Calculate actual status for ALL gowns in parallel
-        await Promise.all(gowns.map(async (gown) => {
-            gown.status = await calculateActualGownStatus(gown._id);
-        }));
+        // Calculate actual status for ALL gowns in batch to avoid N+1 queries
+        await batchUpdateGownStatuses(gowns);
 
         res.json({ success: true, gowns })
     } catch (error) {
@@ -216,8 +225,7 @@ export const ToggleGownAvailability = async (req, res) => {
         res.json({ success: true, message: "Availability Toggled", available: gown.available })
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
-
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -257,8 +265,7 @@ export const DeleteGown = async (req, res) => {
         res.json({ success: true, message: "Gown and all associated booking records deleted successfully" })
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
-
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -287,7 +294,7 @@ export const updateLaundryDays = async (req, res) => {
         res.json({ success: true, message: "Laundry day updated", laundryDays: gown.laundryDays });
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -353,21 +360,30 @@ export const getDashboardData = async (req, res) => {
         const { _id, role } = req.user;
 
         if (role !== 'owner') {
-            return res.json({ success: false, message: "Unauthorized" });
+            return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
-        const gowns = await Gown.find({ owner: _id })
-        const bookings = await Booking.find({ owner: _id })
+        const gowns = await Gown.find({ owner: _id });
+        const allBookings = await Booking.find({ owner: _id })
             .populate('gown')
             .populate('user', 'name email')
             .sort({ createdAt: -1 });
 
+        const now = new Date();
+        const bookings = allBookings.filter(booking => {
+            if (booking.status !== 'trial') return true;
+            return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
+        });
+
         const pendingBookings = await Booking.find({ owner: _id, status: 'pending' })
         const completedBookings = await Booking.find({ owner: _id, status: 'completed' })
 
-        // Monthly revenue: count confirmed AND completed bookings (completed were previously confirmed)
+        // Monthly revenue: count confirmed AND completed bookings from the current month
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         const monthlyRevenue = bookings.filter(booking =>
-            booking.status === 'confirmed' || booking.status === 'completed'
+            (booking.status === 'confirmed' || booking.status === 'completed') &&
+            new Date(booking.createdAt) >= monthStart && new Date(booking.createdAt) <= monthEnd
         ).reduce((acc, booking) => acc + (booking.price || 0), 0)
 
         const dashboardData = {
@@ -383,7 +399,7 @@ export const getDashboardData = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -401,7 +417,15 @@ export const updateUserImage = async (req, res) => {
                 .json({ success: false, message: "No image uploaded" });
         }
 
-        const fileBuffer = fs.readFileSync(imageFile.path)
+        let fileBuffer;
+        if (imageFile.buffer) {
+            fileBuffer = imageFile.buffer;
+        } else if (imageFile.path) {
+            fileBuffer = fs.readFileSync(imageFile.path);
+        } else {
+            return res.status(400).json({ success: false, message: "No image data found" });
+        }
+
         const response = await imageKit.upload({
             file: fileBuffer,
             fileName: imageFile.originalname,
@@ -424,7 +448,7 @@ export const updateUserImage = async (req, res) => {
 
     } catch (error) {
         console.error(error)
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -432,10 +456,6 @@ export const updateUserImage = async (req, res) => {
 // Optimized API to get trending gowns (most booked)
 export const getTrendingGowns = async (req, res) => {
     try {
-        const now = new Date();
-        const currentTime = now.getTime();
-        const DAY_IN_MS = 24 * 60 * 60 * 1000;
-
         // 1. Get top booked gowns via aggregation
         const trendingData = await Booking.aggregate([
             {
@@ -462,6 +482,7 @@ export const getTrendingGowns = async (req, res) => {
         // 2. Fetch specific gowns + fallback if needed
         let initialGowns = await Gown.find({ 
             _id: { $in: trendingIds },
+            statusOverride: { $ne: 'Sold Out' },
             available: true,
             verified: true
         }).populate('owner', 'name shopName');
@@ -470,11 +491,13 @@ export const getTrendingGowns = async (req, res) => {
         initialGowns = initialGowns.filter(gown => gown.owner !== null);
 
         let gowns = initialGowns;
+        let gownIds = gowns.map(g => g._id);
 
         if (gowns.length < 5) {
             let recentGowns = await Gown.find({
                 _id: { $nin: gownIds },
-                available: true
+                available: true,
+                statusOverride: { $ne: 'Sold Out' }
                 // Removed strict verified filter for fallback to ensure something shows up
                 // to avoid empty trending choice section
             })
@@ -486,86 +509,11 @@ export const getTrendingGowns = async (req, res) => {
             recentGowns = recentGowns.filter(g => g.owner !== null);
             
             gowns = [...gowns, ...recentGowns];
+            gownIds = gowns.map(g => g._id);
         }
 
-        const gownIds = gowns.map(g => g._id);
-
-        // 3. Fetch all potentially conflicting bookings for these gowns in ONE query
-        // Max laundry days is 14
-        const maxLaundryMs = 14 * 24 * 60 * 60 * 1000;
-        const relevantBookings = await Booking.find({
-            gown: { $in: gownIds },
-            status: { $in: ['pending', 'confirmed', 'completed'] },
-            pickupDate: { $lte: new Date(currentTime + maxLaundryMs + DAY_IN_MS) },
-            returnDate: { $gte: new Date(currentTime - maxLaundryMs - DAY_IN_MS) }
-        }).sort({ pickupDate: 1 });
-
-        // Map bookings to gowns for easier lookup
-        const bookingsMap = {};
-        relevantBookings.forEach(b => {
-            const gid = b.gown.toString();
-            if (!bookingsMap[gid]) bookingsMap[gid] = [];
-            bookingsMap[gid].push(b);
-        });
-
-        const combineDateAndTime = (dateValue, timeValue) => {
-            if (!dateValue) return null;
-            const d = new Date(dateValue);
-            const safeTime = timeValue || "09:00";
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const dd = String(d.getDate()).padStart(2, "0");
-            return new Date(`${yyyy}-${mm}-${dd}T${safeTime}`);
-        };
-
-        // 4. Calculate statuses in-memory
-        const finalizedGowns = gowns.map(gown => {
-            const g = gown.toObject();
-            const gid = g._id.toString();
-            
-            if (g.statusOverride) {
-                g.status = g.statusOverride;
-                return g;
-            }
-
-            const gBookings = bookingsMap[gid] || [];
-            const laundryDays = g.laundryDays || 0;
-            let finalStatus = 'Available';
-
-            for (const booking of gBookings) {
-                const pickupDateTime = combineDateAndTime(booking.pickupDate, booking.pickupTime);
-                const returnDateTime = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime);
-
-                if (!pickupDateTime || !returnDateTime) continue;
-
-                const pickupTimeMs = pickupDateTime.getTime();
-                const returnTimeMs = returnDateTime.getTime();
-
-                if (booking.status === 'confirmed') {
-                    if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
-                        finalStatus = 'In-Use';
-                        break;
-                    }
-                    if (pickupDateTime.toDateString() === now.toDateString()) {
-                        finalStatus = 'Reserved';
-                    }
-                } else if (booking.status === 'pending') {
-                    if (pickupDateTime.toDateString() === now.toDateString() || (currentTime >= pickupTimeMs && currentTime <= returnTimeMs)) {
-                        finalStatus = 'Reserved';
-                    }
-                } else if (booking.status === 'completed' && laundryDays > 0) {
-                    const laundryEndDate = new Date(returnDateTime);
-                    laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
-                    laundryEndDate.setHours(23, 59, 59, 999);
-                    if (now >= returnDateTime && now <= laundryEndDate) {
-                        finalStatus = 'In-Laundry';
-                    }
-                }
-            }
-
-            g.status = finalStatus;
-            return g;
-        });
+        // 4. Calculate statuses using the batch utility
+        const finalizedGowns = await batchUpdateGownStatuses(gowns);
 
         // 5. Restore original trending order for the first set
         const trendingOrderMap = {};

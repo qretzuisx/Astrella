@@ -22,9 +22,13 @@ const ManageGowns = () => {
   // availability toggle. If the gown is toggled off (available === false), we
   // always show it as "Unavailable" on the owner page, regardless of booking status.
   const getDisplayStatus = (gown) => {
-    // Priority 1: Manual availability toggle (Hide)
+    // Priority 1: Manual status override (highest priority)
+    if (gown?.statusOverride && gown.statusOverride !== '') return gown.statusOverride;
+    
+    // Priority 2: Manual availability toggle (Hide)
     if (gown && gown.available === false) return 'Unavailable';
-    // Priority 2: Backend calculated status (respects statusOverride and dynamic booking logic)
+    
+    // Priority 3: Backend calculated status
     return gown?.status || 'Available';
   };
 
@@ -45,6 +49,7 @@ const ManageGowns = () => {
     statusOverride: '',
     available: true
   })
+
 
   useEffect(() => {
     fetchGowns()
@@ -94,7 +99,7 @@ const ManageGowns = () => {
   const handleToggleAvailability = async (gownId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/owner/toogle-gown`, {
+      const response = await fetch(`${API_URL}/owner/toggle-gown`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -225,6 +230,8 @@ const ManageGowns = () => {
     setEditOpen(true)
   }
 
+
+
   const closeEditModal = () => {
     setEditOpen(false)
     setSelectedGown(null)
@@ -354,8 +361,7 @@ const ManageGowns = () => {
       matchesEvent = eventArr.some(e => e.toLowerCase() === filterEventType.toLowerCase())
     }
 
-    const matchesSearch = (gown.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (gown.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (gown.name || '').toLowerCase().includes(searchTerm.toLowerCase())
     
     return matchesStatus && matchesEvent && matchesSearch
   })
@@ -441,7 +447,7 @@ const ManageGowns = () => {
           {/* Status Filter Tabs - Modern Segmented Control Style */}
           <div className='mb-10 overflow-x-auto premium-scrollbar-yellow -mx-3 px-3 pb-2'>
             <div className='inline-flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl min-w-full'>
-            {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable'].map((status) => {
+            {['all', 'Available', 'Reserved', 'In-Use', 'In-Laundry', 'Unavailable', 'Sold Out'].map((status) => {
               const count = status === 'all'
                 ? gowns.length
                 : gowns.filter(g => getDisplayStatus(g) === status).length
@@ -526,6 +532,7 @@ const ManageGowns = () => {
                         getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500/80' :
                         getDisplayStatus(gown) === 'In-Use' ? 'bg-gray-500/80' :
                         getDisplayStatus(gown) === 'In-Laundry' ? 'bg-blue-500/80' :
+                        getDisplayStatus(gown) === 'Sold Out' ? 'bg-purple-600/80' :
                         'bg-gray-400/80'
                       }`}>
                       {getDisplayStatus(gown)}
@@ -544,8 +551,8 @@ const ManageGowns = () => {
                   <div className='p-4 sm:p-6'>
                     <div className="flex items-start justify-between gap-4 mb-4">
                         <h3 className='text-xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
-                        {!gown.available && (
-                            <div className="p-1 px-2 bg-gray-100 text-xs font-black text-gray-400 uppercase tracking-widest rounded-lg">Hidden</div>
+                        {(gown.available === false || (gown.statusOverride && gown.statusOverride !== 'Available' && gown.statusOverride !== '')) && (
+                            <div className="p-1 px-2 bg-gray-200 text-red-500 font-black text-[10px] uppercase tracking-[0.2em] rounded-lg border border-red-100 shadow-sm animate-pulse">Hidden</div>
                         )}
                     </div>
                     
@@ -649,7 +656,7 @@ const ManageGowns = () => {
         </div>
       </div>
 
-      {/* Edit Gown Modal */}
+      {/* Edit Gown Modal (Existing) */}
       {editOpen && selectedGown && (
         <div
           className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
@@ -712,17 +719,6 @@ const ManageGowns = () => {
                     className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none'
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Description</label>
-                <textarea
-                  name='description'
-                  value={editForm.description}
-                  onChange={handleEditFormChange}
-                  rows='3'
-                  className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none resize-none'
-                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -830,42 +826,33 @@ const ManageGowns = () => {
                   <div className='w-1 h-5 bg-primary rounded-full'></div>
                   <h3 className='text-[10px] font-black text-primary uppercase tracking-wider'>Status Control</h3>
                 </div>
-                
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
-                  {/* Status Selection */}
-                  <div className='bg-gray-50/50 p-6 rounded-2xl border border-gray-100'>
-                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3'>Manual Override</label>
-                    <select
-                      name='statusOverride'
-                      value={editForm.statusOverride}
-                      onChange={handleEditFormChange}
-                      className='w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none text-xs font-black text-primary appearance-none shadow-sm'
-                    >
-                      <option value=''>Auto (Dynamic)</option>
-                      <option value='Available'>Force Available</option>
-                      <option value='Reserved'>Force Reserved</option>
-                      <option value='In-Use'>Force In-Use</option>
-                      <option value='In-Laundry'>Force In-Laundry</option>
-                      <option value='Unavailable'>Force Unavailable</option>
-                    </select>
-                  </div>
-
-                  {/* Visibility Toggle */}
-                  <div className='bg-gray-50/50 p-6 rounded-2xl border border-gray-100 flex flex-col justify-center'>
-                    <label className='flex items-center justify-between cursor-pointer group'>
-                       <span className='text-[10px] font-black text-gray-700 uppercase tracking-widest group-hover:text-primary transition-colors'>Catalog Visibility</span>
-                      <div className='relative'>
-                        <input
-                          type='checkbox'
-                          name='available'
-                          checked={editForm.available}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, available: e.target.checked }))}
-                          className='sr-only'
-                        />
-                        <div className={`w-12 h-6 rounded-full transition-colors ${editForm.available ? 'bg-primary' : 'bg-gray-300'}`}></div>
-                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${editForm.available ? 'translate-x-6' : ''}`}></div>
-                      </div>
-                    </label>
+                  <div className='bg-primary-dull/5 p-6 sm:p-8 rounded-[2.5rem] border border-primary/10 shadow-inner'>
+                  <div className='grid grid-cols-4 gap-3 sm:gap-4'>
+                    {[
+                      { value: '', label: 'Auto', color: 'bg-slate-400', desc: 'Dynamic logic' },
+                      { value: 'Available', label: 'Available', color: 'bg-green-500', desc: 'Force Show' },
+                      { value: 'Unavailable', label: 'Unavailable', color: 'bg-orange-500', desc: 'Force Hide' },
+                      { value: 'Sold Out', label: 'Sold Out', color: 'bg-purple-600', desc: 'Reference only' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type='button'
+                        onClick={() => setEditForm(prev => ({ ...prev, statusOverride: option.value }))}
+                        className={`flex flex-col items-center sm:items-start p-4 sm:p-5 rounded-3xl border-2 transition-all duration-300 group ${
+                          editForm.statusOverride === option.value
+                            ? 'border-primary bg-white shadow-2xl shadow-primary/20 scale-105 z-10'
+                            : 'border-transparent bg-white/50 hover:bg-white hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full mb-3 shadow-lg ${option.color} ${editForm.statusOverride === option.value ? 'ring-4 ring-primary/20 animate-pulse' : 'opacity-40'}`} />
+                        <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest mb-1 ${editForm.statusOverride === option.value ? 'text-primary' : 'text-gray-400'}`}>
+                          {option.label}
+                        </span>
+                        <span className='text-[8px] sm:text-[9px] font-bold text-gray-300 group-hover:text-gray-400 transition-colors uppercase tracking-[0.1em]'>
+                          {option.desc}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -891,6 +878,7 @@ const ManageGowns = () => {
           </div>
         </div>
       )}
+
     </div>
   )
 }

@@ -88,8 +88,7 @@ const Gown = () => {
         const basicMatch =
           gown.name?.toLowerCase().includes(query) ||
           gown.fabric?.toLowerCase().includes(query) ||
-          gown.color?.toLowerCase().includes(query) ||
-          gown.description?.toLowerCase().includes(query)
+          gown.color?.toLowerCase().includes(query)
 
         // Check eventType (handle both array and string)
         let eventMatch = false

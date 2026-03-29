@@ -269,6 +269,7 @@ const OwnerProfile = () => {
                       Follow on Facebook
                     </a>
                   )}
+
                 </div>
               </div>
             )}

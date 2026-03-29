@@ -641,6 +641,21 @@ const ManageBookings = () => {
                                      <p className="text-xs font-bold text-gray-700 truncate">{booking.contactNumber || 'N/A'}</p>
                                  </div>
                              </div>
+                             {booking.measurements && (booking.measurements.waist || booking.measurements.hips) && (
+                               <div className="flex items-center gap-2">
+                                   <div className="p-1.5 bg-gray-50 rounded-lg">
+                                       <svg className="w-3.5 h-3.5 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                       </svg>
+                                   </div>
+                                   <div className="min-w-0">
+                                       <p className="text-[10px] sm:text-xs font-black text-[#007AFF] uppercase tracking-widest">Measurements</p>
+                                       <p className="text-xs font-bold text-gray-700">
+                                         W: {booking.measurements.waist || '-'}{booking.measurements.unit} • H: {booking.measurements.hips || '-'}{booking.measurements.unit}
+                                       </p>
+                                   </div>
+                               </div>
+                             )}
                          </div>
                       </div>
                     </div>

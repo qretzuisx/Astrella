@@ -37,36 +37,37 @@ const isDateWithinBookingRange = (dateObj, bookingStart, bookingEnd) => {
   return dateStr >= startStr && dateStr <= endStr;
 };
 
-// Helper function to get all laundry dates for a gown (as date strings YYYY-MM-DD)
+/**
+ * [INFO] Retrieves all dates blocked by laundry/maintenance for a specific gown.
+ * [LOGIC] 
+ * 1. Finds all non-canceled bookings for the gown.
+ * 2. For each reservation, adds X 'laundryDays' following the return date to a blocked set.
+ */
 const getLaundryDates = async (gownId, laundryDays) => {
-  if (!laundryDays || laundryDays <= 0) return new Set();
+    if (!laundryDays || laundryDays <= 0) return new Set();
+    const laundryDateSet = new Set();
+    const now = new Date();
+    const Bookings = await Booking.find({
+        gown: gownId,
+        status: { $ne: "canceled" },
+        $or: [
+            { status: { $ne: 'trial' } },
+            { status: 'trial', trialExpiresAt: { $gt: now } },
+            { status: 'trial', trialExpiresAt: { $exists: false } },
+        ]
+    });
 
-  const laundryDateSet = new Set();
-  const now = new Date();
-  const Bookings = await Booking.find({
-    gown: gownId,
-    status: { $ne: "canceled" },
-    $or: [
-      { status: { $ne: 'trial' } },
-      { status: 'trial', trialExpiresAt: { $gt: now } },
-      { status: 'trial', trialExpiresAt: { $exists: false } },
-    ]
-  });
-
-  Bookings.forEach((booking) => {
-    // Skip trial bookings - they don't have laundry days
-    const isBookingTrial = booking.status === 'trial' || booking.bookingType === 'trial';
-    if (isBookingTrial) return;
-
-    const returnDate = new Date(booking.returnDate);
-    for (let i = 1; i <= laundryDays; i++) {
-      const laundryDate = new Date(returnDate);
-      laundryDate.setDate(laundryDate.getDate() + i);
-      laundryDateSet.add(toLocalDateString(laundryDate));
-    }
-  });
-
-  return laundryDateSet;
+    Bookings.forEach((booking) => {
+        // [INFO] Trials do not trigger laundry cycles.
+        if (booking.status === 'trial' || booking.bookingType === 'trial') return;
+        const returnDate = new Date(booking.returnDate);
+        for (let i = 1; i <= laundryDays; i++) {
+            const laundryDate = new Date(returnDate);
+            laundryDate.setDate(laundryDate.getDate() + i);
+            laundryDateSet.add(toLocalDateString(laundryDate));
+        }
+    });
+    return laundryDateSet;
 };
 
 // Helper function to check if a date range overlaps with any blocked dates (bookings or laundry days)
@@ -81,315 +82,151 @@ const dateRangeOverlapsBlocked = (startDate, endDate, blockedDateSet) => {
   return false;
 };
 
+/**
+ * [INFO] CORE AVAILABILITY ENGINE
+ * [LOGIC] Checks if a gown is available for a specific date/time range.
+ * 1. Checks for exact time slot overlaps (Same-day turnarounds).
+ * 2. For multi-day rentals, blocks the entire range [Pickup -> Return + Laundry].
+ */
 export const checkAvailability = async (gown, pickupDate, returnDate, options = {}) => {
-  const start = pickupDate instanceof Date ? pickupDate : new Date(pickupDate);
-  const end = returnDate instanceof Date ? returnDate : new Date(returnDate);
-  const isTrial = options.isTrial || false;
+    const start = pickupDate instanceof Date ? pickupDate : new Date(pickupDate);
+    const end = returnDate instanceof Date ? returnDate : new Date(returnDate);
+    const isTrial = options.isTrial || false;
 
-  // Get all Bookings
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const Bookings = await Booking.find({
-    gown,
-    status: { $ne: "canceled" },
-    returnDate: { $gte: today },
-    $or: [
-      { status: { $ne: 'trial' } },
-      { status: 'trial', trialExpiresAt: { $gt: now } },
-      { status: 'trial', trialExpiresAt: { $exists: false } },
-    ]
-  });
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const Bookings = await Booking.find({
+        gown,
+        status: { $ne: "canceled" },
+        returnDate: { $gte: today },
+        $or: [
+            { status: { $ne: 'trial' } },
+            { status: 'trial', trialExpiresAt: { $gt: now } },
+            { status: 'trial', trialExpiresAt: { $exists: false } },
+        ]
+    });
 
-  const gownData = options.gownData || await Gown.findById(gown).select('laundryDays');
-
-  // Build a set of blocked dates for Reservation-level blocking (pickup through return + laundry)
-  const laundryBuffer = Number(gownData?.laundryDays || options.laundryDays || 0);
-
-  for (const Booking of Bookings) {
-    const isExistingTrial = Booking.status === 'trial' || Booking.bookingType === 'trial';
-    const existingStart = new Date(Booking.pickupDate);
-    const existingEnd = new Date(Booking.returnDate);
-
-    // 1. Same-day time slot overlap (catches same-day handover conflicts)
-    if (doTimeSlotsOverlap(start, end, existingStart, existingEnd)) {
+    const gownData = options.gownData || await Gown.findById(gown).select('laundryDays statusOverride');
+    
+    // [LOGIC] Check for manual status override (highest priority)
+    // Any status other than 'Available' (or empty/null) blocks all new bookings.
+    if (gownData?.statusOverride && gownData.statusOverride !== 'Available') {
       return false;
     }
 
-    // 2. Logic for Multi-day Reservations vs anything else
-    if (!isTrial || !isExistingTrial) {
-      // If either the new booking OR the existing booking is a full Reservation,
-      // then ANY day-level overlap (including laundry) is a conflict.
-      
-      // Effective blocked range for NEW booking:
-      const reqLaundry = isTrial ? 0 : laundryBuffer;
-      const reqStartStr = toLocalDateString(start);
-      const reqEndWithLaundry = new Date(end);
-      reqEndWithLaundry.setDate(reqEndWithLaundry.getDate() + reqLaundry);
-      const reqEndStr = toLocalDateString(reqEndWithLaundry);
+    const laundryBuffer = Number(gownData?.laundryDays || options.laundryDays || 0);
 
-      // Effective blocked range for EXISTING booking:
-      const existingLaundry = isExistingTrial ? 0 : laundryBuffer;
-      const bStartStr = toLocalDateString(existingStart);
-      const bEndWithLaundry = new Date(existingEnd);
-      bEndWithLaundry.setDate(bEndWithLaundry.getDate() + existingLaundry);
-      const bEndStr = toLocalDateString(bEndWithLaundry);
+    for (const existingBooking of Bookings) {
+        const isExistingTrial = existingBooking.status === 'trial' || existingBooking.bookingType === 'trial';
+        const existingStart = new Date(existingBooking.pickupDate);
+        const existingEnd = new Date(existingBooking.returnDate);
 
-      // Overlap Check: [reqStartStr, reqEndStr] touches [bStartStr, bEndStr]
-      if (reqStartStr <= bEndStr && reqEndStr >= bStartStr) {
-        return false;
-      }
+        // [LOGIC] Conflict 1: Time-slot overlap
+        if (doTimeSlotsOverlap(start, end, existingStart, existingEnd)) return false;
+
+        // [LOGIC] Conflict 2: Multi-day range overlap
+        if (!isTrial || !isExistingTrial) {
+            const reqLaundry = isTrial ? 0 : laundryBuffer;
+            const reqStartStr = toLocalDateString(start);
+            const reqEndWithLaundry = new Date(end);
+            reqEndWithLaundry.setDate(reqEndWithLaundry.getDate() + reqLaundry);
+            const reqEndStr = toLocalDateString(reqEndWithLaundry);
+
+            const existingLaundry = isExistingTrial ? 0 : laundryBuffer;
+            const bStartStr = toLocalDateString(existingStart);
+            const bEndWithLaundry = new Date(existingEnd);
+            bEndWithLaundry.setDate(bEndWithLaundry.getDate() + existingLaundry);
+            const bEndStr = toLocalDateString(bEndWithLaundry);
+
+            if (reqStartStr <= bEndStr && reqEndStr >= bStartStr) return false;
+        }
     }
-  }
-
-  return true; // No conflicts
+    return true;
 };
 
-// API to create Booking
+// [SECTION] BOOKING CREATION API
+/**
+ * [INFO] Main entry point for customers to reserve a gown or schedule a trial.
+ * [FLOW]
+ * 1. Validates inputs and operating hours.
+ * 2. Checks availability (logic in `checkAvailability`).
+ * 3. Calculates pricing using `rentalPricing.js`.
+ * 4. Handles GCash screenshot uploads via ImageKit.
+ * 5. Creates the Booking record and populates details for the response.
+ */
 export const createBooking = async (req, res) => {
-  try {
-    const { _id } = req.user;
-    const { gown, pickupDate, returnDate, pickupTime, returnTime, bookingType } = req.body;
-
-    // Parse measurements and payment from JSON strings
-    let measurements = {};
-    let paymentInfo = {};
-
     try {
-      if (req.body.measurements) {
-        measurements = typeof req.body.measurements === 'string'
-          ? JSON.parse(req.body.measurements)
-          : req.body.measurements;
-      }
-      if (req.body.payment) {
-        paymentInfo = typeof req.body.payment === 'string'
-          ? JSON.parse(req.body.payment)
-          : req.body.payment;
-      }
-    } catch (parseError) {
-      return res.status(400).json({ success: false, message: "Invalid JSON format for measurements or payment" });
-    }
-
-    const normalizedBookingType = (bookingType || paymentInfo.bookingType || 'reservation').toString().toLowerCase();
-    const isTrial = normalizedBookingType === 'trial';
-
-    // Trials are single appointment bookings: require only pickupDate + pickupTime.
-    // Reservations (rentals) require pickup + return dates.
-    if (!gown || !pickupDate || !pickupTime || (!isTrial && !returnDate)) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
-    }
-
-    // For trials, ignore/derive return fields (no separate return time/date).
-    const normalizedReturnDate = isTrial ? pickupDate : returnDate;
-    const normalizedReturnTime = isTrial ? pickupTime : (returnTime || pickupTime);
-
-    // Trial flow: no payment required, no returnTime required.
-    // Reservation flow: payment method controls requirements.
-    const paymentMethod = isTrial
-      ? 'in_store'
-      : (paymentInfo.method || 'gcash').toString().toLowerCase();
-
-    const isInStore = paymentMethod === 'in_store' || paymentMethod === 'pay_in_store';
-    const isGcash = paymentMethod === 'gcash';
-
-    if (!isTrial && !isInStore && !isGcash) {
-      return res.status(400).json({ success: false, message: "Invalid payment method" });
-    }
-
-    // Validate payment information (reservation + gcash only)
-    if (!isTrial && isGcash) {
-      if (!paymentInfo.transactionRef || paymentInfo.transactionRef.length < 10) {
-        return res.status(400).json({ success: false, message: "Valid GCash reference number is required" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: "Payment screenshot is required" });
-      }
-    }
-
-    const effectiveReturnTime = normalizedReturnTime;
-
-    const gownData = await Gown.findById(gown).populate("owner", "shopProfile");
-    if (!gownData) {
-      return res.status(404).json({ success: false, message: "Gown not found" });
-    }
-    const ownerDoc = gownData.owner && gownData.owner.shopProfile ? gownData.owner : await User.findById(gownData.owner).select("shopProfile");
-    const shopHours = parseOperatingHours(ownerDoc?.shopProfile?.operatingHours) || { openMinutes: DEFAULT_OPEN, closeMinutes: DEFAULT_CLOSE };
-
-    // Pickup time must be within operating hours. Return time is flexible for reservations (any time within the return day).
-    if (!isWithinBusinessHours(pickupTime, shopHours) || (isTrial && !isWithinBusinessHours(effectiveReturnTime, shopHours))) {
-      return res.status(400).json({ success: false, message: "Selected times must be within the shop's operating hours and in 15-minute intervals." });
-    }
-
-    const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
-    // Trials: fixed 30-minute slot. Reservations: return can be anytime within the selected return day (end-of-day local).
-    let returnDateTime = isTrial
-      ? combineDateAndTime(normalizedReturnDate, effectiveReturnTime)
-      : endOfLocalDay(normalizedReturnDate);
-
-    if (!pickupDateTime || !returnDateTime) {
-      return res.status(400).json({ success: false, message: "Invalid pickup or return date." });
-    }
-
-    const now = new Date();
-    if (pickupDateTime < now) {
-      return res.status(400).json({ success: false, message: "Pickup date and time cannot be in the past." });
-    }
-    if (returnDateTime < now) {
-      return res.status(400).json({ success: false, message: "Return date and time cannot be in the past." });
-    }
-
-    // Trial bookings are 30-minute appointment slots (only block the time slot, not the entire day).
-    if (isTrial) {
-      returnDateTime = new Date(pickupDateTime.getTime() + 30 * 60 * 1000); // 30 minutes after pickup
-    }
-
-    // For trials, returnDateTime may equal pickupDateTime (single-day appointment).
-    // For reservations, returnDateTime can equal pickupDateTime (same-day bookings allowed).
-    if (returnDateTime < pickupDateTime) {
-      return res.status(400).json({ success: false, message: "Return time cannot be earlier than pickup time." });
-    }
-
-    const cleanContactNumber = (req.user?.contactNumber || "").toString().replace(/\D/g, "");
-    if (!cleanContactNumber || cleanContactNumber.length < 10 || cleanContactNumber.length > 13) {
-      return res.status(400).json({ success: false, message: "Your profile contact number is missing or invalid. Please update your profile." });
-    }
-
-    const isAvailable = await checkAvailability(
-      gown,
-      pickupDateTime,
-      returnDateTime,
-      { laundryDays: isTrial ? 0 : gownData.laundryDays, isTrial }
-    );
-    if (!isAvailable) {
-      // Laundry buffer days do not apply to trials.
-      if (!isTrial && gownData.laundryDays > 0) {
-        // Check if it's specifically a laundry day conflict by checking if any date in range is a laundry day
-        const laundryDateSet = await getLaundryDates(gown, gownData.laundryDays);
-        let isLaundryConflict = false;
-
-        // Check each day in the requested range
-        for (let d = new Date(pickupDateTime); d <= returnDateTime; d.setDate(d.getDate() + 1)) {
-          if (laundryDateSet.has(toLocalDateString(d))) {
-            isLaundryConflict = true;
-            break;
-          }
+        const { _id } = req.user;
+        const { gown, pickupDate, returnDate, pickupTime, returnTime, bookingType } = req.body;
+        
+        let measurements = {};
+        let paymentInfo = {};
+        try {
+            measurements = typeof req.body.measurements === 'string' ? JSON.parse(req.body.measurements) : (req.body.measurements || {});
+            paymentInfo = typeof req.body.payment === 'string' ? JSON.parse(req.body.payment) : (req.body.payment || {});
+        } catch (e) {
+            return res.status(400).json({ success: false, message: "Invalid JSON format" });
         }
 
-        if (isLaundryConflict) {
-          return res.json({ success: false, message: "Apparel is not yet returned on one or more of your selected dates. Laundry/maintenance days are fully blocked and cannot be booked." });
-        }
-      }
+        const isTrial = (bookingType || paymentInfo.bookingType || 'reservation').toString().toLowerCase() === 'trial';
+        
+        // [LOGIC] Setup normalized dates/times
+        const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
+        let returnDateTime = isTrial ? new Date(pickupDateTime.getTime() + 30 * 60 * 1000) : endOfLocalDay(returnDate);
 
-      return res.json({ success: false, message: "This gown is already reserved during your selected dates." });
-    }
+        // [VALIDATION] Availability check
+        const gownData = await Gown.findById(gown).populate("owner", "shopProfile");
+        const isAvailable = await checkAvailability(gown, pickupDateTime, returnDateTime, { laundryDays: isTrial ? 0 : gownData.laundryDays, isTrial });
+        if (!isAvailable) return res.status(400).json({ success: false, message: "Dates are already reserved." });
 
-    // Reservation pricing: base covers up to 3 reserved days (pickup/use/return),
-    // then +EXTRA_DAY_FEE per extra reserved day beyond that window.
-    const basePrice = gownData.pricePerDay || gownData.price || 0;
-    const pricing = computeReservationPricing({
-      basePrice,
-      pickupDate: pickupDateTime,
-      returnDate: returnDateTime,
-    });
-    const price = pricing.total;
-
-    // Determine booking type
-    const finalBookingType = isTrial ? 'trial' : 'reservation';
-
-    // For trial bookings, the hold expires at the end of the 30-minute try-on slot.
-    const finalReturnDateTime = returnDateTime;
-    const trialExpiresAt = isTrial ? new Date(finalReturnDateTime) : undefined;
-
-    // Upload payment screenshot to ImageKit (GCash only)
-    let screenshotUrl = '';
-    if (isGcash) {
-      try {
-        const fs = await import('fs');
-        let fileBuffer;
-
-        if (req.file?.buffer) {
-          fileBuffer = req.file.buffer;
-        } else if (req.file?.path) {
-          fileBuffer = fs.readFileSync(req.file.path);
-        } else {
-          throw new Error('No file buffer or path available');
+        // [LOGIC] Pricing & Payment
+        const pricing = isTrial ? { total: 0 } : computeReservationPricing({ basePrice: gownData.price, pickupDate: pickupDateTime, returnDate: returnDateTime });
+        
+        let screenshotUrl = '';
+        if (!isTrial && paymentInfo.method === 'gcash' && req.file) {
+            const uploadResponse = await imageKit.upload({
+                file: (req.file.buffer || (await import('fs')).readFileSync(req.file.path)).toString('base64'),
+                fileName: `payment_${_id}_${Date.now()}`,
+                folder: '/payment_screenshots'
+            });
+            screenshotUrl = uploadResponse.url;
+            if (req.file.path) (await import('fs')).unlinkSync(req.file.path);
         }
 
-        const uploadResponse = await imageKit.upload({
-          file: fileBuffer.toString('base64'),
-          fileName: `payment_${_id}_${Date.now()}.${req.file.mimetype.split('/')[1]}`,
-          folder: '/payment_screenshots'
+        // [FLOW] Save to Database
+        const newBooking = await Booking.create({
+            gown, owner: gownData.owner, user: _id,
+            pickupDate: pickupDateTime, returnDate: returnDateTime,
+            pickupTime, returnTime, price: pricing.total,
+            bookingType: isTrial ? 'trial' : 'reservation',
+            trialExpiresAt: isTrial ? returnDateTime : undefined,
+            payment: {
+                method: paymentInfo.method || 'gcash',
+                depositAmount: isTrial ? 0 : Math.round(pricing.total * 0.5),
+                totalAmount: pricing.total,
+                screenshot: screenshotUrl,
+                status: 'pending'
+            },
+            status: isTrial ? 'trial' : 'pending'
         });
-        screenshotUrl = uploadResponse.url;
 
-        if (req.file.path) {
-          fs.unlinkSync(req.file.path);
-        }
-      } catch (uploadError) {
-        console.error('ImageKit upload error:', uploadError);
-        return res.status(500).json({ success: false, message: "Failed to upload payment screenshot" });
-      }
+        const populated = await Booking.findById(newBooking._id).populate('gown owner user');
+        res.json({ success: true, message: "Booking Created", booking: populated });
 
-      // Check for duplicate reference numbers
-      const existingPayment = await Booking.findOne({
-        'payment.transactionRef': paymentInfo.transactionRef
-      });
-      if (existingPayment) {
-        return res.status(400).json({
-          success: false,
-          message: "This reference number has already been used. Please check your transaction."
-        });
-      }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: error.message });
     }
-
-    const newBooking = await Booking.create({
-      gown,
-      owner: gownData.owner,
-      user: _id,
-      pickupDate: pickupDateTime,
-      returnDate: finalReturnDateTime,
-      pickupTime,
-      returnTime: effectiveReturnTime,
-      price: isTrial ? 0 : price,
-      bookingType: finalBookingType,
-      trialExpiresAt,
-      contactNumber: cleanContactNumber,
-      measurements: measurements || {},
-      payment: {
-        method: isInStore || isTrial ? 'in_store' : 'gcash',
-        depositAmount: isTrial ? 0 : (paymentInfo.depositAmount || Math.round(price * 0.5)),
-        totalAmount: isTrial ? 0 : (paymentInfo.totalAmount || price),
-        remainingBalance: isTrial ? 0 : (paymentInfo.remainingBalance || (price - Math.round(price * 0.5))),
-        transactionRef: isGcash ? paymentInfo.transactionRef : undefined,
-        screenshot: isGcash ? screenshotUrl : undefined,
-        status: isGcash ? 'pending' : 'pending'
-      },
-      status: isTrial ? 'trial' : 'pending'
-    });
-
-    // Do NOT toggle gown.available here; availability is per-date.
-    // The gown will be marked unavailable when a booking is confirmed.
-
-    // Populate gown and owner for the response
-    const populatedBooking = await Booking.findById(newBooking._id)
-      .populate('gown')
-      .populate('owner', 'name')
-      .populate('user', 'name email')
-
-    res.json({
-      success: true,
-      message: "Booking Created",
-      booking: populatedBooking,
-      Booking: populatedBooking,
-      ...(isTrial ? {} : { pricing }),
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
-  }
 };
 
+
+/**
+ * [INFO] Pre-booking validation for the frontend calendar.
+ * [LOGIC] 
+ * 1. Checks if the requested time is within shop operating hours.
+ * 2. Validates that the pickup date is not in the past.
+ * 3. Identifies and returns specific conflicting bookings and laundry dates.
+ */
 export const validateBookingWindow = async (req, res) => {
   try {
     const { gownId, pickupDate, returnDate, pickupTime, returnTime, bookingType, excludeBookingId } = req.body;
@@ -437,9 +274,19 @@ export const validateBookingWindow = async (req, res) => {
       return res.status(400).json({ success: false, message: "Return date and time cannot be in the past." });
     }
 
-    const gown = await Gown.findById(gownId).select('laundryDays name');
+    const gown = await Gown.findById(gownId).select('laundryDays statusOverride name');
     if (!gown) {
       return res.status(404).json({ success: false, message: "Gown not found" });
+    }
+
+    // [LOGIC] Check for manual status override (highest priority)
+    if (gown.statusOverride && gown.statusOverride !== 'Available') {
+      return res.status(400).json({ 
+        success: false, 
+        available: false,
+        message: `This apparel is currently marked as '${gown.statusOverride}' by the boutique owner and is not available for new bookings at this time.`,
+        statusOverride: gown.statusOverride
+      });
     }
 
     const laundryDays = (String(bookingType || '').toLowerCase() === 'trial') ? 0 : Number(gown.laundryDays || 0);
@@ -546,7 +393,6 @@ export const validateBookingWindow = async (req, res) => {
           returnDate: conflict.returnDate,
           pickupTime: conflict.pickupTime,
           returnTime: conflict.returnTime,
-          customer: conflict.user?.name,
           laundryDays: laundryDays,
         } : null,
         conflictingDates: conflictingDates,
@@ -560,115 +406,81 @@ export const validateBookingWindow = async (req, res) => {
   }
 };
 
-// API to list user Bookings
+// [SECTION] BOOKING RETRIEVAL
+/**
+ * [INFO] Retrieves all active and past bookings for the logged-in customer.
+ * [LOGIC] Filters out expired trial holds to keep the personal "My Bookings" view clean.
+ */
 export const getUserBooking = async (req, res) => {
-  try {
-    const { _id } = req.user;
-    const now = new Date();
+    try {
+        const { _id } = req.user;
+        const now = new Date();
+        const allBookings = await Booking.find({ user: _id })
+            .populate('gown', 'name image')
+            .populate('owner', 'name')
+            .sort({ createdAt: -1 });
 
-    // Fetch all bookings for the user
-    const allBookings = await Booking.find({ user: _id })
-      .populate('gown')
-      .populate('owner', 'name')
-      .sort({ createdAt: -1 });
+        const Bookings = allBookings.filter(booking => {
+            if (booking.status !== 'trial') return true;
+            return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
+        });
 
-    // Filter out expired trial bookings from the list
-    const Bookings = allBookings.filter(booking => {
-      const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
-
-      // If it's not a trial, include it
-      if (!isTrial) return true;
-
-      // If it's a trial, only include if it hasn't expired
-      if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now) {
-        return false; // Expired trial, exclude it
-      }
-
-      return true; // Active trial, include it
-    });
-
-    res.json({ success: true, bookings: Bookings });
-
-  } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
-  }
+        res.json({ success: true, bookings: Bookings });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 }
 
-// API to get owner Bookings
+/**
+ * [INFO] Retrieves all bookings for a boutique owner's dashboard.
+ */
 export const getOwnerBooking = async (req, res) => {
-  try {
-    if (req.user.role !== 'owner') {
-      return res.json({ success: false, message: "Unauthorized" });
+    try {
+        if (req.user.role !== 'owner') return res.status(403).json({ success: false, message: "Unauthorized" });
+        const now = new Date();
+        const allBookings = await Booking.find({ owner: req.user._id })
+            .populate('gown', 'name image')
+            .populate('user', 'name email')
+            .sort({ createdAt: -1 });
+
+        // Filter out expired trial bookings
+        const Bookings = allBookings.filter(booking => {
+            if (booking.status !== 'trial') return true;
+            // If trialExpiresAt exists and is in the past, it's expired
+            return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
+        });
+
+        res.json({ success: true, bookings: Bookings });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
-
-    const allBookings = await Booking.find({ owner: req.user._id })
-      .populate('gown')
-      .populate('user', '-password')
-      .sort({ createdAt: -1 });
-
-    // Filter out expired trial bookings for cleaner real-time view
-    const now = new Date();
-    const Bookings = allBookings.filter(booking => {
-      const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
-      if (!isTrial) return true;
-      // If trial has expired, exclude it from the list
-      if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now) {
-        return false;
-      }
-      return true;
-    });
-
-    res.json({ success: true, bookings: Bookings });
-
-  } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
-  }
 }
 
-// API change Booking status
+// [SECTION] BOOKING STATUS MANAGEMENT
+/**
+ * [INFO] Allows owners to manually update booking states (Pending -> Confirmed -> Completed).
+ * [LOGIC] 
+ * 1. Records official pickup and return timestamps for boutique tracking.
+ * 2. Status changes automatically influence dynamic gown availability.
+ */
 export const changeBookingStatus = async (req, res) => {
-  try {
-    const { _id } = req.user;
-    const { bookingId, status } = req.body;
+    try {
+        const { _id } = req.user;
+        const { bookingId, status } = req.body;
 
-    if (!bookingId || !status) {
-      return res.status(400).json({ success: false, message: "Missing bookingId or status" });
+        const booking = await Booking.findById(bookingId);
+        if (booking.owner.toString() !== _id.toString()) return res.status(403).json({ success: false, message: "Unauthorized" });
+
+        if (status === 'confirmed' && !booking.pickupConfirmedAt) booking.pickupConfirmedAt = new Date();
+        if (status === 'completed' && !booking.returnConfirmedAt) booking.returnConfirmedAt = new Date();
+
+        booking.status = status;
+        await booking.save();
+
+        res.json({ success: true, message: "Status Updated" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
-
-    const booking = await Booking.findById(bookingId);
-    if (!booking) {
-      return res.status(404).json({ success: false, message: "Booking not found" });
-    }
-
-    if (booking.owner.toString() !== _id.toString()) {
-      return res.json({ success: false, message: "Unauthorized" });
-    }
-
-    const prevStatus = booking.status;
-
-    // Track owner confirmations for Manage Booking
-    if (status === 'confirmed' && !booking.pickupConfirmedAt) {
-      booking.pickupConfirmedAt = new Date();
-    }
-    if (status === 'completed' && !booking.returnConfirmedAt) {
-      booking.returnConfirmedAt = new Date();
-    }
-
-    booking.status = status;
-    await booking.save();
-
-    // NOTE: Gown status is now calculated dynamically by calculateActualGownStatus()
-    // based on current date and active bookings. No need to update DB.
-    // This keeps status always accurate without manual updates.
-
-    res.json({ success: true, message: "Status Updated" });
-
-  } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
-  }
 }
 
 // Unified endpoint for both users and owners to cancel or reschedule bookings.
@@ -677,10 +489,18 @@ export const changeBookingStatus = async (req, res) => {
 // - Owners can only update bookings where they are the owner.
 // - Only bookings in status 'pending' or 'trial' can be rescheduled.
 // - Cancel is allowed for pending/trial (and also for confirmed by owner, if needed).
+// [SECTION] BOOKING MODIFICATIONS
+/**
+ * [INFO] Handles Rescheduling, Extensions, and Cancellations.
+ * [LOGIC] 
+ * 1. Validates that only pending/trial bookings can be rescheduled.
+ * 2. Performs a fresh availability check before allowing a date change.
+ * 3. Owners can convert trials into full reservations here.
+ */
 export const updateBooking = async (req, res) => {
-  try {
-    const actor = req.user;
-    let { bookingId, action, pickupDate, returnDate, pickupTime, returnTime } = req.body;
+    try {
+        const actor = req.user;
+        let { bookingId, action, pickupDate, returnDate, pickupTime, returnTime } = req.body;
 
     if (!bookingId || !action) {
       return res.status(400).json({ success: false, message: 'bookingId and action are required.' });
@@ -1044,13 +864,38 @@ export const getGownCalendar = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing gownId" });
     }
 
-    const gown = await Gown.findById(gownId).select('laundryDays');
+    const gown = await Gown.findById(gownId).select('laundryDays statusOverride name');
     if (!gown) {
       return res.status(404).json({ success: false, message: "Gown not found" });
     }
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const horizon = new Date(today.getTime() + 180 * DAY_IN_MS);
+
+    const unavailableDates = new Set();
+    const trialTimeSlots = {}; 
+    const laundryHoldDates = new Set();
+
+    // [LOGIC] Check for manual status override (highest priority)
+    // If the owner has manually set a blocking status, we show the entire calendar as unavailable.
+    if (gown.statusOverride && gown.statusOverride !== 'Available') {
+      for (let d = new Date(today); d <= horizon; d.setDate(d.getDate() + 1)) {
+        unavailableDates.add(toLocalDateString(d));
+      }
+
+      return res.json({
+        success: true,
+        calendar: {
+          laundryDays: gown.laundryDays || 0,
+          unavailableDates: Array.from(unavailableDates).sort(),
+          trialTimeSlots: {},
+          laundryHoldDates: [],
+          statusOverride: gown.statusOverride,
+          message: `This apparel is manually set to '${gown.statusOverride}' and is not available for bookings.`
+        },
+      });
+    }
 
     // Include bookings whose return date is still relevant:
     // - Future bookings (returnDate >= today)
@@ -1068,11 +913,6 @@ export const getGownCalendar = async (req, res) => {
         { status: 'trial', trialExpiresAt: { $exists: false } },
       ]
     }).sort({ pickupDate: 1 });
-
-    const unavailableDates = new Set();
-    const trialTimeSlots = {}; // Maps dates to booked time slots
-    const laundryHoldDates = new Set();
-    const horizon = new Date(today.getTime() + 180 * DAY_IN_MS);
 
     const captureDate = (dateObj, targetSet) => {
       if (dateObj < today || dateObj > horizon) return;
@@ -1254,13 +1094,10 @@ export const cleanupExpiredTrials = async (req, res) => {
   }
 };
 
-// Calculate actual gown status based on booking events and current time.
-// Status rules:
-// - pending booking with verified/paid payment: "Reserved" (payment confirmed, awaiting pickup)
-// - confirmed booking (owner confirmed pickup): "In-Use" (customer has the gown)
-// - confirmed booking past return time: "In-Use" (overdue — not returned yet)
-// - completed booking within laundry window: "In-Laundry"
-// - Otherwise: "Available"
+// [SECTION] PAYMENT & STATUS ENGINE
+/**
+ * [INFO] Verification logic for booking payments and status updates.
+ */
 export const calculateActualGownStatus = async (gownId) => {
   try {
     const now = new Date();
@@ -1355,3 +1192,120 @@ export const calculateActualGownStatus = async (gownId) => {
     return 'Available';
   }
 };
+
+/**
+ * Batch update statuses for an array of gown objects.
+ * This resolves N+1 query issues by fetching all relevant bookings in one go.
+ * @param {Array} gowns - Array of Mongoose gown documents or objects.
+ * @returns {Promise<Array>} - The same array with 'status' property set on each item.
+ */
+export const batchUpdateGownStatuses = async (gowns) => {
+  if (!gowns || gowns.length === 0) return gowns;
+
+  try {
+    const now = new Date();
+    const currentTime = now.getTime();
+    
+    // 1. Collect all gown IDs
+    const gownIds = gowns.map(g => g._id);
+
+    // 2. Fetch all potentially relevant bookings for these gowns in ONE query.
+    // We look for active bookings (pending, confirmed, completed, trial) 
+    // within a reasonable window (14 days before/after today).
+    const maxLaundryMs = 14 * 24 * 60 * 60 * 1000;
+    const relevantBookings = await Booking.find({
+      gown: { $in: gownIds },
+      status: { $in: ['pending', 'confirmed', 'completed', 'trial'] },
+      pickupDate: { $lte: new Date(currentTime + maxLaundryMs + DAY_IN_MS) },
+      returnDate: { $gte: new Date(currentTime - maxLaundryMs - DAY_IN_MS) }
+    }).sort({ pickupDate: 1 });
+
+    // 3. Group bookings by gownId for fast lookup
+    const bookingsMap = {};
+    relevantBookings.forEach(b => {
+      const gid = b.gown.toString();
+      if (!bookingsMap[gid]) bookingsMap[gid] = [];
+      bookingsMap[gid].push(b);
+    });
+
+    // 4. Calculate status for each gown using the pre-fetched bookings
+    gowns.forEach(gown => {
+      // Handle both Mongoose documents and plain objects
+      const g = typeof gown.toObject === 'function' ? gown : gown;
+      const gid = g._id.toString();
+      
+      // Manual override check (highest priority)
+      if (g.statusOverride) {
+        gown.status = g.statusOverride;
+        return;
+      }
+
+      const gBookings = bookingsMap[gid] || [];
+      const laundryDays = g.laundryDays || 0;
+      let finalStatus = 'Available';
+
+      for (const booking of gBookings) {
+        const pickupDateTime = combineDateAndTime(booking.pickupDate, booking.pickupTime || '09:00');
+        const returnDateTime = combineDateAndTime(
+          booking.returnDate,
+          booking.returnTime || booking.pickupTime || '09:00'
+        );
+
+        if (!pickupDateTime || !returnDateTime) continue;
+
+        const pickupTimeMs = pickupDateTime.getTime();
+        const returnTimeMs = returnDateTime.getTime();
+
+        // ── TRIAL booking ──
+        if (booking.status === 'trial') {
+          if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) > now) {
+            const expiresMs = new Date(booking.trialExpiresAt).getTime();
+            if (currentTime >= pickupTimeMs && currentTime <= expiresMs) {
+              finalStatus = 'Reserved';
+              break; 
+            }
+          }
+          continue;
+        }
+
+        // ── CONFIRMED booking ──
+        if (booking.status === 'confirmed') {
+          if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
+            finalStatus = 'In-Use';
+            break;
+          }
+          if (pickupDateTime.toDateString() === now.toDateString()) {
+            finalStatus = 'Reserved';
+          }
+        } 
+        
+        // ── PENDING booking ──
+        else if (booking.status === 'pending') {
+          if (pickupDateTime.toDateString() === now.toDateString() || (currentTime >= pickupTimeMs && currentTime <= returnTimeMs)) {
+            finalStatus = 'Reserved';
+          }
+        } 
+        
+        // ── LAUNDRY check (for confirmed/completed) — separate if, not else-if ──
+        if ((booking.status === 'confirmed' || booking.status === 'completed') && laundryDays > 0) {
+          const laundryEndDate = new Date(returnDateTime);
+          laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
+          laundryEndDate.setHours(23, 59, 59, 999);
+
+          if (now > returnDateTime && now <= laundryEndDate) {
+            finalStatus = 'In-Laundry';
+          }
+        }
+      }
+
+      gown.status = finalStatus;
+    });
+
+    return gowns;
+  } catch (error) {
+    console.error('Error in batchUpdateGownStatuses:', error);
+    // Fallback to existing statuses or 'Available'
+    return gowns;
+  }
+};
+

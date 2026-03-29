@@ -37,7 +37,6 @@ const UserProfile = () => {
   }
 
   const role = user ? (typeof user.role === 'object' ? user.role.name : user.role) : null
-  const roleLabel = role // Display actual role
 
   const validatePhoneNumber = (phone) => {
     return /^\d{11}$/.test(phone)
@@ -299,10 +298,10 @@ const UserProfile = () => {
 
               <div className='flex-1 text-center sm:text-left'>
                 <p className='text-gray-600'>{user.email}</p>
-                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold capitalize ${roleLabel === 'owner' ? 'bg-blue-100 text-blue-800' :
+                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold capitalize ${role === 'owner' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                  {roleLabel || 'user'}
+                  {role || 'user'}
                 </span>
               </div>
 

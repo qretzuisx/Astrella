@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { API_URL } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
 
+// [SECTION] SHOP PROFILE STATE & INITIALIZATION
 const ShopProfile = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -42,10 +43,18 @@ const ShopProfile = () => {
     })
   }
 
+  // [FLOW] Fetch profile data on component mount
   useEffect(() => {
     fetchShopProfile()
   }, [])
 
+  /** 
+   * [INFO] Retrieves shop profile data from the backend.
+   * [LOGIC] 
+   * 1. Fetches data using the authenticated user's token.
+   * 2. Supports both flat (legacy) and nested (modern) data structures.
+   * 3. Parses operating hours string ("HH:MM-HH:MM") into separate time fields.
+   */
   const fetchShopProfile = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -63,12 +72,8 @@ const ShopProfile = () => {
       const data = await response.json()
 
       if (data.success && data.user) {
-        // SQL Backend: data is flat (shopName, shopDescription, etc.)
-        // MongoDB Backend: data is nested in shopProfile object
-        // Support both structures for compatibility
-
         const user = data.user
-        const isFlat = user.shopName !== undefined // SQL backend structure
+        const isFlat = user.shopName !== undefined // Support for multiple backend versions
 
         setShopProfile({
           shopName: isFlat ? (user.shopName || '') : (user.shopProfile?.shopName || ''),
@@ -80,28 +85,21 @@ const ShopProfile = () => {
           facebook: isFlat ? (user.facebookUrl || '') : (user.shopProfile?.socialMedia?.facebook || '')
         })
 
-        // Set existing documents (check both structures)
-        const businessPermit = isFlat ? user.businessPermit : user.shopProfile?.businessPermit
-        const dtiRegistration = isFlat ? user.dtiRegistration : user.shopProfile?.dtiRegistration
+        // [LOGIC] Handle document previews
+        const bPermit = isFlat ? user.businessPermit : user.shopProfile?.businessPermit
+        const dRegistration = isFlat ? user.dtiRegistration : user.shopProfile?.dtiRegistration
 
-        if (businessPermit) {
-          setPermitPreview(businessPermit)
-        }
-        if (dtiRegistration) {
-          setDtiPreview(dtiRegistration)
-        }
+        if (bPermit) setPermitPreview(bPermit)
+        if (dRegistration) setDtiPreview(dRegistration)
 
-        // Parse operating hours "HH:MM-HH:MM" into open/close for time inputs
-        // Try to get openingTime/closingTime from separate fields first (MongoDB)
+        // [LOGIC] Parse operating hours for UI inputs
         const shopProfileData = isFlat ? {} : (user.shopProfile || {})
         if (shopProfileData.openingTime) {
           setOperatingHoursOpen(shopProfileData.openingTime)
         } else {
           const oh = isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || '')
           const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
-          if (match) {
-            setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
-          }
+          if (match) setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
         }
 
         if (shopProfileData.closingTime) {
@@ -109,16 +107,11 @@ const ShopProfile = () => {
         } else {
           const oh = isFlat ? (user.operatingHours || '') : (user.shopProfile?.operatingHours || '')
           const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
-          if (match) {
-            setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
-          }
+          if (match) setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
         }
 
-        // Load available days
         const available = isFlat ? (user.availableDays || []) : (user.shopProfile?.availableDays || [])
-        if (available.length > 0) {
-          setAvailableDays(available)
-        }
+        if (available.length > 0) setAvailableDays(available)
       }
     } catch (error) {
       console.error('Error fetching shop profile:', error)
@@ -128,37 +121,35 @@ const ShopProfile = () => {
     }
   }
 
+  // [SECTION] INPUT HANDLERS & VALIDATION
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setShopProfile(prev => ({ ...prev, [name]: value }))
     setError('')
     
-    // Clear field error when user corrects it
     if (name === 'contactNumber') {
-      if (value === '') {
-        setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
-      } else if (/^\d{11}$/.test(value)) {
+      if (value === '' || /^\d{11}$/.test(value)) {
         setFieldErrors(prev => ({ ...prev, contactNumber: '' }))
       }
     }
   }
 
-  const validatePhoneNumber = (phone) => {
-    return /^\d{11}$/.test(phone)
-  }
+  const validatePhoneNumber = (phone) => /^\d{11}$/.test(phone)
 
+  /** 
+   * [INFO] Handles local file selection and generates previews.
+   * [LOGIC] Restricts file types to PNG, JPEG, and PDF; max size 10MB.
+   */
   const handleFileChange = (e, type) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
     if (!validTypes.includes(file.type)) {
       setError('Please upload a PNG, JPG, or PDF file')
       return
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       setError('File size must be less than 10MB')
       return
@@ -166,7 +157,6 @@ const ShopProfile = () => {
 
     if (type === 'permit') {
       setBusinessPermit(file)
-      // Create preview for images only
       if (file.type.startsWith('image/')) {
         const reader = new FileReader()
         reader.onloadend = () => setPermitPreview(reader.result)
@@ -187,6 +177,14 @@ const ShopProfile = () => {
     setError('')
   }
 
+  /** 
+   * [INFO] Submits the shop profile update.
+   * [FLOW] 
+   * 1. Validates inputs (contact number).
+   * 2. Packages data into FormData for multipart/form-data upload.
+   * 3. Sends PUT request to /user/shop-profile.
+   * 4. Updates local state and triggers a refresh on success.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
@@ -194,18 +192,14 @@ const ShopProfile = () => {
     setSuccess('')
     setFieldErrors({})
 
-    // Validate phone number before submission
     if (shopProfile.contactNumber && !validatePhoneNumber(shopProfile.contactNumber)) {
       setFieldErrors({ contactNumber: 'Phone number must be exactly 11 digits' })
       setSaving(false)
       return
     }
 
-
-
     try {
       const token = localStorage.getItem('token')
-      // Create FormData for file uploads
       const formData = new FormData()
       formData.append('shopName', shopProfile.shopName)
       formData.append('description', shopProfile.description)
@@ -218,19 +212,12 @@ const ShopProfile = () => {
       formData.append('availableDays', JSON.stringify(availableDays))
       formData.append('facebook', shopProfile.facebook)
 
-      // Append files if selected
-      if (businessPermit) {
-        formData.append('businessPermit', businessPermit)
-      }
-      if (dtiRegistration) {
-        formData.append('dtiRegistration', dtiRegistration)
-      }
+      if (businessPermit) formData.append('businessPermit', businessPermit)
+      if (dtiRegistration) formData.append('dtiRegistration', dtiRegistration)
 
       const response = await fetch(`${API_URL}/user/shop-profile`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       })
 
@@ -238,19 +225,9 @@ const ShopProfile = () => {
 
       if (data.success) {
         setSuccess('Shop profile updated successfully!')
-        setFieldErrors({})
         setTimeout(() => setSuccess(''), 3000)
-        // Update operating hours from response so they don't revert before refetch
-        const oh = data.shopProfile?.operatingHours || ''
-        const match = String(oh).trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
-        if (match) {
-          setOperatingHoursOpen(`${match[1].padStart(2, '0')}:${match[2]}`)
-          setOperatingHoursClose(`${match[3].padStart(2, '0')}:${match[4]}`)
-        }
-        // Refresh to show uploaded documents
         fetchShopProfile()
       } else {
-        // Parse error message to extract field-specific errors
         if (data.message && data.message.includes('contactNumber')) {
           setFieldErrors({ contactNumber: 'Phone number must be exactly 11 digits' })
           setError('Please fix the phone number error below')
@@ -452,6 +429,8 @@ const ShopProfile = () => {
                   />
                 </div>
               </div>
+
+
             </div>
 
             {/* Documents */}

@@ -1,6 +1,7 @@
 import User from "../models/User.js"
 import Gown from "../models/Gown.js"
-import { calculateActualGownStatus } from "./bookingController.js"
+import { calculateRecommendationScore } from "../utils/recommendationUtils.js"
+import { calculateActualGownStatus, batchUpdateGownStatuses } from "./bookingController.js"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
@@ -8,12 +9,21 @@ import sendEmail from '../utils/email.js'
 import Booking from "../models/booking.js"
 
 
-// jwt token
+// [SECTION] AUTHENTICATION UTILITIES
+/**
+ * [INFO] Generates a JSON Web Token for authenticated sessions.
+ * [FLOW] Used during login and registration to provide access to protected routes.
+ */
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
-// register user
+// [SECTION] USER REGISTRATION
+/**
+ * [INFO] Handles new user sign-ups. Supports both regular customers and boutique owners.
+ * [LOGIC] 
+ * 1. Validates input fields and contact number format.
+ */
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password, contactNumber, role, shopProfile } = req.body
@@ -21,50 +31,46 @@ export const registerUser = async (req, res) => {
         const cleanContactNumber = (contactNumber || "").toString().replace(/\D/g, "");
         const normalizedRole = (role || 'user').toString().toLowerCase();
 
+        // [VALIDATION] Basic input checks
         if (!name || !email || !password || password.length < 8) {
-            return res.json({ success: false, message: 'Fill all the Fields !' })
+            return res.status(400).json({ success: false, message: 'Fill all the Fields !' })
         }
 
         if (!cleanContactNumber || cleanContactNumber.length !== 11) {
-            return res.json({ success: false, message: 'Contact number must be exactly 11 digits.' });
+            return res.status(400).json({ success: false, message: 'Contact number must be exactly 11 digits.' });
         }
 
-        if (normalizedRole !== 'user' && normalizedRole !== 'owner') {
-            return res.json({ success: false, message: 'Role must be user or owner.' });
-        }
-
+        // [VALIDATION] Owner-specific requirements
         if (normalizedRole === 'owner') {
             const shopName = (shopProfile?.shopName || '').toString().trim();
             const address = (shopProfile?.address || '').toString().trim();
             const city = (shopProfile?.city || '').toString().trim();
             const operatingHours = (shopProfile?.operatingHours || '').toString().trim();
-            if (!shopName) return res.status(400).json({ success: false, message: 'Shop name is required for owner sign-up.' });
-            if (!address) return res.status(400).json({ success: false, message: 'Shop address is required for owner sign-up.' });
-            if (!city) return res.status(400).json({ success: false, message: 'Shop city is required for owner sign-up.' });
-            if (!operatingHours) return res.status(400).json({ success: false, message: 'Operating hours are required for owner sign-up.' });
+            if (!shopName || !address || !city || !operatingHours) {
+                return res.status(400).json({ success: false, message: 'Shop details are required for owner sign-up.' });
+            }
         }
 
         const userExists = await User.findOne({ email })
         if (userExists) {
-            return res.json({ success: false, message: 'User already exists' })
+            return res.status(400).json({ success: false, message: 'User already exists' })
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        // If signing up as owner, allow capturing initial shop profile fields.
+        // [INFO] Initialize shop profile only if the user is an owner
         const initialShopProfile = normalizedRole === 'owner' ? {
-            shopName: shopProfile?.shopName || '',
-            description: shopProfile?.description || '',
-            address: shopProfile?.address || '',
-            city: shopProfile?.city || '',
+            shopName: (shopProfile?.shopName || '').toString().trim(),
+            description: (shopProfile?.description || '').toString().trim(),
+            address: (shopProfile?.address || '').toString().trim(),
+            city: (shopProfile?.city || '').toString().trim(),
             contactNumber: cleanContactNumber,
-            operatingHours: shopProfile?.operatingHours || '',
+            operatingHours: (shopProfile?.operatingHours || '').toString().trim(),
             businessPermit: '',
             dtiRegistration: '',
             verified: false,
             socialMedia: {
-                facebook: shopProfile?.socialMedia?.facebook || shopProfile?.facebook || '',
-                instagram: shopProfile?.socialMedia?.instagram || shopProfile?.instagram || ''
+                facebook: shopProfile?.socialMedia?.facebook || shopProfile?.facebook || ''
             }
         } : undefined;
 
@@ -76,251 +82,112 @@ export const registerUser = async (req, res) => {
             role: normalizedRole,
             ...(initialShopProfile ? { shopProfile: initialShopProfile } : {})
         })
+        
         const token = generateToken(user._id.toString())
         res.json({ success: true, token })
 
 
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// login user
+// [SECTION] USER LOGIN & AUTHENTICATION
+/**
+ * [INFO] Authenticates users based on email and password.
+ * [FLOW] Returns a JWT token that must be included in subsequent request headers.
+ */
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body
         const user = await User.findOne({ email })
         if (!user) {
-            return res.json({ success: false, message: "User not found" })
+            return res.status(404).json({ success: false, message: "User not found" })
         }
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
-            return res.json({ success: false, message: "Invalid Credentials" })
+            return res.status(401).json({ success: false, message: "Invalid Credentials" })
         }
         const token = generateToken(user._id.toString())
         res.json({ success: true, token })
 
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// user data using jwt
+/**
+ * [INFO] Retrieves the profile of the currently authenticated user.
+ * [FLOW] Data is populated by the 'protect' middleware before reaching this controller.
+ */
 export const getUserData = async (req, res) => {
     try {
         const { user } = req;
         res.json({ success: true, user })
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-// Request to become owner (instant approval - no admin needed)
+// [SECTION] ROLE UPGRADES
+/**
+ * [INFO] Allows a regular user to become a Shop Owner.
+ * [FLOW] Upgrades the 'role' and initializes a required shop profile.
+ */
 export const requestOwnerRole = async (req, res) => {
     try {
         const { _id } = req.user;
 
-        // Check if user is already an owner
         const user = await User.findById(_id);
         if (user.role === 'owner') {
-            return res.json({ success: false, message: "You already have owner privileges" });
+            return res.status(400).json({ success: false, message: "You already have owner privileges" });
         }
 
-        // Grant owner role immediately
-        await User.findByIdAndUpdate(_id, { role: 'owner' });
+        const { shopName, address, city, operatingHours } = req.body;
+        if (!shopName || !shopName.trim()) {
+            return res.status(400).json({ success: false, message: "Shop name is required to become an owner." });
+        }
+
+        await User.findByIdAndUpdate(_id, {
+            role: 'owner',
+            shopProfile: {
+                shopName: shopName.trim(),
+                address: address.trim(),
+                city: city.trim(),
+                operatingHours: operatingHours || '',
+                contactNumber: user.contactNumber || '',
+                verified: false,
+                socialMedia: { facebook: '' }
+            }
+        });
 
         res.json({ success: true, message: "Owner access granted! You can now access the owner dashboard." });
 
     } catch (error) {
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// AI Recommendation algorithm
-const calculateRecommendationScore = (gown, preferences) => {
-    let score = 0;
-    const maxScore = 100;
+// AI Recommendation logic moved to backend/utils/recommendationUtils.js
 
-    // Event Type Match (30 points) - STRICT MATCHING ONLY
-    if (preferences.eventType) {
-        const userEventType = preferences.eventType.toLowerCase().trim();
-
-        // Handle both array and string eventType
-        if (Array.isArray(gown.eventType)) {
-            const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
-            // Only give points if exact match found in the array
-            if (gownEventTypes.includes(userEventType)) {
-                score += 30;
-            }
-            // If no exact match, score remains 0 for event type
-        } else {
-            // Backward compatibility for old string format
-            const gownEventType = gown.eventType?.toLowerCase().trim();
-            // Only give points if exact match
-            if (gownEventType === userEventType) {
-                score += 30;
-            }
-            // If no exact match, score remains 0 for event type
-        }
-    }
-
-    // Body Type Recommendations (25 points)
-    const bodyTypeRecommendations = {
-        'Hourglass': {
-            colors: ['Navy', 'Black', 'Burgundy', 'Emerald', 'Deep Red', 'Royal Blue'],
-            fabrics: ['Satin', 'Silk', 'Chiffon', 'Wool', 'Cotton', 'Linen'],
-            styles: ['A-line', 'Mermaid', 'Fit and Flare', 'Slim Fit', 'Tailored', 'Bodycon']
-        },
-        'Pear': {
-            colors: ['Dark', 'Navy', 'Black', 'Deep', 'Grey', 'Charcoal'],
-            fabrics: ['Chiffon', 'Tulle', 'Organza', 'Wool', 'Structured'],
-            styles: ['A-line', 'Ball Gown', 'Empire', 'Structured Shoulders', 'Padded Blazers']
-        },
-        'Rectangle': {
-            colors: ['All', 'Vibrant', 'Earth Tones'],
-            fabrics: ['Chiffon', 'Tulle', 'Organza', 'Satin', 'Denim', 'Velvet', 'Leather'],
-            styles: ['A-line', 'Ball Gown', 'Mermaid', 'Layered', 'Structured', 'Pocket Details']
-        },
-        'Diamond': {
-            colors: ['Dark', 'Navy', 'Black', 'Charcoal', 'Slate'],
-            fabrics: ['Chiffon', 'Tulle', 'Wool', 'Silk'],
-            styles: ['A-line', 'Empire', 'Regular Fit', 'V-neck']
-        },
-        'Inverted Triangle': {
-            colors: ['Dark', 'Navy', 'Grey', 'Black', 'White', 'Ivory', 'Cream', 'Beige', 'Blue'],
-            fabrics: ['Wool', 'Cotton', 'Linen', 'Satin', 'Piña', 'Jusi', 'Silk', 'Organza'],
-            styles: ['V-neck', 'Tailored', 'Slim Fit', 'Barong', 'Shift', 'Empire']
-        },
-        'Trapezoid': {
-            colors: ['All', 'Navy', 'Grey', 'Charcoal', 'Blue', 'Burgundy', 'Emerald'],
-            fabrics: ['Wool', 'Cotton', 'Linen', 'Silk', 'Piña', 'Jusi', 'Satin'],
-            styles: ['Tailored', 'Regular Fit', 'Blazer', 'Barong', 'Wrap', 'Shift']
-        },
-        'Oval': {
-            colors: ['Dark', 'Navy', 'Black', 'Charcoal', 'Deep Blue', 'Burgundy'],
-            fabrics: ['Wool', 'Cotton', 'Linen', 'Structured', 'Silk'],
-            styles: ['Structured', 'Vertical Straights', 'Regular Fit', 'Empire', 'V-neck']
-        }
-    };
-
-    if (preferences.bodyType && bodyTypeRecommendations[preferences.bodyType]) {
-        const rec = bodyTypeRecommendations[preferences.bodyType];
-        const gownColor = gown.color?.toLowerCase();
-        const gownFabric = gown.fabric?.toLowerCase();
-
-        if (rec.colors.some(c => gownColor?.includes(c.toLowerCase()))) {
-            score += 10;
-        }
-        if (rec.fabrics.some(f => gownFabric?.includes(f.toLowerCase()))) {
-            score += 10;
-        }
-        score += 5; // Base score for body type consideration
-    }
-
-    // Skin Tone Color Recommendations (20 points)
-    const skinToneColors = {
-        'Warm': ['Gold', 'Peach', 'Coral', 'Ivory', 'Warm White', 'Blush', 'Cream', 'Earth', 'Olive', 'Khaki', 'Camel', 'Mustard'],
-        'Cool': ['Silver', 'Blue', 'Pink', 'Cool White', 'Lavender', 'Mint', 'Grey', 'Navy', 'Charcoal', 'Slate', 'Burgundy', 'Royal Blue'],
-        'Neutral': ['All colors work well']
-    };
-
-    if (preferences.skinTone && skinToneColors[preferences.skinTone]) {
-        const recommendedColors = skinToneColors[preferences.skinTone];
-        const gownColor = gown.color?.toLowerCase();
-
-        if (recommendedColors.some(c => gownColor?.includes(c.toLowerCase()))) {
-            score += 20;
-        } else if (recommendedColors[0] === 'All colors work well') {
-            score += 15; // Neutral skin tone gets moderate score
-        }
-    }
-
-    // Height Recommendations (15 points)
-    if (preferences.height) {
-        const gownFabric = gown.fabric?.toLowerCase();
-        if (preferences.height === 'Small') {
-            // Avoid heavy fabrics, prefer lighter ones
-            if (['chiffon', 'tulle', 'organza'].some(f => gownFabric?.includes(f))) {
-                score += 15;
-            } else {
-                score += 5;
-            }
-        } else if (preferences.height === 'Tall') {
-            // Can handle heavier fabrics
-            if (['satin', 'silk', 'velvet'].some(f => gownFabric?.includes(f))) {
-                score += 15;
-            } else {
-                score += 10;
-            }
-        } else {
-            // Medium height - flexible
-            score += 12;
-        }
-    }
-
-    // Face Shape Recommendations (10 points)
-    const faceShapeRecommendations = {
-        'Oval': { necklines: ['All'], accessories: 'Versatile' },
-        'Square': { necklines: ['V-neck', 'Sweetheart', 'Round'], accessories: 'Soft' },
-        'Round': { necklines: ['V-neck', 'Square', 'Off-shoulder'], accessories: 'Angular' },
-        'Heart': { necklines: ['V-neck', 'Sweetheart'], accessories: 'Balanced' },
-        'Diamond': { necklines: ['V-neck', 'Round', 'Sweetheart'], accessories: 'Soft' }
-    };
-
-    if (preferences.faceShape && faceShapeRecommendations[preferences.faceShape]) {
-        score += 10; // Base score for face shape consideration
-    }
-
-    // Sex Matching (Bonus for explicit match - 10 points)
-    if (preferences.sex && gown.sex) {
-        const userSex = preferences.sex.toLowerCase();
-        const gownSex = gown.sex.toLowerCase();
-        if (userSex === gownSex) {
-            score += 10;
-        } else if (gownSex === 'unisex') {
-            score += 5;
-        }
-    }
-
-    // Male-specific fabric/style preferences (Bonus - 10 points)
-    if (preferences.sex === 'Male') {
-        const gownFabric = gown.fabric?.toLowerCase();
-        const gownName = gown.name?.toLowerCase();
-        const malePreferredFabrics = ['wool', 'linen', 'cotton', 'leather', 'denim', 'velvet', 'piña', 'jusi'];
-        const maleFormalStyles = ['suit', 'tuxedo', 'blazer', 'barong', 'vest'];
-
-        if (malePreferredFabrics.some(f => gownFabric?.includes(f))) {
-            score += 5;
-        }
-        if (maleFormalStyles.some(s => gownName?.includes(s))) {
-            score += 5;
-            // Additional bonus for Traditional events matching Barong
-            if (preferences.eventType?.toLowerCase() === 'traditional' && gownName.includes('barong')) {
-                score += 10;
-            }
-        }
-    }
-
-    return Math.min(score, maxScore);
-};
-
-// Update user profile
+// [SECTION] PROFILE MANAGEMENT
+/**
+ * [INFO] Updates basic customer details (Name, Bio, Contact).
+ */
 export const updateProfile = async (req, res) => {
     try {
         const { _id } = req.user;
         const { name, contactNumber, address, bio } = req.body;
 
-        // Validate required fields
         if (!name || name.trim().length === 0) {
-            return res.json({ success: false, message: 'Name is required' });
+            return res.status(400).json({ success: false, message: 'Name is required' });
         }
 
         const cleanContactNumber = (contactNumber || "").toString().replace(/\D/g, "");
         if (cleanContactNumber && cleanContactNumber.length !== 11) {
-            return res.json({ success: false, message: 'Contact number must be exactly 11 digits' });
+            return res.status(400).json({ success: false, message: 'Contact number must be exactly 11 digits' });
         }
 
-        // Update user
         const updatedUser = await User.findByIdAndUpdate(
             _id,
             {
@@ -340,41 +207,29 @@ export const updateProfile = async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// Change password
+/**
+ * [INFO] Secured password update for active sessions.
+ */
 export const changePassword = async (req, res) => {
     try {
         const { _id } = req.user;
         const { currentPassword, newPassword } = req.body;
 
-        // Validate inputs
         if (!currentPassword || !newPassword) {
-            return res.json({ success: false, message: 'All fields are required' });
+            return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
-        if (newPassword.length < 8) {
-            return res.json({ success: false, message: 'New password must be at least 8 characters long' });
-        }
-
-        // Get user with password
         const user = await User.findById(_id);
-        if (!user) {
-            return res.json({ success: false, message: 'User not found' });
-        }
-
-        // Verify current password
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-            return res.json({ success: false, message: 'Current password is incorrect' });
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
         }
 
-        // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // Update password
         user.password = hashedPassword;
         await user.save();
 
@@ -382,10 +237,18 @@ export const changePassword = async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
+// [SECTION] PASSWORD RESET FLOW
+/**
+ * [INFO] Initiates the password reset process by sending a 5-digit code to the user's email.
+ * [LOGIC] 
+ * 1. Generates a random 5-digit numeric code.
+ * 2. Hashes the code for secure database storage.
+ * 3. Sends the raw code via email (valid for 10 minutes).
+ */
 export const requestPasswordReset = async (req, res) => {
     try {
         const { email } = req.body;
@@ -398,43 +261,48 @@ export const requestPasswordReset = async (req, res) => {
             return res.status(404).json({ success: false, message: 'No account found with that email' });
         }
 
-        const rawToken = Math.floor(10000 + Math.random() * 90000).toString(); // Secure 5-digit numeric code
+        const rawToken = Math.floor(10000 + Math.random() * 90000).toString();
         const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
         user.resetPasswordToken = hashedToken;
-        user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
         await user.save();
+
+        await sendEmail({
+            email: user.email,
+            subject: 'Astrella — Password Reset Code',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 32px; border: 1px solid #eee; border-radius: 16px;">
+                    <h2 style="color: #013E8D;">Password Reset Request</h2>
+                    <p>Hello <strong>${user.name}</strong>,</p>
+                    <p>You requested a password reset for your Astrella account. Use the code below within <strong>10 minutes</strong>:</p>
+                    <div style="font-size: 36px; font-weight: 900; letter-spacing: 0.3em; color: #FF3B30; text-align: center; padding: 24px; background: #FFF5F5; border-radius: 12px; margin: 24px 0;">
+                        ${rawToken}
+                    </div>
+                </div>
+            `
+        });
 
         res.json({
             success: true,
-            message: 'Password reset code generated. Use it within 60 minutes.',
-            resetToken: rawToken
+            message: 'A 5-digit reset code has been sent to your email.'
         });
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        console.error('[Reset Password] ERROR:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+/**
+ * [INFO] Validates the reset code and updates the user's password.
+ */
 export const resetPassword = async (req, res) => {
     try {
         const { email, resetToken, newPassword } = req.body;
 
-        if (!email || !resetToken || !newPassword) {
-            return res.status(400).json({ success: false, message: 'Email, reset token, and new password are required' });
-        }
-
-        if (newPassword.length < 8) {
-            return res.status(400).json({ success: false, message: 'New password must be at least 8 characters long' });
-        }
-
         const user = await User.findOne({ email });
-        if (!user || !user.resetPasswordToken || !user.resetPasswordExpires) {
-            return res.status(400).json({ success: false, message: 'Reset request not found or already used' });
-        }
-
-        if (user.resetPasswordExpires.getTime() < Date.now()) {
-            return res.status(400).json({ success: false, message: 'Reset token has expired. Start over.' });
+        if (!user || !user.resetPasswordToken || user.resetPasswordExpires.getTime() < Date.now()) {
+            return res.status(400).json({ success: false, message: 'Reset request expired or not found' });
         }
 
         const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
@@ -442,8 +310,7 @@ export const resetPassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid reset token' });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
+        user.password = await bcrypt.hash(newPassword, 10);
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
@@ -451,405 +318,225 @@ export const resetPassword = async (req, res) => {
         res.json({ success: true, message: 'Password reset successful. You can now log in.' });
 
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Get user statistics
+// [SECTION] ACCOUNT METRICS & MAINTENANCE
+/**
+ * [INFO] Aggregates total, completed, and pending bookings for a user's dashboard.
+ */
 export const getUserStatistics = async (req, res) => {
     try {
         const { _id } = req.user;
-
-        // Get all user bookings
         const allBookings = await Booking.find({ user: _id });
-        const completedBookings = allBookings.filter(b => b.status === 'confirmed');
-        const pendingBookings = allBookings.filter(b => b.status === 'pending');
-
-        // Get user join date
         const user = await User.findById(_id);
 
-        const statistics = {
-            totalBookings: allBookings.length,
-            completedBookings: completedBookings.length,
-            pendingBookings: pendingBookings.length,
-            memberSince: user.createdAt
-        };
-
-        res.json({ success: true, statistics });
-
+        res.json({
+            success: true,
+            statistics: {
+                totalBookings: allBookings.length,
+                completedBookings: allBookings.filter(b => b.status === 'completed').length,
+                pendingBookings: allBookings.filter(b => b.status === 'pending').length,
+                memberSince: user.createdAt
+            }
+        });
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// Delete user account
+/**
+ * [INFO] Completely removes a user account and associated gown listings.
+ * [LOGIC] 
+ * 1. Blocks deletion if there are active reservations or valid trial holds.
+ * 2. Deletes all gowns owned by the user.
+ * 3. Removes the user from the database.
+ */
 export const deleteAccount = async (req, res) => {
     try {
         const { _id } = req.user;
-        const user = await User.findById(_id);
-
-        if (!user) {
-            return res.json({ success: false, message: 'User not found' });
-        }
-
-
-        // Check if user has any active bookings (as a customer)
         const activeBookings = await Booking.find({
             user: _id,
             status: { $in: ['pending', 'confirmed', 'trial'] }
         });
 
         const now = new Date();
-        const hasValidTrial = activeBookings.some(b =>
-            b.status === 'trial' && (!b.trialExpiresAt || new Date(b.trialExpiresAt) > now)
-        );
-        const hasActiveReservation = activeBookings.some(b =>
-            ['pending', 'confirmed'].includes(b.status)
+        const hasActiveWork = activeBookings.some(b => 
+            ['pending', 'confirmed'].includes(b.status) || 
+            (b.status === 'trial' && (!b.trialExpiresAt || new Date(b.trialExpiresAt) > now))
         );
 
-        if (hasActiveReservation || hasValidTrial) {
-            return res.json({
+        if (hasActiveWork) {
+            return res.status(400).json({
                 success: false,
-                message: 'Please cancel or complete all active reservations and trial holds before deleting your account'
+                message: 'Complete all active bookings and trial holds before deleting account.'
             });
         }
 
-        // Delete user's gowns
         await Gown.deleteMany({ owner: _id });
-
-        // Delete user
         await User.findByIdAndDelete(_id);
 
         res.json({ success: true, message: 'Account deleted successfully' });
-
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// Get AI Recommendations
+// [SECTION] AI RECOMMENDATION ENGINE
+/**
+ * [INFO] Fetches gowns tailored to user preferences (Body Type, Skin Tone, etc).
+ * [LOGIC] 
+ * 1. Filters initially by 'available: true'.
+ * 2. Recalculates dynamic status (In-Laundry, Reserved) for all gowns.
+ * 3. Applies strict 'Event Type' filtering (Wedding, Formal, etc).
+ * 4. Ranks remaining gowns using the scoring utility in `recommendationUtils.js`.
+ */
 export const getRecommendations = async (req, res) => {
     try {
         const { bodyType, skinTone, height, eventType, faceShape, ageGroup, sex } = req.query;
-        // Backward compatibility for 'age' param
-        const userAgeGroup = ageGroup || req.query.age;
+        let allGowns = await Gown.find({ 
+            available: true,
+            statusOverride: { $ne: 'Sold Out' }
+        }).populate('owner', 'name');
 
-        // Only exclude globally unavailable gowns (owner toggled off).
-        // Reservation / In-Use / In-Laundry gowns are still shown so users can see them for future bookings.
-        let allGowns = await Gown.find({ available: true })
-            .populate('owner', 'name')
-            .sort({ createdAt: -1 });
+        // [LOGIC] Update dynamic statuses in batch for performance
+        await batchUpdateGownStatuses(allGowns);
 
-        // Filter out orphaned gowns (owner deleted)
-        allGowns = allGowns.filter(gown => gown.owner !== null);
-
-        // Recalculate dynamic status for each gown in parallel
-        await Promise.all(allGowns.map(async (gown) => {
-            if (gown.statusOverride) {
-                gown.status = gown.statusOverride;
-            } else {
-                gown.status = await calculateActualGownStatus(gown._id);
-            }
-        }));
-
-        if (allGowns.length === 0) {
-            return res.json({
-                success: true,
-                recommendations: [],
-                message: "No gowns available at the moment"
-            });
-        }
-
-        // STRICT EVENT TYPE FILTERING - Filter gowns by event type FIRST
+        // [LOGIC] Strict Filtering (Event Type, Age, Sex)
         if (eventType) {
-            const userEventType = eventType.toLowerCase().trim();
-            allGowns = allGowns.filter(gown => {
-                if (Array.isArray(gown.eventType)) {
-                    const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
-                    return gownEventTypes.includes(userEventType);
-                } else if (gown.eventType) {
-                    const gownEventType = gown.eventType.toLowerCase().trim();
-                    return gownEventType === userEventType;
-                }
-                return false;
-            });
-
-            // If no gowns match the event type, return empty
-            if (allGowns.length === 0) {
-                return res.json({
-                    success: true,
-                    recommendations: [],
-                    preferences: { bodyType, skinTone, height, eventType, faceShape, age, sex },
-                    message: `No gowns available for ${eventType} events`
-                });
-            }
+            allGowns = allGowns.filter(g => g.eventType.map(e => e.toLowerCase()).includes(eventType.toLowerCase()));
         }
-
-        // Filter by age group if provided
-        if (userAgeGroup) {
-            const userAge = userAgeGroup.toLowerCase().trim();
-            allGowns = allGowns.filter(gown => {
-                if (Array.isArray(gown.ageGroup)) {
-                    return gown.ageGroup.some(a => a.toLowerCase().trim() === userAge);
-                }
-                const gownAge = (gown.ageGroup || '').toLowerCase().trim();
-                return gownAge === userAge;
-            });
+        if (ageGroup) {
+            allGowns = allGowns.filter(g => g.ageGroup.map(a => a.toLowerCase()).includes(ageGroup.toLowerCase()));
         }
-
-        // Filter by sex if provided
         if (sex) {
-            const userSex = sex.toLowerCase().trim();
-            allGowns = allGowns.filter(gown => {
-                const gownSex = (gown.sex || '').toLowerCase().trim();
-                // Also match Unisex gowns when user selects Male or Female
-                return gownSex === userSex || gownSex === 'unisex';
-            });
+            allGowns = allGowns.filter(g => g.sex.toLowerCase() === sex.toLowerCase() || g.sex.toLowerCase() === 'unisex');
         }
 
-        // If no preferences provided, return all filtered gowns
-        if (!bodyType && !skinTone && !height && !eventType && !faceShape && !age && !sex) {
-            return res.json({
-                success: true,
-                recommendations: allGowns.map(gown => ({
-                    gown,
-                    score: 50, // Default score
-                    matchReason: "General recommendation"
-                }))
-            });
-        }
-
-        // Calculate scores for each gown (now only scoring the filtered gowns)
-        const preferences = { bodyType, skinTone, height, eventType, faceShape, ageGroup: userAgeGroup, sex };
+        // [LOGIC] Ranking based on AI Stylist logic
         const scoredGowns = allGowns.map(gown => {
-            const score = calculateRecommendationScore(gown, preferences);
+            const score = calculateRecommendationScore(gown, { bodyType, skinTone, height, eventType, faceShape, ageGroup, sex });
             return {
                 gown,
                 score,
-                matchReason: score >= 70 ? "Excellent match" :
-                    score >= 50 ? "Good match" :
-                        score >= 30 ? "Fair match" : "Consider"
+                matchReason: score >= 70 ? "Excellent match" : score >= 50 ? "Good match" : "Fair match"
             };
-        });
+        }).sort((a, b) => b.score - a.score);
 
-        // Sort by score (highest first)
-        scoredGowns.sort((a, b) => b.score - a.score);
-
-        // Return all matched gowns (already filtered by event type)
-        res.json({
-            success: true,
-            recommendations: scoredGowns,
-            preferences,
-            totalMatches: scoredGowns.length
-        });
-
+        res.json({ success: true, recommendations: scoredGowns });
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
-// API to update shop profile (for owners)
+
+// [SECTION] SHOP PROFILE MANAGEMENT
+/**
+ * [INFO] Updates boutique details (Opening hours, documents, social media).
+ * [LOGIC] 
+ * 1. Handles ImageKit file uploads for Business Permits and DTI Registration.
+ * 2. Formats operating hours for booking validation.
+ * 3. Syncs the address and contact number to all owned gowns for retrieval speed.
+ */
 export const updateShopProfile = async (req, res) => {
     try {
         const { _id } = req.user
-        const { shopName, description, address, city, operatingHours, openingTime, closingTime, availableDays, facebook, instagram } = req.body
+        const { shopName, description, address, city, operatingHours, openingTime, closingTime, availableDays, facebook } = req.body
 
         const user = await User.findById(_id)
-
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" })
-        }
-
         if (user.role !== 'owner') {
-            return res.status(403).json({ success: false, message: "Only owners can update shop profile" })
+            return res.status(403).json({ success: false, message: "Unauthorized" })
         }
 
-        // Handle file uploads
+        // [LOGIC] Handle File Uploads (ImageKit)
         let businessPermitUrl = user.shopProfile?.businessPermit || ''
         let dtiRegistrationUrl = user.shopProfile?.dtiRegistration || ''
 
-        // Upload business permit if provided
-        if (req.files && req.files.businessPermit) {
+        if (req.files?.businessPermit) {
             const imageKit = (await import('../configs/imagekit.js')).default
             const fs = await import('fs')
             const file = req.files.businessPermit[0]
-
-            // Read file from disk
-            let fileBuffer
-            if (file.buffer) {
-                fileBuffer = file.buffer
-            } else if (file.path) {
-                fileBuffer = fs.readFileSync(file.path)
-            }
-
             const uploadResponse = await imageKit.upload({
-                file: fileBuffer.toString('base64'),
-                fileName: `business_permit_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
+                file: (file.buffer || fs.readFileSync(file.path)).toString('base64'),
+                fileName: `permit_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
                 folder: '/business_documents'
             })
             businessPermitUrl = uploadResponse.url
-
-            // Clean up temp file
-            if (file.path) {
-                fs.unlinkSync(file.path)
-            }
+            if (file.path) fs.unlinkSync(file.path)
         }
 
-        // Upload DTI registration if provided
-        if (req.files && req.files.dtiRegistration) {
+        if (req.files?.dtiRegistration) {
             const imageKit = (await import('../configs/imagekit.js')).default
             const fs = await import('fs')
             const file = req.files.dtiRegistration[0]
-
-            // Read file from disk
-            let fileBuffer
-            if (file.buffer) {
-                fileBuffer = file.buffer
-            } else if (file.path) {
-                fileBuffer = fs.readFileSync(file.path)
-            }
-
             const uploadResponse = await imageKit.upload({
-                file: fileBuffer.toString('base64'),
-                fileName: `dti_registration_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
+                file: (file.buffer || fs.readFileSync(file.path)).toString('base64'),
+                fileName: `dti_${_id}_${Date.now()}.${file.mimetype.split('/')[1]}`,
                 folder: '/business_documents'
             })
             dtiRegistrationUrl = uploadResponse.url
-
-            // Clean up temp file
-            if (file.path) {
-                fs.unlinkSync(file.path)
-            }
+            if (file.path) fs.unlinkSync(file.path)
         }
 
-        // Get contact number from request body
-        const rawContactNumber = req.body.contactNumber || user.shopProfile?.contactNumber || user.contactNumber || ''
-        const contactNumber = rawContactNumber.toString().replace(/\D/g, '').slice(0, 11)
-
-        if (contactNumber && contactNumber.length !== 11) {
-            return res.status(400).json({ success: false, message: "Shop contact number must be exactly 11 digits" })
-        }
-
-        // Build operatingHours string if separate time fields are provided
-        let finalOperatingHours = operatingHours
-        let finalOpeningTime = openingTime
-        let finalClosingTime = closingTime
-
-        if (openingTime && closingTime) {
-            finalOperatingHours = `${openingTime}-${closingTime}`
-            finalOpeningTime = openingTime
-            finalClosingTime = closingTime
-        }
-
-        // Parse availableDays if it's a JSON string
-        let parsedAvailableDays = availableDays
-        if (typeof availableDays === 'string') {
-            try {
-                parsedAvailableDays = JSON.parse(availableDays)
-            } catch (e) {
-                parsedAvailableDays = user.shopProfile?.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            }
-        }
-
-        // Update shop profile
+        // [LOGIC] Sync Profile Data
+        const contactNumber = (req.body.contactNumber || user.contactNumber).toString().replace(/\D/g, '').slice(0, 11)
         user.shopProfile = {
             ...user.shopProfile,
-            shopName: shopName || user.shopProfile?.shopName || '',
-            description: description || user.shopProfile?.description || '',
-            address: address || user.shopProfile?.address || '',
-            city: city || user.shopProfile?.city || '',
-            contactNumber: contactNumber,
-            operatingHours: finalOperatingHours || user.shopProfile?.operatingHours || '',
-            openingTime: finalOpeningTime || user.shopProfile?.openingTime || '09:00',
-            closingTime: finalClosingTime || user.shopProfile?.closingTime || '19:00',
-            availableDays: parsedAvailableDays || user.shopProfile?.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            socialMedia: {
-                facebook: facebook || user.shopProfile?.socialMedia?.facebook || '',
-                instagram: instagram || user.shopProfile?.socialMedia?.instagram || ''
-            },
-            verified: user.shopProfile?.verified || false,
-            verifiedAt: user.shopProfile?.verifiedAt,
+            shopName: shopName || user.shopProfile.shopName,
+            description: description || user.shopProfile.description,
+            address: address || user.shopProfile.address,
+            city: city || user.shopProfile.city,
+            contactNumber,
+            operatingHours: operatingHours || user.shopProfile.operatingHours,
+            openingTime: openingTime || user.shopProfile.openingTime,
+            closingTime: closingTime || user.shopProfile.closingTime,
+            availableDays: availableDays || user.shopProfile.availableDays,
+            socialMedia: { facebook: facebook || user.shopProfile.socialMedia.facebook },
             businessPermit: businessPermitUrl,
             dtiRegistration: dtiRegistrationUrl
         }
-
-        // Sync contact number to root level for easy access
         user.contactNumber = contactNumber
-
         await user.save()
         
-        // Sync all gowns with the new shop info for "easy accessibility" and redundancy
-        await Gown.updateMany(
-            { owner: _id },
-            { $set: { contactNumber: contactNumber, location: address || user.shopProfile.address } }
-        )
+        // [FLOW] Keep gown data synced with shop address/contact
+        await Gown.updateMany({ owner: _id }, { $set: { contactNumber, location: address || user.shopProfile.address } })
 
-        res.json({
-            success: true,
-            message: "Shop profile updated successfully",
-            shopProfile: user.shopProfile
-        })
-
+        res.json({ success: true, shopProfile: user.shopProfile })
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// API to get shop profile by owner ID
+/**
+ * [INFO] Publicly retrieves a shop's profile and operating hours.
+ */
 export const getShopProfile = async (req, res) => {
     try {
-        const { ownerId } = req.params
-        const owner = await User.findById(ownerId).select('name email contactNumber shopProfile createdAt role')
-
+        const owner = await User.findById(req.params.ownerId).select('name email contactNumber shopProfile createdAt')
         if (!owner) {
-            return res.status(404).json({ success: false, message: "Owner not found" })
+            return res.status(404).json({ success: false, message: 'Shop not found' });
         }
-
-        res.json({
-            success: true,
-            shopProfile: owner.shopProfile,
-            ownerName: owner.name,
-            ownerEmail: owner.email,
-            ownerContactNumber: owner.contactNumber,
-            memberSince: owner.createdAt
-        })
-
+        res.json({ success: true, shopProfile: owner.shopProfile, ownerName: owner.name })
     } catch (error) {
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
-
-// API to get shop operating hours for booking (openingTime, closingTime, availableDays)
 export const getShopOperatingHours = async (req, res) => {
     try {
-        const { ownerId } = req.params
-
-        const owner = await User.findById(ownerId).select('shopProfile role')
-
-        if (!owner || owner.role !== 'owner') {
-            return res.status(404).json({ success: false, message: "Shop not found" })
+        const owner = await User.findById(req.params.ownerId).select('shopProfile')
+        if (!owner) {
+            return res.status(404).json({ success: false, message: 'Shop not found' });
         }
-
-        const shopProfile = owner.shopProfile || {}
-
-        // Return operating hours in a format useful for booking
-        res.json({
-            success: true,
+        res.json({ 
+            success: true, 
             operatingHours: {
-                openingTime: shopProfile.openingTime || '09:00',
-                closingTime: shopProfile.closingTime || '19:00',
-                availableDays: shopProfile.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-                operatingHours: shopProfile.operatingHours || '09:00-19:00'
+                openingTime: owner.shopProfile.openingTime || '09:00',
+                closingTime: owner.shopProfile.closingTime || '18:00',
+                availableDays: owner.shopProfile.availableDays
             }
         })
-
     } catch (error) {
-        console.log(error.message);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 }
