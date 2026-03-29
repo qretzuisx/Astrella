@@ -756,48 +756,48 @@ const GownDetails = () => {
             </h2>
             <div className='grid grid-cols-2 gap-2 sm:gap-3 relative z-10'>
               {/* Material */}
-              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.fabric_icon} alt="fabric" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Material</p>
-                  <p className='text-primary font-black text-sm sm:text-base'>{gown.fabric || 'Premium Blends'}</p>
+                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Material</p>
+                  <p className='text-primary font-black text-xs sm:text-base break-words leading-snug'>{gown.fabric || 'Premium Blends'}</p>
                 </div>
               </div>
 
               {/* Size */}
-              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.size_icon} alt="size" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Size</p>
-                  <p className='text-primary font-black text-sm sm:text-base'>
+                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Available Size</p>
+                  <p className='text-primary font-black text-xs sm:text-base break-words leading-snug'>
                     {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size}
                   </p>
                 </div>
               </div>
 
               {/* Color */}
-              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.color_icon} alt="color" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
-                <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-1 opacity-60'>Available Tones</p>
-                  <div className="flex items-center gap-3">
+                <div className='min-w-0 overflow-hidden'>
+                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Available Tones</p>
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
                       {(() => {
                         const colors = parseColors(gown.color);
                         return (
-                          <div className="flex -space-x-2">
+                          <div className="flex -space-x-1.5 sm:-space-x-2 flex-shrink-0">
                             {(colors || []).map((c, i) => {
                               const normalized = (c || '').toString().toLowerCase();
                               const hex = getColorHex(normalized);
                               return (
                                 <div 
                                   key={i} 
-                                  className={`w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
+                                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
                                   style={{ backgroundColor: hex }} 
                                   title={c} 
                                 />
@@ -806,19 +806,19 @@ const GownDetails = () => {
                           </div>
                         );
                       })()}
-                    <p className='text-primary font-black text-sm sm:text-base capitalize'>{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Custom')}</p>
+                    <p className='text-primary font-black text-xs sm:text-base capitalize break-words leading-snug'>{Array.isArray(gown.color) ? gown.color.join(', ') : (gown.color || 'Custom')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Event Types */}
-              <div className='flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2.5 sm:p-3 rounded-xl flex-shrink-0 group-hover/item:bg-secondary transition-all duration-500'>
+              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
                   <img src={assets.event_icon} alt="event" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-1 opacity-60'>Best for</p>
-                  <p className='text-primary font-black text-sm sm:text-base capitalize'>
+                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Best for</p>
+                  <p className='text-primary font-black text-xs sm:text-base capitalize break-words leading-snug'>
                     {Array.isArray(gown.eventType) && gown.eventType.length > 0
                       ? gown.eventType.join(', ')
                       : gown.eventtype || gown.eventType || 'All Occasions'}

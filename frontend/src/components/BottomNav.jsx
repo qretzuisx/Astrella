@@ -61,6 +61,11 @@ const BottomNav = () => {
             <NavLink
               key={item.name}
               to={item.path}
+              onClick={(e) => {
+                if (location.pathname === item.path) {
+                  e.preventDefault()
+                }
+              }}
               className="flex flex-col items-center justify-center w-full h-full space-y-1 relative group touch-target"
             >
               <div className={`p-2 rounded-2xl transition-all duration-500 transform ${isActive ? 'bg-primary/5 text-primary scale-110 shadow-sm' : 'text-gray-400 group-hover:text-primary active:scale-90'}`}>

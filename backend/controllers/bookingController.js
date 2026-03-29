@@ -200,12 +200,14 @@ export const createBooking = async (req, res) => {
             pickupTime, returnTime, price: pricing.total,
             bookingType: isTrial ? 'trial' : 'reservation',
             trialExpiresAt: isTrial ? returnDateTime : undefined,
+            contactNumber: req.body.contactNumber || req.user.contactNumber || '',
             payment: {
                 method: paymentInfo.method || 'gcash',
                 depositAmount: isTrial ? 0 : Math.round(pricing.total * 0.5),
                 totalAmount: pricing.total,
                 screenshot: screenshotUrl,
-                status: 'pending'
+                status: 'pending',
+                transactionRef: paymentInfo.transactionRef || ''
             },
             status: isTrial ? 'trial' : 'pending'
         });
@@ -440,15 +442,30 @@ export const getOwnerBooking = async (req, res) => {
         const now = new Date();
         const allBookings = await Booking.find({ owner: req.user._id })
             .populate('gown', 'name image')
-            .populate('user', 'name email')
+            .populate('user', 'name email contactNumber')
             .sort({ createdAt: -1 });
-
-        // Filter out expired trial bookings
-        const Bookings = allBookings.filter(booking => {
-            if (booking.status !== 'trial') return true;
-            // If trialExpiresAt exists and is in the past, it's expired
-            return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
-        });
+          
+        const Bookings = allBookings
+            .filter(booking => {
+                if (booking.status !== 'trial') return true;
+                return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
+            })
+            .map(booking => {
+                const b = booking.toObject();
+                
+                // [FIX] Force profile number to take top priority if it exists and booking level is blank/N/A
+                const profileNumber = (b.user?.contactNumber || '').toString().trim();
+                const currentNumber = (b.contactNumber || '').toString().trim();
+                
+                if (profileNumber && profileNumber !== 'N/A' && (currentNumber === '' || currentNumber === 'N/A')) {
+                    b.contactNumber = profileNumber;
+                }
+                
+                // If it's still missing, ensure it defaults to empty/blank rather than a hardcoded 'N/A' string in the data
+                if (!b.contactNumber) b.contactNumber = '';
+                
+                return b;
+            });
 
         res.json({ success: true, bookings: Bookings });
     } catch (error) {
@@ -611,7 +628,7 @@ export const updateBooking = async (req, res) => {
       const populated = await Booking.findById(booking._id)
         .populate('gown')
         .populate('owner', 'name')
-        .populate('user', 'name email');
+        .populate('user', 'name email contactNumber');
 
       return res.json({ success: true, message: 'Trial finalized as reservation', booking: populated });
     }
@@ -847,7 +864,7 @@ export const updateBooking = async (req, res) => {
     const populated = await Booking.findById(booking._id)
       .populate('gown')
       .populate('owner', 'name')
-      .populate('user', 'name email');
+      .populate('user', 'name email contactNumber');
 
     return res.json({ success: true, message: 'Booking updated', booking: populated });
 
@@ -1056,40 +1073,25 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
-// API to clean up expired trial bookings (can be called periodically or by maintainer)
+// Cleanup function (can be called periodically or by maintainer)
+// Now only marks expired trials as 'expired' (no hard delete)
 export const cleanupExpiredTrials = async (req, res) => {
   try {
     const now = new Date();
 
-    // Find expired trial bookings
-    const expiredTrials = await Booking.find({
-      status: 'trial',
-      trialExpiresAt: { $lt: now }
-    });
-
-    if (expiredTrials.length === 0) {
-      return res.json({ success: true, message: "No expired trials to clean up", cleanedCount: 0 });
-    }
-
-    // Mark them as expired
-    const result = await Booking.updateMany(
-      {
-        status: 'trial',
-        trialExpiresAt: { $lt: now }
-      },
-      {
-        $set: { status: 'expired' }
-      }
+    // Mark expired trials as 'expired'
+    await Booking.updateMany(
+      { status: 'trial', trialExpiresAt: { $lt: now } },
+      { $set: { status: 'expired' } }
     );
 
     res.json({
       success: true,
-      message: `Cleaned up ${result.modifiedCount} expired trial bookings`,
-      cleanedCount: result.modifiedCount
+      message: "Expired trial holds marked as expired."
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('[CLEANUP_TRIALS] Error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -77,6 +77,11 @@ const Navbar = ({ setShowLogin }) => {
             <Link
               key={index}
               to={link.path}
+              onClick={(e) => {
+                if (location.pathname === link.path) {
+                  e.preventDefault()
+                }
+              }}
               className={`transition-all duration-300 text-sm font-bold tracking-tight px-1 py-1 relative group ${isActive ? "text-primary" : "text-gray-500 hover:text-primary"}`}
             >
               {link.name}

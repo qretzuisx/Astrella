@@ -10,7 +10,7 @@ export const protect = async (req, res, next)=>{
   const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = payload.id || payload; // support old/new payload shapes
+    const userId = payload.id || payload;
     if(!userId){
       return res.status(401).json({success: false, message: "not authorized"});
     }

@@ -201,7 +201,6 @@ const ManageBookings = () => {
     }
   }
 
-
   const allowedTimes = React.useMemo(() => {
     const times = []
     for (let h = 9; h <= 19; h++) {
@@ -544,15 +543,13 @@ const ManageBookings = () => {
           )}
 
           {/* Status Filter Tabs - Modern Segmented Control */}
-          <div className='mb-10 overflow-x-auto premium-scrollbar-yellow -mx-3 px-3 pb-2'>
+          <div className='mb-6 overflow-x-auto premium-scrollbar-yellow -mx-3 px-3 pb-2'>
             <div className='inline-flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl min-w-full'>
               {['all', 'trial', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => {
                 const count = status === 'all' 
                   ? bookings.length 
                   : bookings.filter(b => b.status === status).length;
                 
-                // Ensure critical tabs are always visible
-
                 return (
                   <button
                     key={status}
@@ -585,178 +582,160 @@ const ManageBookings = () => {
                   id={`booking-${booking._id || booking.id}`}
                   className={`group bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 font-geist ${(booking._id || booking.id) === highlightId && (booking.status === 'trial' || (booking.status === 'pending' && booking.payment?.status === 'pending')) ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : ''}`}
                 >
-                  <div className='p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6 sm:gap-8'>
-                    {/* Item and Client Info */}
-                    <div className='flex items-center gap-6 flex-1'>
-                      <div className="relative flex-shrink-0">
-                        <img 
-                          src={booking.gown?.image?.[0] || booking.gown?.image || assets.gown_image1} 
-                          alt={booking.gown?.name} 
-                          loading="lazy"
-                          className='w-20 h-20 sm:w-32 sm:h-32 object-contain bg-white rounded-2xl sm:rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform duration-700'
-                        />
-                         <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-xl flex items-center justify-center border-4 border-white shadow-md ${
-                            booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-500' : 
-                            booking.status === 'pending' ? 'bg-orange-500' :
-                            booking.status === 'trial' ? 'bg-gray-500' : 'bg-red-500'
-                          }`}>
-                            <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-                          </div>
+                  {/* Card Content Interior */}
+                  <div className='p-5 sm:p-7'>
+                    {/* Top Row: ID and Status Tags */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg tracking-widest border border-gray-100">
+                          ID: #{(booking._id || booking.id)?.slice(-6).toUpperCase()}
+                        </span>
+                        <span className={`px-4 py-1.5 rounded-full text-[11px] font-black tracking-widest uppercase border ${
+                            booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-50 text-green-700 border-green-100' : 
+                            booking.status === 'pending' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+                            booking.status === 'trial' ? 'bg-gray-50 text-gray-500 border-gray-200' : 
+                            'bg-red-50 text-red-600 border-red-100'
+                        }`}>
+                          {booking.status}
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-[11px] font-black tracking-widest uppercase ${
-                                booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-50 text-green-700' : 
-                                booking.status === 'pending' ? 'bg-orange-50 text-orange-600' : 
-                                booking.status === 'trial' ? 'bg-gray-100 text-gray-600' : 
-                                'bg-red-50 text-red-600'
-                            }`}>
-                                {booking.status}
-                            </span>
-                             <span className="text-xs font-bold text-gray-400">ID: #{(booking._id || booking.id)?.slice(-6).toUpperCase()}</span>
+                      
+                      {/* Payment Info Badge */}
+                      {booking.payment && (
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase border ${
+                            booking.payment.status === 'verified' ? 'bg-green-50/50 text-green-600 border-green-100/50' : 
+                            booking.payment.status === 'pending' ? 'bg-orange-50/50 text-orange-500 border-orange-100/50' : 
+                            'bg-red-50/50 text-red-500 border-red-100/50'
+                        }`}>
+                          {booking.payment.method} • {booking.payment.status}
                         </div>
-                        <h3 className='text-xl sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-3'>
-                            {booking.gown?.name || 'Gown Name'}
-                        </h3>
-                         <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-5">
-                             <div className="flex items-center gap-2">
-                                 <div className="p-1.5 bg-gray-50 rounded-lg">
-                                      <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                      </svg>
-                                 </div>
-                                 <div className="min-w-0">
-                                     <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest">Client</p>
-                                     <p className="text-xs font-bold text-gray-700 truncate">{booking.user?.name || 'User Name'}</p>
-                                 </div>
-                             </div>
-                             <div className="flex items-center gap-2">
-                                 <div className="p-1.5 bg-gray-50 rounded-lg">
-                                      <svg className="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                                      </svg>
-                                 </div>
-                                 <div className="min-w-0">
-                                     <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest">Contact</p>
-                                     <p className="text-xs font-bold text-gray-700 truncate">{booking.contactNumber || 'N/A'}</p>
-                                 </div>
-                             </div>
-                             {booking.measurements && (booking.measurements.waist || booking.measurements.hips) && (
-                               <div className="flex items-center gap-2">
-                                   <div className="p-1.5 bg-gray-50 rounded-lg">
-                                       <svg className="w-3.5 h-3.5 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                       </svg>
-                                   </div>
-                                   <div className="min-w-0">
-                                       <p className="text-[10px] sm:text-xs font-black text-[#007AFF] uppercase tracking-widest">Measurements</p>
-                                       <p className="text-xs font-bold text-gray-700">
-                                         W: {booking.measurements.waist || '-'}{booking.measurements.unit} • H: {booking.measurements.hips || '-'}{booking.measurements.unit}
-                                       </p>
-                                   </div>
-                               </div>
-                             )}
-                         </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Schedule, Payment & Actions */}
-                    <div className='flex flex-wrap xl:flex-nowrap items-center gap-6 xl:border-l xl:border-gray-50 xl:pl-8'>
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4 overflow-hidden">
+                    {/* Main Content: Responsive Flex/Grid Wrapping */}
+                    <div className="flex flex-col xl:flex-row xl:items-center gap-6 sm:gap-10">
+                      
+                      {/* Section 1: Apparel & Client (Strong Base Width) */}
+                      <div className="flex items-center gap-5 sm:gap-6 min-w-0 xl:w-[400px]">
+                        <div className="relative flex-shrink-0">
+                          <img 
+                            src={booking.gown?.image?.[0] || booking.gown?.image || assets.gown_image1} 
+                            alt={booking.gown?.name} 
+                            className='w-24 h-24 sm:w-32 sm:h-32 object-contain bg-white rounded-[2rem] shadow-sm border border-gray-100 group-hover:scale-105 transition-all duration-700'
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className='text-lg sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-2 break-words whitespace-normal'>
+                              {booking.gown?.name || 'Gown Name'}
+                          </h3>
+                          <div className="space-y-1.5">
+                            <div className="flex flex-col">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client Name</p>
+                              <p className="text-sm font-bold text-gray-700 break-words whitespace-normal leading-snug">
+                                {booking.user?.name || 'Client Name'}
+                              </p>
+                              {booking.user?.email && (
+                                <p className="text-[10px] font-medium text-gray-400 break-words -mt-0.5 leading-tight">{booking.user.email}</p>
+                              )}
+                            </div>
+                            <div className="flex flex-col pt-1 border-t border-gray-50">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact Number</p>
+                                <p className="text-base font-black text-primary break-words whitespace-normal leading-tight">
+                                <p className="text-base font-black text-primary break-words whitespace-normal leading-tight">
+                                  {(booking.contactNumber && booking.contactNumber !== 'N/A') 
+                                    ? booking.contactNumber 
+                                    : (booking.user?.contactNumber && booking.user.contactNumber !== 'N/A' 
+                                      ? booking.user.contactNumber 
+                                      : 'N/A')}
+                                </p>
+                                </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Schedule (Clear Boxed Areas) */}
+                      <div className="flex flex-wrap sm:flex-nowrap gap-4 w-full xl:w-auto xl:flex-1">
                         {booking.status === 'trial' ? (
-                          <div className="bg-primary/5 p-3 sm:p-4 rounded-2xl border border-primary/10 min-w-[140px] col-span-2">
-                            <p className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-widest mb-1.5">Try-on Schedule</p>
-                            <p className="text-sm sm:text-base font-black text-primary-dull">{formatDate(booking.pickupDate)}</p>
-                            <p className="text-[10px] sm:text-xs font-bold text-primary/60 mt-0.5">{booking.pickupTime || '09:00'}</p>
+                          <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[160px]">
+                            <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Try-On Appointment</p>
+                            <p className="text-base font-black text-primary-dull break-words whitespace-normal leading-tight">{formatDate(booking.pickupDate)}</p>
+                            <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.pickupTime || '09:00'}</p>
                           </div>
                         ) : (
                           <>
-                            <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
-                               <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup</p>
-                               <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.pickupDate)}</p>
-                               <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
+                            <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[140px]">
+                              <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup Date</p>
+                              <p className="text-base font-black text-primary-dull whitespace-normal">{formatDate(booking.pickupDate)}</p>
+                              <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.pickupTime || '09:00'}</p>
                             </div>
-                             <div className="bg-gray-50/50 p-3 sm:p-4 rounded-2xl border border-gray-50 min-w-0">
-                               <p className="text-[10px] sm:text-xs font-black text-primary/40 uppercase tracking-widest mb-1.5">Return</p>
-                               <p className="text-xs sm:text-sm font-black text-primary-dull truncate">{formatDate(booking.returnDate)}</p>
-                               <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
+                            <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[140px]">
+                              <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Return Date</p>
+                              <p className="text-base font-black text-primary-dull whitespace-normal">{formatDate(booking.returnDate)}</p>
+                              <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.returnTime || '09:00'}</p>
                             </div>
                           </>
                         )}
+                        
+                        {/* Section 3: Value (Only for non-trial) */}
+                        {booking.status !== 'trial' && (
+                          <div className="flex-1 sm:flex-none xl:w-40 flex flex-col justify-center bg-white p-5 rounded-3xl border border-gray-100/50 xl:border-0">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
+                            <p className='text-3xl font-black text-primary-dull flex items-baseline gap-1'>
+                              <span className="text-sm opacity-40 mr-0.5">₱</span>
+                              {booking.price?.toLocaleString()}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Value & Actions */}
-                      {booking.status !== 'trial' && (
-                        <div className="flex flex-col items-center xl:items-end justify-center min-w-[140px]">
-                           <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
-                          <p className='text-3xl font-black text-primary-dull flex items-baseline gap-1'>
-                            <span className="text-sm opacity-40">₱</span>
-                            {booking.price?.toLocaleString()}
-                          </p>
-                          
-                          {/* Status Badge Secondary */}
-                          {booking.payment && (
-                              <div className={`mt-3 px-3 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider ${
-                                  booking.payment.status === 'verified' ? 'bg-green-50 text-green-700' :
-                                  booking.payment.status === 'pending' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
-                              }`}>
-                                  {booking.payment.method === 'gcash' ? 'GCash' : 'Cash'} • {booking.payment.status}
-                              </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Control Actions */}
-                      <div className='flex flex-col sm:flex-row xl:flex-col gap-2.5 w-full xl:w-auto'>
-                        {/* Trial Actions */}
-                        {booking.status === 'trial' && (
-                          <button
-                            onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
-                            className='flex-1 xl:w-44 h-14 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-black text-base uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 px-8'
-                          >
-                            Cancel
-                          </button>
-                        )}
-
-                        {/* Payment Verification */}
-                        {booking.status === 'pending' && booking.payment?.status === 'pending' && (
-                          <button
-                            onClick={() => openPaymentModal(booking)}
-                            className='flex-1 xl:w-48 h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 px-8'
-                          >
-                            Verify
-                          </button>
-                        )}
-
-                        {/* Confirm/Complete Actions */}
-                        {booking.status === 'pending' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
+                      {/* Section 4: Vertical Action Column (One Size) */}
+                      <div className="flex flex-col gap-3 w-full sm:w-56 xl:border-l xl:border-gray-50 xl:pl-10">
+                         {/* Payment Verification */}
+                         {(booking.status === 'pending' || booking.status === 'trial') && booking.payment?.status === 'pending' && (
                            <button
-                             onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
-                             className='flex-1 xl:w-48 h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 px-8'
+                             onClick={() => openPaymentModal(booking)}
+                             className='h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all'
                            >
-                             Confirm pickup
+                             Verify
                            </button>
-                        )}
+                         )}
 
-                        {booking.status === 'confirmed' && (
-                          <button
-                            onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
-                            className='flex-1 xl:w-48 h-14 bg-green-600 text-white rounded-2xl font-black text-base uppercase tracking-widest hover:shadow-2xl hover:shadow-green-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 px-8'
-                          >
-                            Completed
-                          </button>
-                        )}
-
-                         {/* Global Cancel for uncompleted bookings */}
-                         {['pending', 'confirmed'].includes(booking.status) && (
+                         {/* Confirm Pickup */}
+                         {(booking.status === 'pending' || booking.status === 'trial') && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
                             <button
-                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
-                              className='flex-1 xl:w-48 h-12 sm:h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-2xl font-black text-xs sm:text-base uppercase tracking-widest transition-all flex items-center justify-center gap-2 px-8'
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
+                              className='h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all'
                             >
-                              <img src={assets.delete_icon} className="w-5 h-5 sm:w-6 sm:h-6 opacity-40 group-hover:opacity-100 group-hover:brightness-0 group-hover:invert transition-all" alt="cancel" />
-                              Cancel
+                              Confirm
                             </button>
                          )}
+
+                         {/* Mark Completed status === 'confirmed' */}
+                         {booking.status === 'confirmed' && (
+                           <button
+                             onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
+                             className='h-14 bg-green-600 text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-green-600/20 hover:scale-105 active:scale-95 transition-all'
+                           >
+                             Complete
+                           </button>
+                         )}
+
+                         {/* Cancel Action (Only Pending/Confirmed/Trial) */}
+                         {['pending', 'confirmed', 'trial'].includes(booking.status) && (
+                            <button
+                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
+                              className='h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-2xl font-black text-xs uppercase tracking-widest border border-transparent hover:border-red-100 transition-all flex items-center justify-center gap-3 group/cancel'
+                            >
+                              <div className="p-2 bg-white rounded-lg group-hover/cancel:bg-red-100 transition-colors">
+                                <svg className="w-4 h-4 opacity-40 group-hover/cancel:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </div>
+                              Cancel Request
+                            </button>
+                         )}
+
                       </div>
                     </div>
                   </div>
@@ -939,66 +918,78 @@ const ManageBookings = () => {
             <div className='bg-gray-50/50 border border-gray-100 rounded-3xl p-6 mb-8'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                 <div>
-                  <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Customer</label>
+                  <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1'>Customer</label>
                   <p className='text-sm font-black text-primary'>{selectedPayment.user?.name}</p>
                 </div>
                 <div>
-                  <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Gown</label>
+                  <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1'>Gown</label>
                   <p className='text-sm font-black text-primary'>{selectedPayment.gown?.name}</p>
                 </div>
                 <div>
-                  <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Total Price</label>
+                  <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1'>Total Price</label>
                   <p className='text-lg font-black text-primary'>{currency}{selectedPayment.price?.toLocaleString()}</p>
                 </div>
                 {selectedPayment.payment?.method === 'gcash' && (
                   <div>
-                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Deposit (50%)</label>
+                    <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1'>Deposit (50%)</label>
                     <p className='text-lg font-black text-green-600'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</p>
                   </div>
                 )}
+                <div>
+                  <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1'>Contact Number</label>
+                  <p className="text-sm font-black text-primary">
+                    {(selectedPayment.contactNumber && selectedPayment.contactNumber !== 'N/A') 
+                      ? selectedPayment.contactNumber 
+                      : (selectedPayment.user?.contactNumber && selectedPayment.user.contactNumber !== 'N/A' 
+                        ? selectedPayment.user.contactNumber : 'N/A')}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Payment Details - Only show for GCash */}
             {selectedPayment.payment?.method === 'gcash' && (
-            <div className='mb-4 sm:mb-6'>
-              <h3 className='text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3'>Deposit Payment Details</h3>
-              <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4'>
-                <div className='space-y-2 sm:space-y-3 text-xs sm:text-sm'>
+            <div className='mb-8'>
+              <h3 className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4'>Deposit Payment Details</h3>
+              <div className='bg-primary/5 border border-primary/10 rounded-[2rem] p-6 shadow-inner'>
+                <div className='space-y-4 text-sm'>
                   <div className='flex justify-between items-center'>
-                    <span className='text-gray-700'>Payment Method:</span>
-                    <span className='font-semibold'>GCash</span>
+                    <span className='text-gray-500 font-bold'>Payment Method</span>
+                    <span className='font-black text-primary'>GCash Pay</span>
                   </div>
-                  <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0'>
-                    <span className='text-gray-700'>Reference Number:</span>
-                    <span className='font-mono font-semibold text-xs sm:text-sm break-all'>{selectedPayment.payment?.transactionRef}</span>
+                  <div className='flex justify-between items-center bg-white/50 p-3 rounded-xl border border-white'>
+                    <span className='text-gray-500 font-bold'>Reference Code</span>
+                    <span className='font-mono font-black text-primary text-xs tracking-wider break-all'>{selectedPayment.payment?.transactionRef}</span>
                   </div>
-                  <div className='flex justify-between items-center pt-2 border-t border-blue-300'>
-                    <span className='text-gray-700 font-semibold'>Deposit Amount:</span>
-                    <span className='text-lg sm:text-xl font-bold text-green-600'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</span>
+                  <div className='pt-4 border-t border-primary/10 flex justify-between items-end'>
+                    <span className='text-primary font-black uppercase text-[10px] tracking-widest mb-1'>Deposit Amount</span>
+                    <span className='text-3xl font-black text-primary'>{currency}{selectedPayment.payment?.depositAmount?.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
-              <p className='text-xs text-gray-500 mt-2'>
-                Note: Balance will be collected during pickup
+              <p className='text-[10px] font-bold text-gray-400 mt-3 text-center'>
+                Note: Remaining balance {currency}{(selectedPayment.price - (selectedPayment.payment?.depositAmount || 0)).toLocaleString()} will be collected during pickup
               </p>
             </div>
             )}
 
             {/* Screenshot - Only for GCash */}
             {selectedPayment.payment?.method === 'gcash' && (
-            <div className='mb-4 sm:mb-6'>
-              <h3 className='text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3'>Transaction Screenshot</h3>
-              <div className='border border-gray-300 rounded-lg overflow-hidden bg-gray-100'>
-                {selectedPayment.payment?.screenshot ? (
+            <div className='mb-8'>
+              <h3 className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4'>Transaction Screenshot</h3>
+              <div className='rounded-[2.5rem] overflow-hidden bg-gray-50 border-4 border-white shadow-xl ring-1 ring-gray-100'>
+                {selectedPayment.payment.screenshot ? (
                   <img 
                     src={selectedPayment.payment.screenshot} 
                     alt="Payment Screenshot" 
-                    className='w-full h-auto max-h-[300px] sm:max-h-[500px] object-contain'
+                    className='w-full h-auto max-h-[500px] object-contain hover:scale-105 transition-transform duration-700'
                   />
                 ) : (
-                  <div className='flex items-center justify-center h-48 sm:h-64 text-gray-400 text-sm sm:text-base'>
-                    No screenshot available
+                  <div className='flex flex-col items-center justify-center p-12 text-gray-300'>
+                    <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-xs font-bold uppercase tracking-widest">No receipt provided</p>
                   </div>
                 )}
               </div>
@@ -1007,69 +998,123 @@ const ManageBookings = () => {
 
             {/* Warning - Conditional based on payment method */}
             {selectedPayment.payment?.method === 'gcash' && (
-            <div className='mb-4 sm:mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4'>
-              <p className='text-xs sm:text-sm text-yellow-800'>
-                <strong>Important:</strong> Please verify that the reference number matches the GCash transaction and the amount is correct before approving.
-              </p>
+            <div className='mb-8 bg-amber-50/40 backdrop-blur-md border border-amber-100/50 rounded-[2rem] p-6 relative overflow-hidden group/warn shadow-[0_10px_30px_rgba(245,158,11,0.05)]'>
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-400 opacity-20 group-hover/warn:opacity-40 transition-opacity"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover/warn:bg-amber-200/20 transition-all duration-500"></div>
+              <div className="flex items-center gap-5 relative z-10 pl-2">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100/80 flex items-center justify-center text-amber-600 flex-shrink-0 shadow-sm">
+                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className='text-[10px] font-black text-amber-700/60 uppercase tracking-[0.2em] mb-1'>Verification Checklist</p>
+                  <p className='text-sm text-amber-950 font-bold leading-relaxed'>
+                    Verify the <span className="bg-amber-100/50 px-1.5 py-0.5 rounded-md border border-amber-200/50">reference number</span> against your GCash merchant dashboard.
+                  </p>
+                </div>
+              </div>
             </div>
             )}
 
             {selectedPayment.payment?.method === 'in_store' && (
-            <div className='mb-4 sm:mb-6 bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4'>
-              <p className='text-xs sm:text-sm text-green-800'>
-                <strong>Cash Payment:</strong> The customer will pay ₱{selectedPayment.price?.toLocaleString()} in full at the shop during pickup.
-
-              </p>
+            <div className='mb-10 p-6 bg-green-50/50 border border-green-100 rounded-[2.5rem] flex items-center gap-4 group/info overflow-hidden relative'>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-green-500/10 transition-all duration-500"></div>
+              <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-green-600 flex-shrink-0">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div className="relative z-10">
+                <p className='text-[10px] font-black text-green-700/50 uppercase tracking-[0.2em] mb-1'>Payment Agreement</p>
+                <p className='text-sm font-bold text-green-800 leading-relaxed'>
+                  The customer will pay <span className="font-black">₱{selectedPayment.price?.toLocaleString()}</span> in full at the shop during pickup.
+                </p>
+              </div>
             </div>
             )}
 
             {/* Rejection Reason - Only for GCash */}
             {selectedPayment.payment?.method === 'gcash' && (
-            <div className='mb-4 sm:mb-6' id='rejectionReasonField'>
-              <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                Rejection Reason (mandatory if rejecting)
-              </label>
+            <div className='mb-8' id='rejectionReasonField'>
+              <div className="flex items-center justify-between mb-3 px-2">
+                <label className='text-[10px] font-black text-gray-500 uppercase tracking-widest'>
+                  Rejection Reason <span className="text-red-500 opacity-60 ml-1">(Required for rejection)</span>
+                </label>
+                <div className="flex items-center gap-1.5 text-[9px] font-black text-primary/60 uppercase tracking-tight">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Client Preview
+                </div>
+              </div>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder='Explain why you are rejecting this payment. This message will be shown to the customer.'
-                rows={3}
-                className='w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none'
+                placeholder='E.g., Reference number not found in our records. Please re-upload a clear screenshot.'
+                rows={4}
+                className='w-full px-7 py-6 bg-gray-50/80 border-2 border-gray-100 rounded-[2.5rem] text-sm font-bold text-primary transition-all focus:border-primary/20 focus:bg-white focus:ring-12 focus:ring-primary/5 outline-none resize-none placeholder:text-gray-400 shadow-inner'
               />
-              <p className='text-xs text-gray-500 mt-1'>The customer will see this reason when they check their booking.</p>
+              <p className='text-[10px] font-black text-gray-500 mt-4 px-4 flex items-center gap-2'>
+                <div className="w-1.5 h-1.5 bg-primary/20 rounded-full"></div>
+                This message will be visible to the customer on their booking details page.
+              </p>
             </div>
             )}
 
             {/* Action Buttons - Conditional rendering based on payment method */}
             {selectedPayment.payment?.method === 'gcash' && (
-            <div className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
+            <div className='flex flex-col sm:flex-row gap-5'>
               <button
                 onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'approve')}
-                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+                className='flex-[1.8] h-20 bg-[#00A859] text-white rounded-3xl font-black text-xs sm:text-sm uppercase tracking-[0.2em] hover:bg-green-700 hover:shadow-[0_25px_60px_rgba(0,168,89,0.35)] hover:-translate-y-1.5 active:scale-95 transition-all duration-500 flex items-center justify-center gap-4 group shadow-[0_15px_35px_rgba(0,168,89,0.2)]'
               >
-                Approve Payment
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Verify & Approve</span>
               </button>
               <button
                 onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'reject')}
                 disabled={rejectingPayment}
-                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:bg-red-400 disabled:cursor-not-allowed'
+                className='flex-1 h-20 bg-white text-red-500 border-2 border-red-50 rounded-3xl font-black text-xs sm:text-sm uppercase tracking-[0.2em] hover:bg-red-50 hover:border-red-100/50 hover:text-red-700 shadow-sm active:scale-95 transition-all duration-500 flex items-center justify-center gap-3 group'
               >
-                {rejectingPayment ? 'Rejecting...' : 'Reject Payment'}
+                {rejectingPayment ? (
+                  <div className='flex items-center gap-2'>
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                    <span>Processing...</span>
+                  </div>
+                 ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center transition-colors group-hover:bg-red-100">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <span>Reject</span>
+                  </>
+                )}
               </button>
             </div>
             )}
 
             {selectedPayment.payment?.method === 'in_store' && (
-            <div className='flex flex-col sm:flex-row gap-3 sm:gap-4'>
+            <div className='flex flex-col sm:flex-row gap-4'>
               <button
                 onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'approve')}
-                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold'
+                className='flex-[2] h-16 bg-primary text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-primary-dull hover:shadow-[0_20px_40px_rgba(1,62,141,0.25)] hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group'
               >
-                Confirm Cash Payment Received
+                <span>Confirm Cash Received</span>
+                <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </button>
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors font-semibold'
+                className='flex-1 h-16 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest active:scale-95 transition-all duration-300'
               >
                 Close
               </button>

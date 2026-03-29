@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
@@ -37,13 +37,23 @@ const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) =
     return formatTime(timeStr)
   }
 
-  const isExpired = now >= expiresMs
+  const hasNotifiedRef = useRef(false)
+  const [isExpired, setIsExpired] = useState(now >= expiresMs)
   const hasStarted = now >= appointmentStart
   const isToday = todayStr === apptStr
 
+  useEffect(() => {
+    const expired = now >= expiresMs
+    setIsExpired(expired)
+    
+    if (expired && !hasNotifiedRef.current) {
+      hasNotifiedRef.current = true
+      if (onExpired) onExpired()
+    }
+  }, [now, expiresMs, onExpired])
+
   // EXPIRED — slot released
   if (isExpired) {
-    if (onExpired) setTimeout(onExpired, 0)
     return (
       <div className='mb-4 p-4 rounded-2xl border border-red-100 bg-red-50/50 flex items-start gap-3 backdrop-blur-sm shadow-[0_5px_15px_rgba(239,68,68,0.05)] text-center sm:text-left'>
         <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0 shadow-sm mt-0.5">
@@ -134,6 +144,7 @@ const MyBookings = ({ setShowLogin }) => {
   const [error, setError] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showLoginRequired, setShowLoginRequired] = useState(false)
+  const initialLoadRef = useRef(true)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editMode, setEditMode] = useState('reschedule') // reschedule | extend
@@ -219,11 +230,12 @@ const MyBookings = ({ setShowLogin }) => {
       return
     }
     setIsAuthenticated(true)
-  }, [navigate])
+  }, [])
 
   const fetchBookings = async () => {
     try {
       setLoading(true)
+      setError('')
       const token = localStorage.getItem('token')
       if (!token) {
         setBookings([])
@@ -260,6 +272,7 @@ const MyBookings = ({ setShowLogin }) => {
       setBookings([])
     } finally {
       setLoading(false)
+      initialLoadRef.current = false
     }
   }
 
@@ -280,7 +293,19 @@ const MyBookings = ({ setShowLogin }) => {
   }
 
   const isEditableStatus = (booking) => ['pending', 'trial'].includes((booking?.status || '').toLowerCase())
-  const canCancelStatus = (booking) => !['canceled', 'completed', 'expired'].includes((booking?.status || '').toLowerCase())
+  const canCancelStatus = (booking) => {
+    const status = (booking?.status || '').toLowerCase();
+    // Only pending or trial can be canceled
+    if (status !== 'pending' && status !== 'trial') return false;
+    
+    // Check if the pickup date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const pickupDate = new Date(booking.pickupDate);
+    if (pickupDate < today) return false;
+
+    return true;
+  }
 
   const openEdit = async (booking, mode) => {
     const pickupTime = booking.pickupTime || '09:00'
@@ -573,7 +598,7 @@ const MyBookings = ({ setShowLogin }) => {
     return null
   }
 
-  if (loading) {
+  if (loading && initialLoadRef.current) {
     return (
       <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
@@ -715,29 +740,30 @@ const MyBookings = ({ setShowLogin }) => {
                   </div>
 
                   {/* Booking Details */}
-                  <div className='p-4 sm:p-6 flex flex-col flex-grow bg-white'>
-                    <h3
-                      className='text-base sm:text-xl font-black text-primary mb-1.5 sm:mb-2 line-clamp-1 group-hover:text-secondary transition-colors duration-500 cursor-pointer'
-                      onClick={() => continueToBook(booking)}
-                    >
-                      {booking.gown?.name || 'Gown Name'}
-                    </h3>
-                    <p className='text-[10px] sm:text-xs font-bold text-gray-400 mb-4 sm:mb-6'>
-                      by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
-                    </p>
+                  <div className='p-6 flex flex-col flex-grow bg-white'>
+                    <div className="mb-4">
+                      <h3
+                        className='text-xl sm:text-2xl font-black text-primary mb-1 break-words whitespace-normal leading-tight group-hover:text-secondary transition-colors duration-500 cursor-pointer'
+                        onClick={() => continueToBook(booking)}
+                      >
+                        {booking.gown?.name || 'Gown Name'}
+                      </h3>
+                      <p className='text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                        by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
+                      </p>
+                    </div>
 
                     {/* Rejection Reason Display */}
                     {(booking.status?.toLowerCase() === 'canceled' && booking.payment?.status?.toLowerCase() === 'rejected' && booking.payment?.rejectionReason) && (
-                      <div className='mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl'>
-                        <p className='text-xs font-black text-red-800 uppercase tracking-widest mb-1'>Payment Rejected</p>
-                        <p className='text-sm text-red-700 font-medium'>{booking.payment.rejectionReason}</p>
+                      <div className='mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl'>
+                        <p className='text-[10px] font-black text-red-800 uppercase tracking-widest mb-1.5'>Reason for rejection</p>
+                        <p className='text-sm text-red-700 font-medium leading-relaxed'>{booking.payment.rejectionReason}</p>
                       </div>
                     )}
 
-                    {/* Date/Status Information */}
-                    <div className='space-y-3 sm:space-y-4 mb-auto'>
+                    {/* Date/Status Information - Standardized Boxed Layout */}
+                    <div className='space-y-4 mb-auto'>
                       {isTrial ? (
-                        /* Use TrialCountdown for the primary time display on trials */
                         booking.trialExpiresAt && (
                           <TrialCountdown
                             trialExpiresAt={booking.trialExpiresAt}
@@ -749,59 +775,46 @@ const MyBookings = ({ setShowLogin }) => {
                           />
                         )
                       ) : (
-                        /* Grid layout for Reservation pickup/return - Stylized like Trial box */
-                        <div className='bg-primary/5 rounded-xl sm:rounded-[24px] p-3 sm:p-6 grid grid-cols-2 gap-x-2 sm:gap-x-6 mb-3 sm:mb-4 border border-primary/10 relative overflow-hidden group/box'>
-                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/box:opacity-100 transition-opacity duration-700"></div>
-                          <div className='flex flex-col relative z-10'>
-                            <p className='text-[9px] font-black text-primary/30 uppercase tracking-[0.15em] mb-2'>Pickup</p>
-                            <div className='flex items-center gap-1.5 sm:gap-3'>
-                              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <svg className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-                                </svg>
-                              </div>
+                        <div className='bg-gray-50/50 rounded-3xl p-5 grid grid-cols-2 gap-x-6 border border-gray-100 relative overflow-hidden group/box'>
+                          <div className='flex flex-col'>
+                            <p className='text-[10px] font-black text-primary/30 uppercase tracking-widest mb-2'>Pickup</p>
+                            <div className='flex items-center gap-3'>
                               <div className='min-w-0'>
-                                <p className='text-[11.5px] sm:text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.pickupDate)}</p>
-                                {booking.pickupTime && <p className='text-[9px] text-primary/40 font-bold uppercase tracking-wider mt-0.5'>{formatTime(booking.pickupTime)}</p>}
+                                <p className='text-sm sm:text-base font-black text-primary leading-tight'>{formatDate(booking.pickupDate)}</p>
+                                {booking.pickupTime && <p className='text-[10px] text-primary/40 font-bold uppercase tracking-wider mt-1'>{formatTime(booking.pickupTime)}</p>}
                               </div>
                             </div>
                           </div>
-                          <div className='flex flex-col border-l border-primary/10 pl-3 sm:pl-6 relative z-10'>
-                            <p className='text-[9px] font-black text-primary/30 uppercase tracking-[0.15em] mb-2'>Return</p>
-                            <div className='flex items-center gap-1.5 sm:gap-3'>
-                              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <svg className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-secondary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-                                </svg>
-                              </div>
+                          <div className='flex flex-col border-l border-gray-100 pl-6'>
+                            <p className='text-[10px] font-black text-primary/30 uppercase tracking-widest mb-2'>Return</p>
+                            <div className='flex items-center gap-3'>
                               <div className='min-w-0'>
-                                <p className='text-[11.5px] sm:text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.returnDate)}</p>
-                                {(booking.returnTime || booking.pickupTime) && <p className='text-[9px] text-secondary/40 font-bold uppercase tracking-wider mt-0.5'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
+                                <p className='text-sm sm:text-base font-black text-primary leading-tight'>{formatDate(booking.returnDate)}</p>
+                                {(booking.returnTime || booking.pickupTime) && <p className='text-[10px] text-secondary/40 font-bold uppercase tracking-wider mt-1'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
                               </div>
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {/* Return reminder: when return date is today and return time reached, show 2-hour window message */}
+                      {/* Return reminder */}
                       {!isTrial && (booking.status || '').toLowerCase() === 'confirmed' && booking.returnDate && (() => {
                         const today = toIsoDate(new Date())
                         const retDate = toIsoDate(new Date(booking.returnDate))
                         if (retDate !== today) return null
                         const retTime = booking.returnTime || booking.pickupTime || '09:00'
-                        const [h, m] = retTime.split(':').map(Number)
-                        const returnMinutes = (h || 0) * 60 + (m || 0)
                         const now = new Date()
                         const nowMinutes = now.getHours() * 60 + now.getMinutes()
+                        const [h, m] = retTime.split(':').map(Number)
+                        const returnMinutes = (h || 0) * 60 + (m || 0)
+                        
                         if (nowMinutes >= returnMinutes) {
                           return (
-                            <div className='mt-4 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3'>
-                              <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                 <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                              </div>
-                              <p className='text-xs font-bold text-orange-800 leading-relaxed'>You are allocated 2 hours to return the apparel to the boutique.</p>
+                            <div className='mt-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3'>
+                              <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                              <p className='text-xs font-bold text-orange-800 leading-relaxed'>Please return the apparel to the boutique within the next 2 hours.</p>
                             </div>
                           )
                         }
@@ -809,58 +822,63 @@ const MyBookings = ({ setShowLogin }) => {
                       })()}
                     </div>
 
-                    {/* Price - Only show for reservations */}
-                    {!isTrial && (
-                      <div className='pt-4 sm:pt-6 border-t border-gray-100 mt-4 sm:mt-6'>
-                        <div className='flex justify-between items-end'>
-                          <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Total Price</span>
-                          <span className='text-2xl font-black text-primary flex items-baseline gap-1'>
-                            <span className="text-secondary text-sm">{currency}</span>
+                    {/* Footer Info: Price & Specific Actions */}
+                    <div className='pt-6 border-t border-gray-50 mt-6'>
+                      {!isTrial && (
+                        <div className='flex justify-between items-center mb-6'>
+                          <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Total Amount</span>
+                          <span className='text-3xl font-black text-primary flex items-baseline gap-1'>
+                            <span className="text-sm opacity-40">{currency}</span>
                             {booking.price?.toLocaleString() || '0'}
                           </span>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Actions - Reschedule and Cancel aligned in one row */}
-                    <div className='mt-4 sm:mt-6 flex flex-col gap-2 sm:gap-3'>
-                      <div className='grid grid-cols-2 gap-2 sm:gap-3'>
-                        <button
-                          type='button'
-                          onClick={() => openEdit(booking, 'reschedule')}
-                          disabled={!editable}
-                          className={`px-4 py-3.5 sm:py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${editable
-                            ? 'border-primary/20 text-primary hover:bg-primary/5 hover:-translate-y-1 hover:border-primary/40 shadow-sm'
-                            : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
-                            }`}
-                        >
-                          Reschedule
-                        </button>
-                        <button
-                          type='button'
-                          onClick={() => cancelBooking(booking)}
-                          disabled={!cancelable}
-                          className={`px-4 py-3.5 sm:py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${cancelable 
-                            ? 'border-red-200 text-red-600 hover:bg-red-50 hover:-translate-y-1 hover:border-red-300 shadow-sm' 
-                            : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
-                            }`}
-                        >
-                          {isTrial ? 'Cancel' : 'Cancel'}
-                        </button>
-                      </div>
-                      {isTrial && (
-                        <button
-                          type='button'
-                          onClick={() => continueToBook(booking)}
-                          className='w-full px-4 py-3 rounded-2xl text-[10px] uppercase tracking-widest font-black bg-primary text-white hover:bg-primary-dull transition-all shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_15px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1 mt-2'
-                        >
-                          Continue to Book
-                        </button>
                       )}
 
-                      {!editable && (
-                        <p className='text-[10px] font-bold text-gray-400 mt-2 text-center'>Editing is only available for Pending/Trial.</p>
-                      )}
+                      <div className='flex flex-col gap-3'>
+                        {/* Status Specific Global Actions */}
+                        <div className='grid grid-cols-2 gap-3'>
+                          <button
+                            type='button'
+                            onClick={() => openEdit(booking, 'reschedule')}
+                            disabled={!editable}
+                            className={`h-14 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all ${editable
+                              ? 'border-primary/20 text-primary bg-white hover:bg-primary hover:text-white hover:border-primary shadow-lg shadow-primary/5 active:scale-95'
+                              : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
+                              }`}
+                          >
+                            Reschedule
+                          </button>
+                          <button
+                            type='button'
+                            onClick={() => cancelBooking(booking)}
+                            disabled={!cancelable}
+                            className={`h-14 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all ${cancelable 
+                              ? 'border-red-100 text-red-500 bg-white hover:bg-red-500 hover:text-white hover:border-red-500 shadow-lg shadow-red-500/5 active:scale-95' 
+                              : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
+                              }`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+
+
+                        {isTrial && (
+                          <button
+                            type='button'
+                            onClick={() => continueToBook(booking)}
+                            className='h-14 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all'
+                          >
+                            Continue to Book
+                          </button>
+                        )}
+
+                        {!editable && !['canceled', 'expired'].includes((booking.status || '').toLowerCase()) && (
+                          <div className='flex items-center justify-center gap-2 p-3 bg-gray-50 rounded-xl'>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Viewing Only</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
