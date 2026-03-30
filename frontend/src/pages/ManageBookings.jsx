@@ -659,19 +659,19 @@ const ManageBookings = () => {
                         {booking.status === 'trial' ? (
                           <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[160px]">
                             <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Try-On Appointment</p>
-                            <p className="text-base font-black text-primary-dull break-words whitespace-normal leading-tight">{formatDate(booking.pickupDate)}</p>
+                            <p className="text-[13px] font-black text-primary-dull whitespace-nowrap leading-tight">{formatDate(booking.pickupDate)}</p>
                             <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.pickupTime || '09:00'}</p>
                           </div>
                         ) : (
                           <>
                             <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[140px]">
                               <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup Date</p>
-                              <p className="text-base font-black text-primary-dull whitespace-normal">{formatDate(booking.pickupDate)}</p>
+                              <p className="text-[13px] font-black text-primary-dull whitespace-nowrap">{formatDate(booking.pickupDate)}</p>
                               <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.pickupTime || '09:00'}</p>
                             </div>
                             <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[140px]">
                               <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Return Date</p>
-                              <p className="text-base font-black text-primary-dull whitespace-normal">{formatDate(booking.returnDate)}</p>
+                              <p className="text-[13px] font-black text-primary-dull whitespace-nowrap">{formatDate(booking.returnDate)}</p>
                               <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.returnTime || '09:00'}</p>
                             </div>
                           </>

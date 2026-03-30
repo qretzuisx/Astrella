@@ -780,7 +780,7 @@ const MyBookings = ({ setShowLogin }) => {
                             <p className='text-[10px] font-black text-primary/30 uppercase tracking-widest mb-2'>Pickup</p>
                             <div className='flex items-center gap-3'>
                               <div className='min-w-0'>
-                                <p className='text-sm sm:text-base font-black text-primary leading-tight'>{formatDate(booking.pickupDate)}</p>
+                                <p className='text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.pickupDate)}</p>
                                 {booking.pickupTime && <p className='text-[10px] text-primary/40 font-bold uppercase tracking-wider mt-1'>{formatTime(booking.pickupTime)}</p>}
                               </div>
                             </div>
@@ -789,7 +789,7 @@ const MyBookings = ({ setShowLogin }) => {
                             <p className='text-[10px] font-black text-primary/30 uppercase tracking-widest mb-2'>Return</p>
                             <div className='flex items-center gap-3'>
                               <div className='min-w-0'>
-                                <p className='text-sm sm:text-base font-black text-primary leading-tight'>{formatDate(booking.returnDate)}</p>
+                                <p className='text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.returnDate)}</p>
                                 {(booking.returnTime || booking.pickupTime) && <p className='text-[10px] text-secondary/40 font-bold uppercase tracking-wider mt-1'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
                               </div>
                             </div>
