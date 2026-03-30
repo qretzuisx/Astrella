@@ -1,4 +1,4 @@
-# Astrella: Boutique Inventory and Booking Management
+# Astrella: A web-based apparel selection and reservation system with artificial intelligence recommendation
 
 Astrella is a comprehensive digital platform designed for boutique owners and customers, specifically tailored for gown rentals and apparel management. This project serves as a Capstone Project, focusing on operational efficiency, inventory precision, and an enhanced user experience for garment selection.
 
