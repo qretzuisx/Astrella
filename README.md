@@ -20,7 +20,6 @@ This project is developed by 3rd-year students of the Bachelor of Science in Inf
 * **Booking System**: An integrated interface allowing customers to check availability and secure rentals for specific dates.
 * **Specialized Dashboards**: Distinct portals for administrators to manage operations and for customers to track their personal booking history.
 * **Advanced Image Processing**: Integration with ImageKit for optimized media delivery, alongside automated background removal and facial analysis for personalized garment matching.
-* **Automated Communication**: Notification system for booking updates and reminders via email.
 
 ---
 
