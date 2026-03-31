@@ -23,7 +23,7 @@ const Recommendations = () => {
         const skinTone = searchParams.get('skinTone');
         const eventType = searchParams.get('eventType');
         const faceShape = searchParams.get('faceShape');
-        const age = searchParams.get('age');
+        const ageGroup = searchParams.get('ageGroup') || searchParams.get('age');
         const sex = searchParams.get('sex');
 
         const params = new URLSearchParams();
@@ -31,7 +31,7 @@ const Recommendations = () => {
         if (skinTone) params.append('skinTone', skinTone);
         if (eventType) params.append('eventType', eventType);
         if (faceShape) params.append('faceShape', faceShape);
-        if (age) params.append('age', age);
+        if (ageGroup) params.append('ageGroup', ageGroup);
         if (sex) params.append('sex', sex);
 
         const response = await fetch(`${API_URL}/user/recommendations?${params.toString()}`);
@@ -52,7 +52,7 @@ const Recommendations = () => {
             skinTone: skinTone || data.preferences?.skinTone,
             eventType: eventType || data.preferences?.eventType,
             faceShape: faceShape || data.preferences?.faceShape,
-            age: age || data.preferences?.age,
+            ageGroup: ageGroup || data.preferences?.ageGroup || data.preferences?.age,
             sex: sex || data.preferences?.sex
           };
 
@@ -84,7 +84,7 @@ const Recommendations = () => {
     if (editedPrefs.skinTone) params.append('skinTone', editedPrefs.skinTone);
     if (editedPrefs.eventType) params.append('eventType', editedPrefs.eventType);
     if (editedPrefs.faceShape) params.append('faceShape', editedPrefs.faceShape);
-    if (editedPrefs.age) params.append('age', editedPrefs.age);
+    if (editedPrefs.ageGroup) params.append('ageGroup', editedPrefs.ageGroup);
     if (editedPrefs.sex) params.append('sex', editedPrefs.sex);
 
     navigate(`/recommendations?${params.toString()}`);
@@ -276,7 +276,7 @@ const Recommendations = () => {
             )}
 
             {/* Your Preferences - Between Top 3 and Others */}
-            {(preferences.bodyType || preferences.skinTone || preferences.eventType || preferences.faceShape || preferences.age || preferences.sex) && (
+            {(preferences.bodyType || preferences.skinTone || preferences.eventType || preferences.faceShape || preferences.ageGroup || preferences.sex) && (
               <div className="bg-white rounded-[40px] shadow-xl p-8 sm:p-12 mb-16 border border-blue-50/50 relative overflow-hidden group">
                 {/* Background decorative element */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-transform duration-700 group-hover:scale-110"></div>
@@ -359,11 +359,11 @@ const Recommendations = () => {
                   </div>
 
                   {/* Age Group */}
-                  <div className="space-y-1.5 sm:space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                     <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Age Group</label>
                     <select
-                      value={editedPrefs.age || ''}
-                      onChange={(e) => handlePrefChange('age', e.target.value)}
+                      value={editedPrefs.ageGroup || ''}
+                      onChange={(e) => handlePrefChange('ageGroup', e.target.value)}
                       className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>

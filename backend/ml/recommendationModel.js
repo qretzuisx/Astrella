@@ -318,6 +318,26 @@ class HybridRecommendationModel {
                 if (!matchesEventType) continue;
             }
 
+            // STRICT AGE GROUP FILTERING
+            if (preferences.ageGroup || preferences.age) {
+                const selectedAgeGroup = (preferences.ageGroup || preferences.age).toLowerCase().trim();
+                const gownAgeGroups = (gown.ageGroup || []).map(a => a.toLowerCase().trim());
+                if (!gownAgeGroups.includes(selectedAgeGroup)) continue;
+            }
+
+            // STRICT SEX FILTERING
+            if (preferences.sex) {
+                const selectedSex = preferences.sex.toLowerCase().trim();
+                const gownSex = (gown.sex || '').toLowerCase().trim();
+                if (gownSex !== selectedSex && gownSex !== 'unisex') continue;
+            }
+
+            // STRICT BODY TYPE ALIGNMENT (Optional: if the library is large enough)
+            if (preferences.bodyType) {
+                const cbScoreTemp = ContentBasedModel.calculateScore(gown, { bodyType: preferences.bodyType });
+                if (cbScoreTemp < 15) continue; // Must align with at least one major stylistic attribute
+            }
+
             // 1. Collaborative Filtering Score (0-5 scale)
             const cfScore = this.collaborativeModel.predictScore(userId, gownId);
 

@@ -403,24 +403,38 @@ export const getRecommendations = async (req, res) => {
         // [LOGIC] Update dynamic statuses in batch for performance
         await batchUpdateGownStatuses(allGowns);
 
-        // [LOGIC] Strict Filtering (Event Type, Age, Sex)
+        // [LOGIC] Strict Filtering (Event Type, Age, Sex, Body Type Style Alignment)
+        const selectedAgeGroup = ageGroup || req.query.age; // Support both naming conventions
+        
         if (eventType) {
             allGowns = allGowns.filter(g => g.eventType.map(e => e.toLowerCase()).includes(eventType.toLowerCase()));
         }
-        if (ageGroup) {
-            allGowns = allGowns.filter(g => g.ageGroup.map(a => a.toLowerCase()).includes(ageGroup.toLowerCase()));
+        if (selectedAgeGroup) {
+            allGowns = allGowns.filter(g => g.ageGroup.map(a => a.toLowerCase()).includes(selectedAgeGroup.toLowerCase()));
         }
         if (sex) {
             allGowns = allGowns.filter(g => g.sex.toLowerCase() === sex.toLowerCase() || g.sex.toLowerCase() === 'unisex');
         }
 
+        // [LOGIC] Strict Body Type Alignment (Fabric & Color)
+        if (bodyType) {
+            const { calculateRecommendationScore } = await import("../utils/recommendationUtils.js");
+            allGowns = allGowns.filter(gown => {
+                // For Body Type, we want a minimum base score for stylistic alignment
+                const styleScore = calculateRecommendationScore(gown, { bodyType });
+                // If the gown doesn't match the recommended color family OR fabric for this body type, 
+                // it won't meet the score threshold of 25 (10 color + 10 fabric + 5 base)
+                return styleScore >= 15; // At least base + one major attribute (color or fabric)
+            });
+        }
+
         // [LOGIC] Ranking based on AI Stylist logic
         const scoredGowns = allGowns.map(gown => {
-            const score = calculateRecommendationScore(gown, { bodyType, skinTone, height, eventType, faceShape, ageGroup, sex });
+            const score = calculateRecommendationScore(gown, { bodyType, skinTone, height, eventType, faceShape, ageGroup: selectedAgeGroup, sex });
             return {
                 gown,
                 score,
-                matchReason: score >= 70 ? "Excellent match" : score >= 50 ? "Good match" : "Fair match"
+                matchReason: score >= 80 ? "Excellent match" : score >= 60 ? "Great match" : "Good match"
             };
         }).sort((a, b) => b.score - a.score);
 

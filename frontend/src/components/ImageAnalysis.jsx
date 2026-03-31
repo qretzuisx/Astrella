@@ -130,51 +130,92 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
     }
   };
 
-  const analyzeBodyType = async (imgElement) => {
+  const analyzeBodyType = async (imgElement, faceLandmarks) => {
     try {
+      if (!faceLandmarks) return 'Rectangle';
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = imgElement.width;
       canvas.height = imgElement.height;
       ctx.drawImage(imgElement, 0, 0);
-      const regions = [
-        { x: 0.25, y: 0.18, w: 0.5, h: 0.12 },
-        { x: 0.32, y: 0.38, w: 0.36, h: 0.1 },
-        { x: 0.28, y: 0.52, w: 0.44, h: 0.12 }
-      ];
-      const getRegionWidth = (region) => {
-        const startX = Math.floor(canvas.width * region.x);
-        const endX = Math.floor(canvas.width * (region.x + region.w));
-        const startY = Math.floor(canvas.height * region.y);
-        const endY = Math.floor(canvas.height * (region.y + region.h));
-        let leftEdge = endX, rightEdge = startX, edgeCount = 0;
-        for (let y = startY; y < endY; y += 3) {
-          let rowLeftEdge = endX, rowRightEdge = startX;
-          for (let x = startX; x < endX; x += 2) {
-            const { data } = ctx.getImageData(x, y, 1, 1);
-            const brightness = (data[0] + data[1] + data[2]) / 3;
-            if (brightness < 200 && data[3] > 200) {
-              if (x < rowLeftEdge) rowLeftEdge = x;
-              if (x > rowRightEdge) rowRightEdge = x;
-            }
-          }
-          if (rowLeftEdge < rowRightEdge) {
-            leftEdge = Math.min(leftEdge, rowLeftEdge);
-            rightEdge = Math.max(rightEdge, rowRightEdge);
-            edgeCount++;
+
+      // 1. FAST ENVIRONMENT SAMPLING (Detect Background Color)
+      const topCornerL = ctx.getImageData(canvas.width * 0.05, canvas.height * 0.05, 1, 1).data;
+      const topCornerR = ctx.getImageData(canvas.width * 0.95, canvas.height * 0.05, 1, 1).data;
+      const avgBgR = (topCornerL[0] + topCornerR[0]) / 2;
+      const avgBgG = (topCornerL[1] + topCornerR[1]) / 2;
+      const avgBgB = (topCornerL[2] + topCornerR[2]) / 2;
+
+      // 2. ANATOMICAL ANCHORING (Using Face Landmarks)
+      const landmarks = faceLandmarks.positions;
+      const chin = landmarks[8];
+      const leftEye = landmarks[36];
+      const rightEye = landmarks[45];
+      const eyeCenterY = (leftEye.y + rightEye.y) / 2;
+      
+      // Face Height (H) is the scale unit
+      const faceHeight = Math.max(Math.abs(chin.y - eyeCenterY), 20); 
+
+      // Anchored Search Heights (The "Heads" Method)
+      const shoulderY = Math.floor(chin.y + faceHeight * 0.75);
+      const waistY = Math.floor(chin.y + faceHeight * 2.5);
+      const hipY = Math.floor(chin.y + faceHeight * 3.5);
+
+      const findWidthAtHeight = (y) => {
+        if (y >= canvas.height) return 0;
+        
+        let leftEdge = canvas.width, rightEdge = 0;
+        // Search center outwards or full scan
+        const centerX = Math.floor(chin.x);
+        const searchWidth = Math.min(canvas.width * 0.45, faceHeight * 6); // Max scan range
+
+        for (let x = Math.max(0, centerX - searchWidth); x < Math.min(canvas.width, centerX + searchWidth); x += 2) {
+          const { data } = ctx.getImageData(x, y, 1, 1);
+          // Euclidean Color Distance from Background
+          const dist = Math.sqrt(
+            Math.pow(data[0] - avgBgR, 2) + 
+            Math.pow(data[1] - avgBgG, 2) + 
+            Math.pow(data[2] - avgBgB, 2)
+          );
+
+          // If pixel is significantly different from background, it's "Body"
+          if (dist > 45 && data[3] > 200) {
+            if (x < leftEdge) leftEdge = x;
+            if (x > rightEdge) rightEdge = x;
           }
         }
-        return edgeCount > 3 ? Math.max(0, rightEdge - leftEdge) : 0;
+        return Math.max(0, rightEdge - leftEdge);
       };
-      const shoulderWidth = getRegionWidth(regions[0]), waistWidth = getRegionWidth(regions[1]), hipWidth = getRegionWidth(regions[2]);
-      if (shoulderWidth < 30 || waistWidth < 30 || hipWidth < 30) return 'Rectangle';
-      const waistToShoulder = waistWidth / shoulderWidth, waistToHip = waistWidth / hipWidth, hipToShoulder = hipWidth / shoulderWidth, shoulderToHip = shoulderWidth / hipWidth;
-      if (waistToShoulder < 0.75 && waistToHip < 0.75 && Math.abs(hipToShoulder - 1) < 0.1) return 'Hourglass';
-      else if (hipToShoulder > 1.1 && waistToHip < 0.85) return 'Pear';
-      else if (shoulderToHip > 1.15 && waistToShoulder < 0.85) return 'Inverted Triangle';
-      else if (shoulderToHip > 1.05 && waistToShoulder < 0.9) return 'Trapezoid';
-      else if (waistToShoulder > 1.0 && waistToHip > 1.0) return 'Oval';
-      else if (waistToShoulder > 0.9 && waistToHip > 0.9 && Math.abs(hipToShoulder - 1) < 0.15) return 'Rectangle';
+
+      const shoulderWidth = findWidthAtHeight(shoulderY);
+      const waistWidth = findWidthAtHeight(waistY);
+      const hipWidth = findWidthAtHeight(hipY);
+
+      // Validation check - if we couldn't find edges, fallback
+      if (shoulderWidth < 20 || waistWidth < 20 || hipWidth < 20) return 'Rectangle';
+
+      const waistToShoulder = waistWidth / shoulderWidth;
+      const waistToHip = waistWidth / hipWidth;
+      const hipToShoulder = hipWidth / shoulderWidth;
+      const shoulderToHip = shoulderWidth / hipWidth;
+
+      // 3. REFINED SHAPE RATIO LOGIC
+      if (waistToShoulder < 0.72 && waistToHip < 0.72 && Math.abs(hipToShoulder - 1) < 0.12) {
+        return 'Hourglass';
+      } else if (hipToShoulder > 1.15 && waistToHip < 0.88) {
+        return 'Pear';
+      } else if (shoulderToHip > 1.2 && waistToShoulder < 0.82) {
+        return 'Inverted Triangle'; 
+      } else if (shoulderToHip > 1.08 && waistToShoulder < 0.88) {
+        // Trapezoid has a slight taper, but not as dramatic as Inverted Triangle
+        return 'Trapezoid';
+      } else if (waistToShoulder > 1.02 && waistToHip > 1.02) {
+        return 'Oval';
+      } else if (waistToShoulder > 0.85 && waistToHip > 0.85 && Math.abs(hipToShoulder - 1) < 0.18) {
+        return 'Rectangle';
+      }
+
       return 'Rectangle';
     } catch (error) {
       console.error('Body type analysis error:', error);
@@ -254,7 +295,11 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         sex = detection.gender === 'female' ? 'Female' : 'Male';
       }
       setAnalysisProgress('Analyzing attributes...');
-      const [skinTone, bodyType, faceShape] = await Promise.all([analyzeSkinTone(img, faceLandmarks), analyzeBodyType(img), analyzeFaceShape(img, faceLandmarks)]);
+      const [skinTone, bodyType, faceShape] = await Promise.all([
+        analyzeSkinTone(img, faceLandmarks), 
+        analyzeBodyType(img, faceLandmarks), 
+        analyzeFaceShape(img, faceLandmarks)
+      ]);
       onAnalysisComplete({ skinTone, bodyType, faceShape, ageGroup, sex, age: age ?? '', confidence: age && sex ? 'High' : 'Medium' });
     } catch (error) {
       console.error('Analysis error:', error);

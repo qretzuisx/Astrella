@@ -14,32 +14,39 @@ import fabricUtils from './fabricUtils.js';
  */
 const bodyTypeRecommendations = {
     'Hourglass': {
-        families: ['blue', 'neutral', 'red', 'green'],
-        fabrics: ['satin', 'silk', 'chiffon', 'wool', 'cotton', 'linen'],
+        families: ['blue', 'neutral', 'red', 'green', 'pink', 'black', 'white', 'gold'],
+        fabrics: ['satin', 'silk', 'chiffon', 'wool', 'cotton', 'linen', 'lace', 'jersey'],
+        keywords: ['mermaid', 'sheath', 'bodycon', 'wrap', 'fitted', 'belted', 'v-neck', 'sweetheart']
     },
     'Pear': {
-        families: ['neutral', 'blue', 'gray', 'dark'],
-        fabrics: ['chiffon', 'tulle', 'organza', 'wool', 'structured'],
+        families: ['neutral', 'blue', 'gray', 'dark', 'purple', 'teal', 'burgundy'],
+        fabrics: ['chiffon', 'tulle', 'organza', 'wool', 'structured', 'crepe', 'lace'],
+        keywords: ['a-line', 'empire', 'ball gown', 'off-the-shoulder', 'boat neck', 'wide leg', 'flared']
     },
     'Rectangle': {
-        families: ['all', 'vibrant', 'earth'],
-        fabrics: ['chiffon', 'tulle', 'organza', 'satin', 'denim', 'velvet', 'leather'],
+        families: ['all', 'vibrant', 'earth', 'pastels', 'bright', 'patterns'],
+        fabrics: ['chiffon', 'tulle', 'organza', 'satin', 'denim', 'velvet', 'leather', 'ruffles'],
+        keywords: ['peplum', 'layered', 'sweetheart', 'cut-out', 'structured shoulders', 'pleated', 'ruched']
     },
     'Diamond': {
-        families: ['neutral', 'blue', 'gray'],
-        fabrics: ['chiffon', 'tulle', 'wool', 'silk'],
+        families: ['neutral', 'blue', 'gray', 'dark', 'olive', 'navy'],
+        fabrics: ['chiffon', 'tulle', 'wool', 'silk', 'cotton', 'soft'],
+        keywords: ['empire', 'shift', 'v-neck', 'vertical', 'tunic', 'flowy', 'wrap']
     },
     'Inverted Triangle': {
-        families: ['blue', 'neutral', 'gray', 'white', 'beige'],
+        families: ['blue', 'neutral', 'gray', 'white', 'beige', 'navy', 'green'],
         fabrics: ['wool', 'cotton', 'linen', 'structured', 'piña', 'jusi', 'silk', 'organza', 'satin'],
+        keywords: ['v-neck', 'halter', 'full skirt', 'a-line', 'wide leg', 'dark top', 'raglan']
     },
     'Trapezoid': {
-        families: ['all', 'blue', 'neutral', 'gray', 'red', 'green'],
-        fabrics: ['wool', 'cotton', 'linen', 'structured', 'piña', 'jusi', 'silk', 'satin'],
+        families: ['all', 'blue', 'neutral', 'gray', 'red', 'green', 'vibrant'],
+        fabrics: ['wool', 'cotton', 'linen', 'structured', 'piña', 'jusi', 'silk', 'satin', 'twill'],
+        keywords: ['tailored', 'slim fit', 'blazer', 'structured', 'classic', 'tapered']
     },
     'Oval': {
-        families: ['blue', 'neutral', 'gray', 'red'],
-        fabrics: ['wool', 'cotton', 'linen', 'structured', 'silk'],
+        families: ['blue', 'neutral', 'gray', 'red', 'dark', 'monochrome'],
+        fabrics: ['wool', 'cotton', 'linen', 'structured', 'silk', 'soft drape'],
+        keywords: ['empire', 'shift', 'vertical stripes', 'v-neck', 'unstructured', 'longline']
     }
 };
 
@@ -143,6 +150,17 @@ export const calculateRecommendationScore = (gown, preferences) => {
     // 5. [LOGIC] Face Shape Recommendations (10 points - base consideration)
     if (preferences.faceShape) {
         score += 10;
+    }
+
+    // 6. [LOGIC] Keyword Matching for Silhouette (Bonus - 20 points)
+    if (preferences.bodyType && bodyTypeRecommendations[preferences.bodyType]) {
+        const rec = bodyTypeRecommendations[preferences.bodyType];
+        const searchText = `${gown.name} ${gown.description || ''}`.toLowerCase();
+        
+        const matchedKeywords = rec.keywords.filter(keyword => searchText.includes(keyword.toLowerCase()));
+        if (matchedKeywords.length > 0) {
+            score += 20; // Significant bonus for matching recommended silhouette keywords
+        }
     }
 
     // 6. [LOGIC] Sex Matching (Bonus for explicit match - 10 points)

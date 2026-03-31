@@ -145,7 +145,7 @@ const Hero = () => {
     params.append('skinTone', skinTone);
     params.append('eventType', eventType);
     params.append('faceShape', faceShape);
-    params.append('age', ageGroup);
+    params.append('ageGroup', ageGroup);
     params.append('sex', sex);
 
     navigate(`/recommendations?${params.toString()}`);
