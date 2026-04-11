@@ -380,7 +380,7 @@ const ManageGowns = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-gray-50 max-w-full overflow-x-hidden'>
+    <div className='flex min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] max-w-full overflow-x-hidden'>
       <OwnerSidebar />
 
       <div className='flex-1 min-w-0 p-3 sm:p-6 lg:p-8'>

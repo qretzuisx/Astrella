@@ -136,10 +136,10 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
 
   return (
     <div onClick={() => { navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0, 0) }}
-      className={`group overflow-hidden shadow-[0_15px_50px_rgba(1,62,141,0.06)] hover:shadow-[0_30px_70px_rgba(1,62,141,0.15)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col h-full bg-white border border-primary/5 ${customClassName || "rounded-[32px] sm:rounded-[48px]"}`}
+      className={`group overflow-hidden shadow-[0_20px_60px_rgba(1,62,141,0.08)] hover:shadow-[0_40px_100px_rgba(1,62,141,0.18)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col h-full bg-white/40 backdrop-blur-xl border border-white/40 ${customClassName || "rounded-[24px] sm:rounded-[36px]"}`}
     >
 
-      <div className="relative overflow-hidden bg-white aspect-[3/4] sm:aspect-[2/3] w-full p-2">
+      <div className="relative overflow-hidden bg-white/10 aspect-square sm:aspect-[4/5] w-full p-2">
         <img
           src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
           alt={gown.name}
@@ -148,77 +148,90 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
         />
 
         {/* Status Pill Overlay */}
-        <div className={`absolute top-4 left-4 px-4 sm:px-3 py-2 sm:py-3 rounded-2xl sm:rounded-[24px] font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(statusText)}`}>
+        <div className={`absolute top-3 sm:top-4 left-3 sm:left-4 px-3 sm:px-2.5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-[20px] font-black text-[9px] sm:text-[10px] uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(statusText)}`}>
           {statusText}
         </div>
 
 
 
-        <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 bg-white/60 backdrop-blur-xl text-primary px-4 sm:px-6 py-2 sm:py-3 rounded-2xl sm:rounded-[24px] shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-white/40 transition-all duration-500 sm:group-hover:-translate-y-2 flex items-center gap-2">
+        <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 bg-white/60 backdrop-blur-xl text-primary px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-xl sm:rounded-[20px] shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-white/40 transition-all duration-500 sm:group-hover:-translate-y-2 flex items-center gap-2">
           <div className="flex items-baseline gap-1">
-            <span className="text-secondary text-[10px] sm:text-xs font-black">{currency}</span>
-            <span className="font-black text-base sm:text-xl text-primary">{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
+            <span className="text-secondary text-[9px] sm:text-[10px] font-black">{currency}</span>
+            <span className="font-black text-sm sm:text-lg text-primary">{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 flex flex-col flex-grow bg-white">
+      <div className="p-2 sm:p-4 flex flex-col flex-grow bg-white/30 backdrop-blur-md">
         <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
           <div className="w-3 sm:w-5 h-0.5 sm:h-1 bg-secondary-light rounded-full opacity-60 group-hover:w-5 sm:group-hover:w-8 group-hover:opacity-100 transition-all duration-500"></div>
           <span className="text-[9px] font-black text-secondary uppercase tracking-widest line-clamp-1">{gown.category || 'Apparel'}</span>
         </div>
 
-        <h3 className="text-sm sm:text-xl font-black text-primary mb-1 sm:mb-2 transition-colors duration-500 line-clamp-2 leading-tight">{gown.name}</h3>
+        <h3 className="text-[12px] sm:text-base font-black text-primary mb-0.5 transition-colors duration-500 line-clamp-2 leading-tight">{gown.name}</h3>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
-            navigate(`/owner-profile/${ownerId}`)
-          }}
-          className="text-gray-400 hover:text-primary text-[10px] sm:text-xs mb-3 sm:mb-5 font-bold text-left transition-colors flex items-center gap-1 sm:gap-2 touch-target w-fit -ml-1 sm:ml-0 px-1 sm:px-0"
-        >
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-200 group-hover:bg-primary/20 transition-colors"></div>
-          <span className="line-clamp-1 truncate block">{gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : 'Owner') : 'Boutique Partner'}</span>
-        </button>
+        <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+              navigate(`/owner-profile/${ownerId}`)
+            }}
+            className="text-gray-400 hover:text-primary text-[9px] sm:text-[10px] font-bold text-left transition-colors flex items-center gap-1 sm:gap-2 touch-target w-fit -ml-0.5 sm:ml-0 px-1 sm:px-0"
+          >
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-200 group-hover:bg-primary/20 transition-colors"></div>
+            <span className="line-clamp-1 truncate block">{gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : 'Owner') : 'Partner'}</span>
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+              if (ownerId) navigate(`/owner-profile/${ownerId}`)
+            }}
+            className="text-secondary hover:text-primary text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-colors whitespace-nowrap"
+          >
+            View Profile
+          </button>
+        </div>
 
         {/* Details Section - Consistent 4-detail grid for all devices */}
-        <div className="mt-auto pt-4 sm:pt-5 border-t border-gray-100 grid grid-cols-2 gap-x-2 sm:gap-x-4 gap-y-3 sm:gap-y-4">
+        <div className="mt-auto pt-2 sm:pt-3 border-t border-gray-100/50 grid grid-cols-2 gap-x-2 sm:gap-x-3 gap-y-1.5 sm:gap-y-2">
 
           {/* Colors */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Colors</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-80">Colors</span>
             <div className="flex items-center gap-0 sm:gap-2">
               <div className="h-6 sm:h-8 flex pr-1 sm:pr-0 items-center justify-center">
                 <div className="scale-75 sm:scale-100 origin-left">
                   {renderColorSwatches(gown.color)}
                 </div>
               </div>
-              <span className="text-[9px] sm:text-[10px] font-black text-primary/70 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Color')}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-primary/80 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">{Array.isArray(gown.color) ? gown.color[0] : (gown.color || 'Color')}</span>
             </div>
           </div>
 
           {/* Size */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Size</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest opacity-80">Size</span>
             <div className="flex items-center gap-1 sm:gap-2">
               <span className="text-[9px] sm:text-[10px] font-black text-primary/80 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{Array.isArray(gown.size) ? (gown.size[0] || 'Size') : (gown.size || 'Size')}</span>
             </div>
           </div>
 
           {/* Material */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Material</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-80">Material</span>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{gown.fabric || 'Fabric'}</span>
+              <span className="text-[10px] font-black text-primary/70 tracking-wide truncate group-hover:text-primary transition-colors duration-500">{gown.fabric || 'Fabric'}</span>
             </div>
           </div>
 
           {/* Best For */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-60">Best For</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] font-black text-secondary uppercase tracking-widest opacity-80">Best For</span>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-primary/50 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">
+              <span className="text-[10px] font-black text-primary/70 tracking-wide truncate group-hover:text-primary transition-colors duration-500 capitalize">
                 {Array.isArray(gown.eventType) && gown.eventType.length > 0
                   ? gown.eventType[0]
                   : gown.eventtype || gown.eventType || 'Occasion'}

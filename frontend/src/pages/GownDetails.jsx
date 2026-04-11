@@ -690,22 +690,37 @@ const GownDetails = () => {
                 <span className="text-gray-400 text-xs font-bold">ID: {gown._id?.slice(-6).toUpperCase()}</span>
               </div>
               <h1 className='text-3xl sm:text-5xl font-black text-primary tracking-tight leading-tight mb-2'>{gown.name}</h1>
-              <div className='flex items-center gap-4 py-4 sm:py-6 border-y border-primary/5'>
-                <div className='w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-[0_10px_20px_rgba(1,62,141,0.2)]'>
-                  {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
+              <div className='flex items-center justify-between py-4 sm:py-6 border-y border-primary/5'>
+                <div className="flex items-center gap-4">
+                  <div className='w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-[0_10px_20px_rgba(1,62,141,0.2)]'>
+                    {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col">
+                    <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>by</p>
+                    <button
+                      onClick={() => {
+                        const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+                        navigate(`/owner-profile/${ownerId}`)
+                      }}
+                      className='text-primary hover:text-secondary-light font-black text-lg transition-colors text-left'
+                    >
+                      {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>by</p>
-                  <button
-                    onClick={() => {
-                      const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
-                      navigate(`/owner-profile/${ownerId}`)
-                    }}
-                    className='text-primary hover:text-secondary-light font-black text-lg transition-colors'
-                  >
-                    {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
-                  </button>
-                </div>
+                
+                <button
+                  onClick={() => {
+                    const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+                    navigate(`/owner-profile/${ownerId}`)
+                  }}
+                  className='px-5 py-2.5 bg-primary/5 hover:bg-primary text-primary hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/10 hover:border-primary transition-all flex items-center justify-center gap-2 group shadow-sm shrink-0'
+                >
+                  View Profile
+                  <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
 

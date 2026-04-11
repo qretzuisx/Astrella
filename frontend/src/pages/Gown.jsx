@@ -206,7 +206,7 @@ const Gown = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 pb-20 sm:pb-0 bg-[#FDFDFF] min-h-screen'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 pb-20 sm:pb-0 bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] min-h-screen'>
       {error && (
         <div className='mb-6 p-6 bg-red-50 border border-red-100 rounded-[32px] animate-shake flex flex-col sm:flex-row items-center justify-between gap-4'>
           <p className='text-red-800 font-bold flex items-center gap-3 text-lg'>

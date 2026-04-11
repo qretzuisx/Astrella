@@ -117,7 +117,7 @@ const OwnerProfile = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[#FDFDFF] pb-20'>
+    <div className='min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] pb-20'>
       {/* Hero Header Section */}
       <div className='relative w-full h-[300px] sm:h-[400px] overflow-hidden'>
         <div className='absolute inset-0 bg-primary/5'>

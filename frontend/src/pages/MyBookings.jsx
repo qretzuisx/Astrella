@@ -748,9 +748,20 @@ const MyBookings = ({ setShowLogin }) => {
                       >
                         {booking.gown?.name || 'Gown Name'}
                       </h3>
-                      <p className='text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest'>
-                        by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
-                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className='text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                          by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
+                        </p>
+                        <button
+                          onClick={() => {
+                            const ownerId = typeof booking.owner === 'object' ? (booking.owner._id || booking.owner.id) : booking.owner
+                            if (ownerId) navigate(`/owner-profile/${ownerId}`)
+                          }}
+                          className="px-3 py-1 bg-primary/5 hover:bg-primary text-primary hover:text-white text-[9px] font-black uppercase tracking-tighter rounded-full border border-primary/10 transition-all shadow-sm shrink-0"
+                        >
+                          View Profile
+                        </button>
+                      </div>
                     </div>
 
                     {/* Rejection Reason Display */}

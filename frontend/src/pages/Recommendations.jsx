@@ -135,7 +135,7 @@ const Recommendations = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDFDFF]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-6 shadow-2xl shadow-primary/10"></div>
           <p className="text-xl font-black text-primary tracking-tight">Preparing your perfect style...</p>
@@ -146,7 +146,7 @@ const Recommendations = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDFDFF] px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] px-4">
         <div className="text-center max-w-md p-10 bg-white rounded-[40px] shadow-2xl border border-red-50">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-6">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ const Recommendations = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFDFF] py-8 sm:py-16 px-4 md:px-8 lg:px-16 xl:px-32">
+    <div className="min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] py-8 sm:py-16 px-4 md:px-8 lg:px-16 xl:px-32">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-10 sm:mb-16">
