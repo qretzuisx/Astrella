@@ -418,9 +418,10 @@ export const getUserBooking = async (req, res) => {
         const { _id } = req.user;
         const now = new Date();
         const allBookings = await Booking.find({ user: _id })
-            .populate('gown', 'name image')
+            .populate('gown', 'name image eventType')
             .populate('owner', 'name')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         const Bookings = allBookings.filter(booking => {
             if (booking.status !== 'trial') return true;
@@ -441,9 +442,10 @@ export const getOwnerBooking = async (req, res) => {
         if (req.user.role !== 'owner') return res.status(403).json({ success: false, message: "Unauthorized" });
         const now = new Date();
         const allBookings = await Booking.find({ owner: req.user._id })
-            .populate('gown', 'name image')
+            .populate('gown')
             .populate('user', 'name email contactNumber')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
           
         const Bookings = allBookings
             .filter(booking => {
@@ -451,7 +453,7 @@ export const getOwnerBooking = async (req, res) => {
                 return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
             })
             .map(booking => {
-                const b = booking.toObject();
+                const b = booking; // No need for toObject() with lean()
                 
                 // [FIX] Force profile number to take top priority if it exists and booking level is blank/N/A
                 const profileNumber = (b.user?.contactNumber || '').toString().trim();
@@ -1001,7 +1003,7 @@ export const getGownCalendar = async (req, res) => {
   }
 };
 
-// API to verify payment (approve or reject)
+// API to verify payment (approve or reject) - Handles both GCash and In-Store methods
 export const verifyPayment = async (req, res) => {
   try {
     const { _id } = req.user;
@@ -1030,30 +1032,26 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "No payment information found" });
     }
 
-    // For in-store (cash) payments, only allow approve action
-    if (booking.payment.method === 'in_store') {
-      if (action !== 'approve') {
-        return res.status(400).json({ success: false, message: "Cash payments can only be approved, not rejected" });
+    // Handle verification based on payment method and action
+    if (action === 'approve') {
+      if (booking.payment.method === 'in_store') {
+        // For in-store, mark as paid immediately (full payment collected)
+        booking.payment.status = 'paid';
+      } else {
+        // For GCash payments, handle as deposit (50%)
+        booking.payment.status = 'verified';
       }
-      // For in-store, mark as paid immediately (full payment collected)
-      booking.payment.status = 'paid';
       booking.payment.verifiedAt = new Date();
       booking.payment.verifiedBy = _id;
     } else {
-      // For GCash payments, handle as deposit (50%)
-      if (action === 'approve') {
-        booking.payment.status = 'verified';
-        booking.payment.verifiedAt = new Date();
-        booking.payment.verifiedBy = _id;
-      } else {
-        const reason = (rejectionReason || '').toString().trim();
-        if (!reason) {
-          return res.status(400).json({ success: false, message: 'Rejection reason is required when rejecting payment.' });
-        }
-        booking.payment.status = 'rejected';
-        booking.payment.rejectionReason = reason;
-        booking.status = 'canceled'; // Cancel booking if payment rejected
+      // For Reject action (both GCash and In-Store)
+      const reason = (rejectionReason || '').toString().trim();
+      if (!reason) {
+        return res.status(400).json({ success: false, message: 'Rejection reason is required when rejecting payment.' });
       }
+      booking.payment.status = 'rejected';
+      booking.payment.rejectionReason = reason;
+      booking.status = 'canceled'; // Cancel booking if payment rejected
     }
 
     await booking.save();

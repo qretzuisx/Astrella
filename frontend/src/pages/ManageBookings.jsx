@@ -12,13 +12,15 @@ const ManageBookings = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [filterEventType, setFilterEventType] = useState('all') // Filter by event type
   const [searchTerm, setSearchTerm] = useState('')
   const currency = CURRENCY
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectingPayment, setRejectingPayment] = useState(false)
+  const [modalError, setModalError] = useState('')
+  const [cancelConfirmBookingId, setCancelConfirmBookingId] = useState(null)
+  const [cancelConfirmGownName, setCancelConfirmGownName] = useState('')
 
   // Get URL search params for gown filtering and highlighting
   const [searchParams] = useSearchParams()
@@ -30,13 +32,6 @@ const ManageBookings = () => {
     const statusParam = searchParams.get('status')
     if (statusParam && ['trial', 'pending', 'confirmed', 'completed', 'canceled'].includes(statusParam)) {
       setFilterStatus(statusParam)
-    }
-    
-    if (initialGownFilter !== 'all') {
-      // For now, if a gownId is passed, we might still want to filter by that specific gown
-      // but the UI only allows filtering by Event Type.
-      // Re-evaluating: user said "instead of name filter". 
-      // I will keep the state as filterEventType but handle the legacy param if needed by finding the gown's event.
     }
   }, [searchParams, initialGownFilter])
 
@@ -86,16 +81,6 @@ const ManageBookings = () => {
       filtered = filtered.filter(booking => booking.status === filterStatus)
     }
 
-    // Filter by event type
-    if (filterEventType !== 'all') {
-      filtered = filtered.filter(booking => {
-        const gownEvents = booking.gown?.eventType || [];
-        const eventArr = Array.isArray(gownEvents) ? gownEvents : [gownEvents];
-        // Support search by event type (case-insensitive)
-        return eventArr.some(e => e.toLowerCase() === filterEventType.toLowerCase());
-      });
-    }
-
     // Filter by search term
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
@@ -113,7 +98,7 @@ const ManageBookings = () => {
     }
 
     setFilteredBookings(filtered)
-  }, [bookings, filterStatus, filterEventType, searchTerm])
+  }, [bookings, filterStatus, searchTerm])
 
   const fetchBookings = async () => {
     try {
@@ -166,6 +151,7 @@ const ManageBookings = () => {
         const data = await response.json()
         if (data.success) {
           setSuccess('Booking canceled successfully')
+          setCancelConfirmBookingId(null)
           fetchBookings()
           setTimeout(() => setSuccess(''), 3000)
         } else {
@@ -415,11 +401,12 @@ const ManageBookings = () => {
       // For reject action, validate that rejection reason is provided
       if (action === 'reject') {
         if (!rejectionReason.trim()) {
-          setError('Please provide a reason for rejecting the payment')
+          setModalError('Please provide a cancellation/rejection reason before rejecting.')
           return
         }
-        setRejectingPayment(true)
       }
+      setRejectingPayment(true)
+      setModalError('')
 
       const token = localStorage.getItem('token')
       const response = await fetch(`${API_URL}/bookings/verify-payment`, {
@@ -436,22 +423,22 @@ const ManageBookings = () => {
       })
 
       const data = await response.json()
+      console.log('[verifyPayment] response:', data)
       
       if (data.success) {
         setSuccess(`Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
         setShowPaymentModal(false)
         setSelectedPayment(null)
         setRejectionReason('')
+        setModalError('')
         fetchBookings()
         setTimeout(() => setSuccess(''), 3000)
       } else {
-        setError(data.message || `Failed to ${action} payment`)
-        setTimeout(() => setError(''), 3000)
+        setModalError(data.message || `Failed to ${action} payment`)
       }
     } catch (error) {
       console.error('Error verifying payment:', error)
-      setError('An error occurred. Please try again.')
-      setTimeout(() => setError(''), 3000)
+      setModalError('An error occurred. Please try again.')
     } finally {
       setRejectingPayment(false)
     }
@@ -460,6 +447,7 @@ const ManageBookings = () => {
   const openPaymentModal = (booking) => {
     setSelectedPayment(booking)
     setRejectionReason('')
+    setModalError('')
     setShowPaymentModal(true)
   }
 
@@ -503,26 +491,6 @@ const ManageBookings = () => {
                 />
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
                    <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
-                </div>
-              </div>
-              {/* Event Type Filter Dropdown */}
-              <div className="w-full md:w-64 relative group">
-                <select
-                  value={filterEventType}
-                  onChange={(e) => setFilterEventType(e.target.value)}
-                  className="w-full pl-6 pr-10 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-black text-primary/70 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm appearance-none cursor-pointer"
-                >
-                  <option value="all">All Occasions</option>
-                  <option value="wedding">Wedding</option>
-                  <option value="traditional">Traditional</option>
-                  <option value="prom">Prom</option>
-                  <option value="formal">Formal</option>
-                  <option value="themed">Themed</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                  </svg>
                 </div>
               </div>
             </div>
@@ -601,7 +569,7 @@ const ManageBookings = () => {
                       </div>
                       
                       {/* Payment Info Badge */}
-                      {booking.payment && (
+                      {(booking.payment && booking.status !== 'trial') && (
                         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase border ${
                             booking.payment.status === 'verified' ? 'bg-green-50/50 text-green-600 border-green-100/50' : 
                             booking.payment.status === 'pending' ? 'bg-orange-50/50 text-orange-500 border-orange-100/50' : 
@@ -692,7 +660,7 @@ const ManageBookings = () => {
                       {/* Section 4: Vertical Action Column (One Size) */}
                       <div className="flex flex-col gap-3 w-full sm:w-56 xl:border-l xl:border-gray-50 xl:pl-10">
                          {/* Payment Verification */}
-                         {(booking.status === 'pending' || booking.status === 'trial') && booking.payment?.status === 'pending' && (
+                         {booking.status === 'pending' && booking.payment?.status === 'pending' && (
                            <button
                              onClick={() => openPaymentModal(booking)}
                              className='h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all'
@@ -702,7 +670,7 @@ const ManageBookings = () => {
                          )}
 
                          {/* Confirm Pickup */}
-                         {(booking.status === 'pending' || booking.status === 'trial') && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
+                         {booking.status === 'pending' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
                             <button
                               onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
                               className='h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all'
@@ -721,10 +689,13 @@ const ManageBookings = () => {
                            </button>
                          )}
 
-                         {/* Cancel Action (Only Pending/Confirmed/Trial) */}
-                         {['pending', 'confirmed', 'trial'].includes(booking.status) && (
+                         {/* Cancel Action (Only Pending/Confirmed) */}
+                         {['pending', 'confirmed'].includes(booking.status) && (
                             <button
-                              onClick={() => handleStatusChange(booking._id || booking.id, 'canceled')}
+                              onClick={() => {
+                                setCancelConfirmBookingId(booking._id || booking.id)
+                                setCancelConfirmGownName(booking.gown?.name || 'this booking')
+                              }}
                               className='h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-2xl font-black text-xs uppercase tracking-widest border border-transparent hover:border-red-100 transition-all flex items-center justify-center gap-3 group/cancel'
                             >
                               <div className="p-2 bg-white rounded-lg group-hover/cancel:bg-red-100 transition-colors">
@@ -914,6 +885,16 @@ const ManageBookings = () => {
               </button>
             </div>
 
+            {/* Inline Error inside Modal */}
+            {modalError && (
+              <div className='mb-6 px-6 py-4 bg-red-50 border border-red-100 rounded-2xl text-sm font-bold text-red-600 flex items-center gap-3'>
+                <svg className='w-5 h-5 flex-shrink-0' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z' />
+                </svg>
+                {modalError}
+              </div>
+            )}
+
             {/* Customer & Booking Info */}
             <div className='bg-gray-50/50 border border-gray-100 rounded-3xl p-6 mb-8'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
@@ -1034,12 +1015,13 @@ const ManageBookings = () => {
             </div>
             )}
 
-            {/* Rejection Reason - Only for GCash */}
-            {selectedPayment.payment?.method === 'gcash' && (
+            {/* Rejection / Cancellation Reason */}
+            {(selectedPayment.payment?.method === 'gcash' || selectedPayment.payment?.method === 'in_store') && (
             <div className='mb-8' id='rejectionReasonField'>
               <div className="flex items-center justify-between mb-3 px-2">
                 <label className='text-[10px] font-black text-gray-500 uppercase tracking-widest'>
-                  Rejection Reason <span className="text-red-500 opacity-60 ml-1">(Required for rejection)</span>
+                  {selectedPayment.payment?.method === 'in_store' ? 'Cancellation Reason' : 'Rejection Reason'} 
+                  <span className="text-red-500 opacity-60 ml-1">(Required for rejection)</span>
                 </label>
                 <div className="flex items-center gap-1.5 text-[9px] font-black text-primary/60 uppercase tracking-tight">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1052,7 +1034,9 @@ const ManageBookings = () => {
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder='E.g., Reference number not found in our records. Please re-upload a clear screenshot.'
+                placeholder={selectedPayment.payment?.method === 'in_store' 
+                  ? 'E.g., Customer failed to provide the agreed cash deposit or canceled the visit.' 
+                  : 'E.g., Reference number not found in our records. Please re-upload a clear screenshot.'}
                 rows={4}
                 className='w-full px-7 py-6 bg-gray-50/80 border-2 border-gray-100 rounded-[2.5rem] text-sm font-bold text-primary transition-all focus:border-primary/20 focus:bg-white focus:ring-12 focus:ring-primary/5 outline-none resize-none placeholder:text-gray-400 shadow-inner'
               />
@@ -1102,10 +1086,10 @@ const ManageBookings = () => {
             )}
 
             {selectedPayment.payment?.method === 'in_store' && (
-            <div className='flex flex-col sm:flex-row gap-4'>
+            <div className='flex flex-col sm:flex-row gap-5'>
               <button
                 onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'approve')}
-                className='flex-[2] h-16 bg-primary text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-primary-dull hover:shadow-[0_20px_40px_rgba(1,62,141,0.25)] hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group'
+                className='flex-[1.8] h-16 bg-primary text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-primary-dull hover:shadow-[0_20px_40px_rgba(1,62,141,0.25)] hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group'
               >
                 <span>Confirm Cash Received</span>
                 <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1113,13 +1097,82 @@ const ManageBookings = () => {
                 </svg>
               </button>
               <button
-                onClick={() => setShowPaymentModal(false)}
-                className='flex-1 h-16 bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest active:scale-95 transition-all duration-300'
+                onClick={() => handleVerifyPayment(selectedPayment._id || selectedPayment.id, 'reject')}
+                disabled={rejectingPayment}
+                className='flex-1 h-16 bg-white text-red-500 border-2 border-red-50 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-red-50 hover:border-red-100/50 hover:text-red-700 active:scale-95 transition-all duration-500 flex items-center justify-center gap-3 group'
               >
-                Close
+                {rejectingPayment ? (
+                  <div className='flex items-center gap-2'>
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center transition-colors group-hover:bg-red-100">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <span>Reject</span>
+                  </>
+                )}
               </button>
             </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* Cancel Confirmation Modal */}
+      {cancelConfirmBookingId && (
+        <div
+          className='fixed inset-0 bg-primary/25 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
+          onClick={() => setCancelConfirmBookingId(null)}
+        >
+          <div
+            className='bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-sm w-full p-8 border border-red-50 relative overflow-hidden'
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Background accent */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-red-50/60 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none"></div>
+
+            {/* Close X */}
+            <button
+              onClick={() => setCancelConfirmBookingId(null)}
+              className='absolute top-5 right-5 w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group'
+            >
+              <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Warning Icon */}
+            <div className="w-16 h-16 rounded-[1.5rem] bg-red-50 flex items-center justify-center mb-6 relative z-10">
+              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+
+            <div className="relative z-10 mb-8">
+              <h3 className='text-2xl font-black text-primary tracking-tight mb-2'>Cancel Booking?</h3>
+              <p className='text-sm font-bold text-gray-500 leading-relaxed'>
+                You are about to cancel the booking for <span className="text-primary font-black">{cancelConfirmGownName}</span>. This action cannot be undone and will release the reserved slot.
+              </p>
+            </div>
+
+            <div className="flex gap-3 relative z-10">
+              <button
+                onClick={() => setCancelConfirmBookingId(null)}
+                className='flex-1 h-13 py-4 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95'
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={() => handleStatusChange(cancelConfirmBookingId, 'canceled')}
+                className='flex-1 h-13 py-4 bg-red-500 text-white hover:bg-red-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all active:scale-95'
+              >
+                Yes, Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

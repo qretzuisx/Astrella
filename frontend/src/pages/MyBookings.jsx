@@ -295,8 +295,8 @@ const MyBookings = ({ setShowLogin }) => {
   const isEditableStatus = (booking) => ['pending', 'trial'].includes((booking?.status || '').toLowerCase())
   const canCancelStatus = (booking) => {
     const status = (booking?.status || '').toLowerCase();
-    // Only pending or trial can be canceled
-    if (status !== 'pending' && status !== 'trial') return false;
+    // Only pending can be canceled
+    if (status !== 'pending') return false;
     
     // Check if the pickup date is in the past
     const today = new Date();
