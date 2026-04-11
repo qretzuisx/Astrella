@@ -64,7 +64,7 @@ const Navbar = ({ setShowLogin }) => {
 
   return (
     <div
-      className={`sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 py-3 sm:py-4 text-gray-700 transition-all border-b border-gray-100/50 bg-white/60 backdrop-blur-3xl shadow-sm`}>
+      className={`sticky top-0 z-[100] self-start w-full flex items-center justify-between px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32 py-3 sm:py-4 transition-all border-b border-gray-100/50 bg-white/70 backdrop-blur-xl shadow-sm`}>
 
       <Link to="/" className="flex items-center">
         <img src={assets.logo} alt="logo" className="h-8 sm:h-12 w-auto object-contain" />

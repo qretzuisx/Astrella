@@ -386,7 +386,7 @@ const ManageGowns = () => {
       <div className='flex-1 min-w-0 p-3 sm:p-6 lg:p-8'>
         <div className='max-w-7xl mx-auto'>
           {/* Header Section */}
-          <div className='mb-10 mt-16 sm:mt-10 lg:mt-0'>
+          <div className='sticky top-0 z-30 bg-[#FDFDFF]/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 py-6 mb-4'>
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">

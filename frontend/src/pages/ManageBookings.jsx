@@ -470,27 +470,29 @@ const ManageBookings = () => {
       <OwnerSidebar />
       <div className='flex-1 min-w-0 p-3 sm:p-6 lg:p-10 transition-all duration-500 font-geist'>
         <div className='max-w-7xl mx-auto'>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 mt-16 sm:mt-10 lg:mt-0">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-8 h-1 bg-primary rounded-full"></div>
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Operations</span>
+            <div className="sticky top-0 z-30 bg-[#FDFDFF]/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 py-6 mb-4">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-1 bg-primary rounded-full"></div>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Operations</span>
+                  </div>
+                  <h1 className='text-3xl sm:text-4xl font-black text-primary-dull tracking-tight mb-2'>Manage Bookings</h1>
+                  <p className='text-sm sm:text-base text-gray-500 font-medium'>Oversee and process your client reservations and appointments.</p>
                 </div>
-                <h1 className='text-3xl sm:text-4xl font-black text-primary-dull tracking-tight mb-2'>Manage Bookings</h1>
-                <p className='text-sm sm:text-base text-gray-500 font-medium'>Oversee and process your client reservations and appointments.</p>
-              </div>
 
-              {/* Search Bar */}
-              <div className="w-full md:w-80 relative group">
-                <input
-                  type="text"
-                  placeholder="Search clients, gowns, or refs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
-                />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                   <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                {/* Search Bar */}
+                <div className="w-full md:w-80 relative group">
+                  <input
+                    type="text"
+                    placeholder="Search clients, gowns, or refs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                     <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -689,8 +691,8 @@ const ManageBookings = () => {
                            </button>
                          )}
 
-                         {/* Cancel Action (Only Pending/Confirmed) */}
-                         {['pending', 'confirmed'].includes(booking.status) && (
+                         {/* Cancel Action (Only Pending/Confirmed/Trial) */}
+                         {(['pending', 'confirmed', 'trial'].includes(booking.status)) && (
                             <button
                               onClick={() => {
                                 setCancelConfirmBookingId(booking._id || booking.id)

@@ -164,6 +164,10 @@ const MyBookings = ({ setShowLogin }) => {
 
   // Filtering state
   const [currentFilter, setCurrentFilter] = useState('All')
+  
+  // Custom Confirmation Modals
+  const [cancelConfirmBooking, setCancelConfirmBooking] = useState(null)
+  const [canceling, setCanceling] = useState(false)
 
   const currency = CURRENCY
 
@@ -295,8 +299,8 @@ const MyBookings = ({ setShowLogin }) => {
   const isEditableStatus = (booking) => ['pending', 'trial'].includes((booking?.status || '').toLowerCase())
   const canCancelStatus = (booking) => {
     const status = (booking?.status || '').toLowerCase();
-    // Only pending can be canceled
-    if (status !== 'pending') return false;
+    // Only pending and trial can be canceled
+    if (status !== 'pending' && status !== 'trial') return false;
     
     // Check if the pickup date is in the past
     const today = new Date();
@@ -470,14 +474,12 @@ const MyBookings = ({ setShowLogin }) => {
     }
   }
 
-  const cancelBooking = async (booking) => {
-    const id = booking?._id || booking?.id
-    if (!id) return
-
-    const ok = window.confirm('Cancel this reservation? This cannot be undone.')
-    if (!ok) return
-
+  const confirmCancel = async () => {
+    if (!cancelConfirmBooking) return
+    const id = cancelConfirmBooking._id || cancelConfirmBooking.id
+    
     try {
+      setCanceling(true)
       setError('')
       setSuccess('')
       const token = localStorage.getItem('token')
@@ -501,15 +503,24 @@ const MyBookings = ({ setShowLogin }) => {
         return
       }
 
-      // Remove canceled booking from the list immediately
-      setBookings((prev) => prev.filter((b) => (b._id || b.id) !== id))
+      // Update local state in-place to reflect cancellation
+      setBookings((prev) => 
+        prev.map((b) => ((b._id || b.id) === id ? { ...b, status: 'canceled' } : b))
+      )
 
-      setSuccess('Booking canceled')
+      setSuccess('Booking canceled successfully')
       setTimeout(() => setSuccess(''), 3000)
+      setCancelConfirmBooking(null)
     } catch (e) {
       console.error('Error canceling booking:', e)
       setError('An error occurred. Please try again.')
+    } finally {
+      setCanceling(false)
     }
+  }
+
+  const handleCancelClick = (booking) => {
+    setCancelConfirmBooking(booking)
   }
 
   const continueToBook = (booking) => {
@@ -861,7 +872,7 @@ const MyBookings = ({ setShowLogin }) => {
                           </button>
                           <button
                             type='button'
-                            onClick={() => cancelBooking(booking)}
+                            onClick={() => handleCancelClick(booking)}
                             disabled={!cancelable}
                             className={`h-14 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all ${cancelable 
                               ? 'border-red-100 text-red-500 bg-white hover:bg-red-500 hover:text-white hover:border-red-500 shadow-lg shadow-red-500/5 active:scale-95' 
@@ -1218,6 +1229,51 @@ const MyBookings = ({ setShowLogin }) => {
           </div>
         )
       })()}
+      {/* Custom Cancellation Confirmation Modal */}
+      {cancelConfirmBooking && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-primary/20 backdrop-blur-md animate-fade-in"
+          onClick={() => setCancelConfirmBooking(null)}
+        >
+          <div 
+            className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-white/50 relative overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Visual Decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl mb-6 flex items-center justify-center mx-auto shadow-inner">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              
+              <h3 className="text-2xl font-black text-gray-800 mb-3 tracking-tight">Cancel Booking?</h3>
+              <p className="text-gray-500 font-medium text-sm leading-relaxed mb-8">
+                Are you sure you want to cancel your reservation for <span className="text-primary font-bold">{cancelConfirmBooking.gown?.name || 'this gown'}</span>? This cannot be undone.
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={confirmCancel}
+                  disabled={canceling}
+                  className="w-full py-4 bg-red-500 text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/20 active:scale-95 transition-all text-center"
+                >
+                  {canceling ? 'Canceling...' : 'Yes, Cancel it'}
+                </button>
+                <button
+                  onClick={() => setCancelConfirmBooking(null)}
+                  disabled={canceling}
+                  className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-gray-100 transition-all text-center"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
