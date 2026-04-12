@@ -729,35 +729,37 @@ const ManageBookings = () => {
       {/* Edit Booking Modal */}
       {editOpen && selectedBooking && (
         <div
-          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
+          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-end sm:items-center justify-center z-[110] p-0 sm:p-4 animate-fade-in'
           onClick={closeEdit}
         >
           <div
-            className='bg-white rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-lg w-full p-8 sm:p-10 max-h-[90vh] overflow-y-auto border border-blue-50 relative'
+            className='bg-white rounded-t-3xl sm:rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-lg w-full flex flex-col max-h-[100dvh] sm:max-h-[90vh] overflow-hidden border border-blue-50 relative mobile-full-modal'
             onClick={(e) => e.stopPropagation()}
           >
-            <div className='flex items-start justify-between gap-6 mb-10'>
-              <div>
-                <div className="flex items-center gap-2 mb-2">
+            {/* Sticky Header */}
+            <div className='flex items-center justify-between gap-4 px-6 sm:px-8 py-5 border-b border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md'>
+              <div className='min-w-0'>
+                <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-1 bg-primary rounded-full"></div>
                   <span className="text-[10px] font-black text-primary uppercase tracking-widest">{editMode} mode</span>
                 </div>
-                <h2 className='text-3xl font-black text-primary tracking-tight leading-tight'>
+                <h2 className='text-xl sm:text-2xl font-black text-primary tracking-tight leading-tight truncate'>
                   {editMode === 'extend' ? 'Extend Stay' : 'Update Schedule'}
                 </h2>
-                <p className='text-sm text-gray-500 font-bold mt-1'>{selectedBooking.gown?.name}</p>
+                <p className='text-xs sm:text-sm text-gray-500 font-bold mt-0.5 truncate'>{selectedBooking.gown?.name}</p>
               </div>
               <button
                 onClick={closeEdit}
-                className='w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-primary/40 hover:text-primary hover:bg-primary/5 transition-all group'
+                className='w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-primary/40 hover:text-primary hover:bg-primary/5 transition-all group flex-shrink-0'
               >
-                <svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className='space-y-8'>
+            {/* Scrollable Body */}
+            <div className='overflow-y-auto flex-1 min-h-0 px-6 sm:px-8 py-6 space-y-6'>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                 <div className="space-y-2">
                   <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Pickup Date</label>
@@ -830,23 +832,25 @@ const ManageBookings = () => {
                 </div>
               )}
 
-              <div className='flex gap-4 pt-6'>
-                 <button
-                  type='button'
-                  onClick={closeEdit}
-                  className='flex-1 py-5 border-2 border-primary/10 text-primary rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95'
-                >
-                  Discard
-                </button>
-                <button
-                  type='button'
-                  onClick={submitEdit}
-                  disabled={savingEdit || (availabilityStatus.message && !availabilityStatus.valid)}
-                  className='flex-[2] py-5 bg-primary text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] hover:-translate-y-1 transition-all disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none disabled:translate-y-0 active:scale-95'
-                >
-                  {savingEdit ? 'Updating...' : 'Save Changes'}
-                </button>
-              </div>
+            </div>
+
+            {/* Sticky Footer */}
+            <div className='flex gap-3 px-6 sm:px-8 py-4 border-t border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md pb-safe'>
+               <button
+                type='button'
+                onClick={closeEdit}
+                className='flex-1 py-3.5 border-2 border-primary/10 text-primary rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95'
+              >
+                Discard
+              </button>
+              <button
+                type='button'
+                onClick={submitEdit}
+                disabled={savingEdit || (availabilityStatus.message && !availabilityStatus.valid)}
+                className='flex-[2] py-3.5 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] transition-all disabled:bg-gray-100 disabled:text-gray-300 disabled:shadow-none active:scale-95'
+              >
+                {savingEdit ? 'Updating...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>
@@ -855,7 +859,7 @@ const ManageBookings = () => {
       {/* Payment Screenshot Modal */}
       {showPaymentModal && selectedPayment && (
         <div 
-          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
+          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in'
           onClick={() => setShowPaymentModal(false)}
         >
           <div 
@@ -1127,7 +1131,7 @@ const ManageBookings = () => {
       {/* Cancel Confirmation Modal */}
       {cancelConfirmBookingId && (
         <div
-          className='fixed inset-0 bg-primary/25 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
+          className='fixed inset-0 bg-primary/25 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in'
           onClick={() => setCancelConfirmBookingId(null)}
         >
           <div

@@ -659,7 +659,7 @@ const ManageGowns = () => {
       {/* Edit Gown Modal (Existing) */}
       {editOpen && selectedGown && (
         <div
-          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
+          className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in'
           onClick={closeEditModal}
         >
           <div

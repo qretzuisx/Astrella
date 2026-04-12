@@ -312,7 +312,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] sm:p-4 animate-in fade-in duration-200">
       <div className={`bg-white sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${showGuidelines && !preview ? 'max-w-4xl' : 'max-w-2xl'} w-full sm:h-auto h-full max-h-full sm:max-h-[95vh] overflow-y-auto border border-primary/5 relative transition-all duration-300`}>
         <div className="p-4 sm:p-10 pb-12 sm:pb-10">
           <div className="flex justify-between items-center mb-6 leading-none sticky top-0 bg-white z-20 py-4 -mx-4 px-4 sm:mx-0 sm:px-0">

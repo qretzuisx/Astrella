@@ -30,22 +30,32 @@ body {
 
 /* react-day-picker: maximize date space, bold, circular stamps, colors match legend */
 .rdp-root {
-  --rdp-day-height: 52px;
-  --rdp-day-width: 52px;
-  --rdp-day_button-height: 48px;
-  --rdp-day_button-width: 48px;
+  --rdp-day-height: 44px;
+  --rdp-day-width: 44px;
+  --rdp-day_button-height: 40px;
+  --rdp-day_button-width: 40px;
 }
 
-/* Mobile: scale calendar cells smaller so it fits without overflow */
-@media (max-width: 640px) {
+/* Medium screens inside modals: slightly smaller calendar */
+@media (max-width: 768px) {
   .rdp-root {
     --rdp-day-height: 40px;
     --rdp-day-width: 40px;
     --rdp-day_button-height: 36px;
     --rdp-day_button-width: 36px;
   }
+}
+
+/* Mobile: scale calendar cells smaller so it fits without overflow */
+@media (max-width: 640px) {
+  .rdp-root {
+    --rdp-day-height: 36px;
+    --rdp-day-width: 36px;
+    --rdp-day_button-height: 32px;
+    --rdp-day_button-width: 32px;
+  }
   .rdp-root .rdp-day_button {
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
   }
 }
 
@@ -179,8 +189,11 @@ body {
     inset: 0 !important;
     max-width: 100% !important;
     max-height: 100% !important;
+    height: 100% !important;
     border-radius: 0 !important;
     margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 }
 

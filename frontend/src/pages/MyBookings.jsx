@@ -913,16 +913,16 @@ const MyBookings = ({ setShowLogin }) => {
       {editOpen && selectedBooking && (() => {
         const isTrial = (selectedBooking.status || '').toLowerCase() === 'trial'
         return (
-          <div className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4' onClick={closeEdit}>
+          <div className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-end sm:items-center justify-center z-[110] p-0 sm:p-4' onClick={closeEdit}>
             <div
-              className='bg-white w-full sm:max-w-lg shadow-[0_30px_60px_rgba(1,62,141,0.15)] flex flex-col rounded-t-3xl sm:rounded-3xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-white/50 relative mobile-full-modal sm:!rounded-3xl sm:!inset-auto sm:!position-relative'
+              className='bg-white w-full sm:max-w-lg shadow-[0_30px_60px_rgba(1,62,141,0.15)] flex flex-col rounded-t-3xl sm:rounded-3xl max-h-[100dvh] sm:max-h-[90vh] overflow-hidden border border-white/50 relative mobile-full-modal'
               onClick={(e) => e.stopPropagation()}
             >
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
               
               {/* Sticky Header */}
-              <div className='flex items-center justify-between gap-4 px-6 py-5 border-b border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md'>
+              <div className='flex items-center justify-between gap-4 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md'>
                 <div className='min-w-0'>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-4 h-1 bg-primary rounded-full"></div>
@@ -943,7 +943,7 @@ const MyBookings = ({ setShowLogin }) => {
               </div>
 
               {/* Scrollable Body */}
-              <div className='overflow-y-auto flex-1 px-6 py-6 space-y-6'>
+              <div className='overflow-y-auto flex-1 min-h-0 px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6'>
 
                 {/* EXTEND MODE */}
                 {editMode === 'extend' && (
@@ -1029,9 +1029,9 @@ const MyBookings = ({ setShowLogin }) => {
                         <h3 className='text-sm font-black text-gray-900 uppercase tracking-widest'>{isTrial ? 'Select Date' : 'Select Dates'}</h3>
                       </div>
 
-                      <div className='bg-white rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]'>
+                      <div className='bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]'>
                         {/* Legend */}
-                        <div className='flex flex-wrap items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6'>
+                        <div className='flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-5'>
                           <span className='flex items-center gap-1.5'>
                             <span className='w-2 h-2 rounded-full bg-red-400 shadow-sm inline-block'></span>
                             Reserved
@@ -1046,7 +1046,7 @@ const MyBookings = ({ setShowLogin }) => {
                           </span>
                         </div>
 
-                        <div className='flex justify-center w-full [&_.rdp]:text-sm [&_.rdp-day]:w-9 [&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-10'>
+                        <div className='flex justify-center w-full'>
                           <DayPicker
                             mode={isTrial ? 'single' : 'range'}
                             numberOfMonths={1}
@@ -1087,15 +1087,15 @@ const MyBookings = ({ setShowLogin }) => {
                         </div>
 
                         {/* Selected dates summary */}
-                        <div className={`mt-6 grid gap-3 text-center ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                          <div className='bg-gray-50/80 rounded-2xl py-3 px-4 border border-gray-100 shadow-inner'>
-                            <p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1'>{isTrial ? 'Trial Date' : 'Pick-up'}</p>
-                            <p className='text-sm sm:text-base font-black text-gray-800'>{form.pickupDate || '—'}</p>
+                        <div className={`mt-3 sm:mt-5 grid gap-2 sm:gap-3 text-center ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                          <div className='bg-gray-50/80 rounded-xl sm:rounded-2xl py-2.5 sm:py-3 px-3 sm:px-4 border border-gray-100 shadow-inner'>
+                            <p className='text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-1'>{isTrial ? 'Trial Date' : 'Pick-up'}</p>
+                            <p className='text-xs sm:text-base font-black text-gray-800'>{form.pickupDate || '—'}</p>
                           </div>
                           {!isTrial && (
-                            <div className='bg-gray-50/80 rounded-2xl py-3 px-4 border border-gray-100 shadow-inner'>
-                              <p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1'>Return</p>
-                              <p className='text-sm sm:text-base font-black text-gray-800'>{form.returnDate || '—'}</p>
+                            <div className='bg-gray-50/80 rounded-xl sm:rounded-2xl py-2.5 sm:py-3 px-3 sm:px-4 border border-gray-100 shadow-inner'>
+                              <p className='text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-1'>Return</p>
+                              <p className='text-xs sm:text-base font-black text-gray-800'>{form.returnDate || '—'}</p>
                             </div>
                           )}
                         </div>
@@ -1113,16 +1113,16 @@ const MyBookings = ({ setShowLogin }) => {
                         <h3 className='text-sm font-black text-gray-900 uppercase tracking-widest'>Time</h3>
                       </div>
 
-                      <div className={`grid gap-4 ${isTrial ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                      <div className={`grid gap-3 sm:gap-4 ${isTrial ? 'grid-cols-1' : 'grid-cols-2'}`}>
                         <div>
-                          <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5'>
+                          <label className='block text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-1.5'>
                             {isTrial ? 'Try-on Time' : 'Pick-up Time'}
                           </label>
                           <select
                             name='pickupTime'
                             value={form.pickupTime}
                             onChange={handleFormChange}
-                            className='w-full px-4 py-3 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/50 shadow-sm'
+                            className='w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-100 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/50 shadow-sm text-sm'
                           >
                             {allowedTimes.map((t) => (
                               <option key={t} value={t}>{formatTime(t)}</option>
@@ -1132,12 +1132,12 @@ const MyBookings = ({ setShowLogin }) => {
 
                         {!isTrial && (
                           <div>
-                            <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5'>Return Time</label>
+                            <label className='block text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-1.5'>Return Time</label>
                             <select
                               name='returnTime'
                               value={form.returnTime}
                               onChange={handleFormChange}
-                              className='w-full px-4 py-3 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/50 shadow-sm'
+                              className='w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-100 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none font-bold transition-all bg-gray-50/50 shadow-sm text-sm'
                             >
                               {allowedTimes.map((t) => {
                                 if (form.pickupDate === form.returnDate && form.pickupTime) {
@@ -1208,11 +1208,11 @@ const MyBookings = ({ setShowLogin }) => {
               </div>
 
               {/* Sticky Footer */}
-              <div className='flex gap-3 px-6 py-5 border-t border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md rounded-b-3xl'>
+              <div className='flex gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 flex-shrink-0 bg-white/80 backdrop-blur-md rounded-b-3xl pb-20 sm:pb-4'>
                 <button
                   type='button'
                   onClick={closeEdit}
-                  className='flex-1 px-4 py-3 border border-gray-200 text-gray-500 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all font-black hover:-translate-y-1 shadow-sm'
+                  className='flex-1 px-4 py-3 border border-gray-200 text-gray-500 rounded-xl sm:rounded-2xl text-[10px] uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all font-black shadow-sm'
                 >
                   Cancel
                 </button>
@@ -1220,7 +1220,7 @@ const MyBookings = ({ setShowLogin }) => {
                   type='button'
                   onClick={submitReschedule}
                   disabled={saving || (availabilityStatus.message && !availabilityStatus.valid)}
-                  className='flex-[2] px-4 py-3 bg-primary text-white rounded-2xl text-[10px] uppercase tracking-widest font-black shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_15px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1 hover:bg-primary-dull disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed transition-all'
+                  className='flex-[2] px-4 py-3 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] uppercase tracking-widest font-black shadow-[0_10px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_15px_40px_rgba(1,62,141,0.3)] hover:bg-primary-dull disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all'
                 >
                   {saving ? 'Saving...' : 'Confirm Changes'}
                 </button>
@@ -1232,7 +1232,7 @@ const MyBookings = ({ setShowLogin }) => {
       {/* Custom Cancellation Confirmation Modal */}
       {cancelConfirmBooking && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-primary/20 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-primary/20 backdrop-blur-md animate-fade-in"
           onClick={() => setCancelConfirmBooking(null)}
         >
           <div 
