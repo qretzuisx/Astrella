@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrella | Official User Manual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #162B69;
+            --secondary: #DDAF29;
+            --accent: #AC2021;
+            --bg: #FDFDFF;
+            --shadow: 0 12px 40px rgba(22, 43, 105, 0.10);
+            --border: #e5e7eb;
+            --text: #0f172a;
+            --text-muted: #475569;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: #eef2f7;
+            color: var(--text);
+            line-height: 1.7;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Print page setup */
+        @page { size: A4 portrait; margin: 12mm 14mm; }
+
+        /* Screen preview — looks like stacked A4 pages */
+        .page {
+            width: 180mm;
+            min-height: 260mm;
+            padding: 10mm 12mm 10mm;
+            margin: 30px auto;
+            background: var(--bg);
+            box-shadow: 0 0 60px rgba(0,0,0,0.08);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* NO overflow:hidden — content must never be clipped */
+        }
+
+        @media print {
+            body { background: none; }
+
+            /* In print: pages become simple block containers that flow naturally */
+            .page {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                margin: 0 !important;
+                padding: 4mm 0 8mm !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+                display: block !important;
+                /* Each .page section starts on a new printed page */
+                page-break-before: always;
+            }
+            /* The very first page should not force a blank page before it */
+            .page:first-child { page-break-before: auto; }
+
+            /* Small elements should stay together */
+            .card, .step, .toc-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Keep headings with the content after them */
+            h2, h3, h4 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            /* Screenshots: let them scale to fit, never clip */
+            .shot {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .shot img {
+                max-width: 100%;
+                height: auto;
+            }
+
+            /* Footer stays at bottom via margin-top:auto only on screen */
+            .footer {
+                margin-top: 16px;
+            }
+
+            /* Cover and divider pages should fill exactly one printed sheet */
+            .page.cover, .page.divider {
+                display: flex !important;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 273mm !important; /* Fill the A4 page within margins */
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Compact pages: screenshot + description must fit on ONE A4 sheet */
+            .page.compact {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .page.compact .shot img {
+                max-width: 55%;
+                display: block;
+                margin: 0 auto;
+            }
+            .page.compact .gap {
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+            .page.compact .card {
+                padding: 0.7rem 0.9rem;
+            }
+            .page.compact .steps {
+                gap: 0.4rem;
+                margin-top: 0.4rem;
+            }
+            .page.compact .step-body b { font-size: 0.85rem; }
+            .page.compact .step-body span { font-size: 0.72rem; }
+            .page.compact h3 { font-size: 1rem; margin-bottom: 0.15rem; }
+            .page.compact h4 { margin-bottom: 2px; }
+            .page.compact .grid-2 { gap: 0.6rem; }
+            .page.compact .footer { margin-top: 8px; }
+
+            .no-print { display: none !important; }
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; color: var(--primary); }
+        h2 { font-size: 2rem; font-weight: 800; margin-bottom: 1.25rem; padding-bottom: 8px; border-bottom: 5px solid var(--secondary); display: inline-block; }
+        h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.35rem; }
+        h4 { font-size: 0.72rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        p  { font-size: 0.88rem; color: var(--text-muted); }
+
+        /* --- COVER --- */
+        .cover {
+            justify-content: center; align-items: center; text-align: center;
+            background: linear-gradient(160deg, #f8fafc 0%, #ffffff 100%);
+        }
+        .cover-logo { width: 340px; margin-bottom: 2.5rem; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.07)); }
+        .cover-title { font-family: 'Outfit', sans-serif; font-size: 3.4rem; font-weight: 800; color: var(--primary); letter-spacing: -2px; line-height: 1; }
+        .cover-subtitle { font-size: 1.1rem; color: var(--text-muted); font-weight: 300; margin-top: 0.65rem; }
+        .cover-divider { width: 70px; height: 5px; background: var(--secondary); border-radius: 99px; margin: 1.75rem auto; }
+        .cover-meta { font-size: 0.88rem; color: var(--text-muted); line-height: 2.1; }
+        .cover-meta b { color: var(--primary); font-weight: 800; }
+        .cover-badge { margin-top: 2.5rem; border: 2px solid var(--primary); display: inline-block; padding: 7px 26px; border-radius: 99px; font-weight: 800; color: var(--primary); font-size: 0.8rem; letter-spacing: 3px; }
+
+        /* --- TABLE OF CONTENTS --- */
+        .toc-section-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; color: var(--secondary); margin: 1.25rem 0 0.4rem 18px; }
+        .toc-list { display: flex; flex-direction: column; }
+        .toc-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 18px;
+            font-weight: 600; font-size: 0.95rem; color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+        .toc-item:last-child { border-bottom: none; }
+        .toc-num { width: 32px; height: 32px; background: var(--primary); color: white; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; flex-shrink: 0; }
+        .toc-num.red { background: var(--accent); }
+        .toc-body { flex: 1; }
+        .toc-body small { font-size: 0.78rem; color: var(--text-muted); font-weight: 400; }
+        .toc-pg { font-weight: 800; color: var(--text-muted); font-size: 0.88rem; }
+
+        /* --- SCREENSHOTS --- */
+        .shot {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+        .shot img { width: 100%; height: auto; display: block; }
+        .shot.gold { border: 3px solid var(--secondary); }
+
+        /* --- INFO CARDS --- */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+        .card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .card.red-bar { border-left: 6px solid var(--accent); }
+
+        /* --- STEPS (clean, no emoji) --- */
+        .steps { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 0.9rem; }
+        .step { display: flex; gap: 0.8rem; align-items: flex-start; }
+        .dot {
+            width: 26px; height: 26px;
+            background: var(--primary); color: white;
+            border-radius: 7px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;
+            font-family: 'Outfit', sans-serif;
+        }
+        .dot.gold { background: var(--secondary); color: var(--primary); }
+        .dot.red  { background: var(--accent); }
+        .dot.outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .step-body b { color: var(--primary); display: block; font-size: 0.95rem; font-weight: 700; }
+        .step-body span { font-size: 0.84rem; color: var(--text-muted); }
+
+        /* --- SECTION DIVIDER PAGES --- */
+        .divider { justify-content: center; align-items: center; text-align: center; }
+        .divider.navy { background: linear-gradient(145deg, #1a327a, #0d1a40); }
+        .divider.red  { background: linear-gradient(145deg, #8c0b04, #AC2021); }
+        .divider .tag { background: var(--secondary); color: var(--primary); border-radius: 99px; padding: 6px 20px; font-weight: 800; font-size: 0.78rem; letter-spacing: 3px; display: inline-block; margin-bottom: 1.75rem; }
+        .divider h1 { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: white; }
+        .divider p  { font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-top: 0.75rem; max-width: 360px; }
+
+        /* --- PAGE FOOTER --- */
+        .footer {
+            margin-top: auto; padding-top: 12px; border-top: 2px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.72rem; font-weight: 800; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* --- HELPERS --- */
+        .gap { display: flex; flex-direction: column; gap: 1.1rem; flex: 1; margin-top: 1.1rem; }
+        .mt { margin-top: 0.9rem; }
+
+        /* --- PRINT BUTTONS --- */
+        .print-controls {
+            position: fixed; bottom: 28px; right: 28px;
+            display: flex; gap: 10px; z-index: 999;
+        }
+        .no-print {
+            background: var(--primary); color: white;
+            padding: 13px 28px; border-radius: 99px;
+            font-weight: 800; text-decoration: none; cursor: pointer; border: none;
+            box-shadow: 0 10px 26px rgba(22,43,105,0.3);
+            font-family: 'Geist', sans-serif; font-size: 0.85rem;
+        }
+        .no-print.outline-btn {
+            background: white; color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 16px rgba(22,43,105,0.12);
+        }
+        .no-print.outline-btn .orient-label { font-weight: 800; }
+    
+        /* Icon Styling */
+        .icon-lg { fill: none; stroke: currentColor;  width: 80px; height: 80px; margin-bottom: 1.5rem; color: white; display: block; margin-left: auto; margin-right: auto; stroke-width: 1.5; opacity: 0.9; }
+        .icon-bt { fill: none; stroke: currentColor;  width: 28px; height: 28px; margin-right: 12px; color: var(--secondary); stroke-width: 2.5; vertical-align: middle; display: inline-block; margin-top: -4px; }
+        h2 { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div class="print-controls no-print">
+    <button class="no-print outline-btn" onclick="toggleOrientation()">
+        <span class="orient-label" id="orientLabel">Portrait</span>
+    </button>
+    <button class="no-print" onclick="window.print()">Download PDF</button>
+</div>
+
+<style id="landscapeStyle"></style>
+
+<script>
+let isLandscape = false;
+function toggleOrientation() {
+    isLandscape = !isLandscape;
+    const label = document.getElementById('orientLabel');
+    const styleEl = document.getElementById('landscapeStyle');
+    if (isLandscape) {
+        label.textContent = 'Landscape';
+        styleEl.textContent = `
+            @page { size: A4 landscape; margin: 8mm 10mm; }
+            @media print {
+                /* Let EVERYTHING flow — no forced single-page constraints */
+                .page, .page.compact, .card, .shot, .step, .grid-2, .steps, .gap > * {
+                    page-break-inside: auto !important;
+                    break-inside: auto !important;
+                }
+                /* Only keep headings glued to next content */
+                h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+
+                /* Much smaller text for shorter pages */
+                body { font-size: 7.5pt; line-height: 1.25; }
+                h2 { font-size: 1.2rem; margin-bottom: 0.4rem; padding-bottom: 3px; border-bottom-width: 3px; }
+                h3 { font-size: 0.85rem; margin-bottom: 0.15rem; }
+                h4 { font-size: 0.58rem; margin-bottom: 1px; letter-spacing: 1.5px; }
+                p { font-size: 0.72rem; margin-bottom: 2px; }
+                .step-body b { font-size: 0.75rem; }
+                .step-body span { font-size: 0.65rem; }
+
+                /* All screenshots much smaller */
+                .shot img { max-width: 50%; display: block; margin: 0 auto; }
+                .shot { border-radius: 8px; box-shadow: none; }
+
+                /* Compact pages: even smaller screenshots */
+                .page.compact .shot img { max-width: 35%; }
+
+                /* Tight gaps */
+                .gap { gap: 0.35rem; margin-top: 0.35rem; }
+                .steps { gap: 0.2rem; margin-top: 0.2rem; }
+                .grid-2 { gap: 0.4rem; }
+                .card { padding: 0.5rem 0.7rem; border-radius: 8px; }
+                .mt { margin-top: 0.3rem; }
+                .dot { width: 20px; height: 20px; font-size: 0.6rem; border-radius: 5px; }
+                .icon-bt { width: 22px; height: 22px; margin-right: 8px; }
+
+                /* Page padding minimal */
+                .page { padding: 2mm 0 4mm !important; }
+
+                /* Cover & dividers fit landscape */
+                .page.cover, .page.divider {
+                    min-height: 184mm !important;
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                }
+                .cover-logo { width: 200px; margin-bottom: 1rem; }
+                .cover-title { font-size: 2.2rem; }
+                .cover-subtitle { font-size: 0.85rem; }
+                .cover-divider { margin: 0.8rem auto; width: 50px; height: 4px; }
+                .cover-meta { font-size: 0.72rem; line-height: 1.7; }
+                .cover-badge { margin-top: 1rem; font-size: 0.65rem; padding: 5px 18px; }
+                .divider h1 { font-size: 2rem; }
+                .divider p { font-size: 0.9rem; }
+                .divider .tag { font-size: 0.68rem; padding: 4px 16px; margin-bottom: 1rem; }
+                .icon-lg { width: 50px; height: 50px; margin-bottom: 0.8rem; }
+
+                /* Footer */
+                .footer { margin-top: 4px; padding-top: 4px; font-size: 0.58rem; border-top-width: 1px; }
+
+                /* TOC */
+                .toc-item { padding: 6px 12px; font-size: 0.8rem; gap: 8px; }
+                .toc-num { width: 22px; height: 22px; font-size: 0.65rem; border-radius: 6px; }
+                .toc-body small { font-size: 0.65rem; }
+                .toc-section-label { font-size: 0.55rem; margin: 0.6rem 0 0.2rem 12px; }
+                .toc-pg { font-size: 0.75rem; }
+            }
+        `;
+    } else {
+        label.textContent = 'Portrait';
+        styleEl.textContent = '';
+    }
+}
+</script>
+
+<!-- ======================================
+     PAGE 1 &middot; COVER
+====================================== -->
+<div class="page cover">
+    <img src="manual_assets/logo.svg" alt="Astrella" class="cover-logo">
+    <div class="cover-title">USER MANUAL</div>
+    <div class="cover-subtitle">Personal AI Stylist &amp; Apparel Reservation Platform</div>
+    <div class="cover-divider"></div>
+
+    <div class="cover-meta">
+        <b>Capstone Project</b> &nbsp;|&nbsp; Bachelor of Science in Information Technology<br>
+        University of the Cordilleras<br>
+        <br>
+        <b>Submitted by:</b><br>
+        Espiritu, Rhizalyn T. &nbsp;&nbsp; Licadang, Mheldee Jhoanna D. &nbsp;&nbsp; Manangan, Angel Louraine D.<br>
+        <br>
+        <b>Academic Year:</b> 2025 &mdash; 2026
+    </div>
+
+    <div class="cover-badge">2026 OFFICIAL RELEASE &nbsp;&middot;&nbsp; ASTRELLA</div>
+</div>
+
+<!-- ======================================
+     PAGE 2 &middot; TABLE OF CONTENTS
+====================================== -->
+<div class="page">
+    <h2>Table of Contents</h2>
+
+    <div class="toc-section-label">Part I &mdash; Customer Guide</div>
+    <div class="toc-list">
+        <div class="toc-item">
+            <div class="toc-num">01</div>
+            <div class="toc-body">
+                Access &amp; Account Setup
+                <br><small>Login, Registration, and Role Selection</small>
+            </div>
+            <div class="toc-pg">03</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num">02</div>
+            <div class="toc-body">
+                The AI Stylist
+                <br><small>Prime Selections &mdash; Ranked Top 3 with Match Scores</small>
+            </div>
+            <div class="toc-pg">04</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num">03</div>
+            <div class="toc-body">
+                Browsing the Collection
+                <br><small>Search, Filters, Pricing (&#8369;), and Availability Badges</small>
+            </div>
+            <div class="toc-pg">05</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num">04</div>
+            <div class="toc-body">
+                Gown Details &amp; Booking
+                <br><small>Reservation vs. Visit &amp; Try-on, Calendar, and Payment</small>
+            </div>
+            <div class="toc-pg">06</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num">05</div>
+            <div class="toc-body">
+                My Bookings Dashboard
+                <br><small>Tracking Status, Dates, Rescheduling, and Cancellations</small>
+            </div>
+            <div class="toc-pg">07</div>
+        </div>
+    </div>
+
+    <div class="toc-section-label">Part II &mdash; Shop Owner Guide</div>
+    <div class="toc-list">
+        <div class="toc-item">
+            <div class="toc-num red">06</div>
+            <div class="toc-body">
+                Owner Dashboard
+                <br><small>Revenue Metrics, Pending Orders, Recent Activity</small>
+            </div>
+            <div class="toc-pg">09</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num red">07</div>
+            <div class="toc-body">
+                Adding New Apparel
+                <br><small>Upload, Pricing, and Apparel Details Form</small>
+            </div>
+            <div class="toc-pg">10</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num red">08</div>
+            <div class="toc-body">
+                Managing Apparel Inventory
+                <br><small>Status Lifecycle, Edits, and Visibility Controls</small>
+            </div>
+            <div class="toc-pg">11</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num red">09</div>
+            <div class="toc-body">
+                Managing Bookings
+                <br><small>Verifying, Confirming, and Rejecting Client Requests</small>
+            </div>
+            <div class="toc-pg">12</div>
+        </div>
+        <div class="toc-item">
+            <div class="toc-num red">10</div>
+            <div class="toc-body">
+                Shop Profile &amp; Settings
+                <br><small>Business Identity, Hours of Operation, and Address</small>
+            </div>
+            <div class="toc-pg">13</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Astrella &nbsp;|&nbsp; Capstone Project 2026</span>
+        <span>Table of Contents</span>
+    </div>
+</div>
+
+<!-- ======================================
+     PAGE 3 &middot; PART I DIVIDER
+====================================== -->
+<div class="page divider navy">
+    <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle fill="none" stroke="currentColor" cx="12" cy="7" r="4"/></svg>
+    <div class="tag">PART I</div>
+    <h1>Customer Guide</h1>
+    <p>Browse, book, and manage your personal style journey on Astrella.</p>
+</div>
+
+<!-- ======================================
+     PAGE 4 &middot; 01 &mdash; ACCESS & LOGIN
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline fill="none" stroke="currentColor" points="10 17 15 12 10 7"/><line fill="none" stroke="currentColor" x1="15" y1="12" x2="3" y2="12"/></svg>01. Access &amp; Account Setup</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_login.png" alt="Login">
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h4>Returning Users</h4>
+                <h3>Signing In</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Choose Your Role</b><span>Select the "Customer" or "Shop Owner" tab at the top of the login modal before entering credentials.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Enter Credentials</b><span>Type your registered email and password, then click "Sign In."</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h4>New Users</h4>
+                <h3>Creating an Account</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot gold">&#43;</div>
+                        <div class="step-body"><b>Switch to Sign Up</b><span>Click "Sign Up" at the bottom of the modal to reveal the registration form.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot gold">&#43;</div>
+                        <div class="step-body"><b>Fill Your Details</b><span>Enter your Full Name, Contact Number, Email, and a secure Password. Shop Owners also provide Boutique Name and City.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Customer Guide</span><span>03</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 5 &middot; 02 &mdash; AI STYLIST (RANKED TOP 3)
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M12 2v2"/><path fill="none" stroke="currentColor" d="M12 20v2"/><path fill="none" stroke="currentColor" d="m4.93 4.93 1.41 1.41"/><path fill="none" stroke="currentColor" d="m17.66 17.66 1.41 1.41"/><path fill="none" stroke="currentColor" d="M2 12h2"/><path fill="none" stroke="currentColor" d="M20 12h2"/><path fill="none" stroke="currentColor" d="m6.34 17.66-1.41 1.41"/><path fill="none" stroke="currentColor" d="m19.07 4.93-1.41 1.41"/><path fill="none" stroke="currentColor" d="M12 12h.01"/></svg>02. The AI Stylist</h2>
+    <div class="gap">
+        <!-- Use the ranked "Prime Selections" screenshot with match score banners -->
+        <div class="shot gold">
+            <img src="manual_assets/hd_recommendations_ranked.png" alt="AI Recommendations &mdash; Prime Selections with Rank Scores">
+        </div>
+        <div class="card">
+            <h4>Prime Selections &nbsp;&middot;&nbsp; Live Top 3 Matches</h4>
+            <h3>Personalized Style Recommendations</h3>
+            <p class="mt">Astrella's AI ranks every gown against your physical profile and displays the top matches with a confidence score, availability badge, price, and full catalog details.</p>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Select Attributes</b><span>On the Home page, choose Body Type, Skin Tone, Event, Face Shape, Age Group, and Gender from the attribute selectors.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Find My Fit</b><span>Click "Find My Fit" to trigger the AI engine. Results are ranked and displayed in real-time.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot gold">&#9733;</div>
+                        <div class="step-body"><b>BEST MATCH &mdash; 90%</b><span>Highest compatibility. Silhouette, color, and occasion match your profile best.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot gold">&#9733;</div>
+                        <div class="step-body"><b>TOP MATCH &amp; GREAT MATCH</b><span>Strong alternatives at 85% with different price points, styles, and fabrics.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Customer Guide</span><span>04</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 6 &middot; 03 &mdash; BROWSING THE COLLECTION
+====================================== -->
+<div class="page compact">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect fill="none" stroke="currentColor" x="3" y="3" width="18" height="18" rx="2" ry="2"/><line fill="none" stroke="currentColor" x1="3" y1="9" x2="21" y2="9"/><line fill="none" stroke="currentColor" x1="9" y1="21" x2="9" y2="9"/></svg>03. Browsing the Collection</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_catalog.png" alt="Apparel Catalog">
+        </div>
+        <div class="card">
+            <h4>Available Apparel</h4>
+            <h3>Search, Filter &amp; Pricing</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Search Bar</b><span>Type any keyword &mdash; gown name, color, or fabric &mdash; to instantly filter the collection in real-time.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Occasion Filter</b><span>Use the Filters button to narrow results by event type: Prom, Wedding, Traditional, Formal, or Themed.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>View Merchant Profile</b><span>Click "View Profile" on any card to see all apparel offered by that specific boutique owner.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot gold">&#8369;</div>
+                        <div class="step-body"><b>Transparent Pricing</b><span>Rental price is shown prominently on each card (e.g., &#8369;1,500). No hidden fees.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot gold">&#9679;</div>
+                        <div class="step-body"><b>Status Badges</b><span>AVAILABLE (green), RESERVED (orange), IN-LAUNDRY (blue), IN-USE (amber) &mdash; all updated in real-time.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Customer Guide</span><span>05</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 7 &middot; 04 &mdash; GOWN DETAILS & BOOKING
+====================================== -->
+<div class="page compact">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>04. Gown Details &amp; Booking</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_gown_details.png" alt="Gown Details and Booking">
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h4>Booking Type A</h4>
+                <h3>Reservation</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#8982;</div>
+                        <div class="step-body"><b>Select Dates</b><span>Pick Pickup and Return dates from the calendar. Reserved dates (in red) and laundry holds (in blue) are blocked.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9202;</div>
+                        <div class="step-body"><b>Preferred Time</b><span>Choose a pickup time slot within the boutique's operating hours.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9998;</div>
+                        <div class="step-body"><b>Payment</b><span>Choose In-Store payment or GCash. GCash requests await payment confirmation before approval.</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h4>Booking Type B</h4>
+                <h3>Visit &amp; Try-On</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot red">&#8982;</div>
+                        <div class="step-body"><b>Visit Date</b><span>Select a short-duration fitting appointment date. These do not reserve the gown long-term.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#9202;</div>
+                        <div class="step-body"><b>Time Slot</b><span>Pick your preferred in-store time. The owner confirms whether the slot is available.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#10003;</div>
+                        <div class="step-body"><b>Submit Request</b><span>Confirm the request. Trial bookings appear instantly in "My Bookings" with a "Continue to Book" option if you decide to reserve.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Customer Guide</span><span>06</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 8 &middot; 05 &mdash; MY BOOKINGS
+====================================== -->
+<div class="page compact">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect fill="none" stroke="currentColor" x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>05. My Bookings Dashboard</h2>
+    <div class="gap">
+        <!-- Use the screenshot showing real bookings (Trial, Pending, Pending cards) -->
+        <div class="shot">
+            <img src="manual_assets/hd_bookings.png" alt="My Bookings &mdash; Live Booking Data">
+        </div>
+        <div class="card">
+            <h4>Booking Management Hub</h4>
+            <h3>Tracking &amp; Managing Your Reservations</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot outline">&#9998;</div>
+                        <div class="step-body"><b>Trial</b><span>A confirmed try-on appointment. Use "Continue to Book" to upgrade it into a full reservation.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9702;</div>
+                        <div class="step-body"><b>Pending</b><span>Reservation submitted. Awaiting owner approval or GCash payment verification.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot gold">&#10003;</div>
+                        <div class="step-body"><b>Confirmed</b><span>Owner approved. Your pickup date and time are locked in &mdash; prepare your ID and payment.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#8635;</div>
+                        <div class="step-body"><b>Reschedule</b><span>Click "Reschedule" to modify your pickup or return date. Changes require owner re-confirmation.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#10005;</div>
+                        <div class="step-body"><b>Cancel</b><span>Cancel any booking before the pickup date. Confirmed bookings may have cancellation terms.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9432;</div>
+                        <div class="step-body"><b>Booking ID</b><span>Each booking has a unique reference code (e.g., #13D680) for easy communication with the boutique.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Customer Guide</span><span>07</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 9 &middot; PART II DIVIDER
+====================================== -->
+<div class="page divider red">
+    <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline fill="none" stroke="currentColor" points="9 22 9 12 15 12 15 22"/></svg>
+    <div class="tag">PART II</div>
+    <h1>Owner's Guide</h1>
+    <p>Manage inventory, process bookings, and operate your boutique on Astrella.</p>
+</div>
+
+<!-- ======================================
+     PAGE 10 &middot; 06 &mdash; OWNER DASHBOARD
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect fill="none" stroke="currentColor" x="3" y="3" width="18" height="18" rx="2" ry="2"/><line fill="none" stroke="currentColor" x1="3" y1="9" x2="21" y2="9"/><line fill="none" stroke="currentColor" x1="9" y1="21" x2="9" y2="9"/></svg>06. Owner Dashboard</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_owner_dashboard.png" alt="Owner Dashboard">
+        </div>
+        <div class="card red-bar">
+            <h4>Management Space &nbsp;&middot;&nbsp; Performance Overview</h4>
+            <h3>Revenue &amp; Business Hub</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot red">&#8369;</div>
+                        <div class="step-body"><b>Estimated Revenue</b><span>Calculated in real-time from all active confirmed and pending bookings. Updates instantly as new reservations arrive.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#9888;</div>
+                        <div class="step-body"><b>Pending Orders</b><span>Outstanding requests requiring your attention. Verify promptly to secure revenue and keep clients satisfied.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9646;</div>
+                        <div class="step-body"><b>Total Apparel</b><span>Live count of all items in your boutique catalog, including available, reserved, and in-laundry pieces.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9776;</div>
+                        <div class="step-body"><b>Recent Activity</b><span>The 5 most recent client requests are shown for quick review before navigating to the full bookings list.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Owner's Guide</span><span>09</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 11 &middot; 07 &mdash; ADDING NEW APPAREL
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect fill="none" stroke="currentColor" x="3" y="3" width="18" height="18" rx="2" ry="2"/><line fill="none" stroke="currentColor" x1="12" y1="8" x2="12" y2="16"/><line fill="none" stroke="currentColor" x1="8" y1="12" x2="16" y2="12"/></svg>07. Adding New Apparel</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_add_gown.png" alt="Add New Apparel">
+        </div>
+        <div class="card red-bar">
+            <h4>Inventory &nbsp;&middot;&nbsp; Add New Apparel</h4>
+            <h3>Listing a New Piece to Your Collection</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot red">&#9654;</div>
+                        <div class="step-body"><b>Upload Photo</b><span>Click the upload area to add a high-resolution image. Astrella supports AI-assisted background removal for a clean catalog look.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#9654;</div>
+                        <div class="step-body"><b>Core Details</b><span>Enter the Apparel Name, Fabric type, Main Color, and set a Rental Price (&#8369;) per booking period.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9654;</div>
+                        <div class="step-body"><b>Style Attributes</b><span>Select the Occasion type (Wedding, Prom, etc.), Body Type compatibility, and available sizes to enable AI matching.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#10003;</div>
+                        <div class="step-body"><b>Submit</b><span>Click "Add Apparel" to publish. The item becomes immediately visible to customers browsing the catalog.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Owner's Guide</span><span>10</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 12 &middot; 08 &mdash; MANAGING APPAREL INVENTORY
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="m7.5 4.27 9 5.15"/><path fill="none" stroke="currentColor" d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path fill="none" stroke="currentColor" d="m3.3 7 8.7 5 8.7-5"/><path fill="none" stroke="currentColor" d="M12 22V12"/></svg>08. Managing Apparel Inventory</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_manage_gowns.png" alt="Manage Apparel Inventory">
+        </div>
+        <div class="card red-bar">
+            <h4>Inventory &nbsp;&middot;&nbsp; Manage Apparel</h4>
+            <h3>Tracking the Lifecycle of Your Collection</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot red">&#8635;</div>
+                        <div class="step-body"><b>Status Lifecycle</b><span>Cycle items through <b>Available &rarr; Reserved &rarr; In-Use &rarr; In-Laundry</b>. Set the Laundry Hold count to block dates for cleaning.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#8369;</div>
+                        <div class="step-body"><b>Update Pricing</b><span>Edit the rental price at any time directly from the card. Changes reflect immediately in the catalog.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9632;</div>
+                        <div class="step-body"><b>Hide / Show</b><span>Toggle an item's visibility using the "Hidden" badge. Hidden items are removed from the customer view without deleting the record.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#9638;</div>
+                        <div class="step-body"><b>Filter by Status</b><span>Use the top tab bar (All, Available, Reserved, In-Use, In-Laundry, Sold Out) to quickly audit specific inventory groups.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Owner's Guide</span><span>11</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 13 &middot; 09 &mdash; MANAGING BOOKINGS
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>09. Managing Bookings</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_owner_bookings.png" alt="Manage Bookings">
+        </div>
+        <div class="card red-bar">
+            <h4>Operations &nbsp;&middot;&nbsp; Booking Verification</h4>
+            <h3>Processing Client Reservations</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot red">&#9654;</div>
+                        <div class="step-body"><b>Filter by Status</b><span>Switch between All, Trial, Pending, Confirmed, Completed, and Canceled tabs to focus on requests that need action.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#9654;</div>
+                        <div class="step-body"><b>Review the Request</b><span>Check client name, contact, gown, pickup date, return date, total value, and payment method before deciding.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#10003;</div>
+                        <div class="step-body"><b>Verify / Confirm</b><span>Click "VERIFY" to approve the booking. The customer's dashboard updates instantly from Pending to Confirmed.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot outline">&#10005;</div>
+                        <div class="step-body"><b>Cancel Request</b><span>Use "Cancel Request" to reject a booking if there are scheduling conflicts. The customer is notified automatically.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Owner's Guide</span><span>12</span></div>
+</div>
+
+<!-- ======================================
+     PAGE 14 &middot; 10 &mdash; SHOP PROFILE & SETTINGS
+====================================== -->
+<div class="page">
+    <h2><svg class="icon-bt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path fill="none" stroke="currentColor" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle fill="none" stroke="currentColor" cx="12" cy="7" r="4"/><path fill="none" stroke="currentColor" d="M12 11h.01"/></svg>10. Shop Profile &amp; Settings</h2>
+    <div class="gap">
+        <div class="shot">
+            <img src="manual_assets/hd_shop_profile.png" alt="Shop Profile">
+        </div>
+        <div class="card red-bar">
+            <h4>Boutique Identity &amp; Operations</h4>
+            <h3>Managing Your Shop Information</h3>
+            <div class="grid-2 mt">
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot red">&#9749;</div>
+                        <div class="step-body"><b>Shop Name &amp; Description</b><span>Keep your boutique name accurate and write a clear description to build client confidence.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot red">&#9679;</div>
+                        <div class="step-body"><b>Location</b><span>Enter your exact street address and city so clients know where to go for their scheduled pickup.</span></div>
+                    </div>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <div class="dot">&#9202;</div>
+                        <div class="step-body"><b>Operating Hours</b><span>Set your Opening Time and Closing Time. These hours govern which time slots customers can select when booking.</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="dot">&#10003;</div>
+                        <div class="step-body"><b>Save Changes</b><span>Scroll to the bottom and click "Save Profile" to apply all edits. Changes take effect immediately across the platform.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer"><span>Astrella &nbsp;|&nbsp; Owner's Guide</span><span>13</span></div>
+</div>
+
+</body>
+</html>
+

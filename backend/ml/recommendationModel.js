@@ -462,7 +462,6 @@ class HybridRecommendationModel {
                 });
             }
         }
-
         return recommendations;
     }
 }
