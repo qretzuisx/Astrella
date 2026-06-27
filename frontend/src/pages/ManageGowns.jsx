@@ -383,7 +383,7 @@ const ManageGowns = () => {
     <div className='flex min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] max-w-full overflow-x-hidden'>
       <OwnerSidebar />
 
-      <div className='flex-1 min-w-0 p-3 sm:p-6 lg:p-8'>
+      <div className='flex-1 min-w-0 p-4 sm:p-6 lg:p-10'>
         <div className='max-w-7xl mx-auto'>
           {/* Header Section */}
           <div className='sticky top-0 z-30 bg-[#FDFDFF]/80 backdrop-blur-md -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 py-6 mb-4'>
@@ -550,71 +550,35 @@ const ManageGowns = () => {
                   {/* Gown Details */}
                   <div className='p-4 flex flex-col flex-grow'>
                     <div className="flex items-start justify-between gap-2 mb-3">
-                        <h3 className='text-sm sm:text-base font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
-                        {(gown.available === false || (gown.statusOverride && gown.statusOverride !== 'Available' && gown.statusOverride !== '')) && (
-                            <div className="p-0.5 px-1.5 bg-gray-200 text-red-500 font-black text-[8px] uppercase tracking-wider rounded border border-red-100 shadow-sm animate-pulse shrink-0">Hidden</div>
-                        )}
-                    </div>
-                    
-                    {/* Details Grid - Consistent with GownCard */}
-                    <div className='grid grid-cols-2 gap-2 text-xs font-semibold mb-4'>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-50/50'>
-                        <div className="w-5 h-5 bg-white rounded flex items-center justify-center shadow-sm">
-                            <img src={assets.fabric_icon} alt="fabric" className='w-2.5 h-2.5' />
-                        </div>
-                        <span className='truncate'>{gown.fabric}</span>
-                      </div>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-50/50'>
-                         <div className="w-5 h-5 bg-white rounded flex items-center justify-center shadow-sm">
-                            <img src={assets.color_icon} alt="color" className='w-2.5 h-2.5' />
-                        </div>
-                        <span className='truncate'>{gown.color}</span>
-                      </div>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-50/50'>
-                        <div className="w-5 h-5 bg-white rounded flex items-center justify-center shadow-sm">
-                            <img src={assets.event_icon} alt="event" className='w-2.5 h-2.5' />
-                        </div>
-                        <span className='capitalize truncate'>
-                          {Array.isArray(gown.eventType) && gown.eventType.length > 0
-                            ? gown.eventType[0]
-                            : gown.eventType || 'N/A'}
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-50/50'>
-                        <div className="w-5 h-5 bg-white rounded flex items-center justify-center shadow-sm">
-                            <img src={assets.size_icon} alt="size" className='w-2.5 h-2.5' />
-                        </div>
-                        <span className='truncate'>
-                          {Array.isArray(gown.size) ? gown.size[0] : gown.size || 'N/A'}
-                        </span>
-                      </div>
+                        <h3 className='text-sm sm:text-base font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem] flex items-center'>{gown.name}</h3>
                     </div>
 
+
                     {/* Laundry Management - Refined */}
-                    <div className='mb-4 p-2.5 bg-primary-dull/5 rounded-xl border border-primary/5 flex flex-row items-center justify-between gap-2 mt-auto'>
-                      <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-                             <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className='mb-4 p-2 bg-primary-dull/5 rounded-xl border border-primary/5 flex flex-row items-center justify-between gap-1.5 mt-auto'>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center shrink-0">
+                             <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                              </svg>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-primary-dull uppercase tracking-wider">Laundry Hold</p>
+                            <p className="text-[8px] sm:text-[9px] font-black text-primary-dull uppercase tracking-wider truncate">Laundry</p>
                           </div>
                       </div>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-1 flex-shrink-0'>
                         <input
                           type='number'
                           min='0'
                           max='14'
                           value={laundryForm[gown._id || gown.id] ?? String(gown.laundryDays ?? 0)}
                           onChange={(e) => handleLaundryInputChange(gown._id || gown.id, e.target.value)}
-                          className='w-12 px-2 py-1 bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none transition-all text-xs font-bold text-center shadow-sm'
+                          className='w-9 px-1 py-1 bg-white border border-gray-200 rounded-md focus:ring-1 focus:ring-primary outline-none transition-all text-[10px] font-bold text-center shadow-sm'
                         />
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
+                          className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-100 text-gray-400'
                               : 'bg-primary text-white hover:shadow-md hover:shadow-primary/10 active:scale-95'
                             }`}
@@ -625,29 +589,39 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Action Buttons - Premium Control Bar */}
-                    <div className='flex flex-row gap-2 mt-auto'>
+                    <div className='flex flex-col gap-2 mt-auto w-full'>
+                      <button
+                        onClick={() => openEditModal(gown)}
+                        className='w-full h-9 bg-gray-50 text-gray-700 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-1.5 group/btn border border-gray-100/50 hover:border-transparent'
+                      >
+                         <img src={assets.edit_profile_icon} className="w-3.5 h-3.5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
+                        Edit Apparel
+                      </button>
+                      <div className='flex gap-2 w-full'>
                         <button
-                          onClick={() => openEditModal(gown)}
-                          className='flex-1 h-9 bg-gray-50 text-gray-700 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-1 group/btn'
+                          onClick={() => handleToggleAvailability(gown._id || gown.id)}
+                          className={`flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-1.5 ${gown.available
+                              ? 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'
+                              : 'bg-green-50 text-green-700 hover:bg-green-600 hover:text-white'
+                            }`}
                         >
-                           <img src={assets.edit_profile_icon} className="w-3.5 h-3.5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
-                          Edit
+                          {gown.available ? 'Hide' : 'Show'}
                         </button>
-                      <button
-                        onClick={() => handleToggleAvailability(gown._id || gown.id)}
-                        className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-1 ${gown.available
-                            ? 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'
-                            : 'bg-green-50 text-green-700 hover:bg-green-600 hover:text-white'
-                          }`}
-                      >
-                        {gown.available ? 'Hide' : 'Show'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteGown(gown._id || gown.id)}
-                        className='h-9 w-9 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del flex-shrink-0'
-                      >
-                         <img src={assets.delete_icon} className="w-5 h-5 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
-                      </button>
+                        <button
+                          onClick={() => handleDeleteGown(gown._id || gown.id)}
+                          className='h-9 w-9 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center group/del flex-shrink-0 cursor-pointer border border-red-100/70 shadow-sm'
+                        >
+                          <svg 
+                            className="w-4.5 h-4.5 text-red-600 group-hover/del:text-white transition-colors" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2.2" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
