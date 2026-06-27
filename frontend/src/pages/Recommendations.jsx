@@ -166,50 +166,37 @@ const Recommendations = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] py-8 sm:py-16 px-4 md:px-8 lg:px-16 xl:px-32">
+    <div className="min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] pt-3 sm:pt-4 pb-8 sm:pb-16 px-4 md:px-8 lg:px-16 xl:px-32">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-10 sm:mb-16">
+        <div className="mb-2 sm:mb-3">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 mb-6 sm:mb-10 text-primary hover:text-primary-dull font-black transition-all hover:-translate-x-1 group"
+            className="flex items-center gap-2 text-primary hover:text-primary-dull font-black transition-all hover:-translate-x-1 group"
           >
             <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span className="uppercase tracking-widest text-[10px] sm:text-xs">Back to Home</span>
           </button>
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 sm:mb-16">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-1 bg-primary rounded-full"></div>
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">AI Stylist Results</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-primary tracking-tight leading-tight">Your Style <span className="text-secondary italic">Matches</span></h1>
-              <p className="text-sm sm:text-lg text-gray-500 font-medium max-w-2xl">
-                We've selected {recommendations.length} exclusive piece{recommendations.length !== 1 ? 's' : ''} tailored to your unique profile.
-              </p>
-            </div>
-            
-            <div className="bg-primary/5 px-6 py-4 rounded-[28px] border border-primary/10 backdrop-blur-sm">
-              <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest mb-1 text-center sm:text-left">Availability Notice</p>
-              <p className="text-[10px] sm:text-xs font-bold text-primary/70">Badges reflect real-time status.</p>
-            </div>
-          </div>
         </div>
 
 
         {/* Recommendations Display */}
         {recommendations.length > 0 ? (
-          <div className="space-y-12">
+          <div className="space-y-3">
             {/* Top 3 Section */}
             {topThree.length > 0 && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="flex flex-col mb-8 sm:mb-10">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col mb-3 sm:mb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-6 sm:w-8 h-[2px] bg-gradient-to-r from-secondary to-secondary/40 rounded-full"></div>
+                    <span className="text-[9px] sm:text-[10px] font-black text-secondary uppercase tracking-[0.3em]">AI Stylist Results</span>
+                    <div className="w-6 sm:w-8 h-[2px] bg-gradient-to-l from-secondary to-secondary/40 rounded-full"></div>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">
-                      <h2 className="text-xl sm:text-2xl font-black text-primary tracking-tight">Prime Selections</h2>
+                      <h2 className="text-xl sm:text-2xl font-black text-primary tracking-tight">Your Top <span className="text-secondary italic">3 Picks</span></h2>
                       <div className="h-[2px] flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
                     </div>
                     {/* Mobile: Pagination Dots at Top */}
@@ -229,31 +216,31 @@ const Recommendations = () => {
                 </div>
 
                 {/* Mobile: Horizontal Carousel, Desktop: Grid */}
-                <div className="flex sm:grid flex-nowrap sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 overflow-x-auto sm:overflow-visible premium-scrollbar pb-6 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x">
+                <div className="flex sm:grid flex-nowrap sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 overflow-x-auto sm:overflow-visible premium-scrollbar pb-6 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x">
                   {topThree.map((item, index) => {
                     const badge = getStarBadge(index);
                     return (
                       <div key={item.gown._id || item.gown.id || index} className="min-w-[85vw] sm:min-w-0 flex flex-col group h-full scroll-snap-align-start">
                         {/* Premium Integrated Wrapper */}
-                        <div className="flex-1 flex flex-col rounded-[32px] sm:rounded-[40px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
+                        <div className="flex-1 flex flex-col rounded-[24px] sm:rounded-[32px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
                           {/* Rank Badge Header */}
-                          <div className={`flex items-center justify-between px-6 py-5 sm:p-7 relative overflow-hidden ${badge.bgColor}`}>
+                          <div className={`flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 relative overflow-hidden ${badge.bgColor}`}>
                              {/* Glossy overlay effect */}
                              <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50"></div>
                              
-                             <div className="flex items-center gap-3 sm:gap-4 relative z-10">
-                               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-[14px] sm:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/30`}>
-                                  <img src={badge.starIcon} alt="star" className="w-5 h-5 sm:w-6 sm:h-6 brightness-0 invert" />
+                             <div className="flex items-center gap-2 sm:gap-3 relative z-10">
+                               <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/30`}>
+                                  <img src={badge.starIcon} alt="star" className="w-4 h-4 sm:w-5 sm:h-5 brightness-0 invert" />
                                </div>
                                <div>
-                                 <p className="text-[10px] sm:text-[10px] font-bold text-white/80 uppercase tracking-widest mb-0.5">Rank #{index + 1}</p>
-                                 <span className="font-black text-xs sm:text-sm text-white uppercase tracking-widest">{badge.text}</span>
+                                 <p className="text-[8px] sm:text-[9px] font-bold text-white/80 uppercase tracking-widest mb-0.5">Rank #{index + 1}</p>
+                                 <span className="font-black text-[10px] sm:text-xs text-white uppercase tracking-widest">{badge.text}</span>
                                </div>
                              </div>
 
                              <div className="text-right relative z-10">
-                               <p className="text-[10px] sm:text-[10px] font-bold text-white/70 uppercase tracking-widest mb-0.5">Match Score</p>
-                               <span className="text-2xl sm:text-3xl font-black text-white tracking-tighter">{item.score}%</span>
+                               <p className="text-[8px] sm:text-[9px] font-bold text-white/70 uppercase tracking-widest mb-0.5">Match Score</p>
+                               <span className="text-xl sm:text-2xl font-black text-white tracking-tighter">{item.score}%</span>
                              </div>
 
                              {/* Abstract Decorative Circles */}
@@ -277,7 +264,7 @@ const Recommendations = () => {
 
             {/* Your Preferences - Between Top 3 and Others */}
             {(preferences.bodyType || preferences.skinTone || preferences.eventType || preferences.faceShape || preferences.ageGroup || preferences.sex) && (
-              <div className="bg-white rounded-[40px] shadow-xl p-8 sm:p-12 mb-16 border border-blue-50/50 relative overflow-hidden group">
+              <div className="bg-white rounded-[40px] shadow-xl p-8 sm:p-12 border border-gray-100/50 relative overflow-hidden group">
                 {/* Background decorative element */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-transform duration-700 group-hover:scale-110"></div>
                 
@@ -404,7 +391,7 @@ const Recommendations = () => {
                   </div>
                   <span className="text-[9px] sm:text-[10px] font-black text-primary/30 uppercase tracking-[0.2em] ml-4">{others.length} Items</span>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 xl:gap-5">
                   {others.map((item, index) => (
                     <div key={item.gown._id || item.gown.id || index} className="flex flex-col group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                       <div className="rounded-[24px] sm:rounded-[32px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/5 group-hover:-translate-y-1 bg-white flex-1 flex flex-col">

@@ -611,7 +611,7 @@ const MyBookings = ({ setShowLogin }) => {
 
   if (loading && initialLoadRef.current) {
     return (
-      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-0 pt-3 sm:pt-4 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
           <p className='text-lg sm:text-xl text-gray-500 mb-4'>Loading your bookings...</p>
           <div className='animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto'></div>
@@ -621,7 +621,7 @@ const MyBookings = ({ setShowLogin }) => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-12 sm:mb-16 pb-20 sm:pb-0 bg-[#FDFDFF] min-h-screen'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-0 pt-3 sm:pt-4 mb-12 sm:mb-16 pb-20 sm:pb-0 bg-[#FDFDFF] min-h-screen'>
       <div className='mb-10 lg:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4'>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">

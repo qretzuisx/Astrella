@@ -622,7 +622,7 @@ const GownDetails = () => {
 
   if (loadingGown) {
     return (
-      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-0 pt-12 sm:pt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto mb-4'></div>
           <p className='text-lg sm:text-xl text-gray-500'>Loading gown details...</p>
@@ -633,7 +633,7 @@ const GownDetails = () => {
 
   if (!gown) {
     return (
-      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-0 pt-12 sm:pt-16 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
           <p className='text-lg sm:text-xl text-gray-500 mb-4'>Gown not found</p>
           <button
@@ -648,171 +648,166 @@ const GownDetails = () => {
   }
 
   return (
-    <div className='px-4 sm:px-8 lg:px-16 mt-6 sm:mt-12 mb-12 sm:mb-16 pb-24 sm:pb-0 bg-[#FDFDFF] min-h-screen text-gray-800'>
+    <div className='px-4 sm:px-8 lg:px-16 mt-0 pt-3 sm:pt-4 mb-8 sm:mb-12 pb-24 sm:pb-0 bg-[#FDFDFF] min-h-screen text-gray-800'>
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)} 
-        className='flex items-center gap-2 mb-10 text-primary hover:text-secondary font-black transition-all hover:-translate-x-1 group'
+        className='flex items-center gap-2 mb-3 sm:mb-4 text-primary hover:text-secondary font-black transition-all hover:-translate-x-1 group'
       >
-        <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        <span className="uppercase tracking-widest text-xs">Back to Catalog</span>
+        <span className="uppercase tracking-widest text-[10px] sm:text-xs">Back to Catalog</span>
       </button>
 
       {/* Main Content */}
-      <div className='flex flex-col lg:flex-row gap-6 lg:gap-8 relative'>
+      <div className='flex flex-col lg:flex-row gap-4 lg:gap-6 relative lg:items-start'>
         {/* Left Column - Image and Descriptions */}
-        <div className='w-full lg:w-1/2 flex flex-col gap-6'>
+        <div className='w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4'>
           {/* Image Section */}
           <div className='relative rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group'>
             <img
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
               loading="lazy"
-              className='w-full h-auto max-h-[450px] sm:max-h-[550px] object-contain transition-transform duration-1000 group-hover:scale-105'
+              className='w-full h-auto max-h-[350px] sm:max-h-[420px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
             
             {/* Status Pill Overlay */}
-            <div className={`absolute top-4 left-4 sm:top-8 sm:left-8 px-5 sm:px-8 py-2.5 sm:py-4 rounded-2xl sm:rounded-[32px] font-black text-xs sm:text-sm uppercase tracking-[0.2em] shadow-2xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(gown.status || 'Available')}`}>
+            <div className={`absolute top-3 left-3 sm:top-5 sm:left-5 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-[0.15em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(gown.status || 'Available')}`}>
               {gown.status || 'Available'}
             </div>
             
 
           </div>
 
-          {/* Title and Owner Information */}
-          <div className='space-y-6'>
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="px-3 py-1 bg-secondary/5 text-secondary text-[10px] font-black uppercase tracking-widest rounded-full">{gown.category || 'Apparel'}</span>
-                <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-                <span className="text-gray-400 text-xs font-bold">ID: {gown._id?.slice(-6).toUpperCase()}</span>
-              </div>
-              <h1 className='text-3xl sm:text-5xl font-black text-primary tracking-tight leading-tight mb-2'>{gown.name}</h1>
-              <div className='flex items-center justify-between py-4 sm:py-6 border-y border-primary/5'>
-                <div className="flex items-center gap-4">
-                  <div className='w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-[0_10px_20px_rgba(1,62,141,0.2)]'>
-                    {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex flex-col">
-                    <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>by</p>
-                    <button
-                      onClick={() => {
-                        const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
-                        navigate(`/owner-profile/${ownerId}`)
-                      }}
-                      className='text-primary hover:text-secondary-light font-black text-lg transition-colors text-left'
-                    >
-                      {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
-                    </button>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => {
-                    const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
-                    navigate(`/owner-profile/${ownerId}`)
-                  }}
-                  className='px-5 py-2.5 bg-primary/5 hover:bg-primary text-primary hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/10 hover:border-primary transition-all flex items-center justify-center gap-2 group shadow-sm shrink-0'
-                >
-                  View Profile
-                  <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+          {/* Title name and Price */}
+          <div className="mb-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 bg-secondary/5 text-secondary text-[8px] font-black uppercase tracking-widest rounded-full">{gown.category || 'Apparel'}</span>
+              <span className="w-1.5 h-1.5 bg-gray-200 rounded-full"></span>
+              <span className="text-gray-400 text-[10px] font-bold">ID: {gown._id?.slice(-6).toUpperCase()}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <h1 className='text-xl sm:text-2xl font-black text-primary tracking-tight leading-tight'>{gown.name}</h1>
+              <div className='text-xl font-black text-primary flex items-baseline gap-1 shrink-0 text-right'>
+                <span className="text-secondary text-xs sm:text-sm">{currency}</span>
+                <span>{(gown.pricePerDay || gown.price || 0).toLocaleString()}<span className="text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider sm:ml-1">/ Day</span></span>
               </div>
             </div>
+          </div>
 
-            {/* Price section - More compact */}
-            <div className='p-6 bg-white border border-primary/5 rounded-[24px] text-primary flex items-center justify-between shadow-sm overflow-hidden relative group'>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-50"></div>
-              <div className="relative z-10">
-                <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2'>Daily Rental rate</p>
-                <div className='text-4xl font-black flex items-baseline gap-2'>
-                  <span className="text-secondary">{currency}</span>
-                  <span className='text-primary'>{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
+          {/* Owner Information */}
+          <div className='space-y-3 sm:space-y-4'>
+            <div className='flex items-center justify-between py-2.5 sm:py-3 border-y border-primary/5'>
+              <div className="flex items-center gap-3">
+                <div className='w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-black text-base shadow-[0_8px_16px_rgba(1,62,141,0.2)]'>
+                  {(gown.owner?.shopName || gown.owner?.name || 'A')?.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex flex-col">
+                  <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>by</p>
+                  <button
+                    onClick={() => {
+                      const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+                      navigate(`/owner-profile/${ownerId}`)
+                    }}
+                    className='text-primary hover:text-secondary-light font-black text-sm sm:text-base transition-colors text-left'
+                  >
+                    {gown.owner ? (typeof gown.owner === 'object' ? (gown.owner.shopName || gown.owner.name) : gown.owner) : 'Boutique Partner'}
+                  </button>
                 </div>
               </div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+              
+              <button
+                onClick={() => {
+                  const ownerId = typeof gown.owner === 'object' ? (gown.owner._id || gown.owner.id) : gown.owner
+                  navigate(`/owner-profile/${ownerId}`)
+                }}
+                className='px-5 py-2.5 bg-primary/5 hover:bg-primary text-primary hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/10 hover:border-primary transition-all flex items-center justify-center gap-2 group shadow-sm shrink-0'
+              >
+                View Profile
+                <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
 
           {/* Info Cards - Compact Layout */}
           <div className='flex flex-col sm:flex-row gap-4'>
-            <div className='flex-1 p-5 sm:p-7 bg-white rounded-3xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-4 h-1 bg-secondary-light rounded-full"></div>
-                <h2 className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Location</h2>
+            <div className='flex-1 p-3 sm:p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-3 h-0.5 bg-secondary-light rounded-full"></div>
+                <h2 className='text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest'>Location</h2>
               </div>
-              <p className='text-primary font-black text-base'>{ownerAddress || shopProfile?.address || gown.owner?.shopProfile?.address || gown.location || 'Physical Store'}</p>
+              <p className='text-primary font-black text-sm'>{ownerAddress || shopProfile?.address || gown.owner?.shopProfile?.address || gown.location || 'Physical Store'}</p>
             </div>
-            <div className='flex-1 p-5 sm:p-7 bg-white rounded-3xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-4 h-1 bg-secondary-light rounded-full"></div>
-                <h2 className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Contact</h2>
+            <div className='flex-1 p-3 sm:p-4 bg-white rounded-2xl border border-primary/5 shadow-sm hover:shadow-md transition-all'>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-3 h-0.5 bg-secondary-light rounded-full"></div>
+                <h2 className='text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest'>Contact</h2>
               </div>
-              <p className='text-primary font-black text-base'>{ownerContactNumber || shopProfile?.contactNumber || gown.owner?.shopProfile?.contactNumber || gown.owner?.contactNumber || gown.contactNumber || gown.contact || 'Inquire'}</p>
+              <p className='text-primary font-black text-sm'>{ownerContactNumber || shopProfile?.contactNumber || gown.owner?.shopProfile?.contactNumber || gown.owner?.contactNumber || gown.contactNumber || gown.contact || 'Inquire'}</p>
             </div>
           </div>
 
 
 
           {/* Gown Specifications */}
-          <div className='bg-white rounded-2xl sm:rounded-[24px] border border-primary/5 p-4 sm:p-6 shadow-sm relative overflow-hidden'>
+          <div className='bg-white rounded-2xl border border-primary/5 p-2.5 sm:p-3.5 shadow-sm relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <h2 className='text-base sm:text-xl font-black text-primary mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 relative z-10'>
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-tr from-secondary-light to-yellow-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(221,175,41,0.2)]">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h2 className='text-xs sm:text-sm font-black text-primary mb-2 flex items-center gap-2 relative z-10'>
+              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-tr from-secondary-light to-yellow-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-[0_5px_15px_rgba(221,175,41,0.2)]">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               Specifications
             </h2>
-            <div className='grid grid-cols-2 gap-2 sm:gap-3 relative z-10'>
+            <div className='grid grid-cols-2 gap-2 relative z-10'>
               {/* Material */}
-              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.fabric_icon} alt="fabric" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 p-2 sm:p-2.5 bg-white rounded-lg sm:rounded-xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-1.5 sm:p-2 rounded-lg flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.fabric_icon} alt="fabric" className='w-4.5 h-4.5 sm:w-5 sm:h-5 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Material</p>
-                  <p className='text-primary font-black text-xs sm:text-base break-words leading-snug'>{gown.fabric || 'Premium Blends'}</p>
+                  <p className='text-[9px] font-black text-secondary uppercase tracking-widest mb-0.5 opacity-60'>Material</p>
+                  <p className='text-primary font-black text-xs sm:text-sm break-words leading-none'>{gown.fabric || 'Premium Blends'}</p>
                 </div>
               </div>
 
               {/* Size */}
-              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.size_icon} alt="size" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 p-2 sm:p-2.5 bg-white rounded-lg sm:rounded-xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-1.5 sm:p-2 rounded-lg flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.size_icon} alt="size" className='w-4.5 h-4.5 sm:w-5 sm:h-5 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Available Size</p>
-                  <p className='text-primary font-black text-xs sm:text-base break-words leading-snug'>
+                  <p className='text-[9px] font-black text-secondary uppercase tracking-widest mb-0.5 opacity-60'>Available Size</p>
+                  <p className='text-primary font-black text-xs sm:text-sm break-words leading-none'>
                     {Array.isArray(gown.size) ? gown.size.join(', ') : gown.size}
                   </p>
                 </div>
               </div>
 
               {/* Color */}
-              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.color_icon} alt="color" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 p-2 sm:p-2.5 bg-white rounded-lg sm:rounded-xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-1.5 sm:p-2 rounded-lg flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.color_icon} alt="color" className='w-4.5 h-4.5 sm:w-5 sm:h-5 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0 overflow-hidden'>
-                  <p className='text-[10px] font-black text-secondary uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Available Tones</p>
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+                  <p className='text-[9px] font-black text-secondary uppercase tracking-widest mb-0.5 opacity-60'>Available Tones</p>
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                       {(() => {
                         const colors = parseColors(gown.color);
                         return (
-                          <div className="flex -space-x-1.5 sm:-space-x-2 flex-shrink-0">
+                          <div className="flex -space-x-1.5 flex-shrink-0">
                             {(colors || []).map((c, i) => {
                               const normalized = (c || '').toString().toLowerCase();
                               const hex = getColorHex(normalized);
                               return (
                                 <div 
                                   key={i} 
-                                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
+                                  className={`w-5 h-5 rounded-full border border-white shadow-md transition-transform hover:scale-110 cursor-help ${normalized === 'white' || normalized === 'off-white' || normalized === 'ivory' ? 'ring-1 ring-gray-100' : ''}`} 
                                   style={{ backgroundColor: hex }} 
                                   title={c} 
                                 />
@@ -821,19 +816,19 @@ const GownDetails = () => {
                           </div>
                         );
                       })()}
-                    <p className='text-primary font-black text-xs sm:text-base capitalize break-words leading-snug'>{Array.isArray(gown.color) ? gown.color.join(', ') : (gown.color || 'Custom')}</p>
+                    <p className='text-primary font-black text-xs sm:text-sm capitalize break-words leading-none'>{Array.isArray(gown.color) ? gown.color.join(', ') : (gown.color || 'Custom')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Event Types */}
-              <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
-                <div className='bg-secondary/5 p-2 sm:p-3 rounded-xl flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
-                  <img src={assets.event_icon} alt="event" className='w-5 h-5 sm:w-6 sm:h-6 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
+              <div className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 p-2 sm:p-2.5 bg-white rounded-lg sm:rounded-xl border border-primary/5 shadow-[0_10px_30px_rgba(1,62,141,0.03)] hover:border-secondary/20 hover:shadow-[0_20px_50px_rgba(172,32,33,0.08)] transition-all duration-500 group/item'>
+                <div className='bg-secondary/5 p-1.5 sm:p-2 rounded-lg flex-shrink-0 w-fit group-hover/item:bg-secondary transition-all duration-500'>
+                  <img src={assets.event_icon} alt="event" className='w-4.5 h-4.5 sm:w-5 sm:h-5 grayscale opacity-40 group-hover/item:grayscale-0 group-hover/item:opacity-100 group-hover/item:invert transition-all' />
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-0.5 sm:mb-1 opacity-60'>Best for</p>
-                  <p className='text-primary font-black text-xs sm:text-base capitalize break-words leading-snug'>
+                  <p className='text-[9px] font-black text-[#FF3B30] uppercase tracking-widest mb-0.5 opacity-60'>Best for</p>
+                  <p className='text-primary font-black text-xs sm:text-sm capitalize break-words leading-none'>
                     {Array.isArray(gown.eventType) && gown.eventType.length > 0
                       ? gown.eventType.join(', ')
                       : gown.eventtype || gown.eventType || 'All Occasions'}
@@ -845,91 +840,92 @@ const GownDetails = () => {
         </div>
 
         {/* Details Section (Right Column) Sticky on Desktop, Static/Bottom on Mobile */}
-        <div className='w-full lg:w-1/2 flex flex-col gap-6 lg:sticky lg:top-20 h-fit pb-28 sm:pb-24 lg:pb-0'>
+        <div className='w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4 lg:sticky lg:top-4 h-fit pb-28 sm:pb-24 lg:pb-0'>
           {/* Success/Error Notifications */}
-          <div className="space-y-4">
-            {success && (
-              <div className='p-6 bg-green-50 border border-green-200 rounded-[24px] animate-fade-in backdrop-blur-md'>
-                <div className='flex items-center gap-3'>
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-[0_5px_15px_rgba(34,197,94,0.3)]">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+          {(success || error) && (
+            <div className="space-y-4">
+              {success && (
+                <div className='p-6 bg-green-50 border border-green-200 rounded-[24px] animate-fade-in backdrop-blur-md'>
+                  <div className='flex items-center gap-3'>
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-[0_5px_15px_rgba(34,197,94,0.3)]">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className='text-green-700 font-black'>Success! Redirecting to your dashboard...</p>
                   </div>
-                  <p className='text-green-700 font-black'>Success! Redirecting to your dashboard...</p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {error && (
-              <div className='p-6 bg-red-50 border border-red-100 rounded-[24px] animate-shake backdrop-blur-md'>
-                <div className='flex items-center gap-3'>
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white shadow-[0_5px_15px_rgba(239,68,68,0.3)]">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+              {error && (
+                <div className='p-6 bg-red-50 border border-red-100 rounded-[24px] animate-shake backdrop-blur-md'>
+                  <div className='flex items-center gap-3'>
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white shadow-[0_5px_15px_rgba(239,68,68,0.3)]">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p className='text-red-700 font-black'>{error}</p>
                   </div>
-                  <p className='text-red-700 font-black'>{error}</p>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Booking Card - More compact padding */}
-          <div className='bg-white rounded-[32px] shadow-lg border border-primary/5 p-6 sm:p-8 relative overflow-hidden'>
+          <div className='bg-white rounded-[24px] shadow-lg border border-primary/5 p-4 sm:p-6 relative overflow-hidden'>
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-            
-            <h2 className='text-2xl font-black text-primary mb-8'>Reserve this Apparel</h2>
+            <h2 className='text-lg sm:text-xl font-black text-primary mb-4 sm:mb-5'>Reserve this Apparel</h2>
 
             {/* Booking Type Selection */}
-            <div className='mb-6 sm:mb-8'>
-              <label className='block text-xs font-black text-gray-400 uppercase tracking-widest mb-4'>Booking type</label>
-              <div className='grid grid-cols-2 gap-4'>
+            <div className='mb-4 sm:mb-5'>
+              <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 sm:mb-3'>Booking type</label>
+              <div className='grid grid-cols-2 gap-2.5'>
                 <button 
                   onClick={() => setBookingType('reservation')}
-                  className={`flex flex-col gap-2 sm:gap-3 p-4 sm:p-5 rounded-3xl border-2 transition-all text-left ${
+                  className={`flex flex-row items-center gap-2 p-2 sm:p-2.5 rounded-xl border-2 transition-all text-left ${
                     bookingType === 'reservation' 
                     ? 'border-primary bg-primary/5 shadow-[inner_0_0_20px_rgba(1,62,141,0.05)]' 
                     : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${bookingType === 'reservation' ? 'bg-primary text-white shadow-[0_5px_15px_rgba(1,62,141,0.3)]' : 'bg-white text-gray-400 border border-primary/5'}`}>
-                    <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${bookingType === 'reservation' ? 'bg-primary text-white shadow-[0_5px_15px_rgba(1,62,141,0.3)]' : 'bg-white text-gray-400 border border-primary/5'}`}>
+                    <svg className="w-3.5 h-3.5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div>
-                    <p className={`font-black text-sm ${bookingType === 'reservation' ? 'text-primary' : 'text-gray-400'}`}>Reservation</p>
-                    <p className='text-[10px] text-gray-400 font-bold'>Standard Rental</p>
+                  <div className="min-w-0">
+                    <p className={`font-black text-xs leading-tight mb-0.5 ${bookingType === 'reservation' ? 'text-primary' : 'text-gray-400'}`}>Reservation</p>
+                    <p className='text-[9px] text-gray-400 font-bold leading-none'>Standard Rental</p>
                   </div>
                 </button>
 
                 <button 
                   onClick={() => setBookingType('trial')}
-                  className={`flex flex-col gap-2 sm:gap-3 p-4 sm:p-5 rounded-3xl border-2 transition-all text-left group/trial ${
+                  className={`flex flex-row items-center gap-2 p-2 sm:p-2.5 rounded-xl border-2 transition-all text-left group/trial ${
                     bookingType === 'trial' 
                     ? 'border-secondary bg-secondary/5 shadow-[inner_0_0_20px_rgba(67,97,238,0.05)]' 
                     : 'border-primary/5 hover:border-primary/20 bg-[#FDFDFF]'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${bookingType === 'trial' ? 'bg-secondary text-white shadow-[0_5px_15px_rgba(67,97,238,0.3)]' : 'bg-gray-200 text-gray-600 border border-gray-300 group-hover/trial:border-secondary/20'}`}>
-                    <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${bookingType === 'trial' ? 'bg-secondary text-white shadow-[0_5px_15px_rgba(67,97,238,0.3)]' : 'bg-gray-200 text-gray-600 border border-gray-300 group-hover/trial:border-secondary/20'}`}>
+                    <svg className="w-3.5 h-3.5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </div>
-                  <div>
-                    <p className={`font-black text-sm ${bookingType === 'trial' ? 'text-secondary' : 'text-gray-600'}`}>Visit & Try-on</p>
-                    <p className='text-[10px] text-gray-500 font-bold'>View in Person</p>
+                  <div className="min-w-0">
+                    <p className={`font-black text-xs leading-tight mb-0.5 ${bookingType === 'trial' ? 'text-secondary' : 'text-gray-600'}`}>Visit & Try-on</p>
+                    <p className='text-[9px] text-gray-500 font-bold leading-none'>View in Person</p>
                   </div>
                 </button>
               </div>
             </div>
 
             {/* Date Selection Section */}
-            <div className='mb-6 sm:mb-8'>
-              <div className="flex items-center justify-between mb-4">
-                <label className='block text-xs font-black text-gray-500 uppercase tracking-widest'>Select Schedule</label>
+            <div className='mb-4 sm:mb-5'>
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest'>Select Schedule</label>
                 <div className='flex items-center gap-4 text-[10px] font-black uppercase tracking-widest'>
                   <span className='flex items-center gap-1.5 text-[#EF4444]'>
                     <span className='w-2 h-2 rounded-full bg-[#EF4444] shadow-[0_0_5px_rgba(239,68,68,0.5)]'></span>
@@ -946,7 +942,7 @@ const GownDetails = () => {
                 </div>
               </div>
 
-              <div className='bg-[#FDFDFF] border border-primary/5 shadow-inner rounded-[32px] p-6 relative'>
+              <div className='bg-[#FDFDFF] border border-primary/5 shadow-inner rounded-2xl p-3 sm:p-4 relative'>
                 {calendarLoading ? (
                   <div className="py-12 flex flex-col items-center justify-center opacity-50">
                     <div className="w-8 h-8 border-2 border-primary border-b-transparent rounded-full animate-spin mb-3"></div>
@@ -955,7 +951,7 @@ const GownDetails = () => {
                 ) : calendarError ? (
                   <p className='text-sm text-red-500 font-bold p-4 text-center'>{calendarError}</p>
                 ) : (
-                  <div className='flex justify-center w-full scale-90 sm:scale-100 origin-top [&_.rdp]:text-primary [&_.rdp-day]:w-9 [&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-10 sm:[&_.rdp-day]:h-10 [&_.rdp-day_button]:text-primary [&_.rdp-day_button:disabled]:text-gray-300 [&_.rdp-nav_button]:text-primary [&_.rdp-nav_button:hover]:bg-primary/5 [&_.rdp-head_cell]:text-gray-400'>
+                  <div className='flex justify-center w-full scale-80 sm:scale-90 origin-top [&_.rdp]:text-primary [&_.rdp-day]:w-7 [&_.rdp-day]:h-7 sm:[&_.rdp-day]:w-8 sm:[&_.rdp-day]:h-8 [&_.rdp-day_button]:text-primary [&_.rdp-day_button:disabled]:text-gray-300 [&_.rdp-nav_button]:text-primary [&_.rdp-nav_button:hover]:bg-primary/5 [&_.rdp-head_cell]:text-gray-400 [&_.rdp]:m-0 [&_.rdp-month]:gap-2 [&_.rdp-caption]:h-8 [&_.rdp-caption_label]:text-xs [&_.rdp-head_cell]:text-[10px] [&_.rdp-day]:text-[10px]'>
                     <DayPicker
                       mode={bookingType === 'trial' ? 'single' : 'range'}
                       numberOfMonths={1}
@@ -1016,25 +1012,25 @@ const GownDetails = () => {
 
               {/* Selected Dates Display */}
               {pickupDate && (
-                <div className='mt-6 grid grid-cols-2 gap-4 animate-fade-in'>
-                  <div className='p-6 bg-primary rounded-[32px] text-white shadow-[0_20px_50px_rgba(1,62,141,0.15)] relative overflow-hidden'>
+                <div className='mt-4 grid grid-cols-2 gap-3 animate-fade-in'>
+                  <div className='p-3.5 sm:p-4 bg-primary rounded-2xl text-white shadow-[0_20px_50px_rgba(1,62,141,0.15)] relative overflow-hidden'>
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
-                    <p className='text-[10px] font-black text-white/60 uppercase tracking-widest mb-2 relative z-10'>{bookingType === 'trial' ? 'Visit Date' : 'Pickup Date'}</p>
-                    <p className='text-base font-black text-white drop-shadow-sm relative z-10'>
+                    <p className='text-[10px] font-black text-white/60 uppercase tracking-widest mb-1 relative z-10'>{bookingType === 'trial' ? 'Visit Date' : 'Pickup Date'}</p>
+                    <p className='text-sm sm:text-base font-black text-white drop-shadow-sm relative z-10'>
                       {formatDateWithDay(pickupDate).split(',')[0]}
                     </p>
-                    <p className='text-[10px] font-black text-white/80 uppercase tracking-widest mt-1 relative z-10'>
+                    <p className='text-[10px] font-black text-white/80 uppercase tracking-widest mt-0.5 relative z-10'>
                       {formatDateWithDay(pickupDate).split(',')[1]}
                     </p>
                   </div>
                   {bookingType !== 'trial' && (
-                    <div className='p-6 bg-white border border-primary/5 rounded-[32px] shadow-sm relative overflow-hidden'>
+                    <div className='p-3.5 sm:p-4 bg-white border border-primary/5 rounded-2xl shadow-sm relative overflow-hidden'>
                       <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-12 -mt-12"></div>
-                      <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 relative z-10'>Return Date</p>
-                      <p className='text-base font-black text-primary relative z-10'>
+                      <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 relative z-10'>Return Date</p>
+                      <p className='text-sm sm:text-base font-black text-primary relative z-10'>
                         {returnDate ? formatDateWithDay(returnDate).split(',')[0] : '—'}
                       </p>
-                      <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 relative z-10'>
+                      <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5 relative z-10'>
                         {returnDate ? formatDateWithDay(returnDate).split(',')[1] : '—'}
                       </p>
                     </div>
@@ -1044,10 +1040,10 @@ const GownDetails = () => {
             </div>
 
             {/* Time Slot Selection */}
-            <div className='mb-6 sm:mb-8'>
-              <label className='block text-xs font-black text-gray-500 uppercase tracking-widest mb-4'>Select Preferred Time</label>
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                <div className="space-y-2">
+            <div className='mb-4 sm:mb-5'>
+              <label className='block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2'>Select Preferred Time</label>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div className="space-y-1">
                   <p className='text-[10px] font-black text-gray-500 uppercase tracking-widest pl-2'>{bookingType === 'trial' ? 'Trial' : 'Pickup'}</p>
                   <select
                     value={pickupTime}
@@ -1055,7 +1051,7 @@ const GownDetails = () => {
                       setPickupTime(e.target.value)
                       setFieldError('pickupTime', '')
                     }}
-                    className={`w-full px-5 py-4 bg-[#FDFDFF] border rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
+                    className={`w-full px-4 py-2.5 bg-[#FDFDFF] border rounded-xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
                       formErrors.pickupTime ? 'border-secondary' : 'border-primary/10 focus:border-primary'
                     } appearance-none relative`}
                     style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
@@ -1072,7 +1068,7 @@ const GownDetails = () => {
                 </div>
                 
                 {bookingType !== 'trial' && (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <p className='text-[10px] font-black text-gray-500 uppercase tracking-widest pl-2'>Return</p>
                       <select
                         value={returnTime}
@@ -1080,10 +1076,10 @@ const GownDetails = () => {
                           setReturnTime(e.target.value)
                           setFieldError('returnTime', '')
                         }}
-                        className={`w-full px-5 py-4 bg-[#FDFDFF] border rounded-2xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
+                        className={`w-full px-4 py-2.5 bg-[#FDFDFF] border rounded-xl focus:ring-4 focus:ring-primary/10 outline-none font-bold transition-all text-primary ${
                           formErrors.returnTime ? 'border-red-500' : 'border-primary/10 focus:border-primary'
                         } appearance-none relative`}
-                        style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem top 50%', backgroundSize: '0.65rem auto' }}
+                        style={{ backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23162B69%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem top 50%', backgroundSize: '0.6rem auto' }}
                       >
                         <option value='' className='bg-white'>Slot</option>
                         {(allowedTimes || []).map(time => {
@@ -1117,15 +1113,15 @@ const GownDetails = () => {
 
             {/* Price Summary */}
             {bookingType !== 'trial' && durationDays > 0 && (
-              <div className='pt-8 border-t border-primary/10 space-y-4 animate-fade-in'>
-                <div className='flex justify-between items-center text-xs font-black text-gray-400 uppercase tracking-widest'>
+              <div className='pt-4 border-t border-primary/10 space-y-2 animate-fade-in'>
+                <div className='flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest'>
                   <span>Rental Period</span>
                   <span className='text-secondary'>{durationDays} Days</span>
                 </div>
                 <div className='flex justify-between items-center'>
-                  <span className='text-lg font-black text-primary'>Total Amount</span>
-                  <div className='text-3xl font-black text-primary flex items-baseline gap-1'>
-                    <span className="text-secondary text-sm">{currency}</span>
+                  <span className='text-base font-black text-primary'>Total Amount</span>
+                  <div className='text-2xl font-black text-primary flex items-baseline gap-1'>
+                    <span className="text-secondary text-xs">{currency}</span>
                     <span>{(totalAmount || 0).toLocaleString()}</span>
                   </div>
                 </div>
@@ -1133,15 +1129,15 @@ const GownDetails = () => {
             )}
 
             {/* Final Action Button */}
-            <div className='mt-10 overflow-hidden rounded-[24px] sm:sticky sm:relative fixed bottom-20 sm:bottom-auto left-4 right-4 sm:left-auto sm:right-auto z-30 sm:z-auto'>
+            <div className='mt-6 overflow-hidden rounded-xl sm:sticky sm:relative fixed bottom-20 sm:bottom-auto left-4 right-4 sm:left-auto sm:right-auto z-30 sm:z-auto'>
               {confirmDisabled && !loading && !success && (
-                <div className='text-center p-3 bg-gray-50 border border-primary/5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 rounded-xl'>
+                <div className='text-center p-2.5 bg-gray-50 border border-primary/5 text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 rounded-lg'>
                   {gown?.status === 'Unavailable' ? 'Apparel Unavailable' : !isFormComplete ? 'Select Dates & Time' : hasFieldErrors ? 'Check Highlighted Errors' : !scheduleStatus.valid ? 'Schedule Conflict' : 'Verifying...'}
                 </div>
               )}
               <button
                 onClick={handleConfirmBooking}
-                className={`w-full py-6 rounded-[24px] font-black text-base uppercase tracking-widest transition-all duration-500 relative flex items-center justify-center gap-3 active:scale-95 ${!confirmDisabled
+                className={`w-full py-3.5 sm:py-4.5 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-500 relative flex items-center justify-center gap-3 active:scale-95 ${!confirmDisabled
                     ? 'bg-primary text-white shadow-[0_15px_30px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_40px_rgba(1,62,141,0.3)] hover:-translate-y-1 hover:bg-secondary'
                     : 'bg-gray-100 text-gray-400 border border-primary/5 cursor-not-allowed'
                   }`}

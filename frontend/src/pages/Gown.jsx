@@ -206,7 +206,7 @@ const Gown = () => {
   }
 
   return (
-    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-12 sm:mt-16 mb-16 pb-20 sm:pb-0 bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] min-h-screen'>
+    <div className='px-4 sm:px-6 md:px-16 lg:px-24 xl:px-32 mt-0 pt-3 sm:pt-4 mb-16 pb-20 sm:pb-0 bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] min-h-screen'>
       {error && (
         <div className='mb-6 p-6 bg-red-50 border border-red-100 rounded-[32px] animate-shake flex flex-col sm:flex-row items-center justify-between gap-4'>
           <p className='text-red-800 font-bold flex items-center gap-3 text-lg'>
@@ -225,27 +225,27 @@ const Gown = () => {
       )}
 
       {/* Header Section */}
-      <div className='flex flex-col items-center text-center mb-14 mt-12 lg:mt-0'>
-        <div className="flex items-center gap-2 mb-2">
+      <div className='flex flex-col items-center text-center mb-3 sm:mb-8 mt-0'>
+        <div className="hidden sm:flex items-center gap-2 mb-2">
           <div className="w-8 h-1 bg-primary rounded-full"></div>
           <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Our Collection</span>
           <div className="w-8 h-1 bg-primary rounded-full"></div>
         </div>
-        <h1 className='text-4xl sm:text-5xl md:text-6xl font-black text-primary tracking-tight leading-tight'>
+        <h1 className='text-2xl sm:text-4xl md:text-5xl font-black text-primary tracking-tight leading-tight'>
           Available <span className="text-secondary">Apparel</span>
         </h1>
-        <p className='text-sm sm:text-base text-gray-500 font-bold mt-2 max-w-2xl'>Discover the perfect fit for your next extraordinary moment.</p>
+        <p className='hidden sm:block text-sm sm:text-base text-gray-500 font-bold mt-2 max-w-2xl'>Discover the perfect fit for your next extraordinary moment.</p>
       </div>
 
         <div 
-          className='sticky top-16 sm:top-20 z-40 py-3 sm:py-6 mb-8 sm:mb-12 bg-white/80 backdrop-blur-2xl -mx-4 sm:mx-0 px-4 sm:px-0 rounded-b-[24px] sm:rounded-b-[40px] shadow-sm'
+          className='sticky top-16 sm:top-20 z-40 py-2 sm:py-4 mb-3 sm:mb-8 bg-white/80 backdrop-blur-2xl -mx-4 sm:mx-0 px-4 sm:px-0 rounded-[24px] sm:rounded-[40px] shadow-sm'
           onMouseEnter={() => setShowFilters(true)}
           onMouseLeave={() => setShowFilters(false)}
         >
           <div className='max-w-4xl mx-auto'>
             <div className='relative flex items-center gap-4'>
               {/* Search Input */}
-              <div className='flex-1 flex items-center bg-white rounded-[20px] sm:rounded-[24px] shadow-[0_15px_40px_rgba(1,62,141,0.05)] border border-blue-50 px-4 sm:px-6 py-3.5 sm:py-5 group focus-within:shadow-[0_20px_60px_rgba(1,62,141,0.12)] focus-within:border-primary/20 transition-all'>
+              <div className='flex-1 flex items-center bg-white rounded-[20px] sm:rounded-[24px] shadow-[0_15px_40px_rgba(1,62,141,0.05)] border border-blue-50 px-4 sm:px-6 py-2.5 sm:py-4 group focus-within:shadow-[0_20px_60px_rgba(1,62,141,0.12)] focus-within:border-primary/20 transition-all'>
                 <img src={assets.search_icon} alt="search" className='w-4 h-4 sm:w-5 sm:h-5 mr-3 sm:mr-4 text-primary opacity-20 group-focus-within:opacity-100 transition-all group-focus-within:scale-110' />
                 <input
                   type='text'
@@ -269,7 +269,7 @@ const Gown = () => {
               {/* Filter Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-3.5 sm:py-5 rounded-[20px] sm:rounded-[24px] shadow-2xl transition-all font-black text-xs sm:text-sm uppercase tracking-widest whitespace-nowrap active:scale-95 ${hasActiveFilters
+                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-4 rounded-[20px] sm:rounded-[24px] shadow-2xl transition-all font-black text-xs sm:text-sm uppercase tracking-widest whitespace-nowrap active:scale-95 ${hasActiveFilters
                   ? 'bg-primary text-white shadow-[0_20px_50px_rgba(1,62,141,0.3)]'
                   : 'bg-white text-primary border border-blue-50 hover:bg-gray-50'
                   }`}
@@ -367,7 +367,7 @@ const Gown = () => {
         {/* Results Count and Gowns Grid */}
         <div className="max-w-7xl mx-auto">
           {hasActiveFilters && (
-            <div className='flex items-center gap-4 text-primary/60 mb-10 text-sm font-black'>
+            <div className='flex items-center gap-4 text-primary/60 mb-4 sm:mb-6 text-sm font-black'>
               <span className='bg-primary/5 px-4 py-2 rounded-full'>
                 <span className='text-primary'>{filteredGowns.length}</span> items discovered
               </span>
@@ -399,7 +399,7 @@ const Gown = () => {
               )}
             </div>
           ) : (
-            <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 lg:gap-8'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 xl:gap-5'>
               {filteredGowns.map((gown) => (
                 <GownCard key={gown._id || gown.id} gown={gown} />
               ))}

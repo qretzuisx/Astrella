@@ -152,10 +152,10 @@ const Hero = () => {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center px-4 relative bg-[#FDFDFF] w-full'>
+    <div className='min-h-screen flex flex-col items-center justify-start px-4 mt-0 pt-3 sm:pt-4 relative bg-[#FDFDFF] w-full'>
 
       {/* Hero Headline */}
-      <div className="max-w-6xl mx-auto z-10 text-center space-y-5 sm:space-y-6 mb-8 sm:mb-12 pt-10 sm:pt-24 px-4">
+      <div className="max-w-6xl mx-auto z-10 text-center space-y-5 sm:space-y-6 mb-8 sm:mb-12 pt-2 sm:pt-4 px-4">
         <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 shadow-sm animate-fade-in mx-auto">
           <span className="text-[9px] sm:text-[11px] font-black text-secondary uppercase tracking-[0.5em]">Introducing Astrella</span>
         </div>
@@ -346,7 +346,7 @@ const Hero = () => {
       </form>
 
       {/* Trending Choice Section - Premium Horizontal Carousel */}
-      <div className="w-full mt-24 sm:mt-40 pb-32 relative z-10 overflow-hidden">
+      <div className="w-full mt-6 sm:mt-12 pb-32 relative z-10 overflow-hidden">
         <div className="flex flex-col items-center mb-12 sm:mb-20 px-4">
           <div className="flex items-center gap-4 sm:gap-6 mb-3 sm:mb-4">
             <div className="w-10 sm:w-16 h-[2px] bg-gradient-to-r from-transparent to-secondary"></div>
