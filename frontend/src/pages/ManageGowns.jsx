@@ -510,23 +510,23 @@ const ManageGowns = () => {
               )}
             </div>
           ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20'>
+            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pb-20'>
               {filteredGowns.map((gown) => (
                 <div
                   key={gown._id || gown.id}
-                  className='group bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500'
+                  className='group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 flex flex-col'
                 >
                   {/* Gown Image - Premium Presentation */}
-                  <div className='relative h-48 sm:h-64 overflow-hidden'>
+                  <div className='relative h-36 sm:h-44 overflow-hidden bg-gray-50/50 flex-shrink-0'>
                     <img
                       src={Array.isArray(gown.image) ? gown.image[0] : gown.image || assets.gown_image1}
                       alt={gown.name}
-                      className='w-full h-full object-contain bg-white group-hover:scale-110 transition-transform duration-700 p-2 sm:p-0'
+                      className='w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-700 p-1 sm:p-2'
                     />
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
                     {/* Status Badge - Refined */}
-                    <div className={`absolute top-4 left-4 px-3.5 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md border border-white/20 ${
+                    <div className={`absolute top-2 left-2 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-md border border-white/20 ${
                         getDisplayStatus(gown) === 'Available' ? 'bg-green-500/80' :
                         getDisplayStatus(gown) === 'Unavailable' ? 'bg-orange-500/80' :
                         getDisplayStatus(gown) === 'Reserved' ? 'bg-red-500/80' :
@@ -539,40 +539,40 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Price Tag - Premium */}
-                    <div className='absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-xl border border-gray-100 group-hover:-translate-y-1 transition-transform'>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
-                        <span className='text-base sm:text-lg font-black text-primary-dull'>
-                            <span className="text-xs sm:text-sm mr-0.5">₱</span>{gown.price?.toLocaleString() || 0}
+                    <div className='absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 shadow-md border border-gray-100/50 group-hover:-translate-y-0.5 transition-transform'>
+                        <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Rent Price</p>
+                        <span className='text-xs sm:text-sm font-black text-primary-dull'>
+                            <span className="text-[10px] mr-0.5">₱</span>{gown.price?.toLocaleString() || 0}
                         </span>
                     </div>
                   </div>
 
                   {/* Gown Details */}
-                  <div className='p-4 sm:p-6'>
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                        <h3 className='text-xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
+                  <div className='p-3 flex flex-col flex-grow'>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className='text-xs sm:text-sm font-black text-primary-dull group-hover:text-primary transition-colors leading-tight line-clamp-1'>{gown.name}</h3>
                         {(gown.available === false || (gown.statusOverride && gown.statusOverride !== 'Available' && gown.statusOverride !== '')) && (
-                            <div className="p-1 px-2 bg-gray-200 text-red-500 font-black text-[10px] uppercase tracking-[0.2em] rounded-lg border border-red-100 shadow-sm animate-pulse">Hidden</div>
+                            <div className="p-0.5 px-1.5 bg-gray-200 text-red-500 font-black text-[8px] uppercase tracking-wider rounded border border-red-100 shadow-sm animate-pulse shrink-0">Hidden</div>
                         )}
                     </div>
                     
                     {/* Details Grid - Consistent with GownCard */}
-                    <div className='grid grid-cols-2 gap-y-2.5 gap-x-3 sm:gap-y-3 sm:gap-x-4 text-xs sm:text-sm font-semibold mb-6'>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.fabric_icon} alt="fabric" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
+                    <div className='grid grid-cols-2 gap-1.5 text-[10px] font-semibold mb-3'>
+                      <div className='flex items-center gap-1.5 text-gray-500 bg-gray-50 p-1 rounded-lg border border-gray-50/50'>
+                        <div className="w-4 h-4 bg-white rounded flex items-center justify-center shadow-sm">
+                            <img src={assets.fabric_icon} alt="fabric" className='w-2 h-2' />
                         </div>
                         <span className='truncate'>{gown.fabric}</span>
                       </div>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                         <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.color_icon} alt="color" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
+                      <div className='flex items-center gap-1.5 text-gray-500 bg-gray-50 p-1 rounded-lg border border-gray-50/50'>
+                         <div className="w-4 h-4 bg-white rounded flex items-center justify-center shadow-sm">
+                            <img src={assets.color_icon} alt="color" className='w-2 h-2' />
                         </div>
                         <span className='truncate'>{gown.color}</span>
                       </div>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.event_icon} alt="event" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
+                      <div className='flex items-center gap-1.5 text-gray-500 bg-gray-50 p-1 rounded-lg border border-gray-50/50'>
+                        <div className="w-4 h-4 bg-white rounded flex items-center justify-center shadow-sm">
+                            <img src={assets.event_icon} alt="event" className='w-2 h-2' />
                         </div>
                         <span className='capitalize truncate'>
                           {Array.isArray(gown.eventType) && gown.eventType.length > 0
@@ -580,9 +580,9 @@ const ManageGowns = () => {
                             : gown.eventType || 'N/A'}
                         </span>
                       </div>
-                      <div className='flex items-center gap-2 text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-50'>
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <img src={assets.size_icon} alt="size" className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
+                      <div className='flex items-center gap-1.5 text-gray-500 bg-gray-50 p-1 rounded-lg border border-gray-50/50'>
+                        <div className="w-4 h-4 bg-white rounded flex items-center justify-center shadow-sm">
+                            <img src={assets.size_icon} alt="size" className='w-2 h-2' />
                         </div>
                         <span className='truncate'>
                           {Array.isArray(gown.size) ? gown.size[0] : gown.size || 'N/A'}
@@ -591,49 +591,51 @@ const ManageGowns = () => {
                     </div>
 
                     {/* Laundry Management - Refined */}
-                    <div className='mb-6 p-3 sm:p-4 bg-primary-dull/5 rounded-2xl border border-primary/5 flex flex-row items-center justify-between gap-3 sm:gap-4'>
-                      <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
-                             <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className='mb-3.5 p-2 bg-primary-dull/5 rounded-xl border border-primary/5 flex flex-row items-center justify-between gap-2 mt-auto'>
+                      <div className="flex items-center gap-1.5">
+                          <div className="w-6 h-6 bg-primary/10 rounded-lg flex items-center justify-center">
+                             <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                              </svg>
                           </div>
-                         <div>
-                            <p className="text-[10px] sm:text-xs font-bold text-primary-dull uppercase tracking-wider">Laundry Hold</p>
-                         </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-primary-dull uppercase tracking-wider">Laundry Hold</p>
+                          </div>
                       </div>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-1.5'>
                         <input
                           type='number'
                           min='0'
                           max='14'
                           value={laundryForm[gown._id || gown.id] ?? String(gown.laundryDays ?? 0)}
                           onChange={(e) => handleLaundryInputChange(gown._id || gown.id, e.target.value)}
-                          className='w-12 px-2 py-1.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-xs font-bold text-center shadow-sm'
+                          className='w-10 px-1.5 py-1 bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary outline-none transition-all text-[10px] font-bold text-center shadow-sm'
                         />
                         <button
                           onClick={() => handleSaveLaundryDays(gown._id || gown.id)}
                           disabled={laundrySaving === (gown._id || gown.id)}
-                          className={`px-3 sm:px-4 py-1.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
+                          className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${laundrySaving === (gown._id || gown.id)
                               ? 'bg-gray-100 text-gray-400'
-                              : 'bg-primary text-white hover:shadow-lg hover:shadow-primary/20 active:scale-95'
+                              : 'bg-primary text-white hover:shadow-md hover:shadow-primary/10 active:scale-95'
                             }`}
                         >
                           {laundrySaving === (gown._id || gown.id) ? '...' : 'Save'}
                         </button>
                       </div>
-                    </div>                    {/* Action Buttons - Premium Control Bar */}
-                    <div className='flex flex-col sm:flex-row gap-3'>
+                    </div>
+
+                    {/* Action Buttons - Premium Control Bar */}
+                    <div className='flex flex-row gap-2 mt-auto'>
                         <button
                           onClick={() => openEditModal(gown)}
-                          className='flex-1 h-12 sm:h-14 bg-gray-50 text-gray-700 rounded-2xl hover:bg-primary hover:text-white transition-all duration-300 text-xs font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2 group/btn'
+                          className='flex-1 h-9 bg-gray-50 text-gray-700 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-widest active:scale-95 flex items-center justify-center gap-1 group/btn'
                         >
-                           <img src={assets.edit_profile_icon} className="w-4 h-4 sm:w-5 sm:h-5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
+                           <img src={assets.edit_profile_icon} className="w-3.5 h-3.5 group-hover/btn:brightness-0 group-hover/btn:invert transition-all" alt="edit" />
                           Edit
                         </button>
                       <button
                         onClick={() => handleToggleAvailability(gown._id || gown.id)}
-                        className={`flex-1 h-12 sm:h-14 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${gown.available
+                        className={`flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-1 ${gown.available
                             ? 'bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white'
                             : 'bg-green-50 text-green-700 hover:bg-green-600 hover:text-white'
                           }`}
@@ -642,10 +644,9 @@ const ManageGowns = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteGown(gown._id || gown.id)}
-                        className='h-12 sm:h-14 sm:w-24 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del'
+                        className='h-9 w-9 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 active:scale-95 flex items-center justify-center group/del flex-shrink-0'
                       >
-                         <img src={assets.delete_icon} className="w-7 h-7 sm:w-8 sm:h-8 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
-                         <span className='sm:hidden font-black text-xs uppercase tracking-widest ml-2'>Delete</span>
+                         <img src={assets.delete_icon} className="w-5 h-5 group-hover/del:brightness-0 group-hover/del:invert transition-all" alt="delete" />
                       </button>
                     </div>
                   </div>

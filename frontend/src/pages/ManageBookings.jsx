@@ -550,17 +550,17 @@ const ManageBookings = () => {
                 <div
                   key={booking._id || booking.id}
                   id={`booking-${booking._id || booking.id}`}
-                  className={`group bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 font-geist ${(booking._id || booking.id) === highlightId && (booking.status === 'trial' || (booking.status === 'pending' && booking.payment?.status === 'pending')) ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : ''}`}
+                  className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:border-primary/10 transition-all duration-500 font-geist ${(booking._id || booking.id) === highlightId && (booking.status === 'trial' || (booking.status === 'pending' && booking.payment?.status === 'pending')) ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : ''}`}
                 >
                   {/* Card Content Interior */}
-                  <div className='p-5 sm:p-7'>
+                  <div className='p-3.5 sm:p-4.5'>
                     {/* Top Row: ID and Status Tags */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg tracking-widest border border-gray-100">
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[8px] font-black text-gray-400 bg-gray-50 px-2 py-1 rounded-md tracking-wider border border-gray-100">
                           ID: #{(booking._id || booking.id)?.slice(-6).toUpperCase()}
                         </span>
-                        <span className={`px-4 py-1.5 rounded-full text-[11px] font-black tracking-widest uppercase border ${
+                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black tracking-wider uppercase border ${
                             booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-50 text-green-700 border-green-100' : 
                             booking.status === 'pending' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
                             booking.status === 'trial' ? 'bg-gray-50 text-gray-500 border-gray-200' : 
@@ -572,7 +572,7 @@ const ManageBookings = () => {
                       
                       {/* Payment Info Badge */}
                       {(booking.payment && booking.status !== 'trial') && (
-                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase border ${
+                        <div className={`px-2.5 py-1 rounded-full text-[9px] font-black tracking-wider uppercase border ${
                             booking.payment.status === 'verified' ? 'bg-green-50/50 text-green-600 border-green-100/50' : 
                             booking.payment.status === 'pending' ? 'bg-orange-50/50 text-orange-500 border-orange-100/50' : 
                             'bg-red-50/50 text-red-500 border-red-100/50'
@@ -583,76 +583,74 @@ const ManageBookings = () => {
                     </div>
 
                     {/* Main Content: Responsive Flex/Grid Wrapping */}
-                    <div className="flex flex-col xl:flex-row xl:items-center gap-6 sm:gap-10">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                       
                       {/* Section 1: Apparel & Client (Strong Base Width) */}
-                      <div className="flex items-center gap-5 sm:gap-6 min-w-0 xl:w-[400px]">
+                      <div className="flex items-center gap-3.5 min-w-0 lg:w-[320px] xl:w-[360px]">
                         <div className="relative flex-shrink-0">
                           <img 
                             src={booking.gown?.image?.[0] || booking.gown?.image || assets.gown_image1} 
                             alt={booking.gown?.name} 
-                            className='w-24 h-24 sm:w-32 sm:h-32 object-contain bg-white rounded-[2rem] shadow-sm border border-gray-100 group-hover:scale-105 transition-all duration-700'
+                            className='w-16 h-16 sm:w-20 sm:h-20 object-contain bg-white rounded-xl shadow-sm border border-gray-100 group-hover:scale-105 transition-all duration-700'
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className='text-lg sm:text-2xl font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-2 break-words whitespace-normal'>
+                          <h3 className='text-sm sm:text-base font-black text-primary-dull group-hover:text-primary transition-colors leading-tight mb-1 break-words whitespace-normal'>
                               {booking.gown?.name || 'Gown Name'}
                           </h3>
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             <div className="flex flex-col">
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client Name</p>
-                              <p className="text-sm font-bold text-gray-700 break-words whitespace-normal leading-snug">
+                              <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Client Name</p>
+                              <p className="text-xs font-bold text-gray-700 break-words whitespace-normal leading-snug">
                                 {booking.user?.name || 'Client Name'}
                               </p>
                               {booking.user?.email && (
-                                <p className="text-[10px] font-medium text-gray-400 break-words -mt-0.5 leading-tight">{booking.user.email}</p>
+                                <p className="text-[9px] font-medium text-gray-400 break-words leading-tight">{booking.user.email}</p>
                               )}
                             </div>
-                            <div className="flex flex-col pt-1 border-t border-gray-50">
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact Number</p>
-                                <p className="text-base font-black text-primary break-words whitespace-normal leading-tight">
-                                <p className="text-base font-black text-primary break-words whitespace-normal leading-tight">
-                                  {(booking.contactNumber && booking.contactNumber !== 'N/A') 
-                                    ? booking.contactNumber 
-                                    : (booking.user?.contactNumber && booking.user.contactNumber !== 'N/A' 
-                                      ? booking.user.contactNumber 
-                                      : 'N/A')}
-                                </p>
-                                </p>
+                            <div className="flex flex-col pt-0.5 border-t border-gray-50">
+                              <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Contact Number</p>
+                              <p className="text-xs font-black text-primary break-words whitespace-normal leading-tight">
+                                {(booking.contactNumber && booking.contactNumber !== 'N/A') 
+                                  ? booking.contactNumber 
+                                  : (booking.user?.contactNumber && booking.user.contactNumber !== 'N/A' 
+                                    ? booking.user.contactNumber 
+                                    : 'N/A')}
+                              </p>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Section 2: Schedule (Clear Boxed Areas) */}
-                      <div className="flex flex-wrap sm:flex-nowrap gap-4 w-full xl:w-auto xl:flex-1">
+                      <div className="flex gap-2.5 w-full lg:w-auto lg:flex-1">
                         {booking.status === 'trial' ? (
-                          <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[160px]">
-                            <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Try-On Appointment</p>
-                            <p className="text-[13px] font-black text-primary-dull whitespace-nowrap leading-tight">{formatDate(booking.pickupDate)}</p>
-                            <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.pickupTime || '09:00'}</p>
+                          <div className="flex-1 bg-gray-50/80 p-3 rounded-xl border border-gray-100/50 min-w-[120px]">
+                            <p className="text-[8px] font-black text-primary/40 uppercase tracking-widest mb-0.5">Try-On Appointment</p>
+                            <p className="text-[11px] font-black text-primary-dull whitespace-nowrap leading-tight">{formatDate(booking.pickupDate)}</p>
+                            <p className="text-[9px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
                           </div>
                         ) : (
                           <>
-                            <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[140px]">
-                              <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Pickup Date</p>
-                              <p className="text-[13px] font-black text-primary-dull whitespace-nowrap">{formatDate(booking.pickupDate)}</p>
-                              <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.pickupTime || '09:00'}</p>
+                            <div className="flex-1 bg-gray-50/80 p-3 rounded-xl border border-gray-100/50 min-w-[100px]">
+                              <p className="text-[8px] font-black text-primary/40 uppercase tracking-widest mb-0.5">Pickup Date</p>
+                              <p className="text-[11px] font-black text-primary-dull whitespace-nowrap">{formatDate(booking.pickupDate)}</p>
+                              <p className="text-[9px] font-bold text-gray-400 mt-0.5">{booking.pickupTime || '09:00'}</p>
                             </div>
-                            <div className="flex-1 bg-gray-50/80 p-5 rounded-3xl border border-gray-100/50 min-w-[140px]">
-                              <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1.5">Return Date</p>
-                              <p className="text-[13px] font-black text-primary-dull whitespace-nowrap">{formatDate(booking.returnDate)}</p>
-                              <p className="text-[11px] font-bold text-gray-400 mt-1">{booking.returnTime || '09:00'}</p>
+                            <div className="flex-1 bg-gray-50/80 p-3 rounded-xl border border-gray-100/50 min-w-[100px]">
+                              <p className="text-[8px] font-black text-primary/40 uppercase tracking-widest mb-0.5">Return Date</p>
+                              <p className="text-[11px] font-black text-primary-dull whitespace-nowrap">{formatDate(booking.returnDate)}</p>
+                              <p className="text-[9px] font-bold text-gray-400 mt-0.5">{booking.returnTime || '09:00'}</p>
                             </div>
                           </>
                         )}
                         
                         {/* Section 3: Value (Only for non-trial) */}
                         {booking.status !== 'trial' && (
-                          <div className="flex-1 sm:flex-none xl:w-40 flex flex-col justify-center bg-white p-5 rounded-3xl border border-gray-100/50 xl:border-0">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
-                            <p className='text-3xl font-black text-primary-dull flex items-baseline gap-1'>
-                              <span className="text-sm opacity-40 mr-0.5">₱</span>
+                          <div className="flex-1 sm:flex-none lg:w-32 flex flex-col justify-center bg-white p-3 rounded-xl border border-gray-100/50 lg:border-0">
+                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Total Value</p>
+                            <p className='text-xl font-black text-primary-dull flex items-baseline gap-0.5'>
+                              <span className="text-xs opacity-40 mr-0.5">₱</span>
                               {booking.price?.toLocaleString()}
                             </p>
                           </div>
@@ -660,12 +658,12 @@ const ManageBookings = () => {
                       </div>
 
                       {/* Section 4: Vertical Action Column (One Size) */}
-                      <div className="flex flex-col gap-3 w-full sm:w-56 xl:border-l xl:border-gray-50 xl:pl-10">
+                      <div className="flex flex-col gap-2 w-full lg:w-44 lg:border-l lg:border-gray-50 lg:pl-4">
                          {/* Payment Verification */}
                          {booking.status === 'pending' && booking.payment?.status === 'pending' && (
                            <button
                              onClick={() => openPaymentModal(booking)}
-                             className='h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all'
+                             className='h-9 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:scale-102 active:scale-95 transition-all'
                            >
                              Verify
                            </button>
@@ -673,19 +671,19 @@ const ManageBookings = () => {
 
                          {/* Confirm Pickup */}
                          {booking.status === 'pending' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
-                            <button
-                              onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
-                              className='h-14 bg-primary text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all'
-                            >
-                              Confirm
-                            </button>
+                             <button
+                               onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
+                               className='h-9 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:scale-102 active:scale-95 transition-all'
+                             >
+                               Confirm
+                             </button>
                          )}
 
                          {/* Mark Completed status === 'confirmed' */}
                          {booking.status === 'confirmed' && (
                            <button
                              onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
-                             className='h-14 bg-green-600 text-white rounded-2xl font-black text-base uppercase tracking-widest shadow-xl shadow-green-600/20 hover:scale-105 active:scale-95 transition-all'
+                             className='h-9 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:scale-102 active:scale-95 transition-all'
                            >
                              Complete
                            </button>
@@ -693,20 +691,20 @@ const ManageBookings = () => {
 
                          {/* Cancel Action (Only Pending/Confirmed/Trial) */}
                          {(['pending', 'confirmed', 'trial'].includes(booking.status)) && (
-                            <button
-                              onClick={() => {
-                                setCancelConfirmBookingId(booking._id || booking.id)
-                                setCancelConfirmGownName(booking.gown?.name || 'this booking')
-                              }}
-                              className='h-14 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-2xl font-black text-xs uppercase tracking-widest border border-transparent hover:border-red-100 transition-all flex items-center justify-center gap-3 group/cancel'
-                            >
-                              <div className="p-2 bg-white rounded-lg group-hover/cancel:bg-red-100 transition-colors">
-                                <svg className="w-4 h-4 opacity-40 group-hover/cancel:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </div>
-                              Cancel Request
-                            </button>
+                             <button
+                               onClick={() => {
+                                 setCancelConfirmBookingId(booking._id || booking.id)
+                                 setCancelConfirmGownName(booking.gown?.name || 'this booking')
+                               }}
+                               className='h-9 bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-xl font-black text-[10px] uppercase tracking-widest border border-transparent hover:border-red-100 transition-all flex items-center justify-center gap-2 group/cancel'
+                             >
+                               <div className="p-1 bg-white rounded group-hover/cancel:bg-red-100 transition-colors">
+                                 <svg className="w-3.5 h-3.5 opacity-40 group-hover/cancel:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                 </svg>
+                               </div>
+                               Cancel Request
+                             </button>
                          )}
 
                       </div>
