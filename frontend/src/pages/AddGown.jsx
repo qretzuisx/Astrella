@@ -242,66 +242,66 @@ const AddGown = () => {
       <div className='flex-1 min-w-0 p-4 sm:p-8 lg:p-12 overflow-y-auto'>
         <div className='max-w-4xl mx-auto'>
           {/* Header */}
-          <div className='mb-12 mt-16 lg:mt-0'>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-1 bg-primary rounded-full"></div>
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
+          <div className='mb-6 mt-10 lg:mt-0'>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-6 h-1 bg-primary rounded-full"></div>
+              <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
             </div>
-            <h1 className='text-4xl font-black text-primary tracking-tight'>Add New Apparel</h1>
-            <p className='text-gray-500 font-bold mt-2'>Introduce a new masterpiece to your collection.</p>
+            <h1 className='text-2xl sm:text-3xl font-black text-primary tracking-tight'>Add New Apparel</h1>
+            <p className='text-xs sm:text-sm text-gray-500 font-medium mt-1'>Introduce a new masterpiece to your collection.</p>
           </div>
 
           {/* Messages */}
           {success && (
-            <div className='mb-8 p-4 bg-green-50 border border-green-100 rounded-2xl animate-fade-in'>
-              <p className='text-green-800 font-bold flex items-center gap-2'>{success}</p>
+            <div className='mb-6 p-3.5 bg-green-50 border border-green-100 rounded-2xl animate-fade-in'>
+              <p className='text-xs text-green-800 font-bold flex items-center gap-2'>{success}</p>
             </div>
           )}
 
           {error && (
-            <div className='mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
-              <p className='text-red-800 font-bold flex items-center gap-2'>{error}</p>
+            <div className='mb-6 p-3.5 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
+              <p className='text-xs text-red-800 font-bold flex items-center gap-2'>{error}</p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-4 sm:p-10 space-y-10'>
+          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-3xl shadow-[0_20px_80px_rgba(1,62,141,0.06)] border border-white p-4 sm:p-6 space-y-6'>
 
             {/* Image Upload Area */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Visual Presentation</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">Visual Presentation</h3>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-8 items-start">
-                <div className="flex-1 w-full space-y-3">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Apparel Image *</label>
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="flex-1 w-full space-y-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Apparel Image *</label>
                   <label className='block group cursor-pointer'>
-                    <div className='border-2 border-dashed border-gray-100 rounded-3xl p-10 text-center bg-gray-50/30 hover:border-primary hover:bg-primary/5 transition-all duration-300'>
-                      <div className='bg-primary/5 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform'>
-                        <svg className='w-6 h-6 text-primary/40' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 4v16m8-8H4' /></svg>
+                    <div className='border border-dashed border-gray-200 rounded-2xl p-5 text-center bg-gray-50/30 hover:border-primary hover:bg-primary/5 transition-all duration-300'>
+                      <div className='bg-primary/5 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform'>
+                        <svg className='w-5 h-5 text-primary/40' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d='M12 4v16m8-8H4' /></svg>
                       </div>
-                      <p className='text-xs text-primary font-black uppercase tracking-wider'>Upload Photo</p>
+                      <p className='text-[10px] text-primary font-black uppercase tracking-wider'>Upload Photo</p>
                     </div>
                     <input type='file' accept='image/*' onChange={handleImageChange} className='hidden' required />
                   </label>
                 </div>
 
                 {imagePreview && (
-                  <div className="w-full md:w-56 aspect-[3/4] overflow-hidden rounded-[32px] border border-gray-100 shadow-2xl relative group bg-gray-50/50">
+                  <div className="w-full sm:w-40 aspect-[3/4] overflow-hidden rounded-2xl border border-gray-100 shadow-lg relative group bg-gray-50/50">
                     <img src={imagePreview} alt='Preview' className={`w-full h-full object-contain transition-transform duration-700 ${isRemovingBg ? 'opacity-50 blur-sm' : 'group-hover:scale-105'}`} />
                     <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
                     {isRemovingBg ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm">
-                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] bg-white/90 px-3 py-1.5 rounded-full shadow-sm">AI Processing...</span>
+                        <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin mb-1.5"></div>
+                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] bg-white/90 px-2 py-1 rounded-full shadow-sm">AI Processing...</span>
                       </div>
                     ) : (
                       <button 
                         type="button"
                         onClick={() => runBackgroundRemoval(selectedImage)}
-                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-[10px] font-black text-primary uppercase tracking-widest shadow-xl border border-white hover:bg-white transition-all hover:scale-105 active:scale-95 z-20"
+                        className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl text-[8px] font-black text-primary uppercase tracking-widest shadow-md border border-white hover:bg-white transition-all hover:scale-105 active:scale-95 z-20"
                       >
                         Retry AI
                       </button>
@@ -312,15 +312,15 @@ const AddGown = () => {
             </div>
 
             {/* Basic Info */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Core Details</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">Core Details</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Apparel Name *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Apparel Name *</label>
                   <input
                     type='text'
                     name='name'
@@ -328,12 +328,12 @@ const AddGown = () => {
                     onChange={handleInputChange}
                     placeholder='e.g., Midnight Velvet Ballgown'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Fabric *</label>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Fabric *</label>
                   <input
                     type='text'
                     name='fabric'
@@ -341,14 +341,12 @@ const AddGown = () => {
                     onChange={handleInputChange}
                     placeholder='Chiffon, Silk'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between ml-4">
-                    <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Main Color *</label>
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Main Color *</label>
                   <input
                     type='text'
                     name='color'
@@ -356,12 +354,12 @@ const AddGown = () => {
                     onChange={handleInputChange}
                     placeholder='Emerald Green'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Rental Price (₱) *</label>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Rental Price (₱) *</label>
                   <input
                     type='number'
                     name='price'
@@ -369,30 +367,30 @@ const AddGown = () => {
                     onChange={handleInputChange}
                     placeholder='0.00'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-black text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-black text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
               </div>
             </div>
 
             {/* Target Audience */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Aesthetics & Fit</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">Aesthetics & Fit</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Event Types *</label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Event Types *</label>
+                  <div className="flex flex-wrap gap-2">
                     {eventTypeList.map(type => (
                       <button
                         key={type}
                         type="button"
                         onClick={() => handleEventTypeChange(type.toLowerCase())}
-                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.eventType.includes(type.toLowerCase())
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                        className={`px-2.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all border ${formData.eventType.includes(type.toLowerCase())
+                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/10 scale-102'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -402,16 +400,16 @@ const AddGown = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Target Sex *</label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Target Sex *</label>
+                  <div className="flex flex-wrap gap-2">
                     {['Female', 'Male', 'Unisex'].map(sex => (
                       <button
                         key={sex}
                         type="button"
                         onClick={() => setFormData({ ...formData, sex })}
-                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.sex === sex
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                        className={`px-2.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all border ${formData.sex === sex
+                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/10 scale-102'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -421,9 +419,9 @@ const AddGown = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4 md:col-span-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Age Groups *</label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="space-y-3 sm:col-span-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Age Groups *</label>
+                  <div className="flex flex-wrap gap-2">
                     {['6–9 Years', '10–12 Years', '13–17 Years', '18–29 Years', '30–59 Years', '60+ Years'].map(age => (
                       <button
                         key={age}
@@ -432,8 +430,8 @@ const AddGown = () => {
                           ...prev,
                           ageGroup: prev.ageGroup.includes(age) ? prev.ageGroup.filter(a => a !== age) : [...prev.ageGroup, age]
                         }))}
-                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.ageGroup.includes(age)
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                        className={`px-2.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all border ${formData.ageGroup.includes(age)
+                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/10 scale-102'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -443,16 +441,16 @@ const AddGown = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4 md:col-span-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Available Sizes *</label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                <div className="space-y-3 sm:col-span-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Available Sizes *</label>
+                  <div className="flex flex-wrap gap-2">
                     {sizeOptions.map(size => (
                       <button
                         key={size}
                         type="button"
                         onClick={() => handleSizeChange(size)}
-                        className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all border ${formData.size.includes(size)
-                            ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                        className={`px-2.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all border ${formData.size.includes(size)
+                            ? 'bg-primary text-white border-primary shadow-md shadow-primary/10 scale-102'
                             : 'bg-white/50 text-primary border-gray-100 hover:bg-white'
                           }`}
                       >
@@ -462,15 +460,15 @@ const AddGown = () => {
                   </div>
                 </div>
 
-                <div className="md:col-span-2 px-2 flex items-center gap-3">
+                <div className="sm:col-span-2 px-1 flex items-center gap-2">
                   <input
                     type='checkbox'
                     id='available'
                     checked={formData.available}
                     onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                    className='w-5 h-5 rounded-lg border-gray-200 text-primary focus:ring-primary/20 transition-all'
+                    className='w-4.5 h-4.5 rounded border-gray-200 text-primary focus:ring-primary/20 transition-all'
                   />
-                  <label htmlFor='available' className='text-[10px] font-black text-primary uppercase tracking-widest cursor-pointer'>
+                  <label htmlFor='available' className='text-[9px] font-black text-primary uppercase tracking-widest cursor-pointer'>
                     Available for immediate booking
                   </label>
                 </div>
@@ -478,11 +476,11 @@ const AddGown = () => {
             </div>
 
             {/* Actions */}
-            <div className='flex flex-col sm:flex-row gap-4 pt-4'>
+            <div className='flex flex-col sm:flex-row gap-3 pt-3'>
               <button
                 type='submit'
                 disabled={loading || isRemovingBg}
-                className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 relative overflow-hidden group'
+                className='flex-grow px-8 py-3 bg-primary text-white rounded-xl hover:shadow-[0_15px_40px_rgba(1,62,141,0.15)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 relative overflow-hidden group'
               >
                 <span className="relative z-10">
                   {loading ? 'Saving Apparel...' : (isRemovingBg ? 'AI Processing...' : 'Add to Collection')}
@@ -492,7 +490,7 @@ const AddGown = () => {
               <button
                 type='button'
                 onClick={() => navigate('/owner/manage-gown')}
-                className='px-10 py-5 bg-white text-primary border border-gray-100 rounded-[24px] hover:bg-gray-50 transition-all font-black text-xs uppercase tracking-widest'
+                className='px-8 py-3 bg-white text-primary border border-gray-100 rounded-xl hover:bg-gray-50 transition-all font-black text-xs uppercase tracking-widest'
               >
                 Cancel
               </button>
