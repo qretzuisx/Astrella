@@ -408,35 +408,34 @@ const Recommendations = () => {
             )}
 
             {/* View All Gowns Button */}
-            <div className="text-center py-20 bg-white rounded-[40px] shadow-sm border border-blue-50/50 mb-20 relative overflow-hidden group">
-               <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-              <p className="text-lg text-gray-500 font-medium mb-8 relative z-10">Still searching for your signature look?</p>
+            <div className="text-center py-6 mt-6 mb-10 relative z-10">
+              <p className="text-xs sm:text-sm text-gray-500 font-medium mb-3">Still searching for your signature look?</p>
               <button
                 onClick={() => navigate('/gowns')}
-                className="relative z-10 bg-white text-primary border-2 border-primary/10 px-12 py-5 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-all font-black uppercase tracking-widest active:scale-95 shadow-xl hover:shadow-primary/20"
+                className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary-dull transition-all font-black text-xs uppercase tracking-wider active:scale-95 shadow-[0_8px_20px_rgba(1,62,141,0.15)]"
               >
                 Browse Entire Catalog
               </button>
             </div>
           </div>
         ) : (
-          <div className="text-center py-24 bg-white rounded-[40px] shadow-2xl border border-gray-100 animate-fade-in">
-            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
-              <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-16 bg-white rounded-[32px] sm:rounded-[36px] shadow-lg border border-gray-100 animate-fade-in">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-xl font-black text-primary mb-10 max-w-sm mx-auto">We couldn't find matches that meet your style criteria (50%+ match).</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <p className="text-base sm:text-lg font-black text-primary mb-6 max-w-sm mx-auto">We couldn't find matches that meet your style criteria (50%+ match).</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center px-4">
               <button
                 onClick={() => navigate('/')}
-                className="w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-black uppercase tracking-widest hover:bg-primary-dull transition-all shadow-xl active:scale-95"
+                className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-primary-dull transition-all shadow-md active:scale-95"
               >
                 Start Over
               </button>
               <button
                 onClick={() => navigate('/gowns')}
-                className="w-full sm:w-auto px-10 py-5 bg-white text-primary border-2 border-primary/10 rounded-full font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95"
+                className="w-full sm:w-auto px-8 py-3.5 bg-white text-primary border-2 border-primary/10 rounded-full font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95"
               >
                 Browse All
               </button>
