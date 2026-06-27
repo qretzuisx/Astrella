@@ -119,7 +119,7 @@ const OwnerProfile = () => {
   return (
     <div className='min-h-screen bg-gradient-to-br from-[#FDFDFF] via-[#F8FAFF] to-[#F1F5FF] pb-20'>
       {/* Hero Header Section */}
-      <div className='relative w-full h-[300px] sm:h-[400px] overflow-hidden'>
+      <div className='relative w-full h-[180px] sm:h-[240px] overflow-hidden'>
         <div className='absolute inset-0 bg-primary/5'>
           <div className='absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-[#FDFDFF]'></div>
         </div>
@@ -127,33 +127,27 @@ const OwnerProfile = () => {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className='absolute top-8 left-6 md:left-16 lg:left-24 xl:left-32 z-20 flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest text-primary border border-white/40 hover:bg-white hover:shadow-lg transition-all active:scale-95'
+          className='absolute top-4 left-4 sm:left-6 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-white/40 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-primary border border-white/40 hover:bg-white hover:shadow-md transition-all active:scale-95'
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span>Back</span>
         </button>
 
-        <div className='absolute inset-0 flex flex-col items-center justify-center text-center px-4'>
-          <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-[40px] bg-white shadow-[0_20px_50px_rgba(1,62,141,0.15)] flex items-center justify-center text-4xl sm:text-5xl font-black text-primary border-4 border-white mb-6 animate-fade-in'>
+        <div className='absolute inset-0 flex flex-col items-center justify-center text-center px-4 pt-4'>
+          <div className='w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-md flex items-center justify-center text-2xl sm:text-3xl font-black text-primary border-2 border-white mb-3 animate-fade-in'>
             {owner.shopProfile?.shopName?.charAt(0) || owner.name?.charAt(0) || '?'}
           </div>
           <div className="animate-fade-in-up">
-            <h1 className='text-4xl sm:text-6xl font-black text-primary tracking-tighter mb-2'>
+            <h1 className='text-xl sm:text-3xl font-black text-primary tracking-tight mb-1'>
               {owner.shopProfile?.shopName || owner.name}
             </h1>
             {owner.shopProfile?.verified && (
-              <div className="flex flex-col items-center gap-3">
-                <div className='inline-flex items-center gap-2 px-4 py-1.5 bg-green-500/10 backdrop-blur-md border border-green-500/20 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest'>
-                  <img src={assets.check_icon} alt="verified" className='w-3.5 h-3.5' />
+              <div className="flex flex-col items-center gap-1.5">
+                <div className='inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 backdrop-blur-md border border-green-500/20 text-green-600 rounded-full text-[9px] font-black uppercase tracking-widest'>
+                  <img src={assets.check_icon} alt="verified" className='w-3 h-3' />
                   Verified Partner
-                </div>
-                {/* Logo Accents */}
-                <div className="flex gap-1.5">
-                  <div className="w-6 h-1 rounded-full bg-[#FF3B30]"></div>
-                  <div className="w-6 h-1 rounded-full bg-[#007AFF]"></div>
-                  <div className="w-6 h-1 rounded-full bg-[#FFCC00]"></div>
                 </div>
               </div>
             )}
@@ -161,12 +155,12 @@ const OwnerProfile = () => {
         </div>
       </div>
 
-      <div className='max-w-7xl mx-auto px-6 md:px-16 lg:px-24 xl:px-32 -mt-12 relative z-10'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 -mt-6 relative z-10'>
         {/* Main Content Container */}
-        <div className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_100px_rgba(1,62,141,0.08)] border border-white/60 p-8 sm:p-12'>
+        <div className='bg-white/40 backdrop-blur-3xl rounded-3xl shadow-[0_30px_80px_rgba(1,62,141,0.06)] border border-white/60 p-4 sm:p-6'>
           
           {/* Custom Navigation Tab Bar */}
-          <div className='flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-12 bg-white/50 p-2 rounded-[32px] w-fit mx-auto border border-white/80 shadow-inner'>
+          <div className='flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 mb-6 bg-white/50 p-1.5 rounded-full w-fit mx-auto border border-white/80 shadow-inner'>
             {[
               { id: 'about', label: 'About' },
               { id: 'gowns', label: `Apparel (${gowns.length})` },
@@ -175,9 +169,9 @@ const OwnerProfile = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-8 py-3.5 rounded-[24px] text-[11px] font-black uppercase tracking-widest transition-all ${
+                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeTab === tab.id 
-                  ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-105' 
+                  ? 'bg-primary text-white shadow-md shadow-primary/10 scale-105' 
                   : 'text-primary/40 hover:text-primary hover:bg-white/60'
                 }`}
               >
@@ -189,70 +183,69 @@ const OwnerProfile = () => {
           {/* Tab Content with Fade Animation */}
           <div className='animate-fade-in-up'>
             {activeTab === 'about' && (
-              <div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
-                <div className='lg:col-span-2 space-y-8'>
+              <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8'>
+                <div className='lg:col-span-2 space-y-5 sm:space-y-6'>
                   <div>
-                    <h2 className='text-[10px] font-black text-[#007AFF] uppercase tracking-[0.4em] mb-4'>Professional Description</h2>
-                    <p className='text-lg sm:text-xl text-primary/80 leading-relaxed font-bold'>
+                    <h2 className='text-[9px] font-black text-[#007AFF] uppercase tracking-[0.3em] mb-2 pl-1'>Professional Description</h2>
+                    <p className='text-sm sm:text-base text-primary/80 leading-relaxed font-bold'>
                       {owner.shopProfile?.description || 'This partner hasn\'t provided a detailed description yet, but they offer high-quality apparel services.'}
                     </p>
                   </div>
-                  
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
-                    <div className='p-8 rounded-[32px] bg-white/60 border border-white/80 shadow-sm'>
-                      <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-4'>Total Collection</h3>
-                      <p className='text-4xl font-black text-primary'>{gowns.length}</p>
-                      <p className='text-xs text-primary/40 font-bold mt-1'>Selected Items</p>
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div className='p-4 rounded-xl bg-white/60 border border-white/80 shadow-sm'>
+                      <h3 className='text-[9px] font-black text-[#FF3B30] uppercase tracking-widest mb-1'>Total Collection</h3>
+                      <p className='text-xl font-black text-primary'>{gowns.length}</p>
+                      <p className='text-[9px] text-primary/40 font-bold mt-0.5'>Selected Items</p>
                     </div>
-                    <div className='p-8 rounded-[32px] bg-white/60 border border-white/80 shadow-sm'>
-                      <h3 className='text-[10px] font-black text-[#FF3B30] uppercase tracking-widest mb-4'>Member Since</h3>
-                      <p className='text-4xl font-black text-primary'>{formatDate(owner.createdAt)}</p>
-                      <p className='text-xs text-primary/40 font-bold mt-1'>Exclusive Partner</p>
+                    <div className='p-4 rounded-xl bg-white/60 border border-white/80 shadow-sm'>
+                      <h3 className='text-[9px] font-black text-[#FF3B30] uppercase tracking-widest mb-1'>Member Since</h3>
+                      <p className='text-xl font-black text-primary'>{formatDate(owner.createdAt)}</p>
+                      <p className='text-[9px] text-primary/40 font-bold mt-0.5'>Exclusive Partner</p>
                     </div>
                   </div>
                 </div>
 
-                <div className='space-y-6'>
-                  <div className='p-8 rounded-[40px] bg-primary text-white shadow-2xl shadow-primary/20'>
-                    <h3 className='text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-6'>Contact Details</h3>
-                    <div className='space-y-6'>
+                <div className='space-y-4'>
+                  <div className='p-5 rounded-2xl bg-primary text-white shadow-lg relative overflow-hidden'>
+                    <h3 className='text-[9px] font-black text-white/40 uppercase tracking-[0.25em] mb-4'>Contact Details</h3>
+                    <div className='space-y-4'>
                       {owner.shopProfile?.address && (
-                        <div className='flex gap-4'>
-                          <div className='w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10'>
-                            <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                        <div className='flex gap-3'>
+                          <div className='w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10'>
+                            <svg className='w-4.5 h-4.5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
                             </svg>
                           </div>
                           <div>
-                            <p className='text-[10px] font-black text-[#FFCC00] uppercase tracking-widest mb-1'>Location</p>
-                            <p className='text-sm font-bold leading-snug'>{owner.shopProfile.address}, {owner.shopProfile.city}</p>
+                            <p className='text-[9px] font-black text-[#FFCC00] uppercase tracking-widest mb-0.5'>Location</p>
+                            <p className='text-xs font-bold leading-snug'>{owner.shopProfile.address}, {owner.shopProfile.city}</p>
                           </div>
                         </div>
                       )}
                       {owner.contactNumber && (
-                        <div className='flex gap-4'>
-                          <div className='w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0'>
-                            <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                        <div className='flex gap-3'>
+                          <div className='w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0'>
+                            <svg className='w-4.5 h-4.5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
                             </svg>
                           </div>
                           <div>
-                            <p className='text-[10px] font-black text-[#FFCC00] uppercase tracking-widest mb-1'>Phone</p>
-                            <p className='text-sm font-bold'>{owner.contactNumber}</p>
+                            <p className='text-[9px] font-black text-[#FFCC00] uppercase tracking-widest mb-0.5'>Phone</p>
+                            <p className='text-xs font-bold'>{owner.contactNumber}</p>
                           </div>
                         </div>
                       )}
                       {owner.shopProfile?.operatingHours && (
-                        <div className='flex gap-4'>
-                          <div className='w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0'>
-                            <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        <div className='flex gap-3'>
+                          <div className='w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0'>
+                            <svg className='w-4.5 h-4.5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
                             </svg>
                           </div>
                           <div>
-                            <p className='text-[10px] font-black text-[#FFCC00] uppercase tracking-widest mb-1'>Available Hours</p>
-                            <p className='text-sm font-bold'>{formatOperatingHours(owner.shopProfile.operatingHours)}</p>
+                            <p className='text-[9px] font-black text-[#FFCC00] uppercase tracking-widest mb-0.5'>Available Hours</p>
+                            <p className='text-xs font-bold'>{formatOperatingHours(owner.shopProfile.operatingHours)}</p>
                           </div>
                         </div>
                       )}
@@ -264,7 +257,7 @@ const OwnerProfile = () => {
                       href={owner.shopProfile.socialMedia.facebook}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='block w-full py-4 bg-white border border-blue-50 text-center rounded-2xl text-[10px] font-black uppercase tracking-widest text-primary hover:bg-gray-50 transition-all shadow-sm'
+                      className='block w-full py-2.5 bg-white border border-blue-50 text-center rounded-xl text-[9px] font-black uppercase tracking-widest text-primary hover:bg-gray-50 transition-all shadow-sm'
                     >
                       Follow on Facebook
                     </a>

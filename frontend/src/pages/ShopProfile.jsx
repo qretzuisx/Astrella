@@ -264,49 +264,49 @@ const ShopProfile = () => {
       <div className='flex-1 p-4 sm:p-8 lg:p-12 overflow-y-auto'>
         <div className='max-w-4xl mx-auto'>
           {/* Header */}
-          <div className='mb-12 mt-8 lg:mt-0'>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-1 bg-primary rounded-full"></div>
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
+          <div className='mb-6 mt-10 lg:mt-0'>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-6 h-1 bg-primary rounded-full"></div>
+              <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Management</span>
             </div>
-            <h1 className='text-4xl font-black text-primary tracking-tight'>Shop Profile</h1>
-            <p className='text-gray-500 font-bold mt-2'>
+            <h1 className='text-2xl sm:text-3xl font-black text-primary tracking-tight'>Shop Profile</h1>
+            <p className='text-xs sm:text-sm text-gray-500 font-medium mt-1'>
               Your identity at Astrella. Set up your shop details to build trust with your clients.
             </p>
           </div>
 
           {/* Success/Error Messages */}
           {success && (
-            <div className='mb-8 p-4 bg-green-50 border border-green-100 rounded-2xl animate-fade-in'>
-              <p className='text-green-800 font-bold flex items-center gap-2'>
-                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
+            <div className='mb-6 p-3.5 bg-green-50 border border-green-100 rounded-2xl animate-fade-in'>
+              <p className='text-xs text-green-800 font-bold flex items-center gap-2'>
+                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
                  {success}
               </p>
             </div>
           )}
 
           {error && (
-            <div className='mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
-              <p className='text-red-800 font-bold flex items-center gap-2'>
-                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>
+            <div className='mb-6 p-3.5 bg-red-50 border border-red-100 rounded-2xl animate-shake'>
+              <p className='text-xs text-red-800 font-bold flex items-center gap-2'>
+                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>
                  {error}
               </p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-[40px] shadow-[0_30px_100px_rgba(1,62,141,0.08)] border border-white p-6 sm:p-10 space-y-10'>
+          <form onSubmit={handleSubmit} className='bg-white/40 backdrop-blur-3xl rounded-3xl shadow-[0_20px_80px_rgba(1,62,141,0.06)] border border-white p-4 sm:p-6 space-y-6'>
             
             {/* Basic Info */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">General Information</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">General Information</h3>
               </div>
               
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Shop Name *</label>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Shop Name *</label>
                   <input
                     type='text'
                     name='shopName'
@@ -314,34 +314,34 @@ const ShopProfile = () => {
                     onChange={handleInputChange}
                     placeholder='e.g., Elegant Gowns Manila'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all placeholder:text-gray-300 shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all placeholder:text-gray-300 shadow-sm'
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Description</label>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Description</label>
                   <textarea
                     name='description'
                     value={shopProfile.description}
                     onChange={handleInputChange}
                     placeholder='Tell customers about your shop...'
-                    rows='4'
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all placeholder:text-gray-300 shadow-sm resize-none'
+                    rows='3'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all placeholder:text-gray-300 shadow-sm resize-none'
                   />
                 </div>
               </div>
             </div>
 
             {/* Location */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Location & Operations</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">Location & Operations</h3>
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Address *</label>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Address *</label>
                   <input
                     type='text'
                     name='address'
@@ -349,12 +349,12 @@ const ShopProfile = () => {
                     onChange={handleInputChange}
                     placeholder='123 Main Street'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">City *</label>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">City *</label>
                   <input
                     type='text'
                     name='city'
@@ -362,43 +362,43 @@ const ShopProfile = () => {
                     onChange={handleInputChange}
                     placeholder='Quezon City'
                     required
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Opening Time</label>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Opening Time</label>
                   <input
                     type='time'
                     value={operatingHoursOpen}
                     onChange={(e) => setOperatingHoursOpen(e.target.value)}
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Closing Time</label>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Closing Time</label>
                   <input
                     type='time'
                     value={operatingHoursClose}
                     onChange={(e) => setOperatingHoursClose(e.target.value)}
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
               </div>
             </div>
 
             {/* Contact */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Connect with Clients</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">Connect with Clients</h3>
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Phone Number *</label>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Phone Number *</label>
                   <input
                     type='text'
                     name='contactNumber'
@@ -406,76 +406,74 @@ const ShopProfile = () => {
                     onChange={handleInputChange}
                     placeholder='09123456789'
                     required
-                    className={`w-full px-6 py-4 bg-white/60 border rounded-2xl focus:ring-4 outline-none font-bold text-primary transition-all shadow-sm ${
+                    className={`w-full px-4 py-2.5 bg-white/60 border rounded-xl focus:ring-2 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm ${
                       fieldErrors.contactNumber
                         ? 'border-red-500 focus:ring-red-500/10'
                         : 'border-gray-100 focus:border-primary focus:ring-primary/5'
                     }`}
                   />
                   {fieldErrors.contactNumber && (
-                    <p className='mt-2 text-xs text-red-600 font-bold ml-4'>{fieldErrors.contactNumber}</p>
+                    <p className='mt-1 text-[10px] text-red-600 font-bold ml-2'>{fieldErrors.contactNumber}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">Facebook URL</label>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Facebook URL</label>
                   <input
                     type='text'
                     name='facebook'
                     value={shopProfile.facebook}
                     onChange={handleInputChange}
                     placeholder='facebook.com/yourshop'
-                    className='w-full px-6 py-4 bg-white/60 border border-gray-100 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none font-bold text-primary transition-all shadow-sm'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
               </div>
-
-
             </div>
 
             {/* Documents */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
-                <h3 className="text-sm font-black text-primary uppercase tracking-widest">Business Trust</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="w-1 h-5 bg-secondary rounded-full"></div>
+                <h3 className="text-xs font-black text-primary uppercase tracking-widest">Business Trust</h3>
               </div>
               
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                 {[
                   { label: 'Business Permit', preview: permitPreview, setter: setBusinessPermit, previewSetter: setPermitPreview, type: 'permit' },
                   { label: 'DTI Registration', preview: dtiPreview, setter: setDtiRegistration, previewSetter: setDtiPreview, type: 'dti' }
                 ].map((doc, i) => (
-                  <div key={i} className="space-y-3">
-                    <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest ml-4">{doc.label}</label>
+                  <div key={i} className="space-y-2">
+                    <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">{doc.label}</label>
                     {!doc.preview ? (
                       <label className='block group cursor-pointer'>
-                        <div className='border-2 border-dashed border-gray-100 rounded-3xl p-8 text-center bg-gray-50/30 hover:border-primary hover:bg-primary/5 transition-all duration-300'>
-                          <div className='bg-primary/5 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform'>
-                            <svg className='w-6 h-6 text-primary/40' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 4v16m8-8H4' />
+                        <div className='border border-dashed border-gray-200 rounded-2xl p-5 text-center bg-gray-50/30 hover:border-primary hover:bg-primary/5 transition-all duration-300'>
+                          <div className='bg-primary/5 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform'>
+                            <svg className='w-5 h-5 text-primary/40' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d='M12 4v16m8-8H4' />
                             </svg>
                           </div>
-                          <p className='text-xs text-primary font-black uppercase tracking-wider'>Add {doc.label}</p>
-                          <p className='text-[10px] text-gray-400 font-bold mt-1'>PDF or Image (max 10MB)</p>
+                          <p className='text-[10px] text-primary font-black uppercase tracking-wider'>Add {doc.label}</p>
+                          <p className='text-[8px] text-gray-400 font-bold mt-0.5'>PDF or Image (max 10MB)</p>
                         </div>
                         <input type='file' onChange={(e) => handleFileChange(e, doc.type)} className='hidden' />
                       </label>
                     ) : (
-                      <div className='relative group overflow-hidden rounded-3xl border border-gray-100 shadow-md aspect-video bg-white flex items-center justify-center p-4'>
+                      <div className='relative group overflow-hidden rounded-2xl border border-gray-100 shadow-sm aspect-video bg-white flex items-center justify-center p-2.5'>
                         {doc.preview.startsWith('http') || doc.preview.startsWith('data:image') ? (
                           <img src={doc.preview} alt='Preview' className='w-full h-full object-contain transition-transform group-hover:scale-105 duration-700' />
                         ) : (
-                          <div className='flex flex-col items-center gap-2 text-primary/40'>
-                            <svg className='w-12 h-12' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' /></svg>
-                            <span className='text-[10px] font-black uppercase tracking-widest'>Document Ready</span>
+                          <div className='flex flex-col items-center gap-1.5 text-primary/40'>
+                            <svg className='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' /></svg>
+                            <span className='text-[9px] font-black uppercase tracking-widest'>Document Ready</span>
                           </div>
                         )}
                         <button
                           type='button'
                           onClick={() => { doc.setter(null); doc.previewSetter(''); }}
-                          className='absolute top-3 right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg active:scale-90 transition-all opacity-0 group-hover:opacity-100'
+                          className='absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-600 shadow-md active:scale-90 transition-all opacity-0 group-hover:opacity-100'
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                       </div>
                     )}
@@ -485,11 +483,11 @@ const ShopProfile = () => {
             </div>
 
             {/* Actions */}
-            <div className='flex flex-col sm:flex-row gap-4 pt-4'>
+            <div className='flex flex-col sm:flex-row gap-3 pt-3'>
               <button
                 type='submit'
                 disabled={saving}
-                className='flex-1 px-10 py-5 bg-primary text-white rounded-[24px] hover:shadow-[0_20px_50px_rgba(1,62,141,0.2)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0 relative overflow-hidden group'
+                className='flex-grow px-8 py-3 bg-primary text-white rounded-xl hover:shadow-[0_15px_40px_rgba(1,62,141,0.15)] hover:-translate-y-0.5 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 disabled:translate-y-0 relative overflow-hidden group'
               >
                  <span className="relative z-10">{saving ? 'Updating Profile...' : 'Save All Changes'}</span>
                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
@@ -497,9 +495,9 @@ const ShopProfile = () => {
               <button
                 type='button'
                 onClick={() => navigate('/owner')}
-                className='px-10 py-5 bg-white text-primary border border-gray-100 rounded-[24px] hover:bg-gray-50 transition-all font-black text-xs uppercase tracking-widest'
+                className='px-8 py-3 bg-white text-primary border border-gray-100 rounded-xl hover:bg-gray-50 transition-all font-black text-xs uppercase tracking-widest'
               >
-                Return to Dashboard
+                Cancel
               </button>
             </div>
           </form>
