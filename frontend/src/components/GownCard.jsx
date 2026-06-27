@@ -136,10 +136,10 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
 
   return (
     <div onClick={() => { navigate(`/gown-details/${gown._id || gown.id}`); scrollTo(0, 0) }}
-      className={`group overflow-hidden shadow-[0_20px_60px_rgba(1,62,141,0.08)] hover:shadow-[0_40px_100px_rgba(1,62,141,0.18)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col h-full bg-white/40 backdrop-blur-xl border border-white/40 ${customClassName || "rounded-[24px] sm:rounded-[36px]"}`}
+      className={`group overflow-hidden shadow-[0_20px_60px_rgba(1,62,141,0.08)] hover:shadow-[0_40px_100px_rgba(1,62,141,0.18)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col h-full bg-white/40 backdrop-blur-xl border border-white/40 ${customClassName || "rounded-[28px] sm:rounded-[40px]"}`}
     >
 
-      <div className={`relative overflow-hidden bg-white/10 ${useContainImage ? 'h-[130px] sm:h-auto sm:aspect-square' : 'h-[130px] sm:h-auto sm:aspect-[4/5]'} w-full p-1.5 sm:p-2`}>
+      <div className={`relative overflow-hidden bg-white/10 ${useContainImage ? 'h-[110px] sm:h-auto sm:aspect-square' : 'h-[130px] sm:h-auto sm:aspect-[4/5]'} w-full p-1.5 sm:p-2`}>
         <img
           src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
           alt={gown.name}
@@ -162,7 +162,7 @@ const GownCard = ({ gown, customClassName = "", useContainImage = false }) => {
         </div>
       </div>
 
-      <div className="p-1.5 sm:p-2 md:p-3 flex flex-col bg-white/30 backdrop-blur-md">
+      <div className="p-1.5 sm:p-2 md:p-3 flex flex-col bg-white/30 backdrop-blur-md rounded-b-[inherit]">
         <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
           <div className="w-3 sm:w-5 h-0.5 sm:h-1 bg-secondary-light rounded-full opacity-60 group-hover:w-5 sm:group-hover:w-8 group-hover:opacity-100 transition-all duration-500"></div>
           <span className="text-[8px] sm:text-[9px] font-black text-secondary uppercase tracking-widest line-clamp-1">{gown.category || 'Apparel'}</span>

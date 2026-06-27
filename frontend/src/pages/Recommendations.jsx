@@ -216,13 +216,13 @@ const Recommendations = () => {
                 </div>
 
                 {/* Mobile: Horizontal Carousel, Desktop: Grid */}
-                <div className="flex sm:grid flex-nowrap sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 overflow-x-auto sm:overflow-visible premium-scrollbar pb-6 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x">
+                <div className="flex sm:grid flex-nowrap sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 overflow-x-auto sm:overflow-visible premium-scrollbar pb-6 sm:pb-8 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-snap-x">
                   {topThree.map((item, index) => {
                     const badge = getStarBadge(index);
                     return (
                       <div key={item.gown._id || item.gown.id || index} className="min-w-[85vw] sm:min-w-0 flex flex-col group h-full scroll-snap-align-start">
                         {/* Premium Integrated Wrapper */}
-                        <div className="flex-1 flex flex-col rounded-[24px] sm:rounded-[32px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
+                        <div className="flex-1 flex flex-col rounded-[28px] sm:rounded-[40px] overflow-hidden border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.05)] transition-all duration-700 group-hover:shadow-[0_40px_100px_rgba(1,62,141,0.15)] group-hover:-translate-y-2">
                           {/* Rank Badge Header */}
                           <div className={`flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 relative overflow-hidden ${badge.bgColor}`}>
                              {/* Glossy overlay effect */}
@@ -251,7 +251,7 @@ const Recommendations = () => {
                           {/* Seamless Gown Card Body */}
                           <GownCard 
                             gown={item.gown} 
-                            customClassName="border-none shadow-none rounded-none !p-0 !m-0 hover:translate-y-0"
+                            customClassName="border-none shadow-none rounded-[28px] sm:rounded-[40px] !p-0 !m-0 hover:translate-y-0"
                             useContainImage={true}
                           />
                         </div>
@@ -262,36 +262,35 @@ const Recommendations = () => {
               </div>
             )}
 
-            {/* Your Preferences - Between Top 3 and Others */}
             {(preferences.bodyType || preferences.skinTone || preferences.eventType || preferences.faceShape || preferences.ageGroup || preferences.sex) && (
-              <div className="bg-white rounded-[40px] shadow-xl p-8 sm:p-12 border border-gray-100/50 relative overflow-hidden group">
+              <div className="bg-white rounded-[32px] sm:rounded-[36px] shadow-lg p-4 sm:p-5 border border-gray-100/50 relative overflow-hidden group">
                 {/* Background decorative element */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl transition-transform duration-700 group-hover:scale-110"></div>
+                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-24 -mt-24 blur-2xl transition-transform duration-700 group-hover:scale-110"></div>
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 sm:mb-10 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3.5 sm:mb-4 relative z-10">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-black text-primary tracking-tight mb-2">Style Profile</h2>
-                    <p className="text-xs sm:text-sm text-gray-500 font-medium">Refine your traits for even better accuracy.</p>
+                    <h2 className="text-base sm:text-lg font-black text-primary tracking-tight mb-0.5">Style Profile</h2>
+                    <p className="text-[10px] sm:text-[11px] text-gray-500 font-medium">Refine your traits for even better accuracy.</p>
                   </div>
                   <button
                     onClick={applyPreferences}
-                    className="bg-primary text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl hover:bg-primary-dull transition-all font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(1,62,141,0.2)] hover:shadow-[0_20px_50px_rgba(1,62,141,0.3)] active:scale-95 flex items-center justify-center gap-2"
+                    className="bg-primary text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-primary-dull transition-all font-black text-[9px] uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(1,62,141,0.15)] hover:shadow-[0_15px_35px_rgba(1,62,141,0.25)] active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     Update Profile
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6 relative z-10">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 relative z-10">
                   {/* Body Type */}
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Body Type</label>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest pl-2">Body Type</label>
                     <select
                       value={editedPrefs.bodyType || ''}
                       onChange={(e) => handlePrefChange('bodyType', e.target.value)}
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-full text-[10px] sm:text-xs font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {bodyTypeList.map(type => (
@@ -301,12 +300,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Skin Tone */}
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Skin Tone</label>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest pl-2">Skin Tone</label>
                     <select
                       value={editedPrefs.skinTone || ''}
                       onChange={(e) => handlePrefChange('skinTone', e.target.value)}
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-full text-[10px] sm:text-xs font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {skinToneList.map(tone => (
@@ -316,12 +315,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Event Type */}
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Events</label>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest pl-2">Events</label>
                     <select
                       value={editedPrefs.eventType || ''}
                       onChange={(e) => handlePrefChange('eventType', e.target.value)}
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-full text-[10px] sm:text-xs font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {eventTypeList.map(event => (
@@ -331,12 +330,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Face Shape */}
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Face Shape</label>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest pl-2">Face Shape</label>
                     <select
                       value={editedPrefs.faceShape || ''}
                       onChange={(e) => handlePrefChange('faceShape', e.target.value)}
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-full text-[10px] sm:text-xs font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       {faceShapeList.map(shape => (
@@ -346,12 +345,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Age Group */}
-                    <div className="space-y-1.5 sm:space-y-2">
-                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Age Group</label>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest pl-2">Age Group</label>
                     <select
                       value={editedPrefs.ageGroup || ''}
                       onChange={(e) => handlePrefChange('ageGroup', e.target.value)}
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-full text-[10px] sm:text-xs font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       <option value="6–9 Years">6–9 Years</option>
@@ -364,12 +363,12 @@ const Recommendations = () => {
                   </div>
 
                   {/* Sex */}
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <label className="block text-[9px] sm:text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2">Category</label>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest pl-2">Category</label>
                     <select
                       value={editedPrefs.sex || ''}
                       onChange={(e) => handlePrefChange('sex', e.target.value)}
-                      className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border border-gray-100 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-full text-[10px] sm:text-xs font-bold text-primary focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="">Select</option>
                       <option value="Female">Female</option>
