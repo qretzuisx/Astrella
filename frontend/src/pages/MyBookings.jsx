@@ -743,24 +743,24 @@ const MyBookings = ({ setShowLogin }) => {
                       src={Array.isArray(booking.gown?.image) ? booking.gown.image[0] : booking.gown?.image || assets.gown_image1}
                       alt={booking.gown?.name || 'Gown'}
                       loading="lazy"
-                      className='w-full h-auto max-h-40 sm:max-h-52 md:max-h-64 object-contain p-3 sm:p-4 transition-transform duration-1000 group-hover:scale-110'
+                      className='w-full h-auto max-h-[110px] sm:max-h-[135px] md:max-h-[160px] object-contain p-2 sm:p-3 transition-transform duration-1000 group-hover:scale-110'
                     />
-                    <div className={`absolute top-4 left-4 sm:top-6 sm:left-6 px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
+                    <div className={`absolute top-2.5 left-2.5 px-2.5 py-1.5 rounded-lg font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 ${getStatusColor(booking.status)}`}>
                       {booking.status?.toUpperCase() || 'PENDING'}
                     </div>
                   </div>
 
                   {/* Booking Details */}
-                  <div className='p-6 flex flex-col flex-grow bg-white'>
-                    <div className="mb-4">
+                  <div className='p-3 sm:p-4 flex flex-col flex-grow bg-white'>
+                    <div className="mb-2">
                       <h3
-                        className='text-xl sm:text-2xl font-black text-primary mb-1 break-words whitespace-normal leading-tight group-hover:text-secondary transition-colors duration-500 cursor-pointer'
+                        className='text-base sm:text-lg font-black text-primary mb-0.5 break-words whitespace-normal leading-tight group-hover:text-secondary transition-colors duration-500 cursor-pointer'
                         onClick={() => continueToBook(booking)}
                       >
                         {booking.gown?.name || 'Gown Name'}
                       </h3>
-                      <div className="flex items-center justify-between gap-3">
-                        <p className='text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest'>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className='text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
                           by {booking.owner ? (typeof booking.owner === 'object' ? (booking.owner.shopName || booking.owner.name) : booking.owner) : 'Owner'}
                         </p>
                         <button
@@ -768,7 +768,7 @@ const MyBookings = ({ setShowLogin }) => {
                             const ownerId = typeof booking.owner === 'object' ? (booking.owner._id || booking.owner.id) : booking.owner
                             if (ownerId) navigate(`/owner-profile/${ownerId}`)
                           }}
-                          className="px-3 py-1 bg-primary/5 hover:bg-primary text-primary hover:text-white text-[9px] font-black uppercase tracking-tighter rounded-full border border-primary/10 transition-all shadow-sm shrink-0"
+                          className="px-2.5 py-0.5 bg-primary/5 hover:bg-primary text-primary hover:text-white text-[8px] font-black uppercase tracking-tighter rounded-full border border-primary/10 transition-all shadow-sm shrink-0"
                         >
                           View Profile
                         </button>
@@ -777,14 +777,14 @@ const MyBookings = ({ setShowLogin }) => {
 
                     {/* Rejection Reason Display */}
                     {(booking.status?.toLowerCase() === 'canceled' && booking.payment?.status?.toLowerCase() === 'rejected' && booking.payment?.rejectionReason) && (
-                      <div className='mb-6 p-4 bg-red-50 border border-red-100 rounded-3xl'>
-                        <p className='text-[10px] font-black text-red-800 uppercase tracking-widest mb-1.5'>Reason for rejection</p>
-                        <p className='text-sm text-red-700 font-medium leading-relaxed'>{booking.payment.rejectionReason}</p>
+                      <div className='mb-4 p-3 bg-red-50 border border-red-100 rounded-2xl'>
+                        <p className='text-[8px] font-black text-red-800 uppercase tracking-widest mb-1'>Reason for rejection</p>
+                        <p className='text-xs text-red-700 font-medium leading-relaxed'>{booking.payment.rejectionReason}</p>
                       </div>
                     )}
 
                     {/* Date/Status Information - Standardized Boxed Layout */}
-                    <div className='space-y-4 mb-auto'>
+                    <div className='space-y-3 mb-auto'>
                       {isTrial ? (
                         booking.trialExpiresAt && (
                           <TrialCountdown
@@ -797,22 +797,22 @@ const MyBookings = ({ setShowLogin }) => {
                           />
                         )
                       ) : (
-                        <div className='bg-gray-50/50 rounded-3xl p-5 grid grid-cols-2 gap-x-6 border border-gray-100 relative overflow-hidden group/box'>
+                        <div className='bg-gray-50/50 rounded-2xl p-3.5 grid grid-cols-2 gap-x-4 border border-gray-100 relative overflow-hidden group/box'>
                           <div className='flex flex-col'>
-                            <p className='text-[10px] font-black text-primary/30 uppercase tracking-widest mb-2'>Pickup</p>
-                            <div className='flex items-center gap-3'>
+                            <p className='text-[8px] font-black text-primary/30 uppercase tracking-widest mb-1'>Pickup</p>
+                            <div className='flex items-center gap-2'>
                               <div className='min-w-0'>
-                                <p className='text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.pickupDate)}</p>
-                                {booking.pickupTime && <p className='text-[10px] text-primary/40 font-bold uppercase tracking-wider mt-1'>{formatTime(booking.pickupTime)}</p>}
+                                <p className='text-[11px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.pickupDate)}</p>
+                                {booking.pickupTime && <p className='text-[9px] text-primary/40 font-bold uppercase tracking-wider mt-0.5'>{formatTime(booking.pickupTime)}</p>}
                               </div>
                             </div>
                           </div>
-                          <div className='flex flex-col border-l border-gray-100 pl-6'>
-                            <p className='text-[10px] font-black text-primary/30 uppercase tracking-widest mb-2'>Return</p>
-                            <div className='flex items-center gap-3'>
+                          <div className='flex flex-col border-l border-gray-100 pl-4'>
+                            <p className='text-[8px] font-black text-primary/30 uppercase tracking-widest mb-1'>Return</p>
+                            <div className='flex items-center gap-2'>
                               <div className='min-w-0'>
-                                <p className='text-[13px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.returnDate)}</p>
-                                {(booking.returnTime || booking.pickupTime) && <p className='text-[10px] text-secondary/40 font-bold uppercase tracking-wider mt-1'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
+                                <p className='text-[11px] font-black text-primary whitespace-nowrap leading-tight'>{formatDate(booking.returnDate)}</p>
+                                {(booking.returnTime || booking.pickupTime) && <p className='text-[9px] text-secondary/40 font-bold uppercase tracking-wider mt-0.5'>{formatTime(booking.returnTime || booking.pickupTime)}</p>}
                               </div>
                             </div>
                           </div>
@@ -845,25 +845,25 @@ const MyBookings = ({ setShowLogin }) => {
                     </div>
 
                     {/* Footer Info: Price & Specific Actions */}
-                    <div className='pt-6 border-t border-gray-50 mt-6'>
+                    <div className='pt-3 border-t border-gray-50 mt-3'>
                       {!isTrial && (
-                        <div className='flex justify-between items-center mb-6'>
-                          <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Total Amount</span>
-                          <span className='text-3xl font-black text-primary flex items-baseline gap-1'>
-                            <span className="text-sm opacity-40">{currency}</span>
+                        <div className='flex justify-between items-center mb-3'>
+                          <span className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Total Amount</span>
+                          <span className='text-xl font-black text-primary flex items-baseline gap-0.5'>
+                            <span className="text-xs opacity-40">{currency}</span>
                             {booking.price?.toLocaleString() || '0'}
                           </span>
                         </div>
                       )}
 
-                      <div className='flex flex-col gap-3'>
+                      <div className='flex flex-col gap-2'>
                         {/* Status Specific Global Actions */}
-                        <div className='grid grid-cols-2 gap-3'>
+                        <div className='grid grid-cols-2 gap-2'>
                           <button
                             type='button'
                             onClick={() => openEdit(booking, 'reschedule')}
                             disabled={!editable}
-                            className={`h-14 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all ${editable
+                            className={`h-11 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${editable
                               ? 'border-primary/20 text-primary bg-white hover:bg-primary hover:text-white hover:border-primary shadow-lg shadow-primary/5 active:scale-95'
                               : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
                               }`}
@@ -874,7 +874,7 @@ const MyBookings = ({ setShowLogin }) => {
                             type='button'
                             onClick={() => handleCancelClick(booking)}
                             disabled={!cancelable}
-                            className={`h-14 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all ${cancelable 
+                            className={`h-11 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${cancelable 
                               ? 'border-red-100 text-red-500 bg-white hover:bg-red-500 hover:text-white hover:border-red-500 shadow-lg shadow-red-500/5 active:scale-95' 
                               : 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50/50'
                               }`}
@@ -888,16 +888,16 @@ const MyBookings = ({ setShowLogin }) => {
                           <button
                             type='button'
                             onClick={() => continueToBook(booking)}
-                            className='h-14 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all'
+                            className='h-11 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all'
                           >
                             Continue to Book
                           </button>
                         )}
 
                         {!editable && !['canceled', 'expired'].includes((booking.status || '').toLowerCase()) && (
-                          <div className='flex items-center justify-center gap-2 p-3 bg-gray-50 rounded-xl'>
+                          <div className='flex items-center justify-center gap-1.5 p-2 bg-gray-50 rounded-lg'>
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
-                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Viewing Only</p>
+                            <p className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Viewing Only</p>
                           </div>
                         )}
                       </div>
