@@ -48,6 +48,7 @@ const GownDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [gown, setGown] = useState(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const [loadingGown, setLoadingGown] = useState(true)
   const currency = CURRENCY
   const [measurements, setMeasurements] = useState({
@@ -649,6 +650,52 @@ const GownDetails = () => {
 
   return (
     <div className='px-4 sm:px-8 lg:px-16 mt-0 pt-3 sm:pt-4 mb-8 sm:mb-12 pb-24 sm:pb-0 bg-[#FDFDFF] min-h-screen text-gray-800'>
+      {/* ── Image Lightbox ── */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s ease' }}
+          onClick={() => setLightboxOpen(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setLightboxOpen(false)}
+          tabIndex={-1}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/25 border border-white/20 rounded-full flex items-center justify-center text-white transition-all duration-200 hover:scale-110 z-10"
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+            aria-label="Close image viewer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Gown name badge */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-xs font-black uppercase tracking-widest whitespace-nowrap">
+            {gown.name}
+          </div>
+
+          {/* Full-size image */}
+          <img
+            src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
+            alt={gown.name}
+            className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded-2xl shadow-2xl select-none"
+            style={{ animation: 'zoomIn 0.25s cubic-bezier(0.22,1,0.36,1)' }}
+            onClick={(e) => e.stopPropagation()}
+            draggable={false}
+          />
+
+          {/* Hint */}
+          <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/40 text-[10px] font-bold uppercase tracking-widest">
+            Click outside or press Esc to close
+          </p>
+
+          <style>{`
+            @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+            @keyframes zoomIn  { from { opacity: 0; transform: scale(0.88) } to { opacity: 1; transform: scale(1) } }
+          `}</style>
+        </div>
+      )}
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)} 
@@ -665,20 +712,30 @@ const GownDetails = () => {
         {/* Left Column - Image and Descriptions */}
         <div className='w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4'>
           {/* Image Section */}
-          <div className='relative rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group'>
+          <div
+            className='relative rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(1,62,141,0.12)] border border-primary/5 bg-white group cursor-zoom-in'
+            onClick={() => setLightboxOpen(true)}
+            title="Click to view full size"
+          >
             <img
               src={Array.isArray(gown.image) ? gown.image[0] : gown.image}
               alt={gown.name}
               loading="lazy"
               className='w-full h-auto max-h-[350px] sm:max-h-[420px] object-contain transition-transform duration-1000 group-hover:scale-105'
             />
-            
+
             {/* Status Pill Overlay */}
             <div className={`absolute top-3 left-3 sm:top-5 sm:left-5 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-[0.15em] shadow-xl backdrop-blur-md border border-white/20 transition-all duration-500 group-hover:translate-x-1 z-10 ${getStatusColor(gown.status || 'Available')}`}>
               {gown.status || 'Available'}
             </div>
-            
 
+            {/* Zoom hint overlay */}
+            <div className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0zm-6-3v6m-3-3h6" />
+              </svg>
+              View Full Size
+            </div>
           </div>
 
           {/* Title name and Price */}
