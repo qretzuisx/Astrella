@@ -339,6 +339,10 @@ body {
     margin-top: 0.5rem !important;
     padding: 0.65rem 2.5rem !important;
   }
+
+  .preview-modal-wrapper {
+    padding: 1rem 1.5rem !important; /* Compress preview padding */
+  }
 }
 
 @media (min-width: 1024px) and (max-height: 730px) {
@@ -348,6 +352,9 @@ body {
   .guidelines-blocked-image-container {
     height: 55px !important;
     width: 55px !important;
+  }
+  .preview-modal-wrapper {
+    padding: 0.5rem 1rem !important; /* Even more compact on ultra-short screens */
   }
 }
 

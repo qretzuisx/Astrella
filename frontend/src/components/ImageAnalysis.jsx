@@ -356,8 +356,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] sm:p-4 animate-in fade-in duration-200">
-      <div className={`bg-white sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full sm:h-auto h-full max-h-full sm:max-h-[95vh] overflow-y-auto overscroll-contain border border-primary/5 relative transition-all duration-300 guidelines-modal-container`} style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
-        <div className={preview ? 'px-4 pt-4 pb-8 sm:px-8 sm:pt-6 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)]' : 'p-4 sm:p-6 lg:p-8 py-4 lg:py-5 pb-8 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)] guidelines-modal-wrapper'}>
+      <div className={`bg-white sm:rounded-[40px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full border border-primary/5 relative transition-all duration-300 guidelines-modal-container`}>
+        <div className={preview ? 'px-4 pt-4 pb-8 sm:px-8 sm:pt-6 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)] preview-modal-wrapper' : 'p-4 sm:p-6 lg:p-8 py-4 lg:py-5 pb-8 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)] guidelines-modal-wrapper'}>
           <div className={`flex justify-between items-center mb-5 leading-none sticky top-0 bg-white/95 backdrop-blur-md z-20 py-3 border-b border-transparent [&:not(:first-child)]:border-gray-100/60 guidelines-header ${preview ? '-mx-4 px-4 sm:-mx-8 sm:px-8' : '-mx-4 px-4 sm:mx-0 sm:px-0'}`}>
             <div className="pr-4">
               <h2 className="text-xl sm:text-3xl font-black text-primary tracking-tight">AI Profiler</h2>
@@ -461,7 +461,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                     <img
                       src={preview}
                       alt="Preview"
-                      className="w-full max-h-[min(45vh,250px)] sm:max-h-[min(55vh,calc(95vh-260px))] object-contain object-center block mx-auto"
+                      className="w-full max-h-[160px] sm:max-h-[200px] lg:max-h-[180px] xl:max-h-[200px] object-contain object-center block mx-auto"
                     />
                   </div>
                   {analyzing && <div className="bg-blue-50 border border-blue-200 rounded-3xl p-5 flex items-center justify-center gap-4 animate-pulse"><div className="animate-spin h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full"></div><span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-800">{analysisProgress}</span></div>}
