@@ -356,9 +356,9 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] sm:p-4 animate-in fade-in duration-200">
-      <div className={`bg-white sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full sm:h-auto h-full max-h-full sm:max-h-[95vh] overflow-y-auto overscroll-contain border border-primary/5 relative transition-all duration-300`} style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
-        <div className={preview ? 'px-4 pt-4 pb-8 sm:px-8 sm:pt-8 sm:pb-8 pb-[env(safe-area-inset-bottom,24px)]' : 'p-4 sm:p-10 pb-16 sm:pb-10 pb-[env(safe-area-inset-bottom,24px)]'}>
-          <div className={`flex justify-between items-center mb-6 leading-none sticky top-0 bg-white/95 backdrop-blur-md z-20 py-4 border-b border-transparent [&:not(:first-child)]:border-gray-100/60 ${preview ? '-mx-4 px-4 sm:-mx-8 sm:px-8' : '-mx-4 px-4 sm:mx-0 sm:px-0'}`}>
+      <div className={`bg-white sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full sm:h-auto h-full max-h-full sm:max-h-[95vh] overflow-y-auto overscroll-contain border border-primary/5 relative transition-all duration-300 guidelines-modal-container`} style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
+        <div className={preview ? 'px-4 pt-4 pb-8 sm:px-8 sm:pt-6 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)]' : 'p-4 sm:p-6 lg:p-8 py-4 lg:py-5 pb-8 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)] guidelines-modal-wrapper'}>
+          <div className={`flex justify-between items-center mb-5 leading-none sticky top-0 bg-white/95 backdrop-blur-md z-20 py-3 border-b border-transparent [&:not(:first-child)]:border-gray-100/60 guidelines-header ${preview ? '-mx-4 px-4 sm:-mx-8 sm:px-8' : '-mx-4 px-4 sm:mx-0 sm:px-0'}`}>
             <div className="pr-4">
               <h2 className="text-xl sm:text-3xl font-black text-primary tracking-tight">AI Profiler</h2>
               <div className="h-1 w-8 sm:w-12 bg-secondary mt-1.5 rounded-full"></div>
@@ -381,27 +381,27 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 
           {!preview && showGuidelines ? (
             <div className="animate-in slide-in-from-bottom-2 duration-300">
-              <div className="space-y-3 mb-6 sm:mb-8 text-center px-4">
+              <div className="space-y-2 mb-5 sm:mb-6 text-center px-4 guidelines-title-section">
                 <h3 className="text-base sm:text-lg font-black text-primary uppercase tracking-widest">Get the best matches</h3>
                 <p className="text-gray-500 text-xs sm:text-sm font-medium max-w-sm mx-auto leading-relaxed">A clear photo helps our AI find the <span className="text-primary font-bold">perfect fit</span> for you.</p>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10">
-                <div className="bg-green-50/40 rounded-[28px] p-5 sm:p-6 border border-green-100 relative group overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8 guidelines-grid-layout">
+                <div className="bg-green-50/40 rounded-[28px] p-5 sm:p-6 border border-green-100 relative group overflow-hidden flex flex-col justify-between guidelines-ideal-card">
                   <div className="absolute top-8 left-4 sm:top-4 bg-green-500 text-white text-[9px] sm:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest z-10 shadow-md">Ideal</div>
-                  <div className="mb-5 rounded-[20px] overflow-hidden shadow-xl transition-transform group-hover:scale-[1.01] duration-300">
-                    <img src="/guidelines/guideline_do_ideal.png" alt="Ideal Shot" className="w-full aspect-square object-cover" />
+                  <div className="mb-5 rounded-[20px] overflow-hidden shadow-xl transition-transform group-hover:scale-[1.01] duration-300 bg-white aspect-square guidelines-ideal-image-container">
+                    <img src="/guidelines/guideline_do_ideal.png" alt="Ideal Shot" className="w-full h-full object-cover" />
                   </div>
-                  <div className="space-y-2.5 font-black text-xs sm:text-sm uppercase tracking-widest text-green-700 flex items-center gap-2">
+                  <div className="space-y-2 font-black text-xs sm:text-sm uppercase tracking-widest text-green-700 flex items-center gap-2">
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     Full-Body Look
                     <p className="normal-case text-[11px] sm:text-xs text-green-800/60 font-medium tracking-normal mt-0.5">Show your whole body from head to toe in good light.</p>
                   </div>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-6 guidelines-avoid-section">
                   <div className="text-[9px] font-black text-red-500 uppercase tracking-[0.2em] px-2 mb-1">What to avoid</div>
                   <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="bg-red-50/20 rounded-[20px] p-3 sm:p-4 border border-red-50 text-center">
-                      <div className="relative rounded-[12px] overflow-hidden aspect-square mb-2 grayscale-[0.6]">
+                    <div className="bg-red-50/20 rounded-[20px] p-3 sm:p-4 border border-red-50 text-center guidelines-dont-card">
+                      <div className="relative rounded-[12px] overflow-hidden aspect-square mb-2 grayscale-[0.6] bg-white guidelines-dont-image-container">
                         <img src="/guidelines/guideline_dont_half.png" alt="Half Body" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex items-center justify-center bg-red-500/5">
                           <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-500 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -409,8 +409,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                       </div>
                       <div className="text-[9px] font-black text-red-800 uppercase tracking-widest">Half-Body</div>
                     </div>
-                    <div className="bg-red-50/20 rounded-[20px] p-3 sm:p-4 border border-red-50 text-center">
-                      <div className="relative rounded-[12px] overflow-hidden aspect-square mb-2 grayscale-[0.6]">
+                    <div className="bg-red-50/20 rounded-[20px] p-3 sm:p-4 border border-red-50 text-center guidelines-dont-card">
+                      <div className="relative rounded-[12px] overflow-hidden aspect-square mb-2 grayscale-[0.6] bg-white guidelines-dont-image-container">
                         <img src="/guidelines/guideline_dont_mirror.png" alt="Mirror Selfie" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex items-center justify-center bg-red-500/5">
                           <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-500 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -418,8 +418,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                       </div>
                       <div className="text-[9px] font-black text-red-800 uppercase tracking-widest">Mirror Selfie</div>
                     </div>
-                    <div className="bg-red-50/25 rounded-[32px] p-6 sm:p-8 border border-red-50 col-span-2 flex gap-5 sm:gap-8 items-center">
-                      <div className="relative rounded-[20px] overflow-hidden aspect-square h-28 sm:h-40 grayscale-[0.6] shrink-0 shadow-lg">
+                    <div className="bg-red-50/25 rounded-[24px] p-3 sm:p-4 border border-red-50 col-span-2 flex gap-4 sm:gap-6 items-center guidelines-blocked-card">
+                      <div className="relative rounded-[12px] overflow-hidden aspect-square h-20 sm:h-24 grayscale-[0.6] shrink-0 shadow-lg bg-white guidelines-blocked-image-container">
                         <img src="/guidelines/guideline_dont_obscured.png" alt="Blocked View" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex items-center justify-center bg-red-500/5">
                           <svg className="w-10 h-10 sm:w-16 sm:h-16 text-red-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -433,10 +433,10 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col items-center gap-3 mt-6 mb-12 sm:mb-2">
+              <div className="flex flex-col items-center gap-3 mt-4 mb-4">
                 <button 
                   onClick={() => setShowGuidelines(false)} 
-                  className="w-full sm:w-auto bg-primary text-white px-10 py-5 sm:px-14 sm:py-6 rounded-full hover:bg-primary-dull transition-all text-xs sm:text-sm font-black uppercase tracking-[0.2em] shadow-xl active:scale-95"
+                  className="w-full sm:w-auto bg-primary text-white px-10 py-4.5 sm:px-14 sm:py-5 rounded-full hover:bg-primary-dull transition-all text-xs sm:text-sm font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 guidelines-footer-button"
                 >
                   Start Upload
                 </button>
@@ -461,7 +461,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                     <img
                       src={preview}
                       alt="Preview"
-                      className="w-full max-h-[min(55vh,calc(95vh-260px))] object-contain object-center block mx-auto"
+                      className="w-full max-h-[min(45vh,250px)] sm:max-h-[min(55vh,calc(95vh-260px))] object-contain object-center block mx-auto"
                     />
                   </div>
                   {analyzing && <div className="bg-blue-50 border border-blue-200 rounded-3xl p-5 flex items-center justify-center gap-4 animate-pulse"><div className="animate-spin h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full"></div><span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-800">{analysisProgress}</span></div>}
