@@ -46,6 +46,11 @@ const gownSchema = new mongoose.Schema({
     // [INFO] Demographic tags used by the AI Stylist recommendation engine.
     ageGroup: {type: [String], default: []},
     sex: {type: String, enum: ['Male', 'Female', 'Unisex', ''], default: ''},
+    silhouette: {
+        type: String,
+        enum: ['', 'A-Line', 'Mermaid', 'Ball Gown', 'Sheath', 'Empire', 'Shift', 'Wrap', 'Peplum', 'Trumpet'],
+        default: ''
+    },
     
     // [SECTION] METRICS
     views: { type: Number, default: 0 } // [INFO] Tracks popularity/clicks for trending sections

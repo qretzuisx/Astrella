@@ -34,13 +34,19 @@ const Recommendations = () => {
         if (ageGroup) params.append('ageGroup', ageGroup);
         if (sex) params.append('sex', sex);
 
-        const response = await fetch(`${API_URL}/user/recommendations?${params.toString()}`);
+        const token = localStorage.getItem('token');
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_URL}/ml/recommendations?${params.toString()}`, { headers });
         const data = await response.json();
 
         if (data.success) {
-          // Filter out recommendations below 50% and sort by score (highest first)
+          // Filter out recommendations below 40% and sort by score (highest first)
           const filtered = (data.recommendations || [])
-            .filter(item => item.score >= 50)
+            .filter(item => item.score >= 40)
             .sort((a, b) => b.score - a.score);
 
           setRecommendations(filtered);

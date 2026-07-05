@@ -103,22 +103,6 @@ const Hero = () => {
     setBodyType(results.bodyType || 'Rectangle');
     setFaceShape(results.faceShape || 'Oval');
 
-    if (results.ageGroup) {
-      setAgeGroup(results.ageGroup);
-    } else if (results.age) {
-      const estimatedAge = parseInt(results.age, 10);
-      if (estimatedAge >= 6 && estimatedAge <= 9) setAgeGroup('6–9 Years');
-      else if (estimatedAge >= 10 && estimatedAge <= 12) setAgeGroup('10–12 Years');
-      else if (estimatedAge >= 13 && estimatedAge <= 17) setAgeGroup('13–17 Years');
-      else if (estimatedAge >= 18 && estimatedAge <= 29) setAgeGroup('18–29 Years');
-      else if (estimatedAge >= 30 && estimatedAge <= 59) setAgeGroup('30–59 Years');
-      else if (estimatedAge >= 60) setAgeGroup('60+ Years');
-    }
-
-    if (results.sex) {
-      setSex(results.sex === 'Male' ? 'Male' : results.sex);
-    }
-
     setShowImageAnalysis(false);
     setValidationError('');
   };

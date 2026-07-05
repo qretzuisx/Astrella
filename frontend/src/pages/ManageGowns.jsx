@@ -46,6 +46,7 @@ const ManageGowns = () => {
     color: '',
     ageGroup: [],
     sex: '',
+    silhouette: '',
     statusOverride: '',
     available: true
   })
@@ -222,6 +223,7 @@ const ManageGowns = () => {
       color: gown.color || '',
       ageGroup: Array.isArray(gown.ageGroup) ? gown.ageGroup : (gown.ageGroup ? [gown.ageGroup] : []),
       sex: gown.sex || '',
+      silhouette: gown.silhouette || '',
       statusOverride: gown.statusOverride || '',
       available: gown.available !== false,
     })
@@ -325,6 +327,7 @@ const ManageGowns = () => {
           color: editForm.color,
           ageGroup: editForm.ageGroup,
           sex: editForm.sex,
+          silhouette: editForm.silhouette,
           statusOverride: editForm.statusOverride,
           available: editForm.available,
         })
@@ -717,6 +720,27 @@ const ManageGowns = () => {
                     className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none'
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className='block text-[10px] font-black text-primary/40 uppercase tracking-widest pl-2'>Silhouette (Recommended for AI Match)</label>
+                <select
+                  name='silhouette'
+                  value={editForm.silhouette || ''}
+                  onChange={handleEditFormChange}
+                  className='w-full px-5 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-sm font-black text-primary transition-all focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none appearance-none cursor-pointer'
+                >
+                  <option value=''>Not Specified (Optional)</option>
+                  <option value='A-Line'>A-Line</option>
+                  <option value='Mermaid'>Mermaid</option>
+                  <option value='Ball Gown'>Ball Gown</option>
+                  <option value='Sheath'>Sheath</option>
+                  <option value='Empire'>Empire</option>
+                  <option value='Shift'>Shift</option>
+                  <option value='Wrap'>Wrap</option>
+                  <option value='Peplum'>Peplum</option>
+                  <option value='Trumpet'>Trumpet</option>
+                </select>
               </div>
 
               <div className="space-y-4">

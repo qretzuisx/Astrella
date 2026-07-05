@@ -21,6 +21,7 @@ const AddGown = () => {
     size: ['Free Size'],
     ageGroup: [],
     sex: '',
+    silhouette: '',
     available: true
   })
 
@@ -190,6 +191,7 @@ const AddGown = () => {
         size: formData.size,
         ageGroup: formData.ageGroup,
         sex: formData.sex,
+        silhouette: formData.silhouette,
         available: formData.available
       }))
 
@@ -215,6 +217,7 @@ const AddGown = () => {
           size: ['Free Size'],
           ageGroup: [],
           sex: '',
+          silhouette: '',
           available: true
         })
         setSelectedImage(null)
@@ -439,6 +442,27 @@ const AddGown = () => {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Silhouette (Recommended for AI Match)</label>
+                  <select
+                    name='silhouette'
+                    value={formData.silhouette || ''}
+                    onChange={handleInputChange}
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm appearance-none cursor-pointer transition-all shadow-sm'
+                  >
+                    <option value=''>Not Specified (Optional)</option>
+                    <option value='A-Line'>A-Line</option>
+                    <option value='Mermaid'>Mermaid</option>
+                    <option value='Ball Gown'>Ball Gown</option>
+                    <option value='Sheath'>Sheath</option>
+                    <option value='Empire'>Empire</option>
+                    <option value='Shift'>Shift</option>
+                    <option value='Wrap'>Wrap</option>
+                    <option value='Peplum'>Peplum</option>
+                    <option value='Trumpet'>Trumpet</option>
+                  </select>
                 </div>
 
                 <div className="space-y-3 sm:col-span-2">

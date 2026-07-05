@@ -10,13 +10,13 @@ import {
     getModelStats,
     getPersonalizedFeed
 } from '../controllers/mlRecommendationController.js';
-import { protect } from '../middleware/auth.js';
+import { protect, optionalProtect } from '../middleware/auth.js';
 import { verifyOwner } from '../middleware/verify.js';
 
 const mlRouter = express.Router();
 
 // Public ML recommendations (works for guests and logged-in users)
-mlRouter.get('/recommendations', getMLRecommendations);
+mlRouter.get('/recommendations', optionalProtect, getMLRecommendations);
 
 // Protected routes (require login)
 mlRouter.get('/similar-users', protect, getSimilarUserRecommendations);

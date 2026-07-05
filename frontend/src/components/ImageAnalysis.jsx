@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
+import { removeBackground } from '@imgly/background-removal';
+import { loadPoseModel, classifyBodyShape, scanWaistWidth } from '../utils/poseBodyAnalysis';
 
 const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
   const [image, setImage] = useState(null);
+  const [rawFile, setRawFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState('');
   const [results, setResults] = useState(null);
@@ -13,7 +16,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Load face-api models for age, sex & facial landmarks
+  // Load face-api models for facial landmarks, age, and gender
   useEffect(() => {
     let mounted = true;
     const loadModels = async () => {
@@ -21,8 +24,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
         const MODEL_URL = '/models';
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
         ]);
         if (mounted) {
           setModelsLoaded(true);
@@ -255,6 +258,7 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
        alert('Please upload a valid image file');
        return;
     }
+    setRawFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreview(e.target.result);
@@ -271,40 +275,79 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
       return;
     }
     setAnalyzing(true);
-    setAnalysisProgress('Loading image...');
+    setAnalysisError('');
+
     try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
+      // STEP 1: Load original image
+      setAnalysisProgress('Analyzing face...');
+      const originalImg = new Image();
+      originalImg.crossOrigin = 'anonymous';
       await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = image;
+        originalImg.onload = resolve;
+        originalImg.onerror = reject;
+        originalImg.src = image;
       });
-      setAnalysisProgress('Detecting face...');
-      let faceLandmarks = null, age = null, sex = '', ageGroup = '';
-      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks().withAgeAndGender();
+
+      // STEP 2: Face detection (face shape, skin tone landmarks)
+      let faceLandmarks = null;
+      const detection = await faceapi.detectSingleFace(originalImg, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks();
       if (detection) {
         faceLandmarks = detection.landmarks;
-        age = Math.round(detection.age);
-        if (age >= 6 && age <= 9) ageGroup = '6–9 Years';
-        else if (age >= 10 && age <= 12) ageGroup = '10–12 Years';
-        else if (age >= 13 && age <= 17) ageGroup = '13–17 Years';
-        else if (age >= 18 && age <= 29) ageGroup = '18–29 Years';
-        else if (age >= 30 && age <= 59) ageGroup = '30–59 Years';
-        else if (age >= 60) ageGroup = '60+ Years';
-        sex = detection.gender === 'female' ? 'Female' : 'Male';
       }
-      setAnalysisProgress('Analyzing attributes...');
-      const [skinTone, bodyType, faceShape] = await Promise.all([
-        analyzeSkinTone(img, faceLandmarks), 
-        analyzeBodyType(img, faceLandmarks), 
-        analyzeFaceShape(img, faceLandmarks)
-      ]);
-      onAnalysisComplete({ skinTone, bodyType, faceShape, ageGroup, sex, age: age ?? '', confidence: age && sex ? 'High' : 'Medium' });
+
+      // STEP 3: Pose detection on original image
+      setAnalysisProgress('Detecting body shape...');
+      const poseLandmarker = await loadPoseModel();
+      const poseResults = poseLandmarker.detect(originalImg);
+      let bodyType = 'Rectangle';
+
+      const skinTone = await analyzeSkinTone(originalImg, faceLandmarks);
+      const faceShape = await analyzeFaceShape(originalImg, faceLandmarks);
+
+      // STEP 4: Body type classification
+      if (poseResults?.landmarks?.length > 0) {
+        const landmarks = poseResults.landmarks[0];
+        const lShoulder = landmarks[11];
+        const rShoulder = landmarks[12];
+        const lHip = landmarks[23];
+        const rHip = landmarks[24];
+        
+        // Shoulder & hip width from POSE LANDMARK X-coordinates.
+        // These are at the actual skeleton joints — immune to arm position.
+        const shoulderWidth = Math.abs(lShoulder.x - rShoulder.x);
+        const hipWidth = Math.abs(lHip.x - rHip.x);
+        
+        // For waist: scan the original image using center-outward technique.
+        // No bg removal needed — we scan from the body center (known from pose)
+        // outward and find the edges where color changes significantly.
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = originalImg.width;
+        canvas.height = originalImg.height;
+        ctx.drawImage(originalImg, 0, 0);
+        
+        const waistWidth = scanWaistWidth(ctx, canvas.width, canvas.height, landmarks);
+        
+        // Sanity check: if scanned waist seems unreasonable, fall back to estimation
+        let finalWaist = waistWidth;
+        if (waistWidth <= 0 || waistWidth > Math.max(shoulderWidth, hipWidth) * 1.15) {
+          const avgWidth = (shoulderWidth + hipWidth) / 2;
+          finalWaist = avgWidth * 0.72;
+          console.log(`[BodyShape] waist scan unreliable (${waistWidth.toFixed(4)}), using estimate: ${finalWaist.toFixed(4)}`);
+        }
+        
+        console.log(`[BodyShape] shoulder=${shoulderWidth.toFixed(4)}, waist=${finalWaist.toFixed(4)}, hip=${hipWidth.toFixed(4)}`);
+        bodyType = classifyBodyShape(shoulderWidth, finalWaist, hipWidth);
+      } else {
+        console.warn('Pose estimation failed, running face-api anchor fallback.');
+        bodyType = await analyzeBodyType(originalImg, faceLandmarks);
+      }
+
+      onAnalysisComplete({ skinTone, bodyType, faceShape, confidence: poseResults?.landmarks?.length > 0 ? 'High' : 'Medium' });
     } catch (error) {
       console.error('Analysis error:', error);
       setAnalysisError('Analysis failed. Please try again.');
-      onAnalysisComplete({ skinTone: 'Neutral', bodyType: 'Rectangle', faceShape: 'Oval', ageGroup: '', sex: '', age: '', confidence: 'Low' });
+      onAnalysisComplete({ skinTone: 'Neutral', bodyType: 'Rectangle', faceShape: 'Oval', confidence: 'Low' });
     } finally {
       setAnalyzing(false);
       setAnalysisProgress('');
@@ -313,9 +356,9 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] sm:p-4 animate-in fade-in duration-200">
-      <div className={`bg-white sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${showGuidelines && !preview ? 'max-w-4xl' : 'max-w-2xl'} w-full sm:h-auto h-full max-h-full sm:max-h-[95vh] overflow-y-auto border border-primary/5 relative transition-all duration-300`}>
-        <div className="p-4 sm:p-10 pb-12 sm:pb-10">
-          <div className="flex justify-between items-center mb-6 leading-none sticky top-0 bg-white z-20 py-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className={`bg-white sm:rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full sm:h-auto h-full max-h-full sm:max-h-[95vh] overflow-y-auto overscroll-contain border border-primary/5 relative transition-all duration-300`} style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
+        <div className={preview ? 'px-4 pt-4 pb-8 sm:px-8 sm:pt-8 sm:pb-8 pb-[env(safe-area-inset-bottom,24px)]' : 'p-4 sm:p-10 pb-16 sm:pb-10 pb-[env(safe-area-inset-bottom,24px)]'}>
+          <div className={`flex justify-between items-center mb-6 leading-none sticky top-0 bg-white/95 backdrop-blur-md z-20 py-4 border-b border-transparent [&:not(:first-child)]:border-gray-100/60 ${preview ? '-mx-4 px-4 sm:-mx-8 sm:px-8' : '-mx-4 px-4 sm:mx-0 sm:px-0'}`}>
             <div className="pr-4">
               <h2 className="text-xl sm:text-3xl font-black text-primary tracking-tight">AI Profiler</h2>
               <div className="h-1 w-8 sm:w-12 bg-secondary mt-1.5 rounded-full"></div>
@@ -401,8 +444,8 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
             </div>
           ) : (
             <div className="animate-in fade-in duration-200">
-              <p className="text-xs sm:text-sm text-gray-500 font-medium mb-6 sm:mb-8 text-center sm:text-left">Upload a <span className="font-bold text-primary">full-body photo</span> to get tailored recommendations.</p>
-              {analysisError && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3"><p className="text-[11px] font-black text-red-800 uppercase tracking-widest">{analysisError}</p></div>}
+              <p className="text-xs sm:text-sm text-gray-500 font-medium mb-4 sm:mb-5 text-center sm:text-left">Upload a <span className="font-bold text-primary">full-body photo</span> to get tailored recommendations.</p>
+              {analysisError && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3"><p className="text-[11px] font-black text-red-800 uppercase tracking-widest">{analysisError}</p></div>}
               {!preview ? (
                 <div className="border-2 border-dashed border-primary/20 bg-primary/5 rounded-[32px] p-8 sm:p-20 text-center group hover:bg-primary/10 hover:border-primary/40 transition-all cursor-pointer relative" onClick={() => fileInputRef.current?.click()}>
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
@@ -413,12 +456,16 @@ const ImageAnalysis = ({ onAnalysisComplete, onClose }) => {
                   <button className="bg-primary text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">Choose Photo</button>
                 </div>
               ) : (
-                <div className="space-y-6 text-center">
-                  <div className="bg-gray-50 rounded-[32px] p-2 border border-gray-100 shadow-inner overflow-hidden max-h-[50vh] sm:max-h-[60vh]">
-                    <img src={preview} alt="Preview" className="w-full h-full object-contain mx-auto rounded-[24px]" />
+                <div className="space-y-4 sm:space-y-5">
+                  <div className="-mx-4 sm:-mx-8 overflow-hidden rounded-[20px] sm:rounded-[28px] border border-gray-100 bg-gray-50/40">
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-full max-h-[min(55vh,calc(95vh-260px))] object-contain object-center block mx-auto"
+                    />
                   </div>
                   {analyzing && <div className="bg-blue-50 border border-blue-200 rounded-3xl p-5 flex items-center justify-center gap-4 animate-pulse"><div className="animate-spin h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full"></div><span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-800">{analysisProgress}</span></div>}
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-1">
                     <button onClick={analyzeImage} disabled={analyzing || !modelsLoaded || !image} className="flex-1 bg-primary text-white px-8 py-5 rounded-full hover:bg-primary-dull transition-all disabled:opacity-50 text-xs font-black uppercase tracking-[0.2em] shadow-[0_15px_30px_rgba(22,43,105,0.2)]">{analyzing ? 'Analyzing Profile...' : 'Start AI Analysis'}</button>
                     <button onClick={() => { setPreview(null); setImage(null); setResults(null); }} disabled={analyzing} className="px-8 py-5 bg-white text-gray-600 border-2 border-gray-200 rounded-full hover:bg-gray-50 text-xs font-black uppercase tracking-[0.2em]">Change</button>
                   </div>

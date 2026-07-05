@@ -413,7 +413,32 @@ export const getRecommendations = async (req, res) => {
             allGowns = allGowns.filter(g => g.ageGroup.map(a => a.toLowerCase()).includes(selectedAgeGroup.toLowerCase()));
         }
         if (sex) {
-            allGowns = allGowns.filter(g => g.sex.toLowerCase() === sex.toLowerCase() || g.sex.toLowerCase() === 'unisex');
+            const selectedSex = sex.toLowerCase().trim();
+            allGowns = allGowns.filter(g => {
+                let gownSex = (g.sex || '').toLowerCase().trim();
+
+                // If sex is untagged, infer from name keywords
+                if (gownSex === '') {
+                    const nameLower = (g.name || '').toLowerCase();
+                    const maleKW = ['barong', 'tuxedo', 'suit', 'blazer', 'vest', 'polo', 'necktie', 'bowtie', 'groomsmen', 'groom'];
+                    const femaleKW = ['gown', 'dress', 'ball gown', 'bridesmaid', 'bridal', 'corset', 'tiara', 'veil'];
+                    if (maleKW.some(kw => nameLower.includes(kw))) {
+                        gownSex = 'male';
+                    } else if (femaleKW.some(kw => nameLower.includes(kw))) {
+                        gownSex = 'female';
+                    }
+                    // If still untagged after keyword check, skip entirely
+                    if (gownSex === '') return false;
+                }
+
+                if (selectedSex === 'male') {
+                    return gownSex === 'male' || gownSex === 'unisex';
+                } else if (selectedSex === 'female') {
+                    return gownSex === 'female' || gownSex === 'unisex';
+                } else {
+                    return gownSex === selectedSex || gownSex === 'unisex';
+                }
+            });
         }
 
         // [LOGIC] Strict Body Type Alignment (Fabric & Color)
@@ -424,7 +449,7 @@ export const getRecommendations = async (req, res) => {
                 const styleScore = calculateRecommendationScore(gown, { bodyType });
                 // If the gown doesn't match the recommended color family OR fabric for this body type, 
                 // it won't meet the score threshold of 25 (10 color + 10 fabric + 5 base)
-                return styleScore >= 15; // At least base + one major attribute (color or fabric)
+                return styleScore >= 10; // At least base + partial match
             });
         }
 

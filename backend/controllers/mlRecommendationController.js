@@ -13,7 +13,7 @@ import Gown from '../models/Gown.js';
 export const getMLRecommendations = async (req, res) => {
     try {
         const userId = req.user?._id?.toString(); // Optional: works for both logged-in and guest users
-        const { bodyType, skinTone, height, eventType, faceShape } = req.query;
+        const { bodyType, skinTone, height, eventType, faceShape, ageGroup, age, sex } = req.query;
 
         // Build preferences object
         const preferences = {
@@ -21,7 +21,9 @@ export const getMLRecommendations = async (req, res) => {
             skinTone,
             height,
             eventType,
-            faceShape
+            faceShape,
+            ageGroup: ageGroup || age,
+            sex
         };
 
         // Get ML-powered recommendations

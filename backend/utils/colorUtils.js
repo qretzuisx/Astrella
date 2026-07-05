@@ -73,7 +73,7 @@ const COLOR_MAP = {
     
     // [LOGIC] NEUTRALS
     'white': { family: 'neutral', warmth: 'Neutral', hex: '#FFFFFF' },
-    'ivory': { family: 'neutral', warmth: 'Warm', hex: '#FFFFF0' },
+    'ivory': { type: 'neutral', family: 'neutral', warmth: 'Warm', hex: '#FFFFF0' },
     'cream': { family: 'neutral', warmth: 'Warm', hex: '#FFFDD0' },
     'beige': { family: 'neutral', warmth: 'Warm', hex: '#F5F5DC' },
     'black': { family: 'neutral', warmth: 'Neutral', hex: '#000000' },
@@ -82,7 +82,19 @@ const COLOR_MAP = {
     'silver': { family: 'neutral', warmth: 'Cool', hex: '#C0C0C0' },
     'charcoal': { family: 'neutral', warmth: 'Neutral', hex: '#36454F' },
     'nude': { family: 'neutral', warmth: 'Warm', hex: '#E3BC9A' },
-    'champagne': { family: 'neutral', warmth: 'Warm', hex: '#F7E7CE' }
+    'champagne': { family: 'neutral', warmth: 'Warm', hex: '#F7E7CE' },
+    
+    // [LOGIC] COMPLEX/POPULAR REGIONAL COLORS
+    'rosegold': { family: 'pink', warmth: 'Warm', hex: '#B76E79' },
+    'rose gold': { family: 'pink', warmth: 'Warm', hex: '#B76E79' },
+    'dusty rose': { family: 'pink', warmth: 'Cool', hex: '#DCAE96' },
+    'powder blue': { family: 'blue', warmth: 'Cool', hex: '#B0E0E6' },
+    'baby pink': { family: 'pink', warmth: 'Cool', hex: '#F4C2C2' },
+    'midnight blue': { family: 'blue', warmth: 'Cool', hex: '#191970' },
+    'off-white': { family: 'neutral', warmth: 'Neutral', hex: '#F8F8FF' },
+    'off white': { family: 'neutral', warmth: 'Neutral', hex: '#F8F8FF' },
+    'mocha': { family: 'brown', warmth: 'Warm', hex: '#967969' },
+    'taupe': { family: 'brown', warmth: 'Warm', hex: '#483C32' }
 };
 
 /** 

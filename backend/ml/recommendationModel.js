@@ -328,8 +328,29 @@ class HybridRecommendationModel {
             // STRICT SEX FILTERING
             if (preferences.sex) {
                 const selectedSex = preferences.sex.toLowerCase().trim();
-                const gownSex = (gown.sex || '').toLowerCase().trim();
-                if (gownSex !== selectedSex && gownSex !== 'unisex') continue;
+                let gownSex = (gown.sex || '').toLowerCase().trim();
+
+                // If sex is untagged, infer from name keywords
+                if (gownSex === '') {
+                    const nameLower = (gown.name || '').toLowerCase();
+                    const maleKW = ['barong', 'tuxedo', 'suit', 'blazer', 'vest', 'polo', 'necktie', 'bowtie', 'groomsmen', 'groom'];
+                    const femaleKW = ['gown', 'dress', 'ball gown', 'bridesmaid', 'bridal', 'corset', 'tiara', 'veil'];
+                    if (maleKW.some(kw => nameLower.includes(kw))) {
+                        gownSex = 'male';
+                    } else if (femaleKW.some(kw => nameLower.includes(kw))) {
+                        gownSex = 'female';
+                    }
+                    // If still untagged after keyword check, skip entirely
+                    if (gownSex === '') continue;
+                }
+
+                if (selectedSex === 'male') {
+                    if (gownSex !== 'male' && gownSex !== 'unisex') continue;
+                } else if (selectedSex === 'female') {
+                    if (gownSex !== 'female' && gownSex !== 'unisex') continue;
+                } else {
+                    if (gownSex !== selectedSex && gownSex !== 'unisex') continue;
+                }
             }
 
             // STRICT BODY TYPE ALIGNMENT (Optional: if the library is large enough)
