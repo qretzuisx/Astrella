@@ -74,10 +74,8 @@ const faceShapeNecklines = {
     'Round': ['v-neck', 'sweetheart', 'queen anne', 'empire', 'scoop', 'cowl'],
     'Square': ['v-neck', 'sweetheart', 'scoop', 'cowl', 'halter'],
     'Heart': ['sweetheart', 'off-the-shoulder', 'v-neck', 'empire', 'scoop'],
-    'Long': ['boat neck', 'off-the-shoulder', 'high neck', 'square', 'cowl'],
-    'Triangle': ['scoop', 'sweetheart', 'halter', 'v-neck', 'off-the-shoulder'],
-    'Diamond': ['v-neck', 'sweetheart', 'scoop', 'cowl', 'halter'],
-    'Rectangle': ['scoop', 'sweetheart', 'v-neck', 'cowl']
+    'Oblong': ['boat neck', 'off-the-shoulder', 'high neck', 'square', 'cowl'],
+    'Diamond': ['v-neck', 'sweetheart', 'scoop', 'cowl', 'halter']
 };
 
 // [SECTION] SCORE CALCULATION ENGINE

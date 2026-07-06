@@ -36,7 +36,7 @@ import star_green from "./star-green.svg"
 export const eventTypeList = ['Wedding', 'Traditional', 'Prom', 'Formal', 'Themed']
 export const bodyTypeList = ['Hourglass', 'Pear', 'Rectangle', 'Diamond', 'Inverted Triangle', 'Trapezoid', 'Oval']
 export const skinToneList = ['Warm', 'Cool', 'Neutral']
-export const faceShapeList = ['Oval', 'Square', 'Round', 'Heart', 'Diamond', 'Long', 'Triangle', 'Rectangle']
+export const faceShapeList = ['Oval', 'Square', 'Round', 'Heart', 'Diamond', 'Long']
 
 export const assets = {
     logo,

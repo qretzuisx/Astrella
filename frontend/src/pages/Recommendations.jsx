@@ -40,7 +40,10 @@ const Recommendations = () => {
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const response = await fetch(`${API_URL}/ml/recommendations?${params.toString()}`, { headers });
+        const response = await fetch(`${API_URL}/ml/recommendations?${params.toString()}`, {
+          headers,
+          cache: 'no-store', // always fetch fresh — prevents browser from serving stale cached results
+        });
         const data = await response.json();
 
         if (data.success) {

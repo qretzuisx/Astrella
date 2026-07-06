@@ -99,9 +99,10 @@ const Hero = () => {
   }, []);
 
   const handleImageAnalysisComplete = (results) => {
-    setSkinTone(results.skinTone || 'Neutral');
-    setBodyType(results.bodyType || 'Rectangle');
-    setFaceShape(results.faceShape || 'Oval');
+    if (results.skinTone) setSkinTone(results.skinTone);
+    if (results.bodyType) setBodyType(results.bodyType);
+    if (results.faceShape) setFaceShape(results.faceShape);
+    if (results.sex) setSex(results.sex);
 
     setShowImageAnalysis(false);
     setValidationError('');
@@ -256,9 +257,7 @@ const Hero = () => {
                 'Round': 'M12 2C6 2 4 6 4 12C4 18 6 22 12 22C18 22 20 18 20 12C20 6 18 2 12 2Z',
                 'Heart': 'M12 21L10.55 19.7C5.4 15.05 2 12 2 8.5C2 5.5 4.5 3 7.5 3C9.25 3 10.9 3.8 12 5.1C13.1 3.8 14.75 3 16.5 3C19.5 3 22 5.5 22 8.5C22 12 18.6 15.05 13.45 19.7L12 21Z',
                 'Diamond': 'M12 2L4 12L12 22L20 12L12 2Z',
-                'Long': 'M12 2C8 2 5 6 5 12C5 18 8 22 12 22C16 22 19 18 19 12C19 6 16 2 12 2Z',
-                'Triangle': 'M12 2L4 22H20L12 2Z',
-                'Rectangle': 'M6 4H18V20H6V4Z'
+                'Oblong': 'M12 2C8 2 5 6 5 12C5 18 8 22 12 22C16 22 19 18 19 12C19 6 16 2 12 2Z'
               }}
             />
 
@@ -498,6 +497,7 @@ const Hero = () => {
 
       {showImageAnalysis && (
         <ImageAnalysis
+          sex={sex}
           onAnalysisComplete={handleImageAnalysisComplete}
           onClose={() => setShowImageAnalysis(false)}
         />

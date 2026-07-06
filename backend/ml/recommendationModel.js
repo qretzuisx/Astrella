@@ -292,29 +292,52 @@ class HybridRecommendationModel {
         const allGowns = await Gown.find({ available: true })
             .populate('owner', 'name shopProfile');
 
+        // --- BATCH PRE-FETCH: avoid N+1 queries inside the loop ---
+
+        // 1. Fetch all gown IDs that this user has already booked (single query)
+        const bookedGownIds = new Set();
+        if (userId) {
+            const userBookings = await Booking.find({
+                user: userId,
+                status: { $in: ['pending', 'confirmed', 'completed'] }
+            }).select('gown').lean();
+            for (const b of userBookings) {
+                bookedGownIds.add(b.gown.toString());
+            }
+        }
+
+        // 2. Fetch booking counts for all gowns at once (single aggregation)
+        const popularityMap = new Map();
+        const popularityAgg = await Booking.aggregate([
+            { $match: { status: { $in: ['confirmed', 'completed'] } } },
+            { $group: { _id: '$gown', count: { $sum: 1 } } }
+        ]);
+        for (const entry of popularityAgg) {
+            // Normalize to 0-100 scale (assume max 50 bookings = 100 score)
+            popularityMap.set(entry._id.toString(), Math.min(100, (entry.count / 50) * 100));
+        }
+        // -----------------------------------------------------------
+
+        const hasHistory = this.collaborativeModel.userItemMatrix.has(userId);
         const scoredGowns = [];
 
         for (const gown of allGowns) {
             const gownId = gown._id.toString();
 
-            // Skip gowns the user has already booked
-            const alreadyBooked = await this.hasUserBookedGown(userId, gownId);
-            if (alreadyBooked) continue;
+            // Skip gowns the user has already booked (in-memory Set lookup)
+            if (bookedGownIds.has(gownId)) continue;
 
-            // STRICT EVENT TYPE FILTERING: Skip gowns that don't match the selected event type
+            // STRICT EVENT TYPE FILTERING
             if (preferences.eventType) {
                 const userEventType = preferences.eventType.toLowerCase().trim();
                 let matchesEventType = false;
 
                 if (Array.isArray(gown.eventType)) {
-                    const gownEventTypes = gown.eventType.map(e => e.toLowerCase().trim());
-                    matchesEventType = gownEventTypes.includes(userEventType);
+                    matchesEventType = gown.eventType.some(e => e.toLowerCase().trim() === userEventType);
                 } else if (gown.eventType) {
-                    const gownEventType = gown.eventType.toLowerCase().trim();
-                    matchesEventType = gownEventType === userEventType;
+                    matchesEventType = gown.eventType.toLowerCase().trim() === userEventType;
                 }
 
-                // If event type doesn't match, skip this gown entirely
                 if (!matchesEventType) continue;
             }
 
@@ -330,17 +353,12 @@ class HybridRecommendationModel {
                 const selectedSex = preferences.sex.toLowerCase().trim();
                 let gownSex = (gown.sex || '').toLowerCase().trim();
 
-                // If sex is untagged, infer from name keywords
                 if (gownSex === '') {
                     const nameLower = (gown.name || '').toLowerCase();
                     const maleKW = ['barong', 'tuxedo', 'suit', 'blazer', 'vest', 'polo', 'necktie', 'bowtie', 'groomsmen', 'groom'];
                     const femaleKW = ['gown', 'dress', 'ball gown', 'bridesmaid', 'bridal', 'corset', 'tiara', 'veil'];
-                    if (maleKW.some(kw => nameLower.includes(kw))) {
-                        gownSex = 'male';
-                    } else if (femaleKW.some(kw => nameLower.includes(kw))) {
-                        gownSex = 'female';
-                    }
-                    // If still untagged after keyword check, skip entirely
+                    if (maleKW.some(kw => nameLower.includes(kw))) gownSex = 'male';
+                    else if (femaleKW.some(kw => nameLower.includes(kw))) gownSex = 'female';
                     if (gownSex === '') continue;
                 }
 
@@ -353,33 +371,25 @@ class HybridRecommendationModel {
                 }
             }
 
-            // STRICT BODY TYPE ALIGNMENT (Optional: if the library is large enough)
-            if (preferences.bodyType) {
-                const cbScoreTemp = ContentBasedModel.calculateScore(gown, { bodyType: preferences.bodyType });
-                if (cbScoreTemp < 15) continue; // Must align with at least one major stylistic attribute
-            }
-
-            // 1. Collaborative Filtering Score (0-5 scale)
-            const cfScore = this.collaborativeModel.predictScore(userId, gownId);
-
-            // 2. Content-Based Score (0-100 scale)
+            // 1. Content-Based Score (0-100 scale)
+            // Compute once — also used for body-type pre-filter
             const cbScore = ContentBasedModel.calculateScore(gown, preferences);
 
-            // 3. Popularity Score (based on total bookings)
-            const popularityScore = await this.getPopularityScore(gownId);
+            // STRICT BODY TYPE ALIGNMENT pre-filter (uses already-computed cbScore)
+            if (preferences.bodyType && cbScore < 15) continue;
+
+            // 2. Collaborative Filtering Score (0-5 scale)
+            const cfScore = this.collaborativeModel.predictScore(userId, gownId);
+
+            // 3. Popularity Score (in-memory Map lookup, no DB call)
+            const popularityScore = popularityMap.get(gownId) || 0;
 
             // Hybrid Score: Weighted combination
-            // If user has history: 50% CF, 40% CB, 10% Popularity
-            // If new user (no CF): 0% CF, 80% CB, 20% Popularity
-            const hasHistory = this.collaborativeModel.userItemMatrix.has(userId);
-            
             let finalScore;
             if (hasHistory && cfScore > 0) {
-                // Normalize CF score to 0-100 scale (assuming max CF score is 5)
                 const normalizedCF = (cfScore / 5) * 100;
                 finalScore = (normalizedCF * 0.5) + (cbScore * 0.4) + (popularityScore * 0.1);
             } else {
-                // New user: rely more on content and popularity
                 finalScore = (cbScore * 0.8) + (popularityScore * 0.2);
             }
 
@@ -400,26 +410,16 @@ class HybridRecommendationModel {
         return scoredGowns.slice(0, limit);
     }
 
+    // hasUserBookedGown and getPopularityScore are now batch-fetched upfront
+    // in getRecommendations. Kept as helpers for getSimilarUserRecommendations.
     async hasUserBookedGown(userId, gownId) {
         if (!userId) return false;
-        
         const booking = await Booking.findOne({
             user: userId,
             gown: gownId,
             status: { $in: ['pending', 'confirmed', 'completed'] }
-        });
-        
+        }).select('_id').lean();
         return !!booking;
-    }
-
-    async getPopularityScore(gownId) {
-        const bookingCount = await Booking.countDocuments({
-            gown: gownId,
-            status: { $in: ['confirmed', 'completed'] }
-        });
-
-        // Normalize to 0-100 scale (assume max 50 bookings = 100 score)
-        return Math.min(100, (bookingCount / 50) * 100);
     }
 
     getMatchReason(score, hasHistory) {
