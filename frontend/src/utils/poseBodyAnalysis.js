@@ -35,21 +35,21 @@ export const scanTorsoWidthAt = (ctx, canvasWidth, canvasHeight, landmarks, pct)
 
   const lShoulder = landmarks[11];
   const rShoulder = landmarks[12];
-  const lHip      = landmarks[23];
-  const rHip      = landmarks[24];
+  const lHip = landmarks[23];
+  const rHip = landmarks[24];
 
   if (!lShoulder || !rShoulder || !lHip || !rHip) return 0;
 
   const shoulderY = (normalizeCoord(lShoulder.y, canvasHeight) + normalizeCoord(rShoulder.y, canvasHeight)) / 2;
-  const hipY      = (normalizeCoord(lHip.y, canvasHeight) + normalizeCoord(rHip.y, canvasHeight)) / 2;
+  const hipY = (normalizeCoord(lHip.y, canvasHeight) + normalizeCoord(rHip.y, canvasHeight)) / 2;
 
   const y = Math.floor(shoulderY + (hipY - shoulderY) * pct);
   if (y < 0 || y >= canvasHeight) return 0;
 
   // Center X at this height
   const shoulderCenterX = (normalizeCoord(lShoulder.x, canvasWidth) + normalizeCoord(rShoulder.x, canvasWidth)) / 2;
-  const hipCenterX      = (normalizeCoord(lHip.x, canvasWidth) + normalizeCoord(rHip.x, canvasWidth)) / 2;
-  const centerX         = Math.floor(shoulderCenterX + (hipCenterX - shoulderCenterX) * pct);
+  const hipCenterX = (normalizeCoord(lHip.x, canvasWidth) + normalizeCoord(rHip.x, canvasWidth)) / 2;
+  const centerX = Math.floor(shoulderCenterX + (hipCenterX - shoulderCenterX) * pct);
 
   const rowData = ctx.getImageData(0, y, canvasWidth, 1).data;
 
@@ -76,7 +76,7 @@ export const scanTorsoWidthAt = (ctx, canvasWidth, canvasHeight, landmarks, pct)
   let bgRun = 0;
   for (let x = centerX - 1; x >= 0; x--) {
     const dist = Math.sqrt(
-      (rowData[x * 4]     - bodyR) ** 2 +
+      (rowData[x * 4] - bodyR) ** 2 +
       (rowData[x * 4 + 1] - bodyG) ** 2 +
       (rowData[x * 4 + 2] - bodyB) ** 2
     );
@@ -89,7 +89,7 @@ export const scanTorsoWidthAt = (ctx, canvasWidth, canvasHeight, landmarks, pct)
   bgRun = 0;
   for (let x = centerX + 1; x < canvasWidth; x++) {
     const dist = Math.sqrt(
-      (rowData[x * 4]     - bodyR) ** 2 +
+      (rowData[x * 4] - bodyR) ** 2 +
       (rowData[x * 4 + 1] - bodyG) ** 2 +
       (rowData[x * 4 + 2] - bodyB) ** 2
     );
@@ -109,7 +109,7 @@ export const scanTorsoWidthAt = (ctx, canvasWidth, canvasHeight, landmarks, pct)
  */
 export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex = 'Female') => {
   const notes = [];
-  
+
   if (!landmarks || landmarks.length === 0) {
     return {
       success: false,
@@ -125,31 +125,31 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
 
   const lShoulder = landmarks[11];
   const rShoulder = landmarks[12];
-  const lHip      = landmarks[23];
-  const rHip      = landmarks[24];
-  const lAnkle    = landmarks[27];
-  const rAnkle    = landmarks[28];
-  const lWrist    = landmarks[15];
-  const rWrist    = landmarks[16];
-  const nose      = landmarks[0];
+  const lHip = landmarks[23];
+  const rHip = landmarks[24];
+  const lAnkle = landmarks[27];
+  const rAnkle = landmarks[28];
+  const lWrist = landmarks[15];
+  const rWrist = landmarks[16];
+  const nose = landmarks[0];
 
   const normalizeCoord = (value, max) => (value > 2 ? value : value * max);
 
   // Convert landmarks to pixel space for absolute ratios
-  const noseY      = nose ? normalizeCoord(nose.y, canvasHeight) : null;
-  const shoulderY  = (normalizeCoord(lShoulder.y, canvasHeight) + normalizeCoord(rShoulder.y, canvasHeight)) / 2;
-  const hipY       = (normalizeCoord(lHip.y, canvasHeight) + normalizeCoord(rHip.y, canvasHeight)) / 2;
-  const ankleY     = (normalizeCoord(lAnkle.y, canvasHeight) + normalizeCoord(rAnkle.y, canvasHeight)) / 2;
+  const noseY = nose ? normalizeCoord(nose.y, canvasHeight) : null;
+  const shoulderY = (normalizeCoord(lShoulder.y, canvasHeight) + normalizeCoord(rShoulder.y, canvasHeight)) / 2;
+  const hipY = (normalizeCoord(lHip.y, canvasHeight) + normalizeCoord(rHip.y, canvasHeight)) / 2;
+  const ankleY = (normalizeCoord(lAnkle.y, canvasHeight) + normalizeCoord(rAnkle.y, canvasHeight)) / 2;
 
   const shoulderX1 = normalizeCoord(lShoulder.x, canvasWidth);
   const shoulderX2 = normalizeCoord(rShoulder.x, canvasWidth);
-  const hipX1      = normalizeCoord(lHip.x, canvasWidth);
-  const hipX2      = normalizeCoord(rHip.x, canvasWidth);
+  const hipX1 = normalizeCoord(lHip.x, canvasWidth);
+  const hipX2 = normalizeCoord(rHip.x, canvasWidth);
 
   // ── PREVENT HALLUCINATIONS: Validate pose quality ────────────────────────
   const keyJoints = [lShoulder, rShoulder, lHip, rHip, lAnkle, rAnkle];
   const lowVisibility = keyJoints.some(joint => !joint || (joint.visibility !== undefined && joint.visibility < 0.50));
-  
+
   if (lowVisibility) {
     console.warn('[BodyShape] Pose quality low: Cropped joints detected.');
     return {
@@ -172,7 +172,7 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
   const rWristY = normalizeCoord(rWrist.y, canvasHeight);
   const lWristX = normalizeCoord(lWrist.x, canvasWidth);
   const rWristX = normalizeCoord(rWrist.x, canvasWidth);
-  const isLeftWristCovering  = lWrist && lWristY > shoulderY && lWristY < hipY && Math.abs(lWristX - centerX) < (shoulderWidth * 0.42);
+  const isLeftWristCovering = lWrist && lWristY > shoulderY && lWristY < hipY && Math.abs(lWristX - centerX) < (shoulderWidth * 0.42);
   const isRightWristCovering = rWrist && rWristY > shoulderY && rWristY < hipY && Math.abs(rWristX - centerX) < (shoulderWidth * 0.42);
 
   if (isLeftWristCovering || isRightWristCovering) {
@@ -191,7 +191,7 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
 
   // 3. Angled pose check
   const shoulderDepthDiff = Math.abs(lShoulder.z - rShoulder.z);
-  const hipDepthDiff      = Math.abs(lHip.z - rHip.z);
+  const hipDepthDiff = Math.abs(lHip.z - rHip.z);
   if (shoulderDepthDiff > 0.15 || hipDepthDiff > 0.15) {
     console.warn('[BodyShape] Pose quality low: Angled pose.');
     return {
@@ -212,14 +212,14 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
 
   // ── ESTIMATE MEASUREMENTS IN PIXELS ────────────────────────────────────────
   const isMale = sex?.toLowerCase() === 'male';
-  
+
   const totalHeightPx = ankleY - (noseY !== null ? noseY : shoulderY - 0.15 * canvasHeight);
-  
+
   // Scale factor: real-world height reference 66 inches (168 cm) / height in pixels
   const scaleInches = 66 / Math.max(totalHeightPx, 1.0);
 
   // Widths in pixels
-  const hipWidthRaw   = Math.abs(hipX1 - hipX2);
+  const hipWidthRaw = Math.abs(hipX1 - hipX2);
 
   // Scans in pixels
   const chestScan1 = scanTorsoWidthAt(ctx, canvasWidth, canvasHeight, landmarks, 0.18);
@@ -256,19 +256,19 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
 
   // Calculate Flat widths in inches
   const shoulderFlat = shoulderWidth * scaleInches;
-  const chestFlat    = chestWidth * scaleInches;
-  const waistFlat    = waistWidth * scaleInches;
-  const hipFlat      = hipWidth * scaleInches;
+  const chestFlat = chestWidth * scaleInches;
+  const waistFlat = waistWidth * scaleInches;
+  const hipFlat = hipWidth * scaleInches;
 
   // Convert to circumferences using ellipse multiplier (2.3)
   const shoulders = Math.round(shoulderFlat * 2.3);
-  const chest     = Math.round(chestFlat * 2.3);
-  const waist     = Math.round(waistFlat * 2.3);
-  const hips      = Math.round(hipFlat * 2.3);
+  const chest = Math.round(chestFlat * 2.3);
+  const waist = Math.round(waistFlat * 2.3);
+  const hips = Math.round(hipFlat * 2.3);
 
   // Lengths in inches
   const torsoLength = Math.round((hipY - shoulderY) * scaleInches);
-  const legLength   = Math.round((ankleY - hipY) * scaleInches);
+  const legLength = Math.round((ankleY - hipY) * scaleInches);
 
   // Proportions
   const legToTorso = legLength / Math.max(torsoLength, 1);
@@ -283,8 +283,8 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
 
   // Ratios
   const waistToShoulder = waist / shoulders;
-  const waistToHip      = waist / hips;
-  const shoulderToHip   = shoulders / hips;
+  const waistToHip = waist / hips;
+  const shoulderToHip = shoulders / hips;
 
   if (isMale) {
     // ── MALE CLASSIFICATION ──────────────────────────────────────────────────
@@ -309,13 +309,13 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
       predictedType = 'Oval';
     } else if (waist > shoulders * 0.90 && waist > hips * 0.90) {
       predictedType = 'Diamond';
-    } else if (shoulderToHip >= 0.93 && shoulderToHip <= 1.07 && waistToShoulder <= 0.78 && waistToHip <= 0.78) {
+    } else if (shoulderToHip >= 0.90 && shoulderToHip <= 1.10 && waistToShoulder <= 0.83 && waistToHip <= 0.83) {
       predictedType = 'Hourglass';
-    } else if (hips >= shoulders * 1.02 && waistToHip <= 0.84) {
+    } else if (hips >= shoulders * 1.05 && waistToHip <= 0.85) {
       predictedType = 'Pear';
-    } else if (shoulders >= hips * 1.05 && waistToShoulder <= 0.84) {
+    } else if (shoulders >= hips * 1.05 && waistToShoulder <= 0.85) {
       predictedType = 'Inverted Triangle';
-    } else if (shoulderToHip >= 0.93 && shoulderToHip <= 1.07 && waistToShoulder > 0.78 && waistToHip > 0.78) {
+    } else if (shoulderToHip >= 0.90 && shoulderToHip <= 1.10 && waistToShoulder > 0.83 && waistToHip > 0.83) {
       predictedType = 'Rectangle';
     } else {
       if (hips > shoulders) predictedType = 'Pear';
@@ -328,7 +328,7 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
   let validatedType = predictedType;
 
   if (validatedType === 'Hourglass') {
-    if (waist > shoulders * 0.78 || waist > hips * 0.78) {
+    if (waist > shoulders * 0.83 || waist > hips * 0.83) {
       notes.push(`Validation: Hourglass prediction rejected because waist (${waist}") is not narrow enough relative to shoulders/hips. Correcting.`);
       validatedType = 'Rectangle';
     }
@@ -354,8 +354,8 @@ export const classifyBodyShape = (ctx, canvasWidth, canvasHeight, landmarks, sex
   // ── CONFIDENCE SCORE ─────────────────────────────────────────────────────
   let matchStrength = 1.0;
   if (validatedType === 'Hourglass') {
-    const waistGap = Math.max(0, 0.78 - Math.max(waistToShoulder, waistToHip));
-    matchStrength = 0.60 + (waistGap / 0.16) * 0.40;
+    const waistGap = Math.max(0, 0.83 - Math.max(waistToShoulder, waistToHip));
+    matchStrength = 0.60 + (waistGap / 0.20) * 0.40;
   } else if (validatedType === 'Oval') {
     const ovalExcess = Math.min(waist / chest, waistToHip) - 0.82;
     matchStrength = 0.65 + Math.min(0.35, Math.max(0, ovalExcess) / 0.15) * 0.35;

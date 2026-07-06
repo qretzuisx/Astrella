@@ -404,7 +404,7 @@ const ImageAnalysis = ({ sex = 'Female', onAnalysisComplete, onClose }) => {
       let shape = 'Oval';
       let matchScore = 0.80;
 
-      if (foreheadToJaw > 1.25 && jawToWidth < 0.80) {
+      if (foreheadToJaw > 1.15 && jawToWidth < 0.85) {
         shape = 'Heart';
         matchScore = 0.88;
       } else if (foreheadToWidth < 0.90 && jawToWidth < 0.80 && foreheadWidth < faceWidth && jawWidth < faceWidth) {
@@ -414,10 +414,10 @@ const ImageAnalysis = ({ sex = 'Female', onAnalysisComplete, onClose }) => {
         shape = 'Oblong';
         matchScore = 0.89;
       } else if (lenToWidth <= 1.34) {
-        if (jawToWidth > 0.90 && foreheadToWidth > 0.90) {
+        if (jawToWidth > 0.80 && foreheadToWidth > 0.80) {
           shape = 'Square';
           matchScore = 0.92;
-        } else if (jawToWidth > 0.80 && foreheadToWidth > 0.80) {
+        } else if (jawToWidth > 0.75 && foreheadToWidth > 0.75) {
           shape = 'Round';
           matchScore = 0.94;
         } else {
