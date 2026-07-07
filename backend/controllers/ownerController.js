@@ -4,7 +4,7 @@ import Gown from "../models/Gown.js";
 import User from "../models/User.js";
 import fs from "fs";
 import { calculateActualGownStatus, batchUpdateGownStatuses } from "./bookingController.js";
-import { combineDateAndTime } from "../utils/dateUtils.js";
+import { combineDateAndTime, toLocalDateString } from "../utils/dateUtils.js";
 
 // [SECTION] OWNER UTILITIES
 const clampLaundryDays = (value) => {
@@ -378,13 +378,12 @@ export const getDashboardData = async (req, res) => {
         const pendingBookings = await Booking.find({ owner: _id, status: 'pending' })
         const completedBookings = await Booking.find({ owner: _id, status: 'completed' })
 
-        // Monthly revenue: count confirmed AND completed bookings from the current month
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        // Monthly revenue: count confirmed AND completed bookings whose event (pickupDate) falls in the current month
+        const currentYearMonth = toLocalDateString(now).substring(0, 7); // e.g. "2026-07"
         const monthlyRevenue = bookings.filter(booking =>
             (booking.status === 'confirmed' || booking.status === 'completed') &&
-            new Date(booking.createdAt) >= monthStart && new Date(booking.createdAt) <= monthEnd
-        ).reduce((acc, booking) => acc + (booking.price || 0), 0)
+            toLocalDateString(booking.pickupDate).startsWith(currentYearMonth)
+        ).reduce((acc, booking) => acc + (booking.price || 0), 0);
 
         const dashboardData = {
             totalGowns: gowns.length,

@@ -103,11 +103,16 @@ const ImageAnalysis = ({ sex = 'Female', onAnalysisComplete, onClose }) => {
   const [showGuidelines, setShowGuidelines] = useState(true);
   const fileInputRef = useRef(null);
 
-  // Sync profile gender within the scanner modal
-  const [scannerSex, setScannerSex] = useState(sex || 'Female');
+  // Sync profile gender within the scanner modal, fall back if parent passes Unisex
+  const getSanitizedSex = (val) => {
+    if (!val || val === 'Unisex') return 'Female';
+    return val;
+  };
+
+  const [scannerSex, setScannerSex] = useState(getSanitizedSex(sex));
 
   useEffect(() => {
-    if (sex) setScannerSex(sex);
+    setScannerSex(getSanitizedSex(sex));
   }, [sex]);
 
   // Ref to track the current analysis session ID to prevent race conditions
@@ -619,8 +624,8 @@ const ImageAnalysis = ({ sex = 'Female', onAnalysisComplete, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] sm:p-4 animate-in fade-in duration-200">
-      <div className={`bg-white sm:rounded-[40px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full border border-primary/5 relative transition-all duration-300`}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] p-4 sm:p-6 animate-in fade-in duration-200">
+      <div className={`bg-white rounded-[24px] sm:rounded-[40px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.2)] ${preview ? 'max-w-2xl' : showGuidelines ? 'max-w-4xl' : 'max-w-2xl'} w-full max-h-[90vh] overflow-y-auto lg:max-h-none lg:overflow-y-visible border border-primary/5 relative transition-all duration-300`}>
         <div className="p-4 sm:p-6 lg:p-8 py-4 lg:py-5 pb-8 sm:pb-6 pb-[env(safe-area-inset-bottom,24px)]">
           <div className="flex justify-between items-center mb-5 leading-none sticky top-0 bg-white/95 backdrop-blur-md z-20 py-3 border-b border-gray-100">
             <div>
@@ -720,9 +725,9 @@ const ImageAnalysis = ({ sex = 'Female', onAnalysisComplete, onClose }) => {
                 <div className="space-y-4">
                   {/* PREMIUM GENDER SELECTOR ON CHOOSE STATE */}
                   <div className="flex items-center justify-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100 max-w-md mx-auto">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Scan Profile Gender:</span>
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Select Sex:</span>
                     <div className="flex gap-1.5">
-                      {['Female', 'Male', 'Unisex'].map(s => (
+                      {['Female', 'Male'].map(s => (
                         <button
                           key={s}
                           type="button"
@@ -759,7 +764,7 @@ const ImageAnalysis = ({ sex = 'Female', onAnalysisComplete, onClose }) => {
                     <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100/60">
                       <span className="text-[10px] font-black text-primary uppercase tracking-widest">Adjust Scan Gender:</span>
                       <div className="flex gap-1.5">
-                        {['Female', 'Male', 'Unisex'].map(s => (
+                        {['Female', 'Male'].map(s => (
                           <button
                             key={s}
                             type="button"

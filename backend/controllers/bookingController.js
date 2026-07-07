@@ -60,10 +60,10 @@ const getLaundryDates = async (gownId, laundryDays) => {
     Bookings.forEach((booking) => {
         // [INFO] Trials do not trigger laundry cycles.
         if (booking.status === 'trial' || booking.bookingType === 'trial') return;
-        const returnDate = new Date(booking.returnDate);
+        const returnStr = toLocalDateString(new Date(booking.returnDate));
+        const baseDate = new Date(returnStr + "T12:00:00Z");
         for (let i = 1; i <= laundryDays; i++) {
-            const laundryDate = new Date(returnDate);
-            laundryDate.setDate(laundryDate.getDate() + i);
+            const laundryDate = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000);
             laundryDateSet.add(toLocalDateString(laundryDate));
         }
     });
@@ -72,12 +72,15 @@ const getLaundryDates = async (gownId, laundryDays) => {
 
 // Helper function to check if a date range overlaps with any blocked dates (bookings or laundry days)
 const dateRangeOverlapsBlocked = (startDate, endDate, blockedDateSet) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const startStr = toLocalDateString(startDate);
+  const endStr = toLocalDateString(endDate);
 
-  // Check each day in the range
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    if (blockedDateSet.has(toLocalDateString(d))) return true;
+  let cur = new Date(startStr + "T12:00:00Z");
+  const endLimit = new Date(endStr + "T12:00:00Z");
+
+  while (cur <= endLimit) {
+    if (blockedDateSet.has(toLocalDateString(cur))) return true;
+    cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
   }
   return false;
 };
@@ -889,7 +892,8 @@ export const getGownCalendar = async (req, res) => {
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStr = toLocalDateString(now);
+    const today = new Date(todayStr + "T00:00:00Z");
     const horizon = new Date(today.getTime() + 180 * DAY_IN_MS);
 
     const unavailableDates = new Set();
@@ -899,8 +903,13 @@ export const getGownCalendar = async (req, res) => {
     // [LOGIC] Check for manual status override (highest priority)
     // If the owner has manually set a blocking status, we show the entire calendar as unavailable.
     if (gown.statusOverride && gown.statusOverride !== 'Available') {
-      for (let d = new Date(today); d <= horizon; d.setDate(d.getDate() + 1)) {
-        unavailableDates.add(toLocalDateString(d));
+      const todayStrVal = toLocalDateString(today);
+      const horizonStrVal = toLocalDateString(horizon);
+      let cur = new Date(todayStrVal + "T12:00:00Z");
+      const endLimit = new Date(horizonStrVal + "T12:00:00Z");
+      while (cur <= endLimit) {
+        unavailableDates.add(toLocalDateString(cur));
+        cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
       }
 
       return res.json({
@@ -934,8 +943,11 @@ export const getGownCalendar = async (req, res) => {
     }).sort({ pickupDate: 1 });
 
     const captureDate = (dateObj, targetSet) => {
-      if (dateObj < today || dateObj > horizon) return;
-      targetSet.add(toLocalDateString(dateObj));
+      const dStr = toLocalDateString(dateObj);
+      const todayStrVal = toLocalDateString(today);
+      const horizonStrVal = toLocalDateString(horizon);
+      if (dStr < todayStrVal || dStr > horizonStrVal) return;
+      targetSet.add(dStr);
     };
 
     Bookings.forEach((booking) => {
@@ -944,20 +956,17 @@ export const getGownCalendar = async (req, res) => {
       const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
 
       if (!isTrial) {
-        // Normalize dates to midnight for consistent day-based processing
-        const startDate = new Date(bookingStart.getFullYear(), bookingStart.getMonth(), bookingStart.getDate());
-        const endDate = new Date(bookingEnd.getFullYear(), bookingEnd.getMonth(), bookingEnd.getDate());
+        const startStr = toLocalDateString(bookingStart);
+        const endStr = toLocalDateString(bookingEnd);
 
-        // Non-trial bookings block entire days
-        for (
-          let cursor = new Date(startDate);
-          cursor <= endDate;
-          cursor.setDate(cursor.getDate() + 1)
-        ) {
-          // unavailableDates = reserved (pending or confirmed) for calendar highlight
+        let cur = new Date(startStr + "T12:00:00Z");
+        const endLimit = new Date(endStr + "T12:00:00Z");
+
+        while (cur <= endLimit) {
           if (booking.status === 'confirmed' || booking.status === 'pending') {
-            captureDate(new Date(cursor), unavailableDates);
+            captureDate(cur, unavailableDates);
           }
+          cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
         }
       } else {
         // Trial bookings: record specific time slots
@@ -978,10 +987,10 @@ export const getGownCalendar = async (req, res) => {
 
       // Laundry days are only after non-trial bookings
       const bufferDays = isTrial ? 0 : Math.max(gown.laundryDays || 0, 0);
+      const endStr = toLocalDateString(bookingEnd);
       for (let i = 1; i <= bufferDays; i += 1) {
-        // Start from normalized end date
-        const laundryDate = new Date(bookingEnd.getFullYear(), bookingEnd.getMonth(), bookingEnd.getDate());
-        laundryDate.setDate(laundryDate.getDate() + i);
+        const baseDate = new Date(endStr + "T12:00:00Z");
+        const laundryDate = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000);
         if (laundryDate >= today && laundryDate <= horizon) {
           laundryHoldDates.add(toLocalDateString(laundryDate));
         }

@@ -9,7 +9,8 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const toLocalMidnight = (dateValue) => {
   const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
   if (Number.isNaN(d.getTime())) return null;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const localDate = new Date(d.getTime() + (8 * 60 * 60 * 1000));
+  return new Date(Date.UTC(localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate()));
 };
 
 // [SECTION] PRICING CALCULATIONS
