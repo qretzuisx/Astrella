@@ -13,6 +13,33 @@ const OwnerDashboard = () => {
   const currency = CURRENCY
   const timeFormatOptions = { hour: '2-digit', minute: '2-digit' }
 
+  // Month selection and generation helpers
+  const getInitialMonth = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    return `${year}-${month}`
+  }
+
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth())
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  const generateMonths = () => {
+    const list = []
+    const now = new Date()
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const value = `${year}-${month}`
+      list.push({ label, value })
+    }
+    return list
+  }
+
+  const months = generateMonths()
+
   const formatBookingDate = (value) => {
     if (!value) return '--'
     return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
@@ -33,7 +60,8 @@ const OwnerDashboard = () => {
     return '--:--'
   }
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (monthVal) => {
+    const targetMonth = monthVal || selectedMonth
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -63,8 +91,8 @@ const OwnerDashboard = () => {
         }
       }
 
-      // Fetch dashboard data
-      const response = await fetch(`${API_URL}/owner/dashboard`, {
+      // Fetch dashboard data with month filter
+      const response = await fetch(`${API_URL}/owner/dashboard?month=${targetMonth}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -86,20 +114,20 @@ const OwnerDashboard = () => {
   }
 
   useEffect(() => {
-    fetchDashboardData()
+    fetchDashboardData(selectedMonth)
 
     // Set up polling every 10 seconds
-    const intervalId = setInterval(fetchDashboardData, 10000)
+    const intervalId = setInterval(() => fetchDashboardData(selectedMonth), 10000)
 
     // Refresh when window gains focus
-    const handleFocus = () => fetchDashboardData()
+    const handleFocus = () => fetchDashboardData(selectedMonth)
     window.addEventListener('focus', handleFocus)
 
     return () => {
       clearInterval(intervalId)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [])
+  }, [selectedMonth])
 
   if (loading) {
     return (
@@ -253,18 +281,74 @@ const OwnerDashboard = () => {
             </button>
 
             {/* Monthly Revenue */}
-            <div className='group bg-primary-dull rounded-3xl shadow-xl shadow-primary/10 p-4 sm:p-6 text-left hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-row items-center gap-5 sm:block'>
-              <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className='flex-shrink-0 sm:flex sm:items-center sm:justify-between sm:mb-6 relative'>
-                <div className='p-3.5 bg-white/10 rounded-2xl'>
-                  <span className='group-hover:scale-110 block transition-transform text-2xl text-white font-black'>₱</span>
+            <div className='group bg-primary-dull rounded-3xl shadow-xl shadow-primary/10 p-4 sm:p-6 text-left hover:-translate-y-1 transition-all duration-300 relative flex flex-col justify-between gap-4 w-full sm:block'>
+              {/* Decorative background clipped inside the card */}
+              <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0">
+                <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              </div>
+              
+              <div className='flex items-center justify-between w-full sm:mb-6 relative z-10'>
+                <div className='p-3.5 bg-white/10 rounded-2xl flex-shrink-0'>
+                  <span className='group-hover:scale-110 block transition-transform text-2xl text-white font-black leading-none'>₱</span>
+                </div>
+                
+                {/* Month Dropdown Selector */}
+                <div className="relative">
+                  <button 
+                    type="button"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl border border-white/15 transition-all cursor-pointer shadow-sm select-none"
+                  >
+                    <span>{months.find(m => m.value === selectedMonth)?.label || selectedMonth}</span>
+                    <svg 
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Backdrop overlay for closing */}
+                  {dropdownOpen && (
+                    <div className="fixed inset-0 z-20 cursor-default" onClick={() => setDropdownOpen(false)}></div>
+                  )}
+
+                  {/* Dropdown Menu */}
+                  <div className={`absolute right-0 mt-2 w-44 bg-[#16224f] border border-white/10 rounded-2xl shadow-xl z-30 py-1.5 overflow-hidden transition-all duration-200 transform origin-top-right ${
+                    dropdownOpen 
+                      ? 'opacity-100 scale-100' 
+                      : 'opacity-0 scale-95 pointer-events-none'
+                  }`}>
+                    <div className="max-h-60 overflow-y-auto no-scrollbar">
+                      {months.map((m) => (
+                        <button
+                          key={m.value}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMonth(m.value);
+                            setDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors ${
+                            selectedMonth === m.value 
+                              ? 'bg-primary text-white font-bold' 
+                              : 'text-white/80 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex-1 flex flex-row items-center justify-between sm:block">
+
+              <div className="relative z-10 w-full flex flex-row items-center justify-between sm:block">
                 <h3 className='text-xs font-bold text-white/50 uppercase tracking-widest sm:mb-1 relative'>Est. Revenue</h3>
                 <p className='text-2xl sm:text-3xl font-black text-white relative flex items-baseline gap-1'>
                   <span className="text-sm sm:text-lg opacity-60">{currency}</span>
-                  <span>{dashboardData?.monthlyRevenue?.toLocaleString() || 0}</span>
+                  <span>{dashboardData?.monthlyRevenue ? dashboardData.monthlyRevenue.toLocaleString() : '0.00'}</span>
                 </p>
               </div>
             </div>
