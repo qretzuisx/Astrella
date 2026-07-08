@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
@@ -12,6 +13,9 @@ const OwnerDashboard = () => {
   const [userRole, setUserRole] = useState(null)
   const currency = CURRENCY
   const timeFormatOptions = { hour: '2-digit', minute: '2-digit' }
+  const triggerBtnRef = useRef(null)
+  const dropdownMenuRef = useRef(null)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
 
   // Month selection and generation helpers
   const getInitialMonth = () => {
@@ -23,6 +27,22 @@ const OwnerDashboard = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth())
   const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  // Close dropdown when clicking outside both the trigger button and the menu
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        triggerBtnRef.current && !triggerBtnRef.current.contains(e.target) &&
+        dropdownMenuRef.current && !dropdownMenuRef.current.contains(e.target)
+      ) {
+        setDropdownOpen(false)
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick)
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [dropdownOpen])
 
   const generateMonths = () => {
     const list = []
@@ -39,6 +59,7 @@ const OwnerDashboard = () => {
   }
 
   const months = generateMonths()
+
 
   const formatBookingDate = (value) => {
     if (!value) return '--'
@@ -294,61 +315,113 @@ const OwnerDashboard = () => {
                 
                 {/* Month Dropdown Selector */}
                 <div className="relative">
-                  <button 
+                  <button
+                    ref={triggerBtnRef}
                     type="button"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    onClick={() => {
+                      if (!dropdownOpen && triggerBtnRef.current) {
+                        const rect = triggerBtnRef.current.getBoundingClientRect()
+                        setDropdownPos({
+                          top: rect.bottom + 8,
+                          right: window.innerWidth - rect.right,
+                        })
+                      }
+                      setDropdownOpen(prev => !prev)
+                    }}
                     className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl border border-white/15 transition-all cursor-pointer shadow-sm select-none"
                   >
                     <span>{months.find(m => m.value === selectedMonth)?.label || selectedMonth}</span>
-                    <svg 
-                      className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  
-                  {/* Backdrop overlay for closing */}
-                  {dropdownOpen && (
-                    <div className="fixed inset-0 z-20 cursor-default" onClick={() => setDropdownOpen(false)}></div>
-                  )}
 
-                  {/* Dropdown Menu */}
-                  <div className={`absolute right-0 mt-2 w-44 bg-[#16224f] border border-white/10 rounded-2xl shadow-xl z-30 py-1.5 overflow-hidden transition-all duration-200 transform origin-top-right ${
-                    dropdownOpen 
-                      ? 'opacity-100 scale-100' 
-                      : 'opacity-0 scale-95 pointer-events-none'
-                  }`}>
-                    <div className="max-h-60 overflow-y-auto no-scrollbar">
-                      {months.map((m) => (
-                        <button
-                          key={m.value}
-                          type="button"
-                          onClick={() => {
-                            setSelectedMonth(m.value);
-                            setDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors ${
-                            selectedMonth === m.value 
-                              ? 'bg-primary text-white font-bold' 
-                              : 'text-white/80 hover:bg-white/5 hover:text-white'
-                          }`}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Portal dropdown — rendered at body root to fully escape card stacking/clipping */}
+                  {dropdownOpen && createPortal(
+                    <div
+                      ref={dropdownMenuRef}
+                      style={{
+                        position: 'fixed',
+                        top: dropdownPos.top,
+                        right: dropdownPos.right,
+                        zIndex: 99999,
+                        width: '13rem',
+                        backgroundColor: '#0d1b3e',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '1rem',
+                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <p style={{ padding: '10px 16px 6px', fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em', backgroundColor: '#0d1b3e' }}>
+                        Select Month
+                      </p>
+                      <div
+                        style={{
+                          maxHeight: '220px',
+                          overflowY: 'auto',
+                          backgroundColor: '#0d1b3e',
+                          scrollbarWidth: 'thin',
+                          scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+                        }}
+                      >
+                        {months.map((m) => (
+                          <button
+                            key={m.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMonth(m.value)
+                              setDropdownOpen(false)
+                            }}
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              textAlign: 'left',
+                              padding: '10px 16px',
+                              fontSize: '13px',
+                              fontWeight: selectedMonth === m.value ? 700 : 500,
+                              color: selectedMonth === m.value ? '#ffffff' : 'rgba(255,255,255,0.75)',
+                              backgroundColor: selectedMonth === m.value ? 'rgba(255,255,255,0.12)' : 'transparent',
+                              borderLeft: selectedMonth === m.value ? '2px solid rgba(255,255,255,0.6)' : '2px solid transparent',
+                              cursor: 'pointer',
+                              transition: 'background-color 0.15s, color 0.15s',
+                            }}
+                            onMouseEnter={e => {
+                              if (selectedMonth !== m.value) {
+                                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
+                                e.currentTarget.style.color = '#ffffff'
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              if (selectedMonth !== m.value) {
+                                e.currentTarget.style.backgroundColor = 'transparent'
+                                e.currentTarget.style.color = 'rgba(255,255,255,0.75)'
+                              }
+                            }}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>,
+                    document.body
+                  )}
                 </div>
               </div>
 
               <div className="relative z-10 w-full flex flex-row items-center justify-between sm:block">
-                <h3 className='text-xs font-bold text-white/50 uppercase tracking-widest sm:mb-1 relative'>Est. Revenue</h3>
+                <div className="sm:mb-2">
+                  <h3 className='text-[9px] font-black text-white/40 uppercase tracking-[0.2em] leading-none'>Est. Revenue</h3>
+                  <p className="text-[10px] text-white/50 font-medium mt-0.5">{months.find(m => m.value === selectedMonth)?.label}</p>
+                </div>
                 <p className='text-2xl sm:text-3xl font-black text-white relative flex items-baseline gap-1'>
                   <span className="text-sm sm:text-lg opacity-60">{currency}</span>
-                  <span>{dashboardData?.monthlyRevenue ? dashboardData.monthlyRevenue.toLocaleString() : '0.00'}</span>
+                  <span>{dashboardData?.monthlyRevenue != null ? dashboardData.monthlyRevenue.toLocaleString() : '0'}</span>
                 </p>
               </div>
             </div>
