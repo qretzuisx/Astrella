@@ -687,8 +687,8 @@ const ManageBookings = () => {
                              </button>
                            )}
 
-                           {/* Cancel Action (Only Pending/Confirmed/Trial) */}
-                           {(['pending', 'confirmed', 'trial'].includes(booking.status)) && (
+                           {/* Cancel Action (Only Pending/Trial) */}
+                           {(['pending', 'trial'].includes(booking.status)) && (
                                <button
                                  onClick={() => {
                                    setCancelConfirmBookingId(booking._id || booking.id)
