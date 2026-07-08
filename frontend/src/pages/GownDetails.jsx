@@ -188,7 +188,7 @@ const GownDetails = () => {
         const end = formatTimeAmPm(slot.end)
         return (slot.start === slot.end) ? start : `${start} - ${end}`
       }).join(', ')
-      return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes}. (30-minute try-on slot)`, allowSelection: true }
     }
 
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Apparel not yet returned.' }

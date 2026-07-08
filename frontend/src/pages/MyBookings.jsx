@@ -7,122 +7,6 @@ import { API_URL, CURRENCY } from '../config'
 import { toIsoDate, formatDate, formatTime } from '../utils/dateUtils'
 
 
-// Live countdown timer for trial booking expiration
-// Only shows countdown when the try-on appointment is actively happening
-const TrialCountdown = ({ trialExpiresAt, pickupDate, pickupTime, onExpired }) => {
-  const [now, setNow] = useState(Date.now())
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  if (!trialExpiresAt || !pickupDate) return null
-
-  const expiresMs = new Date(trialExpiresAt).getTime()
-
-  // Build the appointment start time from pickupDate + pickupTime
-  const pDate = new Date(pickupDate)
-  const [pH, pM] = (pickupTime || '09:00').split(':').map(Number)
-  const appointmentStart = new Date(pDate.getFullYear(), pDate.getMonth(), pDate.getDate(), pH, pM, 0).getTime()
-
-  // Check if today is the appointment day
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const apptDate = new Date(pickupDate)
-  const apptStr = `${apptDate.getFullYear()}-${String(apptDate.getMonth() + 1).padStart(2, '0')}-${String(apptDate.getDate()).padStart(2, '0')}`
-
-  // Format time for display
-  const formatTimeDisplay = (timeStr) => {
-    return formatTime(timeStr)
-  }
-
-  const hasNotifiedRef = useRef(false)
-  const [isExpired, setIsExpired] = useState(now >= expiresMs)
-  const hasStarted = now >= appointmentStart
-  const isToday = todayStr === apptStr
-
-  useEffect(() => {
-    const expired = now >= expiresMs
-    setIsExpired(expired)
-    
-    if (expired && !hasNotifiedRef.current) {
-      hasNotifiedRef.current = true
-      if (onExpired) onExpired()
-    }
-  }, [now, expiresMs, onExpired])
-
-  // EXPIRED — slot released
-  if (isExpired) {
-    return (
-      <div className='mb-4 p-4 rounded-2xl border border-red-100 bg-red-50/50 flex items-start gap-3 backdrop-blur-sm shadow-[0_5px_15px_rgba(239,68,68,0.05)] text-center sm:text-left'>
-        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0 shadow-sm mt-0.5">
-          <svg className='w-4 h-4 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-          </svg>
-        </div>
-        <div className='flex-1'>
-          <p className='text-[10px] font-black uppercase tracking-widest text-red-600/70 mb-1'>Try-on Status</p>
-          <p className='text-sm font-bold text-red-800'>
-            Trial expired — slot released
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // ACTIVE — appointment time has arrived, show countdown
-  if (isToday && hasStarted) {
-    const remaining = Math.max(0, Math.floor((expiresMs - now) / 1000))
-    const mins = Math.floor(remaining / 60)
-    const secs = remaining % 60
-    const isUrgent = remaining <= 300 // 5 minutes
-
-    return (
-      <div className={`mb-4 p-4 rounded-2xl border flex items-center gap-4 backdrop-blur-sm transition-all duration-300 ${isUrgent ? 'bg-red-50/80 border-red-200 shadow-[0_10px_30px_rgba(239,68,68,0.15)] animate-pulse' : 'bg-primary/5 border-primary/20 shadow-[0_10px_30px_rgba(1,62,141,0.08)]'
-        }`}>
-        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${isUrgent ? 'bg-red-600 text-white' : 'bg-primary text-white'}`}>
-           <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isUrgent ? 'animate-bounce' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-          </svg>
-        </div>
-        
-        <div className='flex-1 min-w-0'>
-          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isUrgent ? 'text-red-600/80' : 'text-primary/70'}`}>Try-on expires in</p>
-          <p className={`text-2xl sm:text-3xl font-black tabular-nums tracking-tight ${isUrgent ? 'text-red-600' : 'text-primary'}`}>
-            {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-          </p>
-        </div>
-        {isUrgent && (
-          <span className='text-[10px] font-black px-3 py-1.5 rounded-full bg-red-600 text-white uppercase tracking-widest shadow-md animate-pulse'>
-            Expiring!
-          </span>
-        )}
-      </div>
-    )
-  }
-
-  // SCHEDULED — appointment is today but hasn't started yet, or on a future day
-  return (
-    <div className='mb-4 p-4 rounded-2xl border bg-blue-50/50 border-blue-100 flex items-start gap-4 backdrop-blur-sm shadow-[0_5px_15px_rgba(1,62,141,0.03)]'>
-      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
-        <svg className='w-4 h-4 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-        </svg>
-      </div>
-      <div className='flex-1 min-w-0'>
-        <p className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-600/70 mb-1'>Try-on scheduled</p>
-      <p className='text-sm font-bold text-blue-900'>
-        {isToday ? `Today at ${formatTimeDisplay(pickupTime)}` : `${formatDate(pickupDate)} at ${formatTimeDisplay(pickupTime)}`}
-      </p>
-
-      </div>
-      <span className='text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full bg-blue-200 text-blue-800'>
-        30 min slot
-      </span>
-    </div>
-  )
-}
 
 const ALLOWED_TIMES = (() => {
   const times = []
@@ -199,7 +83,7 @@ const MyBookings = ({ setShowLogin }) => {
         const end = formatTimeAmPm(slot.end)
         return (slot.start === slot.end) ? start : `${start} - ${end}`
       }).join(', ')
-      return { reason: 'trial', message: `Currently trying at ${bookedTimes}. Apparel Expires 30 minutes after trying on!`, allowSelection: true }
+      return { reason: 'trial', message: `Currently trying at ${bookedTimes}. (30-minute try-on slot)`, allowSelection: true }
     }
 
     if (calendarInfo.laundryHoldDates.includes(isoDate)) return { reason: 'laundry', message: 'Apparel not yet returned.' }
@@ -786,16 +670,22 @@ const MyBookings = ({ setShowLogin }) => {
                     {/* Date/Status Information - Standardized Boxed Layout */}
                     <div className='space-y-3 mb-auto'>
                       {isTrial ? (
-                        booking.trialExpiresAt && (
-                          <TrialCountdown
-                            trialExpiresAt={booking.trialExpiresAt}
-                            pickupDate={booking.pickupDate}
-                            pickupTime={booking.pickupTime}
-                            onExpired={() => {
-                              setTimeout(() => fetchBookings(), 2000)
-                            }}
-                          />
-                        )
+                        <div className='mb-4 p-4 rounded-2xl border bg-blue-50/50 border-blue-100 flex items-start gap-4 backdrop-blur-sm shadow-[0_5px_15px_rgba(1,62,141,0.03)]'>
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                            <svg className='w-4 h-4 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                            </svg>
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <p className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-600/70 mb-1'>Try-on scheduled</p>
+                            <p className='text-sm font-bold text-blue-900'>
+                              {formatDate(booking.pickupDate)} at {formatTime(booking.pickupTime)}
+                            </p>
+                          </div>
+                          <span className='text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full bg-blue-200 text-blue-800'>
+                            30 min slot
+                          </span>
+                        </div>
                       ) : (
                         <div className='bg-gray-50/50 rounded-2xl p-3.5 grid grid-cols-2 gap-x-4 border border-gray-100 relative overflow-hidden group/box'>
                           <div className='flex flex-col'>

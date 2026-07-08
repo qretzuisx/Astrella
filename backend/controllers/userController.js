@@ -361,10 +361,8 @@ export const deleteAccount = async (req, res) => {
             status: { $in: ['pending', 'confirmed', 'trial'] }
         });
 
-        const now = new Date();
         const hasActiveWork = activeBookings.some(b => 
-            ['pending', 'confirmed'].includes(b.status) || 
-            (b.status === 'trial' && (!b.trialExpiresAt || new Date(b.trialExpiresAt) > now))
+            ['pending', 'confirmed', 'trial'].includes(b.status)
         );
 
         if (hasActiveWork) {

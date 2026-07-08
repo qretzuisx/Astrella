@@ -369,11 +369,7 @@ export const getDashboardData = async (req, res) => {
             .populate('user', 'name email')
             .sort({ createdAt: -1 });
 
-        const now = new Date();
-        const bookings = allBookings.filter(booking => {
-            if (booking.status !== 'trial') return true;
-            return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
-        });
+        const bookings = allBookings;
 
         const pendingBookings = await Booking.find({ owner: _id, status: 'pending' })
         const completedBookings = await Booking.find({ owner: _id, status: 'completed' })

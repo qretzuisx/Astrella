@@ -49,12 +49,7 @@ const getLaundryDates = async (gownId, laundryDays) => {
     const now = new Date();
     const Bookings = await Booking.find({
         gown: gownId,
-        status: { $ne: "canceled" },
-        $or: [
-            { status: { $ne: 'trial' } },
-            { status: 'trial', trialExpiresAt: { $gt: now } },
-            { status: 'trial', trialExpiresAt: { $exists: false } },
-        ]
+        status: { $nin: ["canceled", "expired"] },
     });
 
     Bookings.forEach((booking) => {
@@ -100,13 +95,8 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const Bookings = await Booking.find({
         gown,
-        status: { $ne: "canceled" },
-        returnDate: { $gte: today },
-        $or: [
-            { status: { $ne: 'trial' } },
-            { status: 'trial', trialExpiresAt: { $gt: now } },
-            { status: 'trial', trialExpiresAt: { $exists: false } },
-        ]
+        status: { $nin: ["canceled", "expired"] },
+        returnDate: { $gte: today }
     });
 
     const gownData = options.gownData || await Gown.findById(gown).select('laundryDays statusOverride');
@@ -197,12 +187,11 @@ export const createBooking = async (req, res) => {
         }
 
         // [FLOW] Save to Database
-        const newBooking = await Booking.create({
+         const newBooking = await Booking.create({
             gown, owner: gownData.owner, user: _id,
             pickupDate: pickupDateTime, returnDate: returnDateTime,
             pickupTime, returnTime, price: pricing.total,
             bookingType: isTrial ? 'trial' : 'reservation',
-            trialExpiresAt: isTrial ? returnDateTime : undefined,
             contactNumber: req.body.contactNumber || req.user.contactNumber || '',
             payment: {
                 method: paymentInfo.method || 'gcash',
@@ -299,12 +288,7 @@ export const validateBookingWindow = async (req, res) => {
     // Build query to exclude the current booking when rescheduling/extending
     const query = {
       gown: gownId,
-      status: { $ne: "canceled" },
-      $or: [
-        { status: { $ne: 'trial' } },
-        { status: 'trial', trialExpiresAt: { $gt: now } },
-        { status: 'trial', trialExpiresAt: { $exists: false } },
-      ]
+      status: { $nin: ["canceled", "expired"] }
     };
 
     if (excludeBookingId) {
@@ -426,10 +410,7 @@ export const getUserBooking = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        const Bookings = allBookings.filter(booking => {
-            if (booking.status !== 'trial') return true;
-            return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
-        });
+        const Bookings = allBookings;
 
         res.json({ success: true, bookings: Bookings });
     } catch (error) {
@@ -451,10 +432,6 @@ export const getOwnerBooking = async (req, res) => {
             .lean();
           
         const Bookings = allBookings
-            .filter(booking => {
-                if (booking.status !== 'trial') return true;
-                return !(booking.trialExpiresAt && new Date(booking.trialExpiresAt) < now);
-            })
             .map(booking => {
                 const b = booking; // No need for toObject() with lean()
                 
@@ -574,16 +551,10 @@ export const updateBooking = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Gown not found' });
       }
 
-      const now = new Date();
       const otherBookings = await Booking.find({
         gown: booking.gown,
         _id: { $ne: booking._id },
-        status: { $ne: 'canceled' },
-        $or: [
-          { status: { $ne: 'trial' } },
-          { status: 'trial', trialExpiresAt: { $gt: now } },
-          { status: 'trial', trialExpiresAt: { $exists: false } },
-        ]
+        status: { $nin: ['canceled', 'expired'] },
       });
 
       const blockedDates = new Set();
@@ -615,7 +586,6 @@ export const updateBooking = async (req, res) => {
       // Conversion: trial -> reservation pending (or confirmed later by pickup confirmation)
       booking.bookingType = 'reservation';
       booking.status = 'pending';
-      booking.trialExpiresAt = undefined;
 
       // Payment handling: allow in-store paid without GCash requirements
       booking.payment.method = 'in_store';
@@ -783,12 +753,7 @@ export const updateBooking = async (req, res) => {
     const otherBookings = await Booking.find({
       gown: booking.gown,
       _id: { $ne: booking._id },
-      status: { $ne: 'canceled' },
-      $or: [
-        { status: { $ne: 'trial' } },
-        { status: 'trial', trialExpiresAt: { $gt: now } },
-        { status: 'trial', trialExpiresAt: { $exists: false } },
-      ]
+      status: { $nin: ['canceled', 'expired'] },
     });
 
     // Unified Conflict Detection Loop (Airtight)
@@ -840,10 +805,6 @@ export const updateBooking = async (req, res) => {
     booking.returnDate = newReturnDateTime;
     booking.pickupTime = pickupTime;
     booking.returnTime = isTrial ? pickupTime : effectiveReturnTime;
-
-    if (isTrial) {
-      booking.trialExpiresAt = newReturnDateTime; // 30 minutes after the appointment start
-    }
 
     // Recalculate price based on new rental period (for non-trial bookings)
     if (!isTrial) {
@@ -933,13 +894,8 @@ export const getGownCalendar = async (req, res) => {
 
     const Bookings = await Booking.find({
       gown: gownId,
-      status: { $ne: "canceled" },
-      returnDate: { $gte: laundryLookback },
-      $or: [
-        { status: { $ne: 'trial' } },
-        { status: 'trial', trialExpiresAt: { $gt: now } },
-        { status: 'trial', trialExpiresAt: { $exists: false } },
-      ]
+      status: { $nin: ["canceled", "expired"] },
+      returnDate: { $gte: laundryLookback }
     }).sort({ pickupDate: 1 });
 
     const captureDate = (dateObj, targetSet) => {
@@ -1080,21 +1036,12 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
-// Cleanup function (can be called periodically or by maintainer)
-// Now only marks expired trials as 'expired' (no hard delete)
+// Cleanup function (no-op since trial expiration has been removed)
 export const cleanupExpiredTrials = async (req, res) => {
   try {
-    const now = new Date();
-
-    // Mark expired trials as 'expired'
-    await Booking.updateMany(
-      { status: 'trial', trialExpiresAt: { $lt: now } },
-      { $set: { status: 'expired' } }
-    );
-
     res.json({
       success: true,
-      message: "Expired trial holds marked as expired."
+      message: "Trial expiration cleanup has been disabled."
     });
 
   } catch (error) {
@@ -1146,12 +1093,9 @@ export const calculateActualGownStatus = async (gownId) => {
 
       // ── TRIAL booking = active try-on appointment ──
       if (booking.status === 'trial') {
-        // Only consider non-expired trials
-        if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) > now) {
-          const expiresMs = new Date(booking.trialExpiresAt).getTime();
-          if (currentTime >= pickupTimeMs && currentTime <= expiresMs) {
-            return 'Reserved';
-          }
+        const returnTimeMs = new Date(booking.returnDate).getTime();
+        if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
+          return 'Reserved';
         }
         continue;
       }
@@ -1267,12 +1211,10 @@ export const batchUpdateGownStatuses = async (gowns) => {
 
         // ── TRIAL booking ──
         if (booking.status === 'trial') {
-          if (booking.trialExpiresAt && new Date(booking.trialExpiresAt) > now) {
-            const expiresMs = new Date(booking.trialExpiresAt).getTime();
-            if (currentTime >= pickupTimeMs && currentTime <= expiresMs) {
-              finalStatus = 'Reserved';
-              break; 
-            }
+          const returnTimeMs = new Date(booking.returnDate).getTime();
+          if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
+            finalStatus = 'Reserved';
+            break; 
           }
           continue;
         }
