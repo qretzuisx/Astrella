@@ -98,6 +98,7 @@ export const checkAvailability = async (gown, pickupDate, returnDate, options = 
         status: { $nin: ["canceled", "expired"] },
         returnDate: { $gte: today }
     });
+    // [INFO] overdue bookings are still active (gown is out) and must block availability
 
     const gownData = options.gownData || await Gown.findById(gown).select('laundryDays statusOverride');
     
@@ -425,11 +426,37 @@ export const getOwnerBooking = async (req, res) => {
     try {
         if (req.user.role !== 'owner') return res.status(403).json({ success: false, message: "Unauthorized" });
         const now = new Date();
-        const allBookings = await Booking.find({ owner: req.user._id })
+
+        // [FEATURE] Month/Year filter — default to current month if not provided
+        const { month, year } = req.body || {};
+        const filterYear = year != null ? Number(year) : now.getFullYear();
+        let monthStart, monthEnd;
+        if (month === null || month === undefined || month === -1 || month === 'all') {
+            // Whole year range
+            monthStart = new Date(Date.UTC(filterYear, 0, 1, -8, 0, 0));
+            monthEnd = new Date(Date.UTC(filterYear + 1, 0, 1, -8, 0, 0));
+        } else {
+            const filterMonth = Number(month);
+            monthStart = new Date(Date.UTC(filterYear, filterMonth, 1, -8, 0, 0));
+            monthEnd = new Date(Date.UTC(filterYear, filterMonth + 1, 1, -8, 0, 0));
+        }
+
+        const allBookings = await Booking.find({
+            owner: req.user._id,
+            $or: [
+                { pickupDate: { $gte: monthStart, $lt: monthEnd } },
+                { status: 'overdue' },
+                { status: 'not_returned' },
+                { status: 'confirmed', returnDate: { $lt: now } }
+            ]
+        })
             .populate('gown')
             .populate('user', 'name email contactNumber')
             .sort({ createdAt: -1 })
             .lean();
+
+        // [FEATURE] Auto-detect overdue bookings (confirmed past return date → overdue)
+        const bulkOps = [];
           
         const Bookings = allBookings
             .map(booking => {
@@ -445,9 +472,50 @@ export const getOwnerBooking = async (req, res) => {
                 
                 // If it's still missing, ensure it defaults to empty/blank rather than a hardcoded 'N/A' string in the data
                 if (!b.contactNumber) b.contactNumber = '';
+
+                // [LOGIC] Migrate old 'not_returned' state to 'overdue' on the fly
+                if (b.status === 'not_returned') {
+                    b.status = 'overdue';
+                    bulkOps.push({
+                        updateOne: {
+                            filter: { _id: b._id },
+                            update: { $set: { status: 'overdue' } }
+                        }
+                    });
+                }
+
+                // [LOGIC] Auto-detect overdue: confirmed booking with past return date → overdue
+                if (b.status === 'confirmed' && b.returnDate) {
+                    const returnEnd = endOfLocalDay(b.returnDate);
+                    if (returnEnd && now > returnEnd) {
+                        b.status = 'overdue';
+                        bulkOps.push({
+                            updateOne: {
+                                filter: { _id: b._id },
+                                update: { $set: { status: 'overdue' } }
+                            }
+                        });
+                    }
+                }
+
+                // [LOGIC] Compute overdue days for overdue bookings
+                if (b.status === 'overdue' && b.returnDate) {
+                    const returnDateObj = new Date(b.returnDate);
+                    const returnDateStr = toLocalDateString(returnDateObj);
+                    const nowDateStr = toLocalDateString(now);
+                    // Calculate difference in days
+                    const returnMs = new Date(returnDateStr + 'T00:00:00Z').getTime();
+                    const nowMs = new Date(nowDateStr + 'T00:00:00Z').getTime();
+                    b.overdueDays = Math.max(0, Math.floor((nowMs - returnMs) / DAY_IN_MS));
+                }
                 
                 return b;
             });
+
+        // Persist overdue status changes in bulk (non-blocking)
+        if (bulkOps.length > 0) {
+            Booking.bulkWrite(bulkOps).catch(err => console.error('[OVERDUE] Bulk status update error:', err));
+        }
 
         res.json({ success: true, bookings: Bookings });
     } catch (error) {
@@ -471,6 +539,7 @@ export const changeBookingStatus = async (req, res) => {
         if (booking.owner.toString() !== _id.toString()) return res.status(403).json({ success: false, message: "Unauthorized" });
 
         if (status === 'confirmed' && !booking.pickupConfirmedAt) booking.pickupConfirmedAt = new Date();
+        // [LOGIC] "Confirm Return" from overdue or confirmed → completed
         if (status === 'completed' && !booking.returnConfirmedAt) booking.returnConfirmedAt = new Date();
 
         booking.status = status;
@@ -897,6 +966,7 @@ export const getGownCalendar = async (req, res) => {
       status: { $nin: ["canceled", "expired"] },
       returnDate: { $gte: laundryLookback }
     }).sort({ pickupDate: 1 });
+    // [INFO] overdue bookings are included above (not in $nin) and treated like confirmed for calendar blocking
 
     const captureDate = (dateObj, targetSet) => {
       const dStr = toLocalDateString(dateObj);
@@ -919,7 +989,7 @@ export const getGownCalendar = async (req, res) => {
         const endLimit = new Date(endStr + "T12:00:00Z");
 
         while (cur <= endLimit) {
-          if (booking.status === 'confirmed' || booking.status === 'pending') {
+          if (booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'overdue') {
             captureDate(cur, unavailableDates);
           }
           cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
@@ -1074,7 +1144,7 @@ export const calculateActualGownStatus = async (gownId) => {
     // Query active bookings that could influence today's status
     const bookings = await Booking.find({
       gown: gownId,
-      status: { $in: ['pending', 'confirmed', 'completed', 'trial'] },
+      status: { $in: ['pending', 'confirmed', 'completed', 'trial', 'overdue'] },
       pickupDate: { $lte: new Date(currentTime + laundryWindowMs + DAY_IN_MS) },
       returnDate: { $gte: new Date(currentTime - laundryWindowMs - DAY_IN_MS) }
     }).sort({ pickupDate: 1 });
@@ -1100,6 +1170,11 @@ export const calculateActualGownStatus = async (gownId) => {
         continue;
       }
 
+      // ── OVERDUE booking = gown is overdue, still out with customer ──
+      if (booking.status === 'overdue') {
+        return 'In-Use';
+      }
+
       // ── CONFIRMED booking = owner confirmed pickup ──
       if (booking.status === 'confirmed') {
         // Gown is "In-Use" if the pickup time has passed AND return time hasn't passed
@@ -1121,10 +1196,10 @@ export const calculateActualGownStatus = async (gownId) => {
         }
       }
 
-      // ── CONFIRMED/COMPLETED booking — check laundry window ──
-      // Both confirmed (in-use or just finished) and completed bookings 
+      // ── CONFIRMED/COMPLETED/OVERDUE booking — check laundry window ──
+      // Both confirmed (in-use or just finished), completed, and overdue bookings 
       // block the gown for a laundry period.
-      if (booking.status === 'confirmed' || booking.status === 'completed') {
+      if (booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'overdue') {
         if (laundryDays > 0) {
           const laundryEndDate = new Date(returnDateTime);
           laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
@@ -1168,7 +1243,7 @@ export const batchUpdateGownStatuses = async (gowns) => {
     const maxLaundryMs = 14 * 24 * 60 * 60 * 1000;
     const relevantBookings = await Booking.find({
       gown: { $in: gownIds },
-      status: { $in: ['pending', 'confirmed', 'completed', 'trial'] },
+      status: { $in: ['pending', 'confirmed', 'completed', 'trial', 'overdue'] },
       pickupDate: { $lte: new Date(currentTime + maxLaundryMs + DAY_IN_MS) },
       returnDate: { $gte: new Date(currentTime - maxLaundryMs - DAY_IN_MS) }
     }).sort({ pickupDate: 1 });
@@ -1219,6 +1294,12 @@ export const batchUpdateGownStatuses = async (gowns) => {
           continue;
         }
 
+        // ── OVERDUE booking = gown is overdue, still out ──
+        if (booking.status === 'overdue') {
+          finalStatus = 'In-Use';
+          break;
+        }
+
         // ── CONFIRMED booking ──
         if (booking.status === 'confirmed') {
           if (currentTime >= pickupTimeMs && currentTime <= returnTimeMs) {
@@ -1237,8 +1318,8 @@ export const batchUpdateGownStatuses = async (gowns) => {
           }
         } 
         
-        // ── LAUNDRY check (for confirmed/completed) — separate if, not else-if ──
-        if ((booking.status === 'confirmed' || booking.status === 'completed') && laundryDays > 0) {
+        // ── LAUNDRY check (for confirmed/completed/overdue) — separate if, not else-if ──
+        if ((booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'overdue') && laundryDays > 0) {
           const laundryEndDate = new Date(returnDateTime);
           laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
           laundryEndDate.setHours(23, 59, 59, 999);

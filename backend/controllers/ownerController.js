@@ -374,9 +374,9 @@ export const getDashboardData = async (req, res) => {
         const pendingBookings = await Booking.find({ owner: _id, status: 'pending' })
         const completedBookings = await Booking.find({ owner: _id, status: 'completed' })
 
-        // Monthly revenue: count confirmed AND completed bookings whose event (pickupDate) falls in the selected or current month
-        const selectedMonth = req.query.month; // e.g. "2026-07"
-        const currentYearMonth = selectedMonth && /^\d{4}-\d{2}$/.test(selectedMonth)
+        const now = new Date();
+        const selectedMonth = req.query.month; // e.g. "2026-07" or "2026"
+        const currentYearMonth = selectedMonth && (/^\d{4}-\d{2}$/.test(selectedMonth) || /^\d{4}$/.test(selectedMonth))
             ? selectedMonth
             : toLocalDateString(now).substring(0, 7);
 

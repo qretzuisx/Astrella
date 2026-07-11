@@ -18,15 +18,28 @@ const OwnerDashboard = () => {
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
 
   // Month selection and generation helpers
-  const getInitialMonth = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    return `${year}-${month}`
+  const now = new Date()
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth()) // 0-indexed, or -1 for whole year
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const MONTH_FULL_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+  const currentNow = new Date()
+  const currentYear = currentNow.getFullYear()
+  const currentMonth = currentNow.getMonth()
+
+  const handleMonthSelect = (monthIndex) => {
+    setSelectedMonth(monthIndex)
+    setDropdownOpen(false)
   }
 
-  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth())
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const isMonthDisabled = (monthIndex) => {
+    return false // Allow all months to align with future bookings calendar
+  }
+
+  const canGoNextYear = selectedYear < currentYear + 5
 
   // Close dropdown when clicking outside both the trigger button and the menu
   useEffect(() => {
@@ -43,22 +56,6 @@ const OwnerDashboard = () => {
     }
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [dropdownOpen])
-
-  const generateMonths = () => {
-    const list = []
-    const now = new Date()
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const value = `${year}-${month}`
-      list.push({ label, value })
-    }
-    return list
-  }
-
-  const months = generateMonths()
 
 
   const formatBookingDate = (value) => {
@@ -81,8 +78,15 @@ const OwnerDashboard = () => {
     return '--:--'
   }
 
-  const fetchDashboardData = async (monthVal) => {
-    const targetMonth = monthVal || selectedMonth
+  const fetchDashboardData = async (mIndex, yVal) => {
+    const targetMonthIndex = mIndex !== undefined ? mIndex : selectedMonth
+    const targetYear = yVal !== undefined ? yVal : selectedYear
+    
+    // Construct YYYY-MM or YYYY query param
+    const targetMonthStr = targetMonthIndex === -1
+      ? `${targetYear}`
+      : `${targetYear}-${String(targetMonthIndex + 1).padStart(2, '0')}`
+
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -113,7 +117,7 @@ const OwnerDashboard = () => {
       }
 
       // Fetch dashboard data with month filter
-      const response = await fetch(`${API_URL}/owner/dashboard?month=${targetMonth}`, {
+      const response = await fetch(`${API_URL}/owner/dashboard?month=${targetMonthStr}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -135,20 +139,20 @@ const OwnerDashboard = () => {
   }
 
   useEffect(() => {
-    fetchDashboardData(selectedMonth)
+    fetchDashboardData(selectedMonth, selectedYear)
 
     // Set up polling every 10 seconds
-    const intervalId = setInterval(() => fetchDashboardData(selectedMonth), 10000)
+    const intervalId = setInterval(() => fetchDashboardData(selectedMonth, selectedYear), 10000)
 
     // Refresh when window gains focus
-    const handleFocus = () => fetchDashboardData(selectedMonth)
+    const handleFocus = () => fetchDashboardData(selectedMonth, selectedYear)
     window.addEventListener('focus', handleFocus)
 
     return () => {
       clearInterval(intervalId)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [selectedMonth])
+  }, [selectedMonth, selectedYear])
 
   if (loading) {
     return (
@@ -312,8 +316,7 @@ const OwnerDashboard = () => {
                 <div className='p-3.5 bg-white/10 rounded-2xl flex-shrink-0'>
                   <span className='group-hover:scale-110 block transition-transform text-2xl text-white font-black leading-none'>₱</span>
                 </div>
-                
-                {/* Month Dropdown Selector */}
+                                {/* Month Dropdown Selector */}
                 <div className="relative">
                   <button
                     ref={triggerBtnRef}
@@ -329,8 +332,11 @@ const OwnerDashboard = () => {
                       setDropdownOpen(prev => !prev)
                     }}
                     className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl border border-white/15 transition-all cursor-pointer shadow-sm select-none"
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
                   >
-                    <span>{months.find(m => m.value === selectedMonth)?.label || selectedMonth}</span>
+                    <span>
+                      {selectedMonth === -1 ? selectedYear : `${MONTH_NAMES[selectedMonth]} ${selectedYear}`}
+                    </span>
                     <svg
                       className={`w-3.5 h-3.5 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`}
                       fill="none"
@@ -350,63 +356,84 @@ const OwnerDashboard = () => {
                         top: dropdownPos.top,
                         right: dropdownPos.right,
                         zIndex: 99999,
-                        width: '13rem',
+                        width: '280px',
                         backgroundColor: '#0d1b3e',
                         border: '1px solid rgba(255,255,255,0.12)',
-                        borderRadius: '1rem',
+                        borderRadius: '1.25rem',
                         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
                         overflow: 'hidden',
+                        fontFamily: "'Poppins', sans-serif"
                       }}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <p style={{ padding: '10px 16px 6px', fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em', backgroundColor: '#0d1b3e' }}>
-                        Select Month
-                      </p>
-                      <div
-                        style={{
-                          maxHeight: '220px',
-                          overflowY: 'auto',
-                          backgroundColor: '#0d1b3e',
-                          scrollbarWidth: 'thin',
-                          scrollbarColor: 'rgba(255,255,255,0.2) transparent',
-                        }}
-                      >
-                        {months.map((m) => (
-                          <button
-                            key={m.value}
-                            type="button"
-                            onClick={() => {
-                              setSelectedMonth(m.value)
-                              setDropdownOpen(false)
-                            }}
-                            style={{
-                              display: 'block',
-                              width: '100%',
-                              textAlign: 'left',
-                              padding: '10px 16px',
-                              fontSize: '13px',
-                              fontWeight: selectedMonth === m.value ? 700 : 500,
-                              color: selectedMonth === m.value ? '#ffffff' : 'rgba(255,255,255,0.75)',
-                              backgroundColor: selectedMonth === m.value ? 'rgba(255,255,255,0.12)' : 'transparent',
-                              borderLeft: selectedMonth === m.value ? '2px solid rgba(255,255,255,0.6)' : '2px solid transparent',
-                              cursor: 'pointer',
-                              transition: 'background-color 0.15s, color 0.15s',
-                            }}
-                            onMouseEnter={e => {
-                              if (selectedMonth !== m.value) {
-                                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
-                                e.currentTarget.style.color = '#ffffff'
-                              }
-                            }}
-                            onMouseLeave={e => {
-                              if (selectedMonth !== m.value) {
-                                e.currentTarget.style.backgroundColor = 'transparent'
-                                e.currentTarget.style.color = 'rgba(255,255,255,0.75)'
-                              }
-                            }}
-                          >
-                            {m.label}
-                          </button>
-                        ))}
+                      {/* Year Navigation */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedYear(y => y - 1)}
+                          className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all cursor-pointer active:scale-90"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <span className="text-sm font-black text-white tracking-wide select-none">{selectedYear}</span>
+                        <button
+                          type="button"
+                          onClick={() => canGoNextYear && setSelectedYear(y => y + 1)}
+                          disabled={!canGoNextYear}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-90 ${
+                            canGoNextYear
+                              ? 'hover:bg-white/10 text-white/50 hover:text-white'
+                              : 'text-white/20 cursor-not-allowed'
+                          }`}
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                      </div>
+
+                      {/* Month Grid */}
+                      <div className="grid grid-cols-3 gap-1.5 p-3">
+                        {MONTH_NAMES.map((name, index) => {
+                          const isSelected = index === selectedMonth
+                          const isCurrent = index === currentMonth && selectedYear === currentYear
+                          const disabled = isMonthDisabled(index)
+                          return (
+                            <button
+                              key={name}
+                              type="button"
+                              onClick={() => !disabled && handleMonthSelect(index)}
+                              disabled={disabled}
+                              className={`relative py-3 px-2 rounded-xl text-[13px] font-bold transition-all duration-200 ${
+                                disabled
+                                  ? 'text-white/20 cursor-not-allowed'
+                                  : isSelected
+                                    ? 'bg-[#162b69] text-white shadow-lg shadow-[#162b69]/50 scale-[1.02] cursor-pointer'
+                                    : isCurrent
+                                      ? 'bg-white/10 text-white font-black hover:bg-white/20 cursor-pointer'
+                                      : 'text-white/70 hover:bg-white/5 hover:text-white cursor-pointer active:scale-95'
+                              }`}
+                            >
+                              {name}
+                              {isCurrent && !isSelected && (
+                                <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white"></span>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* Year-Only Filter Toggle */}
+                      <div className="border-t border-white/10 p-2 bg-white/[0.02] flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handleMonthSelect(-1)}
+                          className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all duration-200 cursor-pointer ${
+                            selectedMonth === -1
+                              ? 'bg-[#162b69] text-white shadow-md'
+                              : 'text-white/80 hover:bg-white/5 hover:text-white active:scale-95'
+                          }`}
+                        >
+                          Show Entire Year
+                        </button>
                       </div>
                     </div>,
                     document.body
@@ -417,7 +444,9 @@ const OwnerDashboard = () => {
               <div className="relative z-10 w-full flex flex-row items-center justify-between sm:block">
                 <div className="sm:mb-2">
                   <h3 className='text-[9px] font-black text-white/40 uppercase tracking-[0.2em] leading-none'>Est. Revenue</h3>
-                  <p className="text-[10px] text-white/50 font-medium mt-0.5">{months.find(m => m.value === selectedMonth)?.label}</p>
+                  <p className="text-[10px] text-white/50 font-medium mt-0.5">
+                    {selectedMonth === -1 ? `Year ${selectedYear}` : `${MONTH_FULL_NAMES[selectedMonth]} ${selectedYear}`}
+                  </p>
                 </div>
                 <p className='text-2xl sm:text-3xl font-black text-white relative flex items-baseline gap-1'>
                   <span className="text-sm sm:text-lg opacity-60">{currency}</span>

@@ -749,7 +749,7 @@ const GownDetails = () => {
               <h1 className='text-xl sm:text-2xl font-black text-primary tracking-tight leading-tight'>{gown.name}</h1>
               <div className='text-xl font-black text-primary flex items-baseline gap-1 shrink-0 text-right'>
                 <span className="text-secondary text-xs sm:text-sm">{currency}</span>
-                <span>{(gown.pricePerDay || gown.price || 0).toLocaleString()}<span className="text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider sm:ml-1">/ Day</span></span>
+                <span>{(gown.pricePerDay || gown.price || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -1175,6 +1175,18 @@ const GownDetails = () => {
                   <span>Rental Period</span>
                   <span className='text-secondary'>{durationDays} Days</span>
                 </div>
+                {durationDays > 3 && (
+                  <>
+                    <div className='flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest'>
+                      <span>Base Rental (3 Days)</span>
+                      <span className='text-primary'>{currency}{(gown?.pricePerDay || gown?.price || 0).toLocaleString()}</span>
+                    </div>
+                    <div className='flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest'>
+                      <span>Extension Fee ({durationDays - 3} Day{durationDays - 3 > 1 ? 's' : ''})</span>
+                      <span className='text-primary'>{currency}{((durationDays - 3) * EXTRA_DAY_FEE).toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
                 <div className='flex justify-between items-center'>
                   <span className='text-base font-black text-primary'>Total Amount</span>
                   <div className='text-2xl font-black text-primary flex items-baseline gap-1'>

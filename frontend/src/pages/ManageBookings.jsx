@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { assets } from '../assets/assets'
 import { API_URL, CURRENCY } from '../config'
 import OwnerSidebar from '../components/OwnerSidebar'
@@ -22,6 +22,26 @@ const ManageBookings = () => {
   const [cancelConfirmBookingId, setCancelConfirmBookingId] = useState(null)
   const [cancelConfirmGownName, setCancelConfirmGownName] = useState('')
 
+  // Month/Year picker state
+  const now = new Date()
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth()) // 0-indexed
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [showMonthPicker, setShowMonthPicker] = useState(false)
+  const monthPickerRef = useRef(null)
+
+  // Close month picker on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (monthPickerRef.current && !monthPickerRef.current.contains(e.target)) {
+        setShowMonthPicker(false)
+      }
+    }
+    if (showMonthPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showMonthPicker])
+
   // Get URL search params for gown filtering and highlighting
   const [searchParams] = useSearchParams()
   const initialGownFilter = searchParams.get('gownId') || 'all'
@@ -30,7 +50,7 @@ const ManageBookings = () => {
   // Set initial filters from URL
   useEffect(() => {
     const statusParam = searchParams.get('status')
-    if (statusParam && ['trial', 'pending', 'confirmed', 'completed', 'canceled'].includes(statusParam)) {
+    if (statusParam && ['trial', 'pending', 'confirmed', 'overdue', 'completed', 'canceled'].includes(statusParam)) {
       setFilterStatus(statusParam)
     }
   }, [searchParams, initialGownFilter])
@@ -69,12 +89,17 @@ const ManageBookings = () => {
   const [calendarInfo, setCalendarInfo] = useState({ unavailableDates: [], trialTimeSlots: {}, laundryHoldDates: [] })
 
   useEffect(() => {
-    fetchBookings()
-  }, [])
+    fetchBookings(selectedMonth, selectedYear)
+  }, [selectedMonth, selectedYear])
 
   // Filter bookings when filterStatus or filterEventType changes
   useEffect(() => {
     let filtered = [...bookings]
+
+    // Filter by date range for tabs other than 'overdue'
+    if (filterStatus !== 'overdue') {
+      filtered = filtered.filter(b => isBookingInSelectedDateRange(b))
+    }
 
     // Filter by status
     if (filterStatus !== 'all') {
@@ -100,7 +125,7 @@ const ManageBookings = () => {
     setFilteredBookings(filtered)
   }, [bookings, filterStatus, searchTerm])
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (month, year) => {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
@@ -109,12 +134,16 @@ const ManageBookings = () => {
         return
       }
 
+      const m = month != null ? month : selectedMonth
+      const y = year != null ? year : selectedYear
+
       const response = await fetch(`${API_URL}/bookings/owner`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ month: m, year: y })
       })
 
       const data = await response.json()
@@ -391,9 +420,53 @@ const ManageBookings = () => {
         return 'bg-orange-100 text-orange-800 border-orange-200'
       case 'canceled':
         return 'bg-red-100 text-red-800 border-red-200'
+      case 'overdue':
+        return 'bg-red-100 text-red-700 border-red-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
+  }
+
+  // Month/Year picker helpers
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const MONTH_FULL_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+  const currentNow = new Date()
+  const currentYear = currentNow.getFullYear()
+  const currentMonth = currentNow.getMonth()
+
+  const handleMonthSelect = (monthIndex) => {
+    setSelectedMonth(monthIndex)
+    setShowMonthPicker(false)
+  }
+
+  const isMonthDisabled = (monthIndex) => {
+    return false // Allow all months so owner can look ahead for future reservations
+  }
+
+  const canGoNextYear = selectedYear < currentYear + 5
+
+  const isBookingInSelectedDateRange = (booking) => {
+    if (!booking.pickupDate) return false
+    const pickupDateObj = new Date(booking.pickupDate)
+    const pYear = pickupDateObj.getFullYear()
+    const pMonth = pickupDateObj.getMonth()
+
+    if (pYear !== selectedYear) return false
+    if (selectedMonth !== -1 && pMonth !== selectedMonth) return false
+    return true
+  }
+
+  // Compute overdue days for display (client-side, real-time)
+  const getOverdueDays = (returnDate) => {
+    if (!returnDate) return 0
+    const ret = new Date(returnDate)
+    const today = new Date()
+    // Compare date parts only
+    const retDate = new Date(ret.getFullYear(), ret.getMonth(), ret.getDate())
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const diff = Math.floor((todayDate - retDate) / (1000 * 60 * 60 * 24))
+    return Math.max(0, diff)
   }
 
   const handleVerifyPayment = async (bookingId, action) => {
@@ -481,17 +554,112 @@ const ManageBookings = () => {
                   <p className='text-sm sm:text-base text-gray-500 font-medium'>Oversee and process your client reservations and appointments.</p>
                 </div>
 
-                {/* Search Bar */}
-                <div className="w-full md:w-80 relative group">
-                  <input
-                    type="text"
-                    placeholder="Search clients, gowns, or refs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
-                  />
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                     <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                  {/* Material Design Month Picker */}
+                  <div className="relative" ref={monthPickerRef} id="month-year-picker" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                    <button
+                      onClick={() => setShowMonthPicker(!showMonthPicker)}
+                      className={`w-full sm:w-48 flex items-center justify-between gap-3 px-5 py-4 bg-white border border-gray-100/80 rounded-2xl text-sm font-bold text-primary-dull shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300 cursor-pointer ${
+                        showMonthPicker ? 'ring-2 ring-primary/20 border-primary' : ''
+                      }`}
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                    >
+                      <span className="text-sm font-bold text-primary-dull">
+                        {selectedMonth === -1 ? selectedYear : `${MONTH_NAMES[selectedMonth]} ${selectedYear}`}
+                      </span>
+                      <svg className={`w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-300 ${showMonthPicker ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Month Picker Dropdown */}
+                    {showMonthPicker && (
+                      <div 
+                        className="absolute top-full mt-2 right-0 sm:left-0 w-[280px] bg-white rounded-2xl shadow-[0_20px_60px_rgba(22,43,105,0.12)] border border-gray-100 z-50 overflow-hidden animate-fade-in"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Year Navigation */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-primary/[0.03] border-b border-gray-100/80">
+                          <button
+                            onClick={() => setSelectedYear(y => y - 1)}
+                            className="w-9 h-9 rounded-full hover:bg-primary/5 flex items-center justify-center text-primary/40 hover:text-primary transition-all cursor-pointer active:scale-90"
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                          </button>
+                          <span className="text-sm font-black text-primary-dull tracking-wide select-none">{selectedYear}</span>
+                          <button
+                            onClick={() => canGoNextYear && setSelectedYear(y => y + 1)}
+                            disabled={!canGoNextYear}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-90 ${
+                              canGoNextYear
+                                ? 'hover:bg-primary/5 text-primary/40 hover:text-primary'
+                                : 'text-gray-200 cursor-not-allowed'
+                            }`}
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                          </button>
+                        </div>
+
+                        {/* Month Grid */}
+                        <div className="grid grid-cols-3 gap-1.5 p-3">
+                          {MONTH_NAMES.map((name, index) => {
+                            const isSelected = index === selectedMonth && selectedYear === selectedYear
+                            const isCurrent = index === currentMonth && selectedYear === currentYear
+                            const disabled = isMonthDisabled(index)
+                            return (
+                              <button
+                                key={name}
+                                onClick={() => !disabled && handleMonthSelect(index)}
+                                disabled={disabled}
+                                className={`relative py-3 px-2 rounded-xl text-[13px] font-bold transition-all duration-200 ${
+                                  disabled
+                                    ? 'text-gray-200 cursor-not-allowed'
+                                    : isSelected
+                                      ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02] cursor-pointer'
+                                      : isCurrent
+                                        ? 'bg-primary/5 text-primary font-black hover:bg-primary/10 cursor-pointer'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-primary-dull cursor-pointer active:scale-95'
+                                }`}
+                              >
+                                {name}
+                                {isCurrent && !isSelected && (
+                                  <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"></span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Year-Only Filter Toggle */}
+                        <div className="border-t border-gray-100 p-2 bg-gray-50/50 flex justify-center">
+                          <button
+                            onClick={() => handleMonthSelect(-1)}
+                            className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all duration-200 cursor-pointer ${
+                              selectedMonth === -1
+                                ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.01]'
+                                : 'text-primary hover:bg-primary/5 hover:text-primary-dull active:scale-95'
+                            }`}
+                          >
+                            Show Entire Year
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="w-full sm:w-80 relative group">
+                    <input
+                      type="text"
+                      placeholder="Search clients, gowns, or refs..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 bg-white/50 backdrop-blur-md border border-gray-100 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                       <img src={assets.search_icon} className="w-5 h-5 opacity-40 group-focus-within:opacity-100 transition-opacity" alt="search" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -515,10 +683,19 @@ const ManageBookings = () => {
           {/* Status Filter Tabs - Modern Segmented Control */}
           <div className='mb-6 overflow-x-auto premium-scrollbar-yellow -mx-3 px-3 pb-2'>
             <div className='inline-flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl min-w-full'>
-              {['all', 'trial', 'pending', 'confirmed', 'completed', 'canceled'].map((status) => {
-                const count = status === 'all' 
-                  ? bookings.length 
-                  : bookings.filter(b => b.status === status).length;
+              {['all', 'trial', 'pending', 'confirmed', 'overdue', 'completed', 'canceled'].map((status) => {
+                let count
+                if (status === 'overdue') {
+                  count = bookings.filter(b => b.status === 'overdue').length
+                } else if (status === 'all') {
+                  count = bookings.filter(b => isBookingInSelectedDateRange(b)).length
+                } else {
+                  count = bookings.filter(b => b.status === status && isBookingInSelectedDateRange(b)).length
+                }
+                
+                const label = status === 'all' ? 'All Requests' 
+                  : status === 'overdue' ? 'Overdue' 
+                  : status.charAt(0).toUpperCase() + status.slice(1)
                 
                 return (
                   <button
@@ -526,13 +703,17 @@ const ManageBookings = () => {
                     onClick={() => setFilterStatus(status)}
                     className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-xs transition-all duration-300 relative whitespace-nowrap ${
                       filterStatus === status
-                        ? 'bg-white text-primary shadow-sm scale-105'
+                        ? status === 'overdue' ? 'bg-white text-red-600 shadow-sm scale-105' : 'bg-white text-primary shadow-sm scale-105'
                         : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                     }`}
                   >
                     <span className="flex items-center gap-2 whitespace-nowrap">
-                      {status === 'all' ? 'All Requests' : status.charAt(0).toUpperCase() + status.slice(1)}
-                      <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${filterStatus === status ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}>
+                      {label}
+                      <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${
+                        filterStatus === status 
+                          ? status === 'overdue' ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary' 
+                          : 'bg-gray-200 text-gray-500'
+                      }`}>
                           {count}
                       </span>
                     </span>
@@ -564,9 +745,10 @@ const ManageBookings = () => {
                             booking.status === 'confirmed' || booking.status === 'completed' ? 'bg-green-50 text-green-700 border-green-100' : 
                             booking.status === 'pending' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
                             booking.status === 'trial' ? 'bg-gray-50 text-gray-500 border-gray-200' : 
+                            booking.status === 'overdue' ? 'bg-red-50 text-red-600 border-red-200' :
                             'bg-red-50 text-red-600 border-red-100'
                         }`}>
-                          {booking.status}
+                          {booking.status === 'overdue' ? 'Overdue' : booking.status}
                         </span>
                       </div>
                       
@@ -652,16 +834,32 @@ const ManageBookings = () => {
                             </p>
                           </div>
                         )}
+
+                        {/* Overdue Info for Overdue bookings */}
+                        {booking.status === 'overdue' && (
+                          <div className="flex-1 sm:flex-none bg-red-50/80 p-3 rounded-xl border border-red-100/50 min-w-[120px]">
+                            <p className="text-[10px] font-black text-red-400 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              Overdue
+                            </p>
+                            <p className="text-lg font-black text-red-600 leading-tight">
+                              {getOverdueDays(booking.returnDate)} {getOverdueDays(booking.returnDate) === 1 ? 'day' : 'days'}
+                            </p>
+                            <p className="text-[10px] font-semibold text-red-400 mt-0.5">
+                              Since {formatDate(booking.returnDate)}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Section 4: Action Column / Row */}
-                      {['pending', 'confirmed', 'trial'].includes(booking.status) && (
-                        <div className="flex flex-row xl:flex-col gap-2 w-full xl:w-44 border-t border-gray-100/70 pt-3.5 xl:border-t-0 xl:pt-0 xl:border-l xl:border-gray-50 xl:pl-4">
+                      {['pending', 'confirmed', 'trial', 'overdue'].includes(booking.status) && (
+                        <div className="flex flex-row xl:flex-col gap-2 w-full xl:w-48 border-t border-gray-100/70 pt-3.5 xl:border-t-0 xl:pt-0 xl:border-l xl:border-gray-50 xl:pl-4">
                            {/* Payment Verification */}
                            {booking.status === 'pending' && booking.payment?.status === 'pending' && (
                              <button
                                onClick={() => openPaymentModal(booking)}
-                               className='h-10 flex-1 bg-primary text-white rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-102 active:scale-95 transition-all cursor-pointer'
+                               className='h-10 flex-1 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all cursor-pointer'
                              >
                                Verify
                              </button>
@@ -671,24 +869,36 @@ const ManageBookings = () => {
                            {booking.status === 'pending' && (booking.payment?.status === 'verified' || booking.payment?.status === 'paid' || !booking.payment) && (
                                <button
                                  onClick={() => handleStatusChange(booking._id || booking.id, 'confirmed')}
-                                 className='h-10 flex-1 bg-primary text-white rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-102 active:scale-95 transition-all cursor-pointer'
+                                 className='h-10 flex-1 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all cursor-pointer'
                                >
                                  Confirm
                                </button>
                            )}
 
-                           {/* Mark Completed status === 'confirmed' */}
+                           {/* Confirm Return for Confirmed bookings */}
                            {booking.status === 'confirmed' && (
                              <button
                                onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
-                               className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-sm uppercase tracking-wider shadow-md hover:scale-102 active:scale-95 transition-all cursor-pointer'
+                               className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap'
                              >
-                               Complete
+                               <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                               <span>Confirm Return</span>
                              </button>
                            )}
 
-                           {/* Cancel Action (Only Pending/Trial) */}
-                           {(['pending', 'trial'].includes(booking.status)) && (
+                           {/* Confirm Return for Overdue bookings */}
+                           {booking.status === 'overdue' && (
+                             <button
+                               onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
+                               className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap'
+                             >
+                               <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                               <span>Confirm Return</span>
+                             </button>
+                           )}
+
+                           {/* Cancel Action (Only Pending — removed from trial per Feature 3) */}
+                           {booking.status === 'pending' && (
                                <button
                                  onClick={() => {
                                    setCancelConfirmBookingId(booking._id || booking.id)
