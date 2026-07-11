@@ -444,7 +444,8 @@ const ManageBookings = () => {
     return false // Allow all months so owner can look ahead for future reservations
   }
 
-  const canGoNextYear = selectedYear < currentYear + 5
+  const canGoNextYear = selectedYear < currentYear
+  const canGoPrevYear = selectedYear > 2025
 
   const isBookingInSelectedDateRange = (booking) => {
     if (!booking.pickupDate) return false
@@ -582,8 +583,13 @@ const ManageBookings = () => {
                         {/* Year Navigation */}
                         <div className="flex items-center justify-between px-4 py-3 bg-primary/[0.03] border-b border-gray-100/80">
                           <button
-                            onClick={() => setSelectedYear(y => y - 1)}
-                            className="w-9 h-9 rounded-full hover:bg-primary/5 flex items-center justify-center text-primary/40 hover:text-primary transition-all cursor-pointer active:scale-90"
+                            onClick={() => canGoPrevYear && setSelectedYear(y => y - 1)}
+                            disabled={!canGoPrevYear}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-90 ${
+                              canGoPrevYear
+                                ? 'hover:bg-primary/5 text-primary/40 hover:text-primary'
+                                : 'text-gray-200 cursor-not-allowed'
+                            }`}
                           >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                           </button>
