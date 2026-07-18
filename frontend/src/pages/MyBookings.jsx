@@ -667,6 +667,14 @@ const MyBookings = ({ setShowLogin }) => {
                       </div>
                     )}
 
+                    {/* Cancellation Reason Display */}
+                    {(booking.status?.toLowerCase() === 'canceled' && booking.cancellationReason) && (
+                      <div className='mb-4 p-3 bg-red-50 border border-red-100 rounded-2xl'>
+                        <p className='text-[8px] font-black text-red-800 uppercase tracking-widest mb-1'>Cancellation Reason</p>
+                        <p className='text-xs text-red-700 font-medium leading-relaxed'>{booking.cancellationReason}</p>
+                      </div>
+                    )}
+
                     {/* Date/Status Information - Standardized Boxed Layout */}
                     <div className='space-y-3 mb-auto'>
                       {isTrial ? (

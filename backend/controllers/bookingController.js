@@ -596,6 +596,14 @@ export const updateBooking = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Booking is already closed.' });
       }
 
+      const { cancellationReason } = req.body;
+      if (isOwnerActor) {
+        if (!cancellationReason || !cancellationReason.trim()) {
+          return res.status(400).json({ success: false, message: 'Cancellation reason is required.' });
+        }
+        booking.cancellationReason = cancellationReason.trim();
+      }
+
       // Cancel should instantly release trial holds. Since calendar queries exclude canceled bookings,
       // setting status to canceled is enough.
       booking.status = 'canceled';

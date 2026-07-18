@@ -21,6 +21,9 @@ const ManageBookings = () => {
   const [modalError, setModalError] = useState('')
   const [cancelConfirmBookingId, setCancelConfirmBookingId] = useState(null)
   const [cancelConfirmGownName, setCancelConfirmGownName] = useState('')
+  const [cancelReasonBookingId, setCancelReasonBookingId] = useState(null)
+  const [cancelReasonGownName, setCancelReasonGownName] = useState('')
+  const [cancellationReason, setCancellationReason] = useState('')
 
   // Month/Year picker state
   const now = new Date()
@@ -174,13 +177,14 @@ const ManageBookings = () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ bookingId, action: 'cancel' })
+          body: JSON.stringify({ bookingId, action: 'cancel', cancellationReason })
         })
 
         const data = await response.json()
         if (data.success) {
           setSuccess('Booking canceled successfully')
           setCancelConfirmBookingId(null)
+          setCancellationReason('')
           fetchBookings()
           setTimeout(() => setSuccess(''), 3000)
         } else {
@@ -907,8 +911,9 @@ const ManageBookings = () => {
                            {booking.status === 'pending' && (
                                <button
                                  onClick={() => {
-                                   setCancelConfirmBookingId(booking._id || booking.id)
-                                   setCancelConfirmGownName(booking.gown?.name || 'this booking')
+                                   setCancelReasonBookingId(booking._id || booking.id)
+                                   setCancelReasonGownName(booking.gown?.name || 'this booking')
+                                   setCancellationReason('')
                                  }}
                                  className='h-10 flex-1 bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl font-black text-xs uppercase tracking-wider border border-gray-200/50 hover:border-red-100 transition-all flex items-center justify-center gap-2 group/cancel cursor-pointer'
                                >
@@ -1340,11 +1345,110 @@ const ManageBookings = () => {
           </div>
         </div>
       )}
+      {/* Cancellation Reason Input Modal */}
+      {cancelReasonBookingId && (
+        <div
+          className='fixed inset-0 bg-primary/25 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in'
+          onClick={() => {
+            setCancelReasonBookingId(null)
+            setCancellationReason('')
+          }}
+        >
+          <div
+            className='bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-lg w-full p-8 border border-red-50 relative overflow-hidden'
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Background accent */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-red-50/60 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none"></div>
+
+            {/* Close X */}
+            <button
+              onClick={() => {
+                setCancelReasonBookingId(null)
+                setCancellationReason('')
+              }}
+              className='absolute top-5 right-5 w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group'
+            >
+              <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Header/Title */}
+            <div className="relative z-10 mb-6">
+              <h3 className='text-2xl font-black text-primary tracking-tight mb-2'>Cancel Booking</h3>
+              <p className='text-sm font-bold text-gray-500 leading-relaxed'>
+                Please provide a cancellation reason for <span className="text-primary font-black">{cancelReasonGownName}</span>.
+              </p>
+            </div>
+
+            {/* Reason Field */}
+            <div className='mb-8 relative z-10' id='cancellationReasonField'>
+              <div className="flex items-center justify-between mb-3 px-2">
+                <label className='text-[10px] font-black text-red-500 uppercase tracking-widest'>
+                  Cancellation Reason <span className="text-red-500 opacity-60 ml-1">(Required for Cancellation)</span>
+                </label>
+                <div className="flex items-center gap-1.5 text-[9px] font-black text-primary/60 uppercase tracking-tight">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Client Preview
+                </div>
+              </div>
+              <textarea
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                placeholder="E.g., The selected apparel is no longer available due to unforeseen circumstances. We apologize for the inconvenience."
+                rows={4}
+                className='w-full px-7 py-6 bg-gray-50/80 border-2 border-gray-100 rounded-[2.5rem] text-sm font-bold text-primary transition-all focus:border-primary/20 focus:bg-white focus:ring-12 focus:ring-primary/5 outline-none resize-none placeholder:text-gray-400 shadow-inner'
+              />
+              <p className='text-[10px] font-black text-gray-500 mt-4 px-4 flex items-center gap-2'>
+                <div className="w-1.5 h-1.5 bg-primary/20 rounded-full"></div>
+                This message will be visible to the customer on their booking details page.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 relative z-10">
+              <button
+                onClick={() => {
+                  setCancelReasonBookingId(null)
+                  setCancellationReason('')
+                }}
+                className='flex-1 h-13 py-4 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95'
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={() => {
+                  if (cancellationReason.trim()) {
+                    setCancelConfirmBookingId(cancelReasonBookingId)
+                    setCancelConfirmGownName(cancelReasonGownName)
+                    setCancelReasonBookingId(null)
+                  }
+                }}
+                disabled={!cancellationReason.trim()}
+                className={`flex-1 h-13 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 text-white ${
+                  cancellationReason.trim()
+                    ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 hover:shadow-red-500/30'
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Cancel Confirmation Modal */}
       {cancelConfirmBookingId && (
         <div
           className='fixed inset-0 bg-primary/25 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in'
-          onClick={() => setCancelConfirmBookingId(null)}
+          onClick={() => {
+            setCancelConfirmBookingId(null)
+            setCancellationReason('')
+          }}
         >
           <div
             className='bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(1,62,141,0.15)] max-w-sm w-full p-8 border border-red-50 relative overflow-hidden'
@@ -1355,7 +1459,10 @@ const ManageBookings = () => {
 
             {/* Close X */}
             <button
-              onClick={() => setCancelConfirmBookingId(null)}
+              onClick={() => {
+                setCancelConfirmBookingId(null)
+                setCancellationReason('')
+              }}
               className='absolute top-5 right-5 w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group'
             >
               <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1379,7 +1486,10 @@ const ManageBookings = () => {
 
             <div className="flex gap-3 relative z-10">
               <button
-                onClick={() => setCancelConfirmBookingId(null)}
+                onClick={() => {
+                  setCancelConfirmBookingId(null)
+                  setCancellationReason('')
+                }}
                 className='flex-1 h-13 py-4 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95'
               >
                 Keep Booking

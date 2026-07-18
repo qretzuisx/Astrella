@@ -71,6 +71,7 @@ const bookingSchema = new mongoose.Schema({
     
     // [SECTION] REJECTION & SETTLEMENT
     rejectionReason: { type: String, default: '' },
+    cancellationReason: { type: String, default: '' },
     balancePaidAt: { type: Date },
     balancePaidAmount: { type: Number }
 }, { timestamps: true })
