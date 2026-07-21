@@ -1,5 +1,5 @@
 import express from "express";
-import { changeBookingStatus, cleanupExpiredTrials, createBooking, getGownCalendar, getOwnerBooking, getUserBooking, updateBooking, validateBookingWindow, verifyPayment } from "../controllers/bookingController.js";
+import { applyPenalty, changeBookingStatus, cleanupExpiredTrials, createBooking, getGownCalendar, getOwnerBooking, getUserBooking, updateBooking, validateBookingWindow, verifyPayment } from "../controllers/bookingController.js";
 import { protect } from "../middleware/auth.js";
 import upload from "../middleware/multer.js";
 
@@ -40,5 +40,6 @@ bookingRouter.put('/verify-payment', protect, verifyPayment)
 bookingRouter.put('/update', protect, updateBooking)
 bookingRouter.get('/calendar/:gownId', getGownCalendar)
 bookingRouter.post('/cleanup-expired-trials', protect, cleanupExpiredTrials)
+bookingRouter.put('/apply-penalty', protect, applyPenalty)
 
 export default bookingRouter;

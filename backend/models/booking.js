@@ -73,7 +73,17 @@ const bookingSchema = new mongoose.Schema({
     rejectionReason: { type: String, default: '' },
     cancellationReason: { type: String, default: '' },
     balancePaidAt: { type: Date },
-    balancePaidAmount: { type: Number }
+    balancePaidAmount: { type: Number },
+
+    // [SECTION] OVERDUE PENALTY
+    penalty: {
+        amount: { type: Number, default: 0 },
+        overdueDays: { type: Number, default: 0 },
+        ratePerDay: { type: Number, default: 50 },
+        isApplied: { type: Boolean, default: false },
+        appliedAt: { type: Date },
+        appliedBy: { type: ObjectId, ref: 'User' }
+    }
 }, { timestamps: true })
 
 // [SECTION] PERFORMANCE INDEXES

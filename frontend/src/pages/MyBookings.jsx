@@ -754,6 +754,40 @@ const MyBookings = ({ setShowLogin }) => {
                         </div>
                       )}
 
+                      {/* Overdue Penalty Section - only shown when penalty is applied */}
+                      {!isTrial && booking.penalty?.isApplied && (
+                        <div className='mb-3 rounded-2xl overflow-hidden border border-red-100 shadow-sm'>
+                          {/* Penalty Header */}
+                          <div className='flex items-center gap-2 px-3.5 py-2.5 bg-red-50'>
+                            <svg className="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className='text-[9px] font-black text-red-600 uppercase tracking-widest'>Overdue Penalty Applied</span>
+                          </div>
+                          {/* Penalty Breakdown */}
+                          <div className='px-3.5 py-3 bg-white space-y-1.5'>
+                            <div className='flex justify-between items-center'>
+                              <span className='text-[10px] font-bold text-gray-500'>Overdue Days</span>
+                              <span className='text-[10px] font-black text-red-600'>{booking.penalty.overdueDays} {booking.penalty.overdueDays === 1 ? 'day' : 'days'}</span>
+                            </div>
+                            <div className='flex justify-between items-center'>
+                              <span className='text-[10px] font-bold text-gray-500'>Penalty Rate</span>
+                              <span className='text-[10px] font-black text-red-600'>₱{booking.penalty.ratePerDay}/day</span>
+                            </div>
+                            <div className='flex justify-between items-center'>
+                              <span className='text-[10px] font-bold text-gray-500'>Penalty Amount</span>
+                              <span className='text-[10px] font-black text-red-600'>₱{booking.penalty.amount?.toLocaleString()}</span>
+                            </div>
+                            <div className='pt-1.5 mt-1 border-t border-red-50 flex justify-between items-center'>
+                              <span className='text-[9px] font-black text-primary/60 uppercase tracking-widest'>Total Amount Due</span>
+                              <span className='text-base font-black text-primary'>
+                                ₱{((booking.price || 0) + (booking.penalty.amount || 0)).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className='flex flex-col gap-2'>
                         {/* Status Specific Global Actions */}
                         <div className='grid grid-cols-2 gap-2'>

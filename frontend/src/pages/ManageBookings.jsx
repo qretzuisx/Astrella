@@ -25,6 +25,11 @@ const ManageBookings = () => {
   const [cancelReasonGownName, setCancelReasonGownName] = useState('')
   const [cancellationReason, setCancellationReason] = useState('')
 
+  // Penalty modal state
+  const [penaltyBooking, setPenaltyBooking] = useState(null)
+  const [showPenaltyModal, setShowPenaltyModal] = useState(false)
+  const [applyingPenalty, setApplyingPenalty] = useState(false)
+
   // Month/Year picker state
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth()) // 0-indexed
@@ -408,6 +413,45 @@ const ManageBookings = () => {
       console.error('Error finalizing trial:', error)
       setError('An error occurred. Please try again.')
       setTimeout(() => setError(''), 3000)
+    }
+  }
+
+  const openPenaltyModal = (booking) => {
+    setPenaltyBooking(booking)
+    setShowPenaltyModal(true)
+  }
+
+  const handleApplyPenalty = async () => {
+    if (!penaltyBooking) return
+    try {
+      setApplyingPenalty(true)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/bookings/apply-penalty`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ bookingId: penaltyBooking._id || penaltyBooking.id })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setSuccess(data.message || 'Penalty applied successfully')
+        setShowPenaltyModal(false)
+        setPenaltyBooking(null)
+        fetchBookings()
+        setTimeout(() => setSuccess(''), 4000)
+      } else {
+        setError(data.message || 'Failed to apply penalty')
+        setTimeout(() => setError(''), 3000)
+      }
+    } catch (err) {
+      console.error('Error applying penalty:', err)
+      setError('An error occurred. Please try again.')
+      setTimeout(() => setError(''), 3000)
+    } finally {
+      setApplyingPenalty(false)
     }
   }
 
@@ -898,13 +942,26 @@ const ManageBookings = () => {
 
                            {/* Confirm Return for Overdue bookings */}
                            {booking.status === 'overdue' && (
-                             <button
-                               onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
-                               className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap'
-                             >
-                               <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                               <span>Confirm Return</span>
-                             </button>
+                             <div className="flex flex-col gap-1.5">
+                               <button
+                                 onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
+                                 className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap'
+                               >
+                                 <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                 <span>Confirm Return</span>
+                               </button>
+                               <button
+                                 onClick={() => openPenaltyModal(booking)}
+                                 className={`h-10 flex-1 rounded-xl font-black text-xs uppercase tracking-wide shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                   booking.penalty?.isApplied
+                                     ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                                     : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white'
+                                 }`}
+                               >
+                                 <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                 <span>{booking.penalty?.isApplied ? `Penalty: ₱${booking.penalty.amount}` : 'Charge Penalty'}</span>
+                               </button>
+                             </div>
                            )}
 
                            {/* Cancel Action (Only Pending — removed from trial per Feature 3) */}
@@ -1504,6 +1561,155 @@ const ManageBookings = () => {
           </div>
         </div>
       )}
+
+      {/* Penalty Charge Modal */}
+      {showPenaltyModal && penaltyBooking && (() => {
+        const overdueDays = getOverdueDays(penaltyBooking.returnDate)
+        const penaltyRate = 50
+        const penaltyAmount = overdueDays * penaltyRate
+        const totalAmountDue = (penaltyBooking.price || 0) + penaltyAmount
+        const alreadyApplied = penaltyBooking.penalty?.isApplied
+
+        return (
+          <div
+            className='fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in'
+            onClick={() => { setShowPenaltyModal(false); setPenaltyBooking(null) }}
+          >
+            <div
+              className='bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(239,68,68,0.15)] max-w-lg w-full p-8 border border-red-50 relative overflow-hidden'
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Background decorations */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-red-50/60 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-50/40 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none"></div>
+
+              {/* Close button */}
+              <button
+                onClick={() => { setShowPenaltyModal(false); setPenaltyBooking(null) }}
+                className='absolute top-5 right-5 w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group'
+              >
+                <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Header */}
+              <div className="relative z-10 mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="w-5 h-1 bg-red-500 rounded-full"></div>
+                      <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Overdue Penalty</span>
+                    </div>
+                    <h3 className='text-2xl font-black text-primary tracking-tight leading-tight'>Charge Penalty</h3>
+                  </div>
+                </div>
+                <p className='text-sm font-bold text-gray-500 leading-relaxed'>
+                  {alreadyApplied
+                    ? 'A penalty has already been applied to this reservation. Review the details below.'
+                    : 'Apply a late return penalty to this overdue reservation.'}
+                </p>
+              </div>
+
+              {/* Booking summary */}
+              <div className='relative z-10 bg-gray-50/80 border border-gray-100 rounded-2xl p-5 mb-6'>
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Customer</label>
+                    <p className='text-sm font-black text-primary truncate'>{penaltyBooking.user?.name || '—'}</p>
+                  </div>
+                  <div>
+                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Gown</label>
+                    <p className='text-sm font-black text-primary truncate'>{penaltyBooking.gown?.name || '—'}</p>
+                  </div>
+                  <div>
+                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Scheduled Return</label>
+                    <p className='text-sm font-bold text-gray-700'>{formatDate(penaltyBooking.returnDate)}</p>
+                  </div>
+                  <div>
+                    <label className='block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1'>Reservation Cost</label>
+                    <p className='text-sm font-black text-primary-dull'>₱{(penaltyBooking.price || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Penalty Breakdown */}
+              <div className='relative z-10 bg-red-50/60 border border-red-100 rounded-2xl p-5 mb-6'>
+                <p className='text-[10px] font-black text-red-500 uppercase tracking-widest mb-4'>Penalty Breakdown</p>
+                <div className='space-y-3'>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-sm font-bold text-gray-600'>Overdue Days</span>
+                    <span className='text-base font-black text-red-600'>{overdueDays} {overdueDays === 1 ? 'day' : 'days'}</span>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-sm font-bold text-gray-600'>Penalty Rate</span>
+                    <span className='text-base font-black text-red-600'>₱{penaltyRate}/day</span>
+                  </div>
+                  <div className='h-px bg-red-100 my-1'></div>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-sm font-black text-red-700 uppercase tracking-wide'>Total Penalty</span>
+                    <span className='text-2xl font-black text-red-600'>₱{penaltyAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Amount Due */}
+              <div className='relative z-10 bg-primary/5 border border-primary/10 rounded-2xl p-4 mb-6'>
+                <div className='flex justify-between items-center'>
+                  <div>
+                    <p className='text-[10px] font-black text-primary/60 uppercase tracking-widest mb-0.5'>Updated Total Amount Due</p>
+                    <p className='text-xs font-bold text-gray-500'>Reservation Cost + Penalty</p>
+                  </div>
+                  <span className='text-2xl font-black text-primary'>₱{totalAmountDue.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {alreadyApplied ? (
+                <div className='relative z-10 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3'>
+                  <svg className="w-5 h-5 text-orange-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p className='text-sm font-bold text-orange-700'>Penalty of <span className='font-black'>₱{penaltyBooking.penalty?.amount?.toLocaleString()}</span> has already been applied to this booking.</p>
+                </div>
+              ) : (
+                <div className='relative z-10 flex gap-3'>
+                  <button
+                    onClick={() => { setShowPenaltyModal(false); setPenaltyBooking(null) }}
+                    className='flex-1 py-4 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95'
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApplyPenalty}
+                    disabled={applyingPenalty}
+                    className='flex-[2] py-4 bg-red-500 text-white hover:bg-red-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none flex items-center justify-center gap-2'
+                  >
+                    {applyingPenalty ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                        <span>Applying...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Confirm & Apply ₱{penaltyAmount.toLocaleString()} Penalty</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

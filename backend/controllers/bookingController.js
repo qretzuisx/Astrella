@@ -551,7 +551,75 @@ export const changeBookingStatus = async (req, res) => {
     }
 }
 
-// Unified endpoint for both users and owners to cancel or reschedule bookings.
+// [SECTION] PENALTY MANAGEMENT
+/**
+ * [INFO] Allows owners to calculate and apply a penalty for overdue bookings.
+ * [LOGIC]
+ * 1. Validates that the booking is overdue and belongs to the acting owner.
+ * 2. Computes overdue days from returnDate vs. today (local date comparison).
+ * 3. Penalty = overdueDays × ₱50/day.
+ * 4. Saves the penalty object to the booking record.
+ */
+export const applyPenalty = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { bookingId } = req.body;
+
+        if (req.user.role !== 'owner') {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+        if (booking.owner.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+        if (booking.status !== 'overdue') {
+            return res.status(400).json({ success: false, message: 'Penalty can only be applied to overdue bookings.' });
+        }
+
+        // [LOGIC] Compute overdue days (local date comparison)
+        const now = new Date();
+        const returnDateStr = toLocalDateString(new Date(booking.returnDate));
+        const nowDateStr = toLocalDateString(now);
+        const returnMs = new Date(returnDateStr + 'T00:00:00Z').getTime();
+        const nowMs = new Date(nowDateStr + 'T00:00:00Z').getTime();
+        const overdueDays = Math.max(0, Math.floor((nowMs - returnMs) / DAY_IN_MS));
+
+        const PENALTY_RATE = 50; // ₱50 per day
+        const penaltyAmount = overdueDays * PENALTY_RATE;
+
+        // [LOGIC] Save penalty to the booking
+        booking.penalty = {
+            amount: penaltyAmount,
+            overdueDays,
+            ratePerDay: PENALTY_RATE,
+            isApplied: true,
+            appliedAt: now,
+            appliedBy: _id
+        };
+
+        await booking.save();
+
+        const populated = await Booking.findById(booking._id)
+            .populate('gown', 'name image')
+            .populate('user', 'name email contactNumber')
+            .populate('owner', 'name');
+
+        res.json({
+            success: true,
+            message: `Penalty of ₱${penaltyAmount} applied successfully (${overdueDays} day${overdueDays !== 1 ? 's' : ''} overdue)`,
+            booking: populated
+        });
+    } catch (error) {
+        console.error('[PENALTY] Error applying penalty:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
 // Rules:
 // - Users can only update their own bookings.
 // - Owners can only update bookings where they are the owner.
