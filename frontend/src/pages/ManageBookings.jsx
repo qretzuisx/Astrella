@@ -440,7 +440,7 @@ const ManageBookings = () => {
         setSuccess(data.message || 'Penalty applied successfully')
         setShowPenaltyModal(false)
         setPenaltyBooking(null)
-        fetchBookings()
+        await handleStatusChange(data.booking._id || data.booking.id, 'completed')
         setTimeout(() => setSuccess(''), 4000)
       } else {
         setError(data.message || 'Failed to apply penalty')
@@ -516,6 +516,32 @@ const ManageBookings = () => {
     const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     const diff = Math.floor((todayDate - retDate) / (1000 * 60 * 60 * 24))
     return Math.max(0, diff)
+  }
+
+  const getScheduledReturnDateTime = (booking) => {
+    if (!booking?.returnDate) return null
+    const date = new Date(booking.returnDate)
+    const [hours, minutes] = (booking.returnTime || booking.pickupTime || '09:00').split(':').map(Number)
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours || 0, minutes || 0, 0, 0)
+  }
+
+  const isBookingLate = (booking) => {
+    const scheduled = getScheduledReturnDateTime(booking)
+    return scheduled ? new Date() > scheduled : false
+  }
+
+  const handleConfirmReturn = async (booking) => {
+    if (booking.penalty?.isApplied && booking.status === 'confirmed') {
+      await handleStatusChange(booking._id || booking.id, 'completed')
+      return
+    }
+
+    if (booking.status === 'confirmed' && isBookingLate(booking)) {
+      openPenaltyModal(booking)
+      return
+    }
+
+    await handleStatusChange(booking._id || booking.id, 'completed')
   }
 
   const handleVerifyPayment = async (bookingId, action) => {
@@ -931,13 +957,26 @@ const ManageBookings = () => {
 
                            {/* Confirm Return for Confirmed bookings */}
                            {booking.status === 'confirmed' && (
-                             <button
-                               onClick={() => handleStatusChange(booking._id || booking.id, 'completed')}
-                               className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap'
-                             >
-                               <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                               <span>Confirm Return</span>
-                             </button>
+                             <div className="flex flex-col gap-2">
+                               <button
+                                 onClick={() => handleConfirmReturn(booking)}
+                                 className='h-10 flex-1 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-wide shadow-md hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap'
+                               >
+                                 <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                 <span>Confirm Return</span>
+                               </button>
+                               <button
+                                 onClick={() => openPenaltyModal(booking)}
+                                 className={`h-10 flex-1 rounded-xl font-black text-xs uppercase tracking-wide shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                   booking.penalty?.isApplied
+                                     ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                                     : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white'
+                                 }`}
+                               >
+                                 <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                 <span>{booking.penalty?.isApplied ? `Penalty: ₱${booking.penalty.amount}` : 'Charge Penalty'}</span>
+                               </button>
+                             </div>
                            )}
 
                            {/* Confirm Return for Overdue bookings */}

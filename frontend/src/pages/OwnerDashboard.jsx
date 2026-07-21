@@ -449,7 +449,7 @@ const OwnerDashboard = () => {
 
               <div className="relative z-10 w-full flex flex-row items-center justify-between sm:block">
                 <div className="sm:mb-2">
-                  <h3 className='text-[9px] font-black text-white/40 uppercase tracking-[0.2em] leading-none'>Est. Revenue</h3>
+                  <h3 className='text-[9px] font-black text-white/40 uppercase tracking-[0.2em] leading-none'>Total Revenue</h3>
                   <p className="text-[10px] text-white/50 font-medium mt-0.5">
                     {selectedMonth === -1 ? `Year ${selectedYear}` : `${MONTH_FULL_NAMES[selectedMonth]} ${selectedYear}`}
                   </p>

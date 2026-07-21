@@ -576,17 +576,18 @@ export const applyPenalty = async (req, res) => {
         if (booking.owner.toString() !== _id.toString()) {
             return res.status(403).json({ success: false, message: 'Unauthorized' });
         }
-        if (booking.status !== 'overdue') {
-            return res.status(400).json({ success: false, message: 'Penalty can only be applied to overdue bookings.' });
+        if (booking.status !== 'overdue' && booking.status !== 'confirmed') {
+            return res.status(400).json({ success: false, message: 'Penalty can only be applied to overdue or late confirmed bookings.' });
         }
 
-        // [LOGIC] Compute overdue days (local date comparison)
         const now = new Date();
-        const returnDateStr = toLocalDateString(new Date(booking.returnDate));
-        const nowDateStr = toLocalDateString(now);
-        const returnMs = new Date(returnDateStr + 'T00:00:00Z').getTime();
-        const nowMs = new Date(nowDateStr + 'T00:00:00Z').getTime();
-        const overdueDays = Math.max(0, Math.floor((nowMs - returnMs) / DAY_IN_MS));
+        const scheduledReturn = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime || '09:00');
+        if (!scheduledReturn || now <= scheduledReturn) {
+            return res.status(400).json({ success: false, message: 'This reservation is not overdue yet.' });
+        }
+
+        const overdueMs = now.getTime() - scheduledReturn.getTime();
+        const overdueDays = Math.max(1, Math.ceil(overdueMs / DAY_IN_MS));
 
         const PENALTY_RATE = 50; // ₱50 per day
         const penaltyAmount = overdueDays * PENALTY_RATE;
