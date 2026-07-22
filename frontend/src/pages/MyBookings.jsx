@@ -565,9 +565,9 @@ const MyBookings = ({ setShowLogin }) => {
               </svg>
             </div>
             <div>
-              <h4 className='text-xs font-black text-red-700 uppercase tracking-wider mb-0.5'>Outstanding Penalty Balance Detected</h4>
+              <h4 className='text-xs font-black text-red-700 uppercase tracking-wider mb-0.5'>Unpaid Penalty</h4>
               <p className='text-xs font-bold text-red-600 leading-relaxed'>
-                You have unpaid penalty fees on your account. Please settle payment with the boutique owner in-person or via GCash. New gown reservations will be locked until outstanding penalties are marked as paid.
+                You have an unpaid fee. Please pay via GCash or in-store to continue booking.
               </p>
             </div>
           </div>

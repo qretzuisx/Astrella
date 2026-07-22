@@ -322,7 +322,15 @@ export const validateBookingWindow = async (req, res) => {
     for (const existing of Bookings) {
       const isExistingTrial = existing.status === 'trial' || existing.bookingType === 'trial';
       const existingStart = new Date(existing.pickupDate);
-      const existingEnd = new Date(existing.returnDate);
+      let existingEnd = new Date(existing.returnDate);
+
+      // [LOGIC] If booking is overdue (gown not returned), extend blocked range to today
+      if (existing.status === 'overdue') {
+        const today = new Date();
+        if (today > existingEnd) {
+          existingEnd = today;
+        }
+      }
 
       // Check for laundry days of EXISTING reservation
       const existingLaundry = isExistingTrial ? 0 : Number(gown.laundryDays || 0);
@@ -420,7 +428,7 @@ export const getUserBooking = async (req, res) => {
         const now = new Date();
         const allBookings = await Booking.find({ user: _id })
             .populate('gown', 'name image eventType')
-            .populate('owner', 'name')
+            .populate('owner', 'name contactNumber shopProfile')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -578,7 +586,7 @@ export const changeBookingStatus = async (req, res) => {
 export const applyPenalty = async (req, res) => {
     try {
         const { _id } = req.user;
-        const { bookingId, penaltyType, amount, description } = req.body;
+        const { bookingId, penaltyType, amount, description, customOverdueDays } = req.body;
 
         if (req.user.role !== 'owner') {
             return res.status(403).json({ success: false, message: 'Unauthorized' });
@@ -611,7 +619,7 @@ export const applyPenalty = async (req, res) => {
         };
 
         if (penaltyType === 'late_return') {
-            // [LOGIC] Auto-calculate late return penalty
+            // [LOGIC] Auto-calculate or allow custom late return penalty
             const scheduledReturn = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime || '09:00');
             if (!scheduledReturn || now <= scheduledReturn) {
                 return res.status(400).json({ success: false, message: 'This reservation is not overdue yet.' });
@@ -624,13 +632,20 @@ export const applyPenalty = async (req, res) => {
             }
 
             const overdueMs = now.getTime() - scheduledReturn.getTime();
-            const overdueDays = Math.max(1, Math.ceil(overdueMs / DAY_IN_MS));
+            const calcOverdueDays = Math.max(1, Math.ceil(overdueMs / DAY_IN_MS));
+            const overdueDays = (customOverdueDays !== undefined && customOverdueDays !== null && customOverdueDays !== '')
+                ? Math.max(0, parseInt(customOverdueDays, 10))
+                : calcOverdueDays;
             const PENALTY_RATE = 50; // ₱50 per day
 
-            penaltyData.amount = overdueDays * PENALTY_RATE;
+            const finalAmount = (amount !== undefined && amount !== null && amount !== '') ? Number(amount) : (overdueDays * PENALTY_RATE);
+
+            penaltyData.amount = Math.max(0, finalAmount);
             penaltyData.overdueDays = overdueDays;
             penaltyData.ratePerDay = PENALTY_RATE;
-            penaltyData.description = description || `Late return: ${overdueDays} day${overdueDays !== 1 ? 's' : ''} overdue at ₱${PENALTY_RATE}/day`;
+            penaltyData.description = description || (overdueDays > 0 
+                ? `Late return: ${overdueDays} day${overdueDays !== 1 ? 's' : ''} overdue at ₱${PENALTY_RATE}/day`
+                : `Late return fee waived / adjusted by owner`);
 
             // [LOGIC] Also update the legacy penalty field for backward compatibility
             booking.penalty = {
@@ -647,18 +662,21 @@ export const applyPenalty = async (req, res) => {
             if (!amount || amount <= 0) {
                 return res.status(400).json({ success: false, message: 'Please provide a valid penalty amount for damage/repair.' });
             }
-            penaltyData.amount = amount;
+            penaltyData.amount = Number(amount);
 
         } else if (penaltyType === 'full_replacement') {
             // [LOGIC] Auto-populate from gown's replacement cost, or fallback to rental price
             const gownData = booking.gown;
             const replacementCost = gownData?.replacementCost || gownData?.price || booking.price;
-            penaltyData.amount = amount && amount > 0 ? amount : replacementCost;
+            penaltyData.amount = amount && amount > 0 ? Number(amount) : replacementCost;
             penaltyData.description = description || `Full replacement cost for gown: ${gownData?.name || 'Unknown'}`;
         }
 
-        // [LOGIC] Add penalty to the penalties array
         if (!booking.penalties) booking.penalties = [];
+
+        // Ensure status is outstanding for amount > 0, or settled for 0
+        penaltyData.status = (penaltyData.amount === 0) ? 'settled' : 'outstanding';
+
         booking.penalties.push(penaltyData);
 
         await booking.save();
@@ -683,11 +701,12 @@ export const applyPenalty = async (req, res) => {
 /**
  * [INFO] Allows owners to mark a specific penalty as settled (customer paid offline).
  * [LOGIC] Updates the penalty status from 'outstanding' to 'settled' and records the settlement timestamp.
+ * Settling a penalty DOES NOT automatically complete the booking — return must be explicitly confirmed by the owner.
  */
 export const settlePenalty = async (req, res) => {
     try {
         const { _id } = req.user;
-        const { bookingId, penaltyIndex } = req.body;
+        const { bookingId, penaltyIndex, confirmReturn } = req.body;
 
         if (req.user.role !== 'owner') {
             return res.status(403).json({ success: false, message: 'Unauthorized' });
@@ -714,14 +733,28 @@ export const settlePenalty = async (req, res) => {
         booking.penalties[penaltyIndex].settledAt = new Date();
         booking.markModified('penalties');
 
-        // [LOGIC] Check if ALL penalties on this booking are now settled
-        const hasRemainingUnpaid = booking.penalties.some(p => p.status === 'outstanding');
-        let autoCompleted = false;
+        let isCompleted = false;
+        let missingLateReturn = false;
 
-        if (!hasRemainingUnpaid && (booking.status === 'overdue' || booking.status === 'confirmed')) {
-            booking.status = 'completed';
-            if (!booking.returnConfirmedAt) booking.returnConfirmedAt = new Date();
-            autoCompleted = true;
+        // Default confirmReturn to true (unless explicitly false)
+        const shouldConfirmReturn = confirmReturn !== false;
+        if (shouldConfirmReturn && (booking.status === 'overdue' || booking.status === 'confirmed')) {
+            const hasRemainingUnpaid = booking.penalties.some(p => p.status === 'outstanding');
+            if (!hasRemainingUnpaid) {
+                // Check if booking is overdue but late_return penalty was never applied
+                const hasLateReturnPenalty = booking.penalties.some(p => p.type === 'late_return');
+                const scheduledReturn = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime || '09:00');
+                const isOverdue = scheduledReturn && new Date() > scheduledReturn;
+
+                if (booking.status === 'overdue' && isOverdue && !hasLateReturnPenalty) {
+                    // Don't complete — late return penalty is still missing
+                    missingLateReturn = true;
+                } else {
+                    booking.status = 'completed';
+                    if (!booking.returnConfirmedAt) booking.returnConfirmedAt = new Date();
+                    isCompleted = true;
+                }
+            }
         }
 
         await booking.save();
@@ -733,14 +766,100 @@ export const settlePenalty = async (req, res) => {
 
         res.json({
             success: true,
-            message: autoCompleted
-                ? `Penalty of ₱${penalty.amount.toLocaleString()} marked as paid. All penalties settled — booking marked as Completed!`
-                : `Penalty of ₱${penalty.amount.toLocaleString()} marked as paid.`,
+            message: missingLateReturn
+                ? `Penalty paid. Late return fee is still pending — please apply or waive it.`
+                : isCompleted
+                    ? `Penalty of ₱${penalty.amount.toLocaleString()} marked as paid and return confirmed!`
+                    : `Penalty of ₱${penalty.amount.toLocaleString()} marked as paid.`,
             booking: populated,
-            autoCompleted
+            isCompleted,
+            missingLateReturn
         });
     } catch (error) {
         console.error('[PENALTY] Error settling penalty:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * [INFO] Settles ALL outstanding penalties on a booking in one click.
+ * [LOGIC] Marks every outstanding penalty as settled and completes the booking if eligible.
+ */
+export const settleAllPenalties = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { bookingId } = req.body;
+
+        if (req.user.role !== 'owner') {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+        if (booking.owner.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        if (!booking.penalties || booking.penalties.length === 0) {
+            return res.status(400).json({ success: false, message: 'No penalties to settle.' });
+        }
+
+        const now = new Date();
+        let settledCount = 0;
+        booking.penalties.forEach(p => {
+            if (p.status === 'outstanding') {
+                p.status = 'settled';
+                p.settledAt = now;
+                settledCount++;
+            }
+        });
+        booking.markModified('penalties');
+
+        if (settledCount === 0) {
+            return res.status(400).json({ success: false, message: 'All penalties are already settled.' });
+        }
+
+        // Check for missing late return before completing
+        let isCompleted = false;
+        let missingLateReturn = false;
+        if (booking.status === 'overdue' || booking.status === 'confirmed') {
+            const hasLateReturnPenalty = booking.penalties.some(p => p.type === 'late_return');
+            const scheduledReturn = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime || '09:00');
+            const isOverdue = scheduledReturn && new Date() > scheduledReturn;
+
+            if (booking.status === 'overdue' && isOverdue && !hasLateReturnPenalty) {
+                missingLateReturn = true;
+            } else {
+                booking.status = 'completed';
+                if (!booking.returnConfirmedAt) booking.returnConfirmedAt = now;
+                isCompleted = true;
+            }
+        }
+
+        await booking.save();
+
+        const populated = await Booking.findById(booking._id)
+            .populate('gown', 'name image price replacementCost')
+            .populate('user', 'name email contactNumber')
+            .populate('owner', 'name');
+
+        const totalSettled = booking.penalties.filter(p => p.status === 'settled').reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        res.json({
+            success: true,
+            message: missingLateReturn
+                ? `${settledCount} penalties paid (₱${totalSettled.toLocaleString()}). Late return fee still pending.`
+                : isCompleted
+                    ? `All ${settledCount} penalties paid (₱${totalSettled.toLocaleString()}) — return confirmed!`
+                    : `${settledCount} penalties marked as paid.`,
+            booking: populated,
+            isCompleted,
+            missingLateReturn
+        });
+    } catch (error) {
+        console.error('[PENALTY] Error settling all penalties:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -1281,8 +1400,16 @@ export const getGownCalendar = async (req, res) => {
 
     Bookings.forEach((booking) => {
       const bookingStart = new Date(booking.pickupDate);
-      const bookingEnd = new Date(booking.returnDate);
+      let bookingEnd = new Date(booking.returnDate);
       const isTrial = booking.status === 'trial' || booking.bookingType === 'trial';
+
+      // [LOGIC] Overdue bookings: extend blocked range to today (gown not returned)
+      if (booking.status === 'overdue') {
+        const todayDate = new Date();
+        if (todayDate > bookingEnd) {
+          bookingEnd = todayDate;
+        }
+      }
 
       if (!isTrial) {
         const startStr = toLocalDateString(bookingStart);
@@ -1314,11 +1441,16 @@ export const getGownCalendar = async (req, res) => {
         });
       }
 
-      // Laundry days are only after non-trial bookings
+      // Laundry days are only after non-trial bookings that are actually returned
       const bufferDays = isTrial ? 0 : Math.max(gown.laundryDays || 0, 0);
-      const endStr = toLocalDateString(bookingEnd);
+      // Don't add laundry for overdue bookings (gown not returned yet)
+      if (booking.status === 'overdue' || bufferDays === 0) return;
+      // For completed bookings, use actual return date
+      const laundryBase = (booking.status === 'completed' && booking.returnConfirmedAt)
+        ? toLocalDateString(new Date(booking.returnConfirmedAt))
+        : toLocalDateString(bookingEnd);
       for (let i = 1; i <= bufferDays; i += 1) {
-        const baseDate = new Date(endStr + "T12:00:00Z");
+        const baseDate = new Date(laundryBase + "T12:00:00Z");
         const laundryDate = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000);
         if (laundryDate >= today && laundryDate <= horizon) {
           laundryHoldDates.add(toLocalDateString(laundryDate));
@@ -1445,11 +1577,17 @@ export const calculateActualGownStatus = async (gownId) => {
     const laundryWindowMs = laundryDays * 24 * 60 * 60 * 1000;
 
     // Query active bookings that could influence today's status
+    // Use $or to always include overdue bookings (gown still out, regardless of original returnDate)
     const bookings = await Booking.find({
       gown: gownId,
-      status: { $in: ['pending', 'confirmed', 'completed', 'trial', 'overdue'] },
-      pickupDate: { $lte: new Date(currentTime + laundryWindowMs + DAY_IN_MS) },
-      returnDate: { $gte: new Date(currentTime - laundryWindowMs - DAY_IN_MS) }
+      $or: [
+        {
+          status: { $in: ['pending', 'confirmed', 'completed', 'trial'] },
+          pickupDate: { $lte: new Date(currentTime + laundryWindowMs + DAY_IN_MS) },
+          returnDate: { $gte: new Date(currentTime - laundryWindowMs - DAY_IN_MS) }
+        },
+        { status: 'overdue' }
+      ]
     }).sort({ pickupDate: 1 });
 
     for (const booking of bookings) {
@@ -1500,17 +1638,17 @@ export const calculateActualGownStatus = async (gownId) => {
       }
 
       // ── CONFIRMED/COMPLETED/OVERDUE booking — check laundry window ──
-      // Both confirmed (in-use or just finished), completed, and overdue bookings 
-      // block the gown for a laundry period.
-      if (booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'overdue') {
+      if (booking.status === 'confirmed' || booking.status === 'completed') {
         if (laundryDays > 0) {
-          const laundryEndDate = new Date(returnDateTime);
+          // For completed bookings, use actual return date (returnConfirmedAt), not original returnDate
+          const laundryStartDate = (booking.status === 'completed' && booking.returnConfirmedAt)
+            ? new Date(booking.returnConfirmedAt)
+            : returnDateTime;
+          const laundryEndDate = new Date(laundryStartDate);
           laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
-          // Normalize to end of day
           laundryEndDate.setHours(23, 59, 59, 999);
 
-          // If current time is after the return time but before laundry is done
-          if (now > returnDateTime && now <= laundryEndDate) {
+          if (now > laundryStartDate && now <= laundryEndDate) {
             return 'In-Laundry';
           }
         }
@@ -1621,13 +1759,17 @@ export const batchUpdateGownStatuses = async (gowns) => {
           }
         } 
         
-        // ── LAUNDRY check (for confirmed/completed/overdue) — separate if, not else-if ──
-        if ((booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'overdue') && laundryDays > 0) {
-          const laundryEndDate = new Date(returnDateTime);
+        // ── LAUNDRY check (for confirmed/completed) — separate if, not else-if ──
+        if ((booking.status === 'confirmed' || booking.status === 'completed') && laundryDays > 0) {
+          // For completed bookings, use actual return date (returnConfirmedAt), not original returnDate
+          const laundryStartDate = (booking.status === 'completed' && booking.returnConfirmedAt)
+            ? new Date(booking.returnConfirmedAt)
+            : returnDateTime;
+          const laundryEndDate = new Date(laundryStartDate);
           laundryEndDate.setDate(laundryEndDate.getDate() + laundryDays);
           laundryEndDate.setHours(23, 59, 59, 999);
 
-          if (now > returnDateTime && now <= laundryEndDate) {
+          if (now > laundryStartDate && now <= laundryEndDate) {
             finalStatus = 'In-Laundry';
           }
         }
