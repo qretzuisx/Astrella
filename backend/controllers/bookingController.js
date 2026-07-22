@@ -163,6 +163,19 @@ export const createBooking = async (req, res) => {
         }
 
         const isTrial = (bookingType || paymentInfo.bookingType || 'reservation').toString().toLowerCase() === 'trial';
+
+        // [LOGIC] Block booking creation if user has outstanding penalties
+        const outstandingCount = await Booking.countDocuments({
+            user: _id,
+            'penalties': { $elemMatch: { status: 'outstanding' } }
+        });
+        if (outstandingCount > 0) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'You have outstanding penalty charges. Please settle them before making a new booking.',
+                hasOutstandingPenalties: true
+            });
+        }
         
         // [LOGIC] Setup normalized dates/times
         const pickupDateTime = combineDateAndTime(pickupDate, pickupTime);
@@ -553,17 +566,128 @@ export const changeBookingStatus = async (req, res) => {
 
 // [SECTION] PENALTY MANAGEMENT
 /**
- * [INFO] Allows owners to calculate and apply a penalty for overdue bookings.
- * [LOGIC]
- * 1. Validates that the booking is overdue and belongs to the acting owner.
- * 2. Computes overdue days from returnDate vs. today (local date comparison).
- * 3. Penalty = overdueDays × ₱50/day.
- * 4. Saves the penalty object to the booking record.
+ * [INFO] Allows owners to apply penalties (late return, damage/repair, full replacement).
+ * [LOGIC] 
+ * 1. late_return: Auto-calculated at ₱50/day from returnDate vs now
+ * 2. damage_repair: Custom amount specified by owner
+ * 3. full_replacement: Auto-populated from gown.replacementCost, owner can adjust
+ * 
+ * Penalties are stacked (multiple per booking). Each has its own settlement status.
+ * Outstanding penalties block customers from creating new bookings.
  */
 export const applyPenalty = async (req, res) => {
     try {
         const { _id } = req.user;
-        const { bookingId } = req.body;
+        const { bookingId, penaltyType, amount, description } = req.body;
+
+        if (req.user.role !== 'owner') {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        if (!penaltyType || !['late_return', 'damage_repair', 'full_replacement'].includes(penaltyType)) {
+            return res.status(400).json({ success: false, message: 'Invalid penalty type. Must be: late_return, damage_repair, or full_replacement.' });
+        }
+
+        const booking = await Booking.findById(bookingId).populate('gown', 'name image price replacementCost');
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+        if (booking.owner.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // [LOGIC] Allow penalties on overdue, confirmed, and completed bookings
+        if (!['overdue', 'confirmed', 'completed'].includes(booking.status)) {
+            return res.status(400).json({ success: false, message: 'Penalties can only be applied to confirmed, overdue, or completed bookings.' });
+        }
+
+        const now = new Date();
+        let penaltyData = {
+            type: penaltyType,
+            description: description || '',
+            status: 'outstanding',
+            appliedAt: now,
+            appliedBy: _id
+        };
+
+        if (penaltyType === 'late_return') {
+            // [LOGIC] Auto-calculate late return penalty
+            const scheduledReturn = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime || '09:00');
+            if (!scheduledReturn || now <= scheduledReturn) {
+                return res.status(400).json({ success: false, message: 'This reservation is not overdue yet.' });
+            }
+
+            // [LOGIC] Check if late_return penalty already exists
+            const existingLateReturn = (booking.penalties || []).find(p => p.type === 'late_return');
+            if (existingLateReturn) {
+                return res.status(400).json({ success: false, message: 'A late return penalty has already been applied to this booking.' });
+            }
+
+            const overdueMs = now.getTime() - scheduledReturn.getTime();
+            const overdueDays = Math.max(1, Math.ceil(overdueMs / DAY_IN_MS));
+            const PENALTY_RATE = 50; // ₱50 per day
+
+            penaltyData.amount = overdueDays * PENALTY_RATE;
+            penaltyData.overdueDays = overdueDays;
+            penaltyData.ratePerDay = PENALTY_RATE;
+            penaltyData.description = description || `Late return: ${overdueDays} day${overdueDays !== 1 ? 's' : ''} overdue at ₱${PENALTY_RATE}/day`;
+
+            // [LOGIC] Also update the legacy penalty field for backward compatibility
+            booking.penalty = {
+                amount: penaltyData.amount,
+                overdueDays,
+                ratePerDay: PENALTY_RATE,
+                isApplied: true,
+                appliedAt: now,
+                appliedBy: _id
+            };
+
+        } else if (penaltyType === 'damage_repair') {
+            // [LOGIC] Owner-set amount for fixable damage
+            if (!amount || amount <= 0) {
+                return res.status(400).json({ success: false, message: 'Please provide a valid penalty amount for damage/repair.' });
+            }
+            penaltyData.amount = amount;
+
+        } else if (penaltyType === 'full_replacement') {
+            // [LOGIC] Auto-populate from gown's replacement cost, or fallback to rental price
+            const gownData = booking.gown;
+            const replacementCost = gownData?.replacementCost || gownData?.price || booking.price;
+            penaltyData.amount = amount && amount > 0 ? amount : replacementCost;
+            penaltyData.description = description || `Full replacement cost for gown: ${gownData?.name || 'Unknown'}`;
+        }
+
+        // [LOGIC] Add penalty to the penalties array
+        if (!booking.penalties) booking.penalties = [];
+        booking.penalties.push(penaltyData);
+
+        await booking.save();
+
+        const populated = await Booking.findById(booking._id)
+            .populate('gown', 'name image price replacementCost')
+            .populate('user', 'name email contactNumber')
+            .populate('owner', 'name');
+
+        const typeLabels = { late_return: 'Late Return', damage_repair: 'Damage/Repair', full_replacement: 'Full Replacement' };
+        res.json({
+            success: true,
+            message: `${typeLabels[penaltyType]} penalty of ₱${penaltyData.amount.toLocaleString()} applied successfully.`,
+            booking: populated
+        });
+    } catch (error) {
+        console.error('[PENALTY] Error applying penalty:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * [INFO] Allows owners to mark a specific penalty as settled (customer paid offline).
+ * [LOGIC] Updates the penalty status from 'outstanding' to 'settled' and records the settlement timestamp.
+ */
+export const settlePenalty = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { bookingId, penaltyIndex } = req.body;
 
         if (req.user.role !== 'owner') {
             return res.status(403).json({ success: false, message: 'Unauthorized' });
@@ -576,46 +700,148 @@ export const applyPenalty = async (req, res) => {
         if (booking.owner.toString() !== _id.toString()) {
             return res.status(403).json({ success: false, message: 'Unauthorized' });
         }
-        if (booking.status !== 'overdue' && booking.status !== 'confirmed') {
-            return res.status(400).json({ success: false, message: 'Penalty can only be applied to overdue or late confirmed bookings.' });
+
+        if (!booking.penalties || penaltyIndex < 0 || penaltyIndex >= booking.penalties.length) {
+            return res.status(400).json({ success: false, message: 'Invalid penalty index.' });
         }
 
-        const now = new Date();
-        const scheduledReturn = combineDateAndTime(booking.returnDate, booking.returnTime || booking.pickupTime || '09:00');
-        if (!scheduledReturn || now <= scheduledReturn) {
-            return res.status(400).json({ success: false, message: 'This reservation is not overdue yet.' });
+        const penalty = booking.penalties[penaltyIndex];
+        if (penalty.status === 'settled') {
+            return res.status(400).json({ success: false, message: 'This penalty has already been settled.' });
         }
 
-        const overdueMs = now.getTime() - scheduledReturn.getTime();
-        const overdueDays = Math.max(1, Math.ceil(overdueMs / DAY_IN_MS));
+        booking.penalties[penaltyIndex].status = 'settled';
+        booking.penalties[penaltyIndex].settledAt = new Date();
+        booking.markModified('penalties');
 
-        const PENALTY_RATE = 50; // ₱50 per day
-        const penaltyAmount = overdueDays * PENALTY_RATE;
+        // [LOGIC] Check if ALL penalties on this booking are now settled
+        const hasRemainingUnpaid = booking.penalties.some(p => p.status === 'outstanding');
+        let autoCompleted = false;
 
-        // [LOGIC] Save penalty to the booking
-        booking.penalty = {
-            amount: penaltyAmount,
-            overdueDays,
-            ratePerDay: PENALTY_RATE,
-            isApplied: true,
-            appliedAt: now,
-            appliedBy: _id
-        };
+        if (!hasRemainingUnpaid && (booking.status === 'overdue' || booking.status === 'confirmed')) {
+            booking.status = 'completed';
+            if (!booking.returnConfirmedAt) booking.returnConfirmedAt = new Date();
+            autoCompleted = true;
+        }
 
         await booking.save();
 
         const populated = await Booking.findById(booking._id)
-            .populate('gown', 'name image')
+            .populate('gown', 'name image price replacementCost')
             .populate('user', 'name email contactNumber')
             .populate('owner', 'name');
 
         res.json({
             success: true,
-            message: `Penalty of ₱${penaltyAmount} applied successfully (${overdueDays} day${overdueDays !== 1 ? 's' : ''} overdue)`,
+            message: autoCompleted
+                ? `Penalty of ₱${penalty.amount.toLocaleString()} marked as paid. All penalties settled — booking marked as Completed!`
+                : `Penalty of ₱${penalty.amount.toLocaleString()} marked as paid.`,
+            booking: populated,
+            autoCompleted
+        });
+    } catch (error) {
+        console.error('[PENALTY] Error settling penalty:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * [INFO] Allows owners to remove a penalty from a booking (only if still outstanding).
+ * [LOGIC] Removes the penalty at the specified index from the penalties array.
+ */
+export const removePenalty = async (req, res) => {
+    try {
+        const { _id } = req.user;
+        const { bookingId, penaltyIndex } = req.body;
+
+        if (req.user.role !== 'owner') {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking not found' });
+        }
+        if (booking.owner.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        if (!booking.penalties || penaltyIndex < 0 || penaltyIndex >= booking.penalties.length) {
+            return res.status(400).json({ success: false, message: 'Invalid penalty index.' });
+        }
+
+        const penalty = booking.penalties[penaltyIndex];
+        if (penalty.status === 'settled') {
+            return res.status(400).json({ success: false, message: 'Cannot remove a settled penalty.' });
+        }
+
+        // [LOGIC] If removing a late_return penalty, also clear the legacy penalty field
+        if (penalty.type === 'late_return') {
+            booking.penalty = { amount: 0, overdueDays: 0, ratePerDay: 50, isApplied: false };
+        }
+
+        booking.penalties.splice(penaltyIndex, 1);
+        booking.markModified('penalties');
+        await booking.save();
+
+        const populated = await Booking.findById(booking._id)
+            .populate('gown', 'name image price replacementCost')
+            .populate('user', 'name email contactNumber')
+            .populate('owner', 'name');
+
+        res.json({
+            success: true,
+            message: 'Penalty removed successfully.',
             booking: populated
         });
     } catch (error) {
-        console.error('[PENALTY] Error applying penalty:', error);
+        console.error('[PENALTY] Error removing penalty:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * [INFO] Checks if a user has any outstanding (unsettled) penalties across all bookings.
+ * [LOGIC] Used to block customers from creating new bookings until penalties are settled.
+ */
+export const checkOutstandingPenalties = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const bookingsWithPenalties = await Booking.find({
+            user: userId,
+            'penalties': { $elemMatch: { status: 'outstanding' } }
+        }).populate('gown', 'name image').populate('owner', 'name shopProfile.shopName');
+
+        const outstandingPenalties = [];
+        let totalOutstanding = 0;
+
+        bookingsWithPenalties.forEach(booking => {
+            booking.penalties.forEach((penalty, index) => {
+                if (penalty.status === 'outstanding') {
+                    outstandingPenalties.push({
+                        bookingId: booking._id,
+                        penaltyIndex: index,
+                        type: penalty.type,
+                        amount: penalty.amount,
+                        description: penalty.description,
+                        appliedAt: penalty.appliedAt,
+                        gownName: booking.gown?.name || 'Unknown',
+                        shopName: booking.owner?.shopProfile?.shopName || booking.owner?.name || 'Unknown'
+                    });
+                    totalOutstanding += penalty.amount;
+                }
+            });
+        });
+
+        res.json({
+            success: true,
+            hasOutstanding: outstandingPenalties.length > 0,
+            totalOutstanding,
+            penalties: outstandingPenalties
+        });
+    } catch (error) {
+        console.error('[PENALTY] Error checking outstanding penalties:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

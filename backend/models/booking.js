@@ -75,7 +75,34 @@ const bookingSchema = new mongoose.Schema({
     balancePaidAt: { type: Date },
     balancePaidAmount: { type: Number },
 
-    // [SECTION] OVERDUE PENALTY
+    // [SECTION] PENALTY CHARGES
+    /**
+     * [INFO] Multi-penalty system supporting stacked penalties per booking.
+     * [LOGIC] Each penalty has its own type, amount, description, and settlement status.
+     * Types: late_return (auto-calculated), damage_repair (owner-set), full_replacement (from gown.replacementCost)
+     */
+    penalties: [{
+        type: {
+            type: String,
+            enum: ['late_return', 'damage_repair', 'full_replacement'],
+            required: true
+        },
+        amount: { type: Number, required: true },
+        description: { type: String, default: '' },
+        status: {
+            type: String,
+            enum: ['outstanding', 'settled'],
+            default: 'outstanding'
+        },
+        settledAt: { type: Date },
+        // [INFO] Late return specific fields
+        overdueDays: { type: Number },
+        ratePerDay: { type: Number },
+        // [INFO] Metadata
+        appliedAt: { type: Date, default: Date.now },
+        appliedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    }],
+    // [INFO] Backward-compatible field for existing overdue penalty data
     penalty: {
         amount: { type: Number, default: 0 },
         overdueDays: { type: Number, default: 0 },

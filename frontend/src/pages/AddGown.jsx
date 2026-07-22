@@ -17,6 +17,7 @@ const AddGown = () => {
     eventType: [],
     fabric: '',
     price: '',
+    replacementCost: '',
     color: '',
     size: ['Free Size'],
     ageGroup: [],
@@ -187,6 +188,7 @@ const AddGown = () => {
         eventType: formData.eventType.map(e => e.toLowerCase()),
         fabric: formData.fabric,
         price: parseFloat(formData.price),
+        replacementCost: formData.replacementCost ? parseFloat(formData.replacementCost) : 0,
         color: formData.color,
         size: formData.size,
         ageGroup: formData.ageGroup,
@@ -213,6 +215,7 @@ const AddGown = () => {
           eventType: [],
           fabric: '',
           price: '',
+          replacementCost: '',
           color: '',
           size: ['Free Size'],
           ageGroup: [],
@@ -373,6 +376,19 @@ const AddGown = () => {
                     className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-black text-primary text-xs sm:text-sm transition-all shadow-sm'
                   />
                 </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-[9px] font-black text-primary/40 uppercase tracking-widest ml-2">Replacement Cost (₱)</label>
+                  <input
+                    type='number'
+                    name='replacementCost'
+                    value={formData.replacementCost}
+                    onChange={handleInputChange}
+                    placeholder='Full gown value if lost/damaged'
+                    className='w-full px-4 py-2.5 bg-white/60 border border-gray-100 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none font-bold text-primary text-xs sm:text-sm transition-all shadow-sm'
+                  />
+                  <p className="text-[8px] font-bold text-gray-400 ml-2">Used for full replacement penalties. Leave blank to default to rental price.</p>
+                </div>
               </div>
             </div>
 
@@ -527,4 +543,3 @@ const AddGown = () => {
 }
 
 export default AddGown
-

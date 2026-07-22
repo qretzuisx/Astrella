@@ -550,11 +550,29 @@ const MyBookings = ({ setShowLogin }) => {
           <p className='text-green-800 text-sm sm:text-base'>{success}</p>
         </div>
       )}
-      {error && (
-        <div className='mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg'>
-          <p className='text-red-800 text-sm sm:text-base'>{error}</p>
-        </div>
-      )}
+      {/* Outstanding Penalties Warning Banner */}
+      {(() => {
+        const hasUnpaid = bookings.some(b => 
+          (b.penalties && b.penalties.some(p => p.status === 'outstanding')) || 
+          (!b.penalties?.length && b.penalty?.isApplied && b.penalty?.amount > 0)
+        )
+        if (!hasUnpaid) return null
+        return (
+          <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 shadow-sm'>
+            <div className='w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0 text-red-600 mt-0.5'>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className='text-xs font-black text-red-700 uppercase tracking-wider mb-0.5'>Outstanding Penalty Balance Detected</h4>
+              <p className='text-xs font-bold text-red-600 leading-relaxed'>
+                You have unpaid penalty fees on your account. Please settle payment with the boutique owner in-person or via GCash. New gown reservations will be locked until outstanding penalties are marked as paid.
+              </p>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Filter Tabs */}
       <div className='flex items-center gap-2 sm:gap-4 bg-white p-2 rounded-full border border-gray-100 shadow-[0_5px_15px_rgba(0,0,0,0.02)] mb-8 overflow-x-auto premium-scrollbar-yellow scroll-snap-x scroll-fade-edge focus:outline-none'>
@@ -754,39 +772,108 @@ const MyBookings = ({ setShowLogin }) => {
                         </div>
                       )}
 
-                      {/* Overdue Penalty Section - only shown when penalty is applied */}
-                      {!isTrial && booking.penalty?.isApplied && (
-                        <div className='mb-3 rounded-2xl overflow-hidden border border-red-100 shadow-sm'>
-                          {/* Penalty Header */}
-                          <div className='flex items-center gap-2 px-3.5 py-2.5 bg-red-50'>
-                            <svg className="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className='text-[9px] font-black text-red-600 uppercase tracking-widest'>Overdue Penalty Applied</span>
-                          </div>
-                          {/* Penalty Breakdown */}
-                          <div className='px-3.5 py-3 bg-white space-y-1.5'>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-[10px] font-bold text-gray-500'>Overdue Days</span>
-                              <span className='text-[10px] font-black text-red-600'>{booking.penalty.overdueDays} {booking.penalty.overdueDays === 1 ? 'day' : 'days'}</span>
-                            </div>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-[10px] font-bold text-gray-500'>Penalty Rate</span>
-                              <span className='text-[10px] font-black text-red-600'>₱{booking.penalty.ratePerDay}/day</span>
-                            </div>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-[10px] font-bold text-gray-500'>Penalty Amount</span>
-                              <span className='text-[10px] font-black text-red-600'>₱{booking.penalty.amount?.toLocaleString()}</span>
-                            </div>
-                            <div className='pt-1.5 mt-1 border-t border-red-50 flex justify-between items-center'>
-                              <span className='text-[9px] font-black text-primary/60 uppercase tracking-widest'>Total Amount Due</span>
-                              <span className='text-base font-black text-primary'>
-                                ₱{((booking.price || 0) + (booking.penalty.amount || 0)).toLocaleString()}
+                      {/* Multi-penalty / Legacy Penalty Section */}
+                      {!isTrial && (() => {
+                        const penaltiesList = (booking.penalties && booking.penalties.length > 0)
+                          ? booking.penalties
+                          : (booking.penalty?.isApplied ? [{
+                              type: 'late_return',
+                              amount: booking.penalty.amount,
+                              description: `Late return: ${booking.penalty.overdueDays} day${booking.penalty.overdueDays !== 1 ? 's' : ''} overdue at ₱${booking.penalty.ratePerDay}/day`,
+                              status: 'outstanding'
+                            }] : [])
+
+                        if (penaltiesList.length === 0) return null
+
+                        const typeLabels = {
+                          late_return: 'Late Return Penalty',
+                          damage_repair: 'Damage / Repair Penalty',
+                          full_replacement: 'Full Replacement Penalty'
+                        }
+
+                        const totalPenalties = penaltiesList.reduce((acc, p) => acc + (p.amount || 0), 0)
+                        const hasOutstanding = penaltiesList.some(p => p.status === 'outstanding')
+
+                        return (
+                          <div className='mb-3 rounded-2xl overflow-hidden border border-red-100 shadow-sm'>
+                            {/* Penalty Header */}
+                            <div className={`flex items-center justify-between px-3.5 py-2.5 ${hasOutstanding ? 'bg-red-50' : 'bg-green-50'}`}>
+                              <div className="flex items-center gap-2">
+                                <svg className={`w-3.5 h-3.5 flex-shrink-0 ${hasOutstanding ? 'text-red-500' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className={`text-[9px] font-black uppercase tracking-widest ${hasOutstanding ? 'text-red-600' : 'text-green-700'}`}>
+                                  {hasOutstanding ? 'Penalty Charges Applied' : 'Penalties Fully Paid'}
+                                </span>
+                              </div>
+                              <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${hasOutstanding ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                {hasOutstanding ? 'Outstanding' : 'Paid'}
                               </span>
                             </div>
+
+                            {/* Penalty Breakdown List */}
+                            <div className='px-3.5 py-3 bg-white space-y-2'>
+                              {penaltiesList.map((p, pIdx) => (
+                                <div key={pIdx} className="p-2.5 rounded-xl bg-gray-50/80 border border-gray-100 flex items-start justify-between gap-2">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-black text-gray-800">{typeLabels[p.type] || p.type}</span>
+                                      <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                                        p.status === 'settled' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                                      }`}>
+                                        {p.status === 'settled' ? 'Paid' : 'Unpaid'}
+                                      </span>
+                                    </div>
+                                    {p.description && (
+                                      <p className="text-[10px] font-semibold text-gray-500 mt-0.5 leading-tight">{p.description}</p>
+                                    )}
+                                  </div>
+                                  <span className="text-xs font-black text-red-600 flex-shrink-0">₱{(p.amount || 0).toLocaleString()}</span>
+                                </div>
+                              ))}
+
+                              {(() => {
+                                const totalPaid = penaltiesList.filter(p => p.status === 'settled').reduce((sum, p) => sum + (p.amount || 0), 0)
+                                const totalUnpaid = penaltiesList.filter(p => p.status === 'outstanding').reduce((sum, p) => sum + (p.amount || 0), 0)
+
+                                return (
+                                  <div className='pt-2.5 mt-2 border-t border-red-100 space-y-1'>
+                                    {totalPaid > 0 && (
+                                      <div className='flex justify-between items-center text-[10px] font-bold text-green-700'>
+                                        <span>Paid Penalties</span>
+                                        <span>- ₱{totalPaid.toLocaleString()}</span>
+                                      </div>
+                                    )}
+                                    <div className='flex justify-between items-center'>
+                                      <div>
+                                        <span className='text-[9px] font-black text-primary/60 uppercase tracking-widest block'>
+                                          {totalUnpaid > 0 ? 'Remaining Unpaid Balance' : 'All Penalties Paid'}
+                                        </span>
+                                      </div>
+                                      <span className={`text-base font-black ${totalUnpaid > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                        ₱{totalUnpaid.toLocaleString()}
+                                      </span>
+                                    </div>
+
+                                    {/* Simplified GCash Info */}
+                                    {totalUnpaid > 0 && (
+                                      <div className='mt-2.5 pt-2.5 border-t border-red-100 flex flex-wrap items-center justify-between gap-2 text-[10px]'>
+                                        <div className='flex items-center gap-1.5'>
+                                          <span className='font-black text-gray-500 uppercase tracking-wide text-[9px]'>GCash No:</span>
+                                          <span className='font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 select-all'>
+                                            {booking.owner?.shopProfile?.contactNumber || booking.owner?.contactNumber || booking.contactNumber || 'Contact Boutique'}
+                                          </span>
+                                        </div>
+                                        <span className='text-[9px] font-bold text-gray-400'>Pay via GCash or Cash in-store</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )
+                      })()}
 
                       <div className='flex flex-col gap-2'>
                         {/* Status Specific Global Actions */}

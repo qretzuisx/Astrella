@@ -22,6 +22,7 @@ const gownSchema = new mongoose.Schema({
     
     // [SECTION] PRICING & LOGISTICS
     price: {type: Number, required: true},
+    replacementCost: {type: Number, default: 0}, // [INFO] Full replacement value if gown is lost/destroyed
     laundryDays: {type: Number, default: 1, min: 0, max: 14}, // [INFO] Days required for laundry after a rental
     
     // [SECTION] AVAILABILITY & STATUS
